@@ -68,6 +68,20 @@ describe('S3StorageService', () => {
     expect(result).toEqual({ key: 'key', etag: 'etag' });
   });
 
+  test('should put object with custom content type', async () => {
+    const service = new S3StorageService();
+    sendMock.mockResolvedValue({ ETag: 'etag' });
+
+    await service.put('key', Buffer.from('data'), 'application/custom');
+
+    expect(PutObjectCommand).toHaveBeenCalledWith({
+      Bucket: 'documents',
+      Key: 'key',
+      Body: Buffer.from('data'),
+      ContentType: 'application/custom',
+    });
+  });
+
   test('should get object', async () => {
     const service = new S3StorageService();
     sendMock.mockResolvedValue({
@@ -78,6 +92,13 @@ describe('S3StorageService', () => {
 
     expect(GetObjectCommand).toHaveBeenCalledWith({ Bucket: 'documents', Key: 'key' });
     expect(result.toString('utf-8')).toBe('ab');
+  });
+
+  test('should throw when response body is empty', async () => {
+    const service = new S3StorageService();
+    sendMock.mockResolvedValue({ Body: undefined });
+
+    await expect(service.get('key')).rejects.toThrow('Empty response body');
   });
 
   test('should delete object', async () => {
@@ -101,5 +122,35 @@ describe('S3StorageService', () => {
       { expiresIn: 300 }
     );
     expect(result).toBe('signed-url');
+  });
+
+  test('should use defaults without endpoint or credentials', async () => {
+    setEnv({
+      S3_ENDPOINT: undefined,
+      S3_ACCESS_KEY_ID: undefined,
+      S3_SECRET_ACCESS_KEY: undefined,
+    });
+
+    const service = new S3StorageService();
+
+    expect(S3Client).toHaveBeenCalledWith(
+      expect.objectContaining({
+        region: 'us-east-1',
+      })
+    );
+    expect(service).toBeDefined();
+  });
+
+  test('should use default expiresInSeconds', async () => {
+    const service = new S3StorageService();
+    (getSignedUrl as jest.Mock).mockResolvedValue('signed-url');
+
+    await service.getSignedUrl('key');
+
+    expect(getSignedUrl).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.objectContaining({ input: { Bucket: 'documents', Key: 'key' } }),
+      { expiresIn: 3600 }
+    );
   });
 });
