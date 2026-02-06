@@ -1,37 +1,61 @@
 'use client';
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
-import { useForm } from 'react-hook-form';
+import { useEffect, useState } from 'react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useRouter } from 'next/navigation';
+import { useController, useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input } from '@/shared/ui';
 import { createTenant, type SignUpResponse } from '../api';
+import { useAuth } from '../hooks/use-auth';
+import { slugify } from '@/shared/utils/slug';
 
 const schema = z.object({
   name: z.string().min(2),
   slug: z.string().min(2),
   ownerName: z.string().min(2),
-  ownerEmail: z.string().email(),
+  ownerEmail: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
 });
 
 type FormData = z.infer<typeof schema>;
 
 export function SignUpForm() {
+  const router = useRouter();
+  const locale = useLocale();
   const tAuth = useTranslations('auth');
   const tCommon = useTranslations('common');
   const [result, setResult] = useState<SignUpResponse | null>(null);
+  const { login } = useAuth();
+  const [slugTouched, setSlugTouched] = useState(false);
   const {
     register,
     handleSubmit,
+    setValue,
+    watch,
+    control,
     formState: { errors, isSubmitting },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    mode: 'onChange',
+    reValidateMode: 'onChange',
   });
+  const nameValue = watch('name');
+  const slugValue = watch('slug');
+
+  const { field: slugField } = useController({ name: 'slug', control });
+
+  useEffect(() => {
+    if (slugTouched) return;
+    const nextSlug = slugify(nameValue ?? '');
+    setValue('slug', nextSlug, { shouldDirty: true, shouldValidate: true });
+  }, [nameValue, setValue, slugTouched]);
 
   const onSubmit = async (data: FormData) => {
     const created = await createTenant(data);
     setResult(created);
+    await login({ email: data.ownerEmail, password: created.ownerPassword });
+    router.replace(`/${locale}`);
   };
 
   return (
@@ -50,7 +74,21 @@ export function SignUpForm() {
           <label className="text-sm font-medium text-text" htmlFor="slug">
             {tAuth('companySlugLabel')}
           </label>
-          <Input id="slug" placeholder={tAuth('companySlugPlaceholder')} {...register('slug')} />
+          <Input
+            id="slug"
+            placeholder={tAuth('companySlugPlaceholder')}
+            value={slugField.value ?? ''}
+            onChange={(event) => {
+              setSlugTouched(true);
+              slugField.onChange(event);
+            }}
+            onBlur={slugField.onBlur}
+            name={slugField.name}
+            ref={slugField.ref}
+          />
+          {!errors.slug && slugValue ? (
+            <p className="text-xs text-muted">{tAuth('companySlugHelper')}</p>
+          ) : null}
           {errors.slug && (
             <p className="text-xs text-destructive">{tAuth('slugRequired')}</p>
           )}

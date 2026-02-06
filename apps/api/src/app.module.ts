@@ -49,10 +49,7 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
       database: process.env['DB_DATABASE'] ?? 'connexto_signer',
       autoLoadEntities: true,
       synchronize: false,
-      migrations: [
-        join(process.cwd(), 'apps/api/src/database/migrations/*{.ts,.js}'),
-        join(process.cwd(), 'dist/apps/api/database/migrations/*{.js}'),
-      ],
+      migrations: [join(__dirname, 'database/migrations/*{.ts,.js}')],
       logging: process.env['DB_LOGGING'] === 'true',
       connectTimeoutMS: 5000,
     }),

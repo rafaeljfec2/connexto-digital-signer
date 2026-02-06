@@ -1,21 +1,44 @@
-import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { NestFactory } from '@nestjs/core';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import { Logger } from 'nestjs-pino';
+import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 
-async function bootstrap(): Promise<void> {
-  const app = await NestFactory.create(AppModule, { bufferLogs: true });
-  app.useLogger(app.get(Logger));
-  const apiPrefix = 'digital-signer/v1';
-  app.setGlobalPrefix(apiPrefix);
-  const allowedOriginsRaw = process.env['CORS_ALLOWED_ORIGINS'] ?? '';
-  const allowedOrigins = allowedOriginsRaw
+const apiPrefix = 'digital-signer/v1';
+
+const resolveAllowedOrigins = (): string[] => {
+  const raw = process.env['CORS_ALLOWED_ORIGINS'] ?? '';
+  return raw
     .split(',')
     .map((origin) => origin.trim())
     .filter((origin) => origin.length > 0);
+};
+
+const configureOpenApi = (app: Awaited<ReturnType<typeof NestFactory.create>>): void => {
+  if (process.env['NODE_ENV'] === 'production') return;
+  const swaggerConfig = new DocumentBuilder()
+    .setTitle('Digital Signer API')
+    .setDescription('Connexto Digital Signer API')
+    .setVersion('v1')
+    .build();
+  const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
+  SwaggerModule.setup(`${apiPrefix}/swagger`, app, swaggerDocument);
+  app.use(
+    `/${apiPrefix}/docs`,
+    apiReference({
+      content: swaggerDocument,
+    })
+  );
+};
+
+const bootstrap = async (): Promise<void> => {
+  const app = await NestFactory.create(AppModule, { bufferLogs: true });
+  app.useLogger(app.get(Logger));
+  app.setGlobalPrefix(apiPrefix);
+  const allowedOrigins = resolveAllowedOrigins();
   app.enableCors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,
@@ -28,23 +51,14 @@ async function bootstrap(): Promise<void> {
     })
   );
   app.useGlobalFilters(new HttpExceptionFilter());
-  if (process.env['NODE_ENV'] !== 'production') {
-    const swaggerConfig = new DocumentBuilder()
-      .setTitle('Digital Signer API')
-      .setDescription('Connexto Digital Signer API')
-      .setVersion('v1')
-      .build();
-    const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
-    SwaggerModule.setup(`${apiPrefix}/swagger`, app, swaggerDocument);
-    app.use(
-      `/${apiPrefix}/docs`,
-      apiReference({
-        content: swaggerDocument,
-      })
-    );
-  }
+
+  await app.init();
+  const dataSource = app.get(DataSource);
+  await dataSource.runMigrations();
+
+  configureOpenApi(app);
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port);
-}
+};
 
 void bootstrap();

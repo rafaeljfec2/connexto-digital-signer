@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEmail, IsString, IsOptional, IsObject, MaxLength } from 'class-validator';
+import { IsEmail, IsString, IsOptional, IsObject, MaxLength, Matches } from 'class-validator';
 
 export class CreateTenantDto {
   @IsString()
@@ -9,6 +9,7 @@ export class CreateTenantDto {
 
   @IsString()
   @MaxLength(100)
+  @Matches(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
   @ApiProperty({ example: 'acme' })
   readonly slug!: string;
 

@@ -24,6 +24,7 @@
     "companyNamePlaceholder": "Acme Corp",
     "companySlugLabel": "Company slug",
     "companySlugPlaceholder": "acme",
+    "companySlugHelper": "Use only lowercase letters, numbers, and hyphens.",
     "ownerNameLabel": "Owner name",
     "ownerNamePlaceholder": "Owner Name",
     "ownerEmailLabel": "Owner email",
