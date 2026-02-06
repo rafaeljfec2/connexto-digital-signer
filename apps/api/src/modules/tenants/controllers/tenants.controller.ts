@@ -8,10 +8,12 @@ import {
   ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { TenantId, Public } from '@connexto/shared';
 import { TenantsService } from '../services/tenants.service';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
+import { throttleConfig } from '../../../common/config/throttle.config';
 
 @ApiTags('Tenants')
 @Controller('tenants')
@@ -19,6 +21,7 @@ export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
   @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Post()
   create(@Body() createTenantDto: CreateTenantDto) {
     return this.tenantsService.create(createTenantDto);

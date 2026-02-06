@@ -1,10 +1,12 @@
 import { Controller, Get, Post, Body, Param, Req } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import type { RequestWithHeaders } from '@connexto/shared';
 import { TenantId, Public } from '@connexto/shared';
 import { SignaturesService } from '../services/signatures.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
 import { AcceptSignatureDto } from '../dto/accept-signature.dto';
+import { throttleConfig } from '../../../common/config/throttle.config';
 
 function getClientIp(req: RequestWithHeaders & { socket?: { remoteAddress?: string } }): string {
   const forwarded = req.headers['x-forwarded-for'];
@@ -48,12 +50,14 @@ export class SignController {
   constructor(private readonly signaturesService: SignaturesService) {}
 
   @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Get(':token')
   getSignerByToken(@Param('token') token: string) {
     return this.signaturesService.findByToken(token);
   }
 
   @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Post(':token/accept')
   accept(
     @Param('token') token: string,
