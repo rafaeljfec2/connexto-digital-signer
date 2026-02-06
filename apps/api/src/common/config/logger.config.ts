@@ -47,6 +47,20 @@ const productionLoggerConfig: Options = {
 
 const developmentLoggerConfig: Options = {
   ...productionLoggerConfig,
+  formatters: {
+    log: (object: Record<string, unknown> & { context?: unknown; msg?: unknown }) => {
+      const ctx = object.context;
+      const isEmptyOrUndefinedStr =
+        ctx === undefined ||
+        ctx === null ||
+        (typeof ctx === 'string' && (ctx.trim() === '' || ctx === 'undefined'));
+      if (isEmptyOrUndefinedStr) {
+        const { context: _c, ...rest } = object;
+        return { ...rest };
+      }
+      return object;
+    },
+  },
   transport: {
     target: 'pino-pretty',
     options: {
@@ -55,24 +69,13 @@ const developmentLoggerConfig: Options = {
       ignore: 'pid,hostname,context',
       singleLine: true,
       hideObject: false,
-    },
-  },
-  formatters: {
-    log: (object: Record<string, unknown> & { context?: string; msg?: unknown }) => {
-      const context = object.context ?? 'Application';
-      const msg = typeof object.msg === 'string' ? object.msg : '';
-      return {
-        ...object,
-        msg: `[${context}] ${msg}`.trim(),
-      };
+      messageFormat: '{if context}[{context}] {end}{msg}',
     },
   },
 };
 
 export function getLoggerConfig(): { pinoHttp: Options } {
   const pinoHttp =
-    process.env['NODE_ENV'] === 'production'
-      ? productionLoggerConfig
-      : developmentLoggerConfig;
+    process.env['NODE_ENV'] === 'production' ? productionLoggerConfig : developmentLoggerConfig;
   return { pinoHttp };
 }
