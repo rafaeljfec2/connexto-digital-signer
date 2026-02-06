@@ -1,25 +1,36 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { randomBytes } from 'node:crypto';
 import { Tenant } from '../entities/tenant.entity';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
 import { sha256 } from '@connexto/shared';
-import { randomBytes } from 'crypto';
+import { UsersService } from '../../users/services/users.service';
 
 @Injectable()
 export class TenantsService {
   constructor(
     @InjectRepository(Tenant)
-    private readonly tenantRepository: Repository<Tenant>
+    private readonly tenantRepository: Repository<Tenant>,
+    private readonly usersService: UsersService
   ) {}
 
-  async create(createTenantDto: CreateTenantDto): Promise<Tenant & { apiKey?: string }> {
+  async create(
+    createTenantDto: CreateTenantDto
+  ): Promise<Tenant & { apiKey?: string; ownerPassword?: string }> {
     const tenant = this.tenantRepository.create(createTenantDto);
     const rawApiKey = `sk_${randomBytes(32).toString('hex')}`;
     tenant.apiKeyHash = sha256(Buffer.from(rawApiKey, 'utf-8'));
     const saved = await this.tenantRepository.save(tenant);
-    return { ...saved, apiKey: rawApiKey };
+    const ownerPassword = `pw_${randomBytes(12).toString('hex')}`;
+    await this.usersService.createOwner(
+      saved.id,
+      createTenantDto.ownerEmail,
+      createTenantDto.ownerName,
+      ownerPassword
+    );
+    return { ...saved, apiKey: rawApiKey, ownerPassword };
   }
 
   async findOne(id: string, scopeToTenantId?: string): Promise<Tenant> {

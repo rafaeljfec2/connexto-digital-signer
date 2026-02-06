@@ -16,8 +16,10 @@ import { TenantId } from '@connexto/shared';
 import { DocumentsService } from '../services/documents.service';
 import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
+import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 @ApiTags('Documents')
+@RequireAuthMethod('jwt')
 @Controller('documents')
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}

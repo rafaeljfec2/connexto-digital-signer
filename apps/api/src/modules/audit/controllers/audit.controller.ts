@@ -2,8 +2,10 @@ import { Controller, Get, Param } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { TenantId } from '@connexto/shared';
 import { AuditService } from '../services/audit.service';
+import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 @ApiTags('Audit')
+@RequireAuthMethod('jwt')
 @Controller('audit')
 export class AuditController {
   constructor(private readonly auditService: AuditService) {}

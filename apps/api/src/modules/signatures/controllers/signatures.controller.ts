@@ -7,6 +7,7 @@ import { SignaturesService } from '../services/signatures.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
 import { AcceptSignatureDto } from '../dto/accept-signature.dto';
 import { throttleConfig } from '../../../common/config/throttle.config';
+import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 function getClientIp(req: RequestWithHeaders & { socket?: { remoteAddress?: string } }): string {
   const forwarded = req.headers['x-forwarded-for'];
@@ -18,6 +19,7 @@ function getClientIp(req: RequestWithHeaders & { socket?: { remoteAddress?: stri
 }
 
 @ApiTags('Signers')
+@RequireAuthMethod('jwt')
 @Controller('documents/:documentId/signers')
 export class SignaturesController {
   constructor(private readonly signaturesService: SignaturesService) {}

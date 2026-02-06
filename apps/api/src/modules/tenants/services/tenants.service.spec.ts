@@ -4,11 +4,7 @@ import { TenantsService } from './tenants.service';
 import { Tenant } from '../entities/tenant.entity';
 import { sha256 } from '@connexto/shared';
 import * as crypto from 'node:crypto';
-
-jest.mock('crypto', () => {
-  const actual = jest.requireActual<typeof import('crypto')>('crypto');
-  return { ...actual, randomBytes: jest.fn() };
-});
+import { UsersService } from '../../users/services/users.service';
 
 jest.mock('node:crypto', () => {
   const actual = jest.requireActual<typeof import('node:crypto')>('node:crypto');
@@ -32,6 +28,7 @@ const buildTenant = (overrides?: Partial<Tenant>): Tenant => ({
 describe('TenantsService', () => {
   let service: TenantsService;
   let tenantRepository: Repository<Tenant>;
+  let usersService: jest.Mocked<UsersService>;
 
   beforeEach(() => {
     tenantRepository = {
@@ -39,7 +36,14 @@ describe('TenantsService', () => {
       save: jest.fn(),
       findOne: jest.fn(),
     } as unknown as Repository<Tenant>;
-    service = new TenantsService(tenantRepository);
+    usersService = {
+      create: jest.fn(),
+      createOwner: jest.fn(),
+      findByEmail: jest.fn(),
+      findOne: jest.fn(),
+      findByTenantId: jest.fn(),
+    } as unknown as jest.Mocked<UsersService>;
+    service = new TenantsService(tenantRepository, usersService);
   });
 
   describe('create', () => {
@@ -47,19 +51,29 @@ describe('TenantsService', () => {
       jest
         .mocked(crypto.randomBytes)
         .mockImplementation((size: number) => Buffer.from('a'.repeat(size)));
-      const cryptoCjs = jest.requireMock('crypto') as { randomBytes: jest.Mock };
-      cryptoCjs.randomBytes.mockImplementation((size: number) => Buffer.from('a'.repeat(size)));
       const created = buildTenant({ apiKeyHash: 'hash' });
       const saved = buildTenant({ id: 'tenant-2', apiKeyHash: 'hash' });
       (tenantRepository.create as jest.Mock).mockReturnValue(created);
       (tenantRepository.save as jest.Mock).mockResolvedValue(saved);
 
-      const result = await service.create({ name: 'Acme', slug: 'acme' });
+      const result = await service.create({
+        name: 'Acme',
+        slug: 'acme',
+        ownerName: 'Owner',
+        ownerEmail: 'owner@acme.com',
+      });
 
       const rawApiKey = `sk_${Buffer.from('a'.repeat(32)).toString('hex')}`;
       expect(created.apiKeyHash).toBe(sha256(Buffer.from(rawApiKey, 'utf-8')));
       expect(result.apiKey).toBe(rawApiKey);
       expect(result.id).toBe('tenant-2');
+      expect(usersService.createOwner).toHaveBeenCalledWith(
+        'tenant-2',
+        'owner@acme.com',
+        'Owner',
+        expect.stringMatching(/^pw_[a-f0-9]{24}$/)
+      );
+      expect(result.ownerPassword).toMatch(/^pw_[a-f0-9]{24}$/);
     });
   });
 

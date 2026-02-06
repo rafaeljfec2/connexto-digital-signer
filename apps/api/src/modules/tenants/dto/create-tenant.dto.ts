@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsString, IsOptional, IsObject, MaxLength } from 'class-validator';
+import { IsEmail, IsString, IsOptional, IsObject, MaxLength } from 'class-validator';
 
 export class CreateTenantDto {
   @IsString()
@@ -11,6 +11,16 @@ export class CreateTenantDto {
   @MaxLength(100)
   @ApiProperty({ example: 'acme' })
   readonly slug!: string;
+
+  @IsString()
+  @MaxLength(255)
+  @ApiProperty({ example: 'Owner Name' })
+  readonly ownerName!: string;
+
+  @IsEmail()
+  @MaxLength(255)
+  @ApiProperty({ example: 'owner@acme.com' })
+  readonly ownerEmail!: string;
 
   @IsOptional()
   @IsObject()

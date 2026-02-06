@@ -3,8 +3,10 @@ import { ApiTags } from '@nestjs/swagger';
 import { TenantId } from '@connexto/shared';
 import { WebhooksService } from '../services/webhooks.service';
 import { CreateWebhookConfigDto } from '../dto/create-webhook-config.dto';
+import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 @ApiTags('Webhooks')
+@RequireAuthMethod('api_key')
 @Controller('webhooks')
 export class WebhooksController {
   constructor(private readonly webhooksService: WebhooksService) {}

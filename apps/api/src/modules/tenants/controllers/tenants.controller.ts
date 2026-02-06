@@ -14,8 +14,10 @@ import { TenantsService } from '../services/tenants.service';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
 import { throttleConfig } from '../../../common/config/throttle.config';
+import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 @ApiTags('Tenants')
+@RequireAuthMethod('jwt')
 @Controller('tenants')
 export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}

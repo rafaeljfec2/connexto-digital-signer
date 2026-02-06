@@ -34,9 +34,36 @@ export interface SignerAddedEvent {
   accessToken: string;
 }
 
+export interface UserLoginSuccessEvent {
+  tenantId: string;
+  userId: string;
+  email: string;
+  ipAddress: string;
+  userAgent: string;
+  loginAt: Date;
+}
+
+export interface UserLoginFailedEvent {
+  email: string;
+  ipAddress: string;
+  userAgent: string;
+  reason: string;
+  attemptedAt: Date;
+}
+
+export interface UserLogoutEvent {
+  tenantId: string;
+  userId: string;
+  email: string;
+  logoutAt: Date;
+}
+
 export type DomainEvent =
   | { type: 'signature.completed'; payload: SignatureCompletedEvent }
   | { type: 'document.completed'; payload: DocumentCompletedEvent }
   | { type: 'document.expired'; payload: DocumentExpiredEvent }
   | { type: 'document.created'; payload: DocumentCreatedEvent }
-  | { type: 'signer.added'; payload: SignerAddedEvent };
+  | { type: 'signer.added'; payload: SignerAddedEvent }
+  | { type: 'user.login.success'; payload: UserLoginSuccessEvent }
+  | { type: 'user.login.failed'; payload: UserLoginFailedEvent }
+  | { type: 'user.logout'; payload: UserLogoutEvent };

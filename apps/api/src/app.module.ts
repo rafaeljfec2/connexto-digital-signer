@@ -17,7 +17,7 @@ import { AuditModule } from './modules/audit/audit.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { BillingModule } from './modules/billing/billing.module';
-import { TenantAuthGuard } from './shared/guards/tenant-auth.guard';
+import { CompositeAuthGuard } from './common/guards/composite-auth.guard';
 import { getLoggerConfig } from './common/config/logger.config';
 import { HealthModule } from './modules/health/health.module';
 import { throttleConfig } from './common/config/throttle.config';
@@ -80,7 +80,7 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
   providers: [
     {
       provide: APP_GUARD,
-      useClass: TenantAuthGuard,
+      useClass: CompositeAuthGuard,
     },
     {
       provide: APP_GUARD,

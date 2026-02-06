@@ -2,8 +2,10 @@ import { Controller, Get } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { TenantId } from '@connexto/shared';
 import { BillingService } from '../services/billing.service';
+import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 @ApiTags('Billing')
+@RequireAuthMethod('jwt')
 @Controller('billing')
 export class BillingController {
   constructor(private readonly billingService: BillingService) {}
