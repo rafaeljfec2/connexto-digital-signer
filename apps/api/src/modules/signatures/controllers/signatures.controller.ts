@@ -1,4 +1,5 @@
 import { Controller, Get, Post, Body, Param, Req } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import type { RequestWithHeaders } from '@connexto/shared';
 import { TenantId, Public } from '@connexto/shared';
 import { SignaturesService } from '../services/signatures.service';
@@ -14,6 +15,7 @@ function getClientIp(req: RequestWithHeaders & { socket?: { remoteAddress?: stri
   return req.socket?.remoteAddress ?? '';
 }
 
+@ApiTags('Signers')
 @Controller('documents/:documentId/signers')
 export class SignaturesController {
   constructor(private readonly signaturesService: SignaturesService) {}
@@ -40,6 +42,7 @@ export class SignaturesController {
   }
 }
 
+@ApiTags('Sign')
 @Controller('sign')
 export class SignController {
   constructor(private readonly signaturesService: SignaturesService) {}

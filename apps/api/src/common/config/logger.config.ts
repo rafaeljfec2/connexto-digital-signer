@@ -69,7 +69,7 @@ const developmentLoggerConfig: Options = {
       ignore: 'pid,hostname,context',
       singleLine: true,
       hideObject: false,
-      messageFormat: 'digital-signer/v1 {if context}[{context}] {end}{if msg}{msg}{end}',
+      messageFormat: '{if context}[{context}] {end} {msg}{end}',
     },
   },
 };

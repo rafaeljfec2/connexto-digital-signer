@@ -10,12 +10,14 @@ import {
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TenantId } from '@connexto/shared';
 import { DocumentsService } from '../services/documents.service';
 import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
 
+@ApiTags('Documents')
 @Controller('documents')
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
