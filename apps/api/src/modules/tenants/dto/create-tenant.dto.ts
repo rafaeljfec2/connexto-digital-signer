@@ -23,6 +23,11 @@ export class CreateTenantDto {
   @ApiProperty({ example: 'owner@acme.com' })
   readonly ownerEmail!: string;
 
+  @IsString()
+  @MaxLength(255)
+  @ApiProperty({ example: 'strong-password' })
+  readonly ownerPassword!: string;
+
   @IsOptional()
   @IsObject()
   @ApiPropertyOptional({

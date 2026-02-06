@@ -22,14 +22,13 @@ export interface SignUpInput {
   readonly slug: string;
   readonly ownerName: string;
   readonly ownerEmail: string;
+  readonly ownerPassword: string;
 }
 
 export interface SignUpResponse {
   readonly id: string;
   readonly name: string;
   readonly slug: string;
-  readonly apiKey: string;
-  readonly ownerPassword: string;
 }
 
 export const loginWithEmail = async (payload: LoginInput): Promise<LoginResponse> => {

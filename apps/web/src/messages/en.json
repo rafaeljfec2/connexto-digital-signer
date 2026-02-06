@@ -8,9 +8,8 @@
     "signIn": "Sign in",
     "createAccountLink": "Create an account",
     "tenantLabel": "Tenant",
-    "credentialsTitle": "Credentials",
-    "apiKey": "API key",
-    "ownerPassword": "Owner password"
+    "accountCreatedTitle": "Account created",
+    "accountCreatedSubtitle": "You are now signed in."
   },
   "auth": {
     "emailLabel": "Email",
@@ -29,15 +28,82 @@
     "ownerNamePlaceholder": "Owner Name",
     "ownerEmailLabel": "Owner email",
     "ownerEmailPlaceholder": "owner@acme.com",
+    "ownerPasswordLabel": "Password",
+    "ownerPasswordPlaceholder": "Your password",
+    "ownerPasswordHelper": "At least 8 chars, with uppercase, lowercase and number.",
+    "ownerPasswordConfirmLabel": "Confirm password",
+    "ownerPasswordConfirmPlaceholder": "Repeat your password",
     "companyNameRequired": "Company name is required",
     "slugRequired": "Slug is required",
     "ownerNameRequired": "Owner name is required",
     "ownerEmailRequired": "Valid email is required",
+    "ownerPasswordRequired": "Password is required",
+    "ownerPasswordConfirmError": "Passwords must match",
     "createAccountCta": "Create account"
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Welcome",
-    "underConstruction": "Dashboard under construction"
+    "underConstruction": "Dashboard under construction",
+    "kpi": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "expired": "Expired",
+      "draft": "Drafts"
+    },
+    "recentTitle": "Recent documents",
+    "newDocument": "New document",
+    "empty": {
+      "title": "No documents yet",
+      "description": "Create your first document to start the signing flow."
+    }
+  },
+  "documents": {
+    "title": "Documents",
+    "subtitle": "Manage your documents and signatures",
+    "table": {
+      "title": "Title",
+      "status": "Status",
+      "created": "Created"
+    },
+    "status": {
+      "draft": "Draft",
+      "pending": "Pending",
+      "completed": "Completed",
+      "expired": "Expired"
+    },
+    "filters": {
+      "status": "Status",
+      "all": "All"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page"
+    },
+    "empty": {
+      "title": "No documents found",
+      "description": "Try adjusting filters or create a new document."
+    },
+    "searchPlaceholder": "Search is coming soon",
+    "upload": {
+      "title": "New document",
+      "subtitle": "Upload your PDF and set a title",
+      "titleLabel": "Document title",
+      "titlePlaceholder": "Sales contract - February",
+      "dropzoneLabel": "Drag and drop your PDF here",
+      "dropzoneHelper": "PDF only, up to 10MB",
+      "removeFile": "Remove",
+      "submit": "Continue",
+      "submitting": "Uploading",
+      "success": "Document uploaded",
+      "errors": {
+        "titleRequired": "Title is required",
+        "fileRequired": "File is required",
+        "onlyPdf": "Only PDF files are allowed",
+        "tooLarge": "File exceeds {max}MB",
+        "failed": "Upload failed"
+      }
+    }
   }
 }

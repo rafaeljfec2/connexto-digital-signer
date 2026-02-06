@@ -138,12 +138,20 @@ Ele está organizado por prioridade e ordem de dependências.
 - [x] Estrutura do projeto (monorepo pnpm + Turborepo)
 - [x] API NestJS com módulos: auth, tenants, documents, signatures, audit, notifications, webhooks, billing
 - [x] Entidades TypeORM com índices
+- [x] Entidade User (roles: owner/admin/member) e senha com bcryptjs
+- [x] Login por email e senha (POST `/auth/login`) + logout (POST `/auth/logout`)
+- [x] Auth guard unificado (JWT + API Key) com `@RequireAuthMethod`
+- [x] Auditoria de auth (login success/failed, logout)
+- [x] Migrations versionadas com `runMigrations()` no startup
 - [x] Setup Docker (Postgres, Redis, MinIO)
 - [x] Logger (NestJS + Pino com pino-pretty)
 - [x] Swagger UI + Scalar UI
 - [x] Prefixo global de rotas (`/digital-signer/v1`)
 - [x] Agrupamento no Swagger via `@ApiTags`
 - [x] Lógica de negócio: adicionar signer, aceitar assinatura, finalizar documento com página de evidências
+- [x] Frontend Next.js 14 (App Router) com Tailwind + i18n (en/pt-br)
+- [x] Telas: Login, Signup (slug auto + politica de senha), Dashboard shell
+- [x] API client Axios + middleware de proteção de rotas
 
 ### Arquitetura
 
@@ -154,6 +162,7 @@ apps/
       common/config/            # Config do logger
       modules/
         auth/                   # Auth por API key + JWT
+        users/                  # Usuarios e roles
         tenants/                # Multi-tenant
         documents/              # CRUD de documentos + storage
         signatures/             # Gestão de signers + fluxo de assinatura
@@ -165,6 +174,7 @@ apps/
         guards/                 # Guard de tenant
         pdf/                    # Manipulação de PDF (pdf-lib)
         storage/                # Storage compatível com S3
+  web/                          # Frontend Next.js (Auth + Dashboard)
 packages/
   shared/                       # Decorators e types compartilhados
   database/                     # Utilitários de banco
@@ -182,6 +192,8 @@ docker/
 | Tenants    | GET    | `/digital-signer/v1/tenants/:id`                |
 | Tenants    | PATCH  | `/digital-signer/v1/tenants/:id`                |
 | Auth       | POST   | `/digital-signer/v1/auth/api-key/login`         |
+| Auth       | POST   | `/digital-signer/v1/auth/login`                 |
+| Auth       | POST   | `/digital-signer/v1/auth/logout`                |
 | Documents  | POST   | `/digital-signer/v1/documents`                  |
 | Documents  | GET    | `/digital-signer/v1/documents/:id`              |
 | Documents  | PATCH  | `/digital-signer/v1/documents/:id`              |

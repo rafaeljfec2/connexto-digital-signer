@@ -11,12 +11,23 @@ import { createTenant, type SignUpResponse } from '../api';
 import { useAuth } from '../hooks/use-auth';
 import { slugify } from '@/shared/utils/slug';
 
-const schema = z.object({
-  name: z.string().min(2),
-  slug: z.string().min(2),
-  ownerName: z.string().min(2),
-  ownerEmail: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
-});
+const schema = z
+  .object({
+    name: z.string().min(2),
+    slug: z.string().min(2),
+    ownerName: z.string().min(2),
+    ownerEmail: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
+    ownerPassword: z
+      .string()
+      .min(8)
+      .regex(/[A-Z]/)
+      .regex(/[a-z]/)
+      .regex(/\d/),
+    ownerPasswordConfirm: z.string().min(8),
+  })
+  .refine((data) => data.ownerPassword === data.ownerPasswordConfirm, {
+    path: ['ownerPasswordConfirm'],
+  });
 
 type FormData = z.infer<typeof schema>;
 
@@ -52,9 +63,10 @@ export function SignUpForm() {
   }, [nameValue, setValue, slugTouched]);
 
   const onSubmit = async (data: FormData) => {
-    const created = await createTenant(data);
+    const { ownerPasswordConfirm: _confirm, ...payload } = data;
+    const created = await createTenant(payload);
     setResult(created);
-    await login({ email: data.ownerEmail, password: created.ownerPassword });
+    await login({ email: data.ownerEmail, password: payload.ownerPassword });
     router.replace(`/${locale}`);
   };
 
@@ -120,6 +132,36 @@ export function SignUpForm() {
             <p className="text-xs text-destructive">{tAuth('ownerEmailRequired')}</p>
           )}
         </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-text" htmlFor="ownerPassword">
+            {tAuth('ownerPasswordLabel')}
+          </label>
+          <Input
+            id="ownerPassword"
+            type="password"
+            placeholder={tAuth('ownerPasswordPlaceholder')}
+            {...register('ownerPassword')}
+          />
+          {errors.ownerPassword ? (
+            <p className="text-xs text-destructive">{tAuth('ownerPasswordRequired')}</p>
+          ) : (
+            <p className="text-xs text-muted">{tAuth('ownerPasswordHelper')}</p>
+          )}
+        </div>
+        <div className="space-y-2">
+          <label className="text-sm font-medium text-text" htmlFor="ownerPasswordConfirm">
+            {tAuth('ownerPasswordConfirmLabel')}
+          </label>
+          <Input
+            id="ownerPasswordConfirm"
+            type="password"
+            placeholder={tAuth('ownerPasswordConfirmPlaceholder')}
+            {...register('ownerPasswordConfirm')}
+          />
+          {errors.ownerPasswordConfirm && (
+            <p className="text-xs text-destructive">{tAuth('ownerPasswordConfirmError')}</p>
+          )}
+        </div>
         <Button className="w-full" type="submit" disabled={isSubmitting}>
           {tAuth('createAccountCta')}
         </Button>
@@ -127,17 +169,8 @@ export function SignUpForm() {
 
       {result && (
         <div className="rounded-md border border-border bg-surface p-4 text-sm text-text">
-          <div className="font-semibold">{tCommon('credentialsTitle')}</div>
-          <div className="mt-3 space-y-2">
-            <div>
-              <div className="text-xs text-muted">{tCommon('apiKey')}</div>
-              <Input readOnly value={result.apiKey} />
-            </div>
-            <div>
-              <div className="text-xs text-muted">{tCommon('ownerPassword')}</div>
-              <Input readOnly value={result.ownerPassword} />
-            </div>
-          </div>
+          <div className="font-semibold">{tCommon('accountCreatedTitle')}</div>
+          <p className="mt-2 text-sm text-muted">{tCommon('accountCreatedSubtitle')}</p>
         </div>
       )}
     </div>

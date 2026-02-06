@@ -61,19 +61,18 @@ describe('TenantsService', () => {
         slug: 'acme',
         ownerName: 'Owner',
         ownerEmail: 'owner@acme.com',
+        ownerPassword: 'strong-password',
       });
 
       const rawApiKey = `sk_${Buffer.from('a'.repeat(32)).toString('hex')}`;
       expect(created.apiKeyHash).toBe(sha256(Buffer.from(rawApiKey, 'utf-8')));
-      expect(result.apiKey).toBe(rawApiKey);
       expect(result.id).toBe('tenant-2');
       expect(usersService.createOwner).toHaveBeenCalledWith(
         'tenant-2',
         'owner@acme.com',
         'Owner',
-        expect.stringMatching(/^pw_[a-f0-9]{24}$/)
+        'strong-password'
       );
-      expect(result.ownerPassword).toMatch(/^pw_[a-f0-9]{24}$/);
     });
   });
 

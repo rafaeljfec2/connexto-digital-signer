@@ -7,6 +7,7 @@ import {
   Patch,
   Param,
   ParseUUIDPipe,
+  Query,
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
@@ -16,6 +17,7 @@ import { TenantId } from '@connexto/shared';
 import { DocumentsService } from '../services/documents.service';
 import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
+import { ListDocumentsQueryDto } from '../dto/list-documents-query.dto';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 @ApiTags('Documents')
@@ -34,7 +36,28 @@ export class DocumentsController {
     if (file === undefined || !Buffer.isBuffer(file.buffer)) {
       throw new BadRequestException('File is required');
     }
+    if (file.mimetype !== 'application/pdf') {
+      throw new BadRequestException('Only PDF files are allowed');
+    }
+    const maxSizeMb = Number.parseInt(process.env['MAX_UPLOAD_SIZE_MB'] ?? '10', 10);
+    const maxBytes = maxSizeMb * 1024 * 1024;
+    if (file.size > maxBytes) {
+      throw new BadRequestException(`File size exceeds ${maxSizeMb}MB`);
+    }
     return this.documentsService.create(tenantId, createDocumentDto, file.buffer);
+  }
+
+  @Get('stats')
+  getStats(@TenantId() tenantId: string) {
+    return this.documentsService.getStats(tenantId);
+  }
+
+  @Get()
+  findAll(
+    @TenantId() tenantId: string,
+    @Query() query: ListDocumentsQueryDto
+  ) {
+    return this.documentsService.findAll(tenantId, query);
   }
 
   @Get(':id')

@@ -1,5 +1,9 @@
 ## Roadmap de Implementacoes Futuras
 
+### Status Atual
+
+- Fase 1 concluida (Auth, Users, Audit, i18n, Signup/Login, Dashboard shell)
+
 ### Visao Geral do Produto
 
 Objetivo final: levar o usuario do upload do PDF ate a assinatura concluida com minimo atrito cognitivo e rastreabilidade completa.
@@ -29,13 +33,15 @@ Requisitos:
 
 Backend:
 
-- Endpoint de contadores por tenant
-- Listagem paginada de documentos recentes
+- Endpoint de contadores por tenant (`GET /documents/stats`)
+- Listagem paginada de documentos (`GET /documents?page=&limit=&status=`)
+- Filtro por status
 
 Frontend:
 
 - Cards KPI + skeleton loaders
 - Empty state claro
+- Tabela de documentos recentes
 
 ### Upload de Documento
 
@@ -49,9 +55,16 @@ Requisitos:
 
 Backend:
 
-- Validacao de tipo de arquivo
-- Limites de tamanho
+- Validacao de tipo de arquivo (PDF)
+- Limites de tamanho (env)
 - Hash do arquivo e storage
+- Resposta com documento criado
+
+Frontend:
+
+- Rota dedicada `/documents/new`
+- Dropzone com validacao de tipo e tamanho
+- Campo de titulo + submit
 
 ---
 

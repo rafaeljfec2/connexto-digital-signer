@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Document, DocumentStatus } from '../entities/document.entity';
 import { CreateDocumentDto } from '../dto/create-document.dto';
+import { ListDocumentsQueryDto } from '../dto/list-documents-query.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
 import { sha256 } from '@connexto/shared';
 import {
@@ -54,6 +55,67 @@ export class DocumentsService {
     };
     this.eventEmitter.emit(EVENT_DOCUMENT_CREATED, createdPayload);
     return saved;
+  }
+
+  async getStats(tenantId: string): Promise<{
+    pending: number;
+    completed: number;
+    expired: number;
+    draft: number;
+    total: number;
+  }> {
+    const [pending, completed, expired, draft, total] = await Promise.all([
+      this.documentRepository.count({
+        where: { tenantId, status: DocumentStatus.PENDING_SIGNATURES },
+      }),
+      this.documentRepository.count({
+        where: { tenantId, status: DocumentStatus.COMPLETED },
+      }),
+      this.documentRepository.count({
+        where: { tenantId, status: DocumentStatus.EXPIRED },
+      }),
+      this.documentRepository.count({
+        where: { tenantId, status: DocumentStatus.DRAFT },
+      }),
+      this.documentRepository.count({ where: { tenantId } }),
+    ]);
+    return {
+      pending,
+      completed,
+      expired,
+      draft,
+      total,
+    };
+  }
+
+  async findAll(
+    tenantId: string,
+    query: ListDocumentsQueryDto
+  ): Promise<{
+    data: Document[];
+    meta: { page: number; limit: number; total: number; totalPages: number };
+  }> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
+    const where = query.status
+      ? { tenantId, status: query.status }
+      : { tenantId };
+    const [data, total] = await this.documentRepository.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip,
+    });
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: string, tenantId: string): Promise<Document> {

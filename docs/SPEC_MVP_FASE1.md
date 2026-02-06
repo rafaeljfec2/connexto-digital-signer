@@ -1,5 +1,7 @@
 ## Especificacao Tecnica - MVP Fase 1
 
+Status: CONCLUIDA
+
 ### Objetivo
 
 Entregar a base do MVP com autenticacao por email e senha, auditoria de eventos de login, refatoracao de guards por tipo de consumo, e fundacao do frontend com login e shell do dashboard. O objetivo principal e reduzir atrito no acesso inicial e preparar a evolucao das fases seguintes.
@@ -10,7 +12,8 @@ Entregar a base do MVP com autenticacao por email e senha, auditoria de eventos 
 - Login por email e senha com JWT.
 - Auditoria de eventos de autenticacao.
 - Refatoracao de guards para separar acessos por JWT e por API Key.
-- Frontend Next.js com login e dashboard shell.
+- Frontend Next.js com login, signup e dashboard shell.
+- i18n (en/pt-br), slug auto e politica de senha no cadastro.
 
 ### Escopo Fora
 
@@ -88,8 +91,7 @@ Separar os acessos por tipo de consumo:
 
 Arquivos novos:
 
-- `apps/api/src/common/guards/jwt-auth.guard.ts`
-- `apps/api/src/common/guards/api-key-auth.guard.ts`
+- `apps/api/src/common/guards/composite-auth.guard.ts`
 
 Opcional (recomendado para MVP):
 
@@ -97,8 +99,6 @@ Opcional (recomendado para MVP):
 
 Comportamento esperado:
 
-- `JwtAuthGuard`: valida Bearer token e extrai `tenantId` + `userId`
-- `ApiKeyAuthGuard`: valida `X-API-Key` e extrai `tenantId`
 - `CompositeAuthGuard`: tenta JWT primeiro, depois API Key, e registra `authMethod`
 
 Decorator de restricao:
@@ -182,12 +182,16 @@ Auditoria de autenticacao fornece rastreabilidade juridica e suporte a auditoria
 ```
 apps/web/src/
   app/
-    (auth)/
-      login/
+    [locale]/
+      (auth)/
+        login/
+          page.tsx
+        signup/
+          page.tsx
+        layout.tsx
+      (dashboard)/
         page.tsx
-      layout.tsx
-    (dashboard)/
-      page.tsx
+        layout.tsx
       layout.tsx
     layout.tsx
   features/
@@ -244,5 +248,5 @@ Requisitos:
 ## Migration e Seed
 
 - Migration para tabela `users`
-- Ao criar tenant, criar user OWNER com senha inicial
-- Retornar senha inicial apenas uma vez no response
+- Ao criar tenant, criar user OWNER com senha definida no cadastro
+- Migrations executadas automaticamente no startup

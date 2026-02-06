@@ -8,9 +8,8 @@
     "signIn": "Entrar",
     "createAccountLink": "Criar conta",
     "tenantLabel": "Tenant",
-    "credentialsTitle": "Credenciais",
-    "apiKey": "API key",
-    "ownerPassword": "Senha do owner"
+    "accountCreatedTitle": "Conta criada",
+    "accountCreatedSubtitle": "Voce ja esta logado."
   },
   "auth": {
     "emailLabel": "Email",
@@ -29,15 +28,82 @@
     "ownerNamePlaceholder": "Nome do owner",
     "ownerEmailLabel": "Email do owner",
     "ownerEmailPlaceholder": "owner@acme.com",
+    "ownerPasswordLabel": "Senha",
+    "ownerPasswordPlaceholder": "Sua senha",
+    "ownerPasswordHelper": "Minimo 8 caracteres, com maiuscula, minuscula e numero.",
+    "ownerPasswordConfirmLabel": "Confirmar senha",
+    "ownerPasswordConfirmPlaceholder": "Repita sua senha",
     "companyNameRequired": "Nome da empresa obrigatorio",
     "slugRequired": "Slug obrigatorio",
     "ownerNameRequired": "Nome do owner obrigatorio",
     "ownerEmailRequired": "Email valido obrigatorio",
+    "ownerPasswordRequired": "Senha obrigatoria",
+    "ownerPasswordConfirmError": "As senhas precisam ser iguais",
     "createAccountCta": "Criar conta"
   },
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Bem-vindo",
-    "underConstruction": "Dashboard em construcao"
+    "underConstruction": "Dashboard em construcao",
+    "kpi": {
+      "pending": "Pendentes",
+      "completed": "Concluidos",
+      "expired": "Expirados",
+      "draft": "Rascunhos"
+    },
+    "recentTitle": "Documentos recentes",
+    "newDocument": "Novo documento",
+    "empty": {
+      "title": "Nenhum documento ainda",
+      "description": "Crie seu primeiro documento para iniciar o fluxo de assinatura."
+    }
+  },
+  "documents": {
+    "title": "Documentos",
+    "subtitle": "Gerencie documentos e assinaturas",
+    "table": {
+      "title": "Titulo",
+      "status": "Status",
+      "created": "Criado em"
+    },
+    "status": {
+      "draft": "Rascunho",
+      "pending": "Pendente",
+      "completed": "Concluido",
+      "expired": "Expirado"
+    },
+    "filters": {
+      "status": "Status",
+      "all": "Todos"
+    },
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Proximo",
+      "page": "Pagina"
+    },
+    "empty": {
+      "title": "Nenhum documento encontrado",
+      "description": "Ajuste os filtros ou crie um novo documento."
+    },
+    "searchPlaceholder": "Busca em breve",
+    "upload": {
+      "title": "Novo documento",
+      "subtitle": "Envie seu PDF e defina um titulo",
+      "titleLabel": "Titulo do documento",
+      "titlePlaceholder": "Contrato de vendas - Fevereiro",
+      "dropzoneLabel": "Arraste e solte seu PDF aqui",
+      "dropzoneHelper": "Apenas PDF, ate 10MB",
+      "removeFile": "Remover",
+      "submit": "Continuar",
+      "submitting": "Enviando",
+      "success": "Documento enviado",
+      "errors": {
+        "titleRequired": "Titulo obrigatorio",
+        "fileRequired": "Arquivo obrigatorio",
+        "onlyPdf": "Apenas arquivos PDF sao permitidos",
+        "tooLarge": "Arquivo excede {max}MB",
+        "failed": "Falha no envio"
+      }
+    }
   }
 }
