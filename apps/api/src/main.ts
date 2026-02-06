@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
+import { apiReference } from '@scalar/nestjs-api-reference';
 import { Logger } from 'nestjs-pino';
 import { AppModule } from './app.module';
 
@@ -24,6 +25,12 @@ async function bootstrap(): Promise<void> {
       .build();
     const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
     SwaggerModule.setup(`${apiPrefix}/swagger`, app, swaggerDocument);
+    app.use(
+      `/${apiPrefix}/docs`,
+      apiReference({
+        content: swaggerDocument,
+      })
+    );
   }
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port);
