@@ -19,15 +19,16 @@ export class TenantsService {
   async create(
     createTenantDto: CreateTenantDto
   ): Promise<Tenant & { apiKey?: string; ownerPassword?: string }> {
-    const tenant = this.tenantRepository.create(createTenantDto);
+    const { ownerEmail, ownerName, ...tenantData } = createTenantDto;
+    const tenant = this.tenantRepository.create(tenantData);
     const rawApiKey = `sk_${randomBytes(32).toString('hex')}`;
     tenant.apiKeyHash = sha256(Buffer.from(rawApiKey, 'utf-8'));
     const saved = await this.tenantRepository.save(tenant);
     const ownerPassword = `pw_${randomBytes(12).toString('hex')}`;
     await this.usersService.createOwner(
       saved.id,
-      createTenantDto.ownerEmail,
-      createTenantDto.ownerName,
+      ownerEmail,
+      ownerName,
       ownerPassword
     );
     return { ...saved, apiKey: rawApiKey, ownerPassword };

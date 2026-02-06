@@ -1,0 +1,42 @@
+{
+  "common": {
+    "appName": "Connexto",
+    "accessAccount": "Access your account",
+    "createAccount": "Create your account",
+    "alreadyHaveAccount": "Already have an account?",
+    "newHere": "New here?",
+    "signIn": "Sign in",
+    "createAccountLink": "Create an account",
+    "tenantLabel": "Tenant",
+    "credentialsTitle": "Credentials",
+    "apiKey": "API key",
+    "ownerPassword": "Owner password"
+  },
+  "auth": {
+    "emailLabel": "Email",
+    "passwordLabel": "Password",
+    "emailPlaceholder": "you@company.com",
+    "passwordPlaceholder": "Your password",
+    "emailInvalid": "Invalid email",
+    "passwordRequired": "Password is required",
+    "signInCta": "Sign in",
+    "companyNameLabel": "Company name",
+    "companyNamePlaceholder": "Acme Corp",
+    "companySlugLabel": "Company slug",
+    "companySlugPlaceholder": "acme",
+    "ownerNameLabel": "Owner name",
+    "ownerNamePlaceholder": "Owner Name",
+    "ownerEmailLabel": "Owner email",
+    "ownerEmailPlaceholder": "owner@acme.com",
+    "companyNameRequired": "Company name is required",
+    "slugRequired": "Slug is required",
+    "ownerNameRequired": "Owner name is required",
+    "ownerEmailRequired": "Valid email is required",
+    "createAccountCta": "Create account"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome",
+    "underConstruction": "Dashboard under construction"
+  }
+}

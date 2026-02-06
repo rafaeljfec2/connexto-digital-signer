@@ -83,8 +83,8 @@ export class AuthService {
       });
       throw new UnauthorizedException('Invalid credentials');
     }
-    const tenant = await this.tenantsService.findOne(user.tenantId);
-    if (!tenant.isActive) {
+    const tenant = await this.tenantsService.findOne(user.tenantId).catch(() => null);
+    if (tenant === null || !tenant.isActive) {
       await this.eventEmitter.emitAsync(EVENT_USER_LOGIN_FAILED, {
         email,
         ipAddress: metadata.ipAddress,
@@ -137,7 +137,7 @@ export class AuthService {
   }
 
   async validatePayload(payload: JwtPayload): Promise<JwtPayload | null> {
-    const tenant = await this.tenantsService.findOne(payload.tenantId);
+    const tenant = await this.tenantsService.findOne(payload.tenantId).catch(() => null);
     if (tenant === null || !tenant.isActive) return null;
     const authMethod = payload.authMethod ?? 'api_key';
     if (authMethod === 'jwt') {

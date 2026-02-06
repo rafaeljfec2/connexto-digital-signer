@@ -88,7 +88,7 @@ describe('CompositeAuthGuard', () => {
     const context = createContext(request);
 
     await expect(guard.canActivate(context)).resolves.toBe(true);
-    const user = request[CURRENT_USER_KEY as keyof typeof request] as JwtPayload;
+    const user = request[CURRENT_USER_KEY as keyof typeof request] as unknown as JwtPayload;
     expect(user.tenantId).toBe('tenant-9');
     expect(request[TENANT_ID_KEY as keyof typeof request]).toBe('tenant-9');
   });

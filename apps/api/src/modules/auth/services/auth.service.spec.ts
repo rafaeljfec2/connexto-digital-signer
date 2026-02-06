@@ -102,7 +102,8 @@ describe('AuthService', () => {
       const user = buildUser();
       usersService.findByEmail.mockResolvedValue(user);
       tenantsService.findOne.mockResolvedValue(buildTenant({ isActive: true }));
-      jest.mocked(bcrypt.compare).mockResolvedValue(true);
+      const compareMock = bcrypt.compare as jest.Mock;
+      compareMock.mockResolvedValue(true);
       jwtService.sign.mockReturnValue('token-1');
       jwtService.decode.mockReturnValue({ exp: 200, iat: 100 });
 
@@ -138,7 +139,8 @@ describe('AuthService', () => {
       const user = buildUser();
       usersService.findByEmail.mockResolvedValue(user);
       tenantsService.findOne.mockResolvedValue(buildTenant({ isActive: true }));
-      jest.mocked(bcrypt.compare).mockResolvedValue(false);
+      const compareMock = bcrypt.compare as jest.Mock;
+      compareMock.mockResolvedValue(false);
 
       await expect(
         service.loginWithEmail(user.email, 'wrong', {

@@ -1,0 +1,26 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #1f3c88;
+  --color-primary-foreground: #ffffff;
+  --color-accent: #14b8a6;
+  --color-accent-foreground: #ffffff;
+  --color-background: #f0f4f8;
+  --color-surface: #ffffff;
+  --color-text: #1e293b;
+  --color-text-muted: #64748b;
+  --color-border: #e2e8f0;
+  --color-destructive: #ef4444;
+  --gradient-auth: linear-gradient(135deg, #1f3c88 0%, #14b8a6 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  color: var(--color-text);
+  background: var(--color-background);
+}

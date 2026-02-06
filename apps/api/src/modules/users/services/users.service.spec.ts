@@ -38,7 +38,8 @@ describe('UsersService', () => {
   });
 
   test('should create user with hashed password', async () => {
-    jest.mocked(bcrypt.hash).mockResolvedValue('hash-1');
+    const hashMock = bcrypt.hash as jest.Mock;
+    hashMock.mockResolvedValue('hash-1');
     const created = buildUser({ passwordHash: 'hash-1' });
     userRepository.create.mockReturnValue(created);
     userRepository.save.mockResolvedValue(created);

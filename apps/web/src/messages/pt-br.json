@@ -1,0 +1,42 @@
+{
+  "common": {
+    "appName": "Connexto",
+    "accessAccount": "Acesse sua conta",
+    "createAccount": "Crie sua conta",
+    "alreadyHaveAccount": "Ja tem uma conta?",
+    "newHere": "Novo por aqui?",
+    "signIn": "Entrar",
+    "createAccountLink": "Criar conta",
+    "tenantLabel": "Tenant",
+    "credentialsTitle": "Credenciais",
+    "apiKey": "API key",
+    "ownerPassword": "Senha do owner"
+  },
+  "auth": {
+    "emailLabel": "Email",
+    "passwordLabel": "Senha",
+    "emailPlaceholder": "voce@empresa.com",
+    "passwordPlaceholder": "Sua senha",
+    "emailInvalid": "Email invalido",
+    "passwordRequired": "Senha obrigatoria",
+    "signInCta": "Entrar",
+    "companyNameLabel": "Nome da empresa",
+    "companyNamePlaceholder": "Acme Corp",
+    "companySlugLabel": "Slug da empresa",
+    "companySlugPlaceholder": "acme",
+    "ownerNameLabel": "Nome do owner",
+    "ownerNamePlaceholder": "Nome do owner",
+    "ownerEmailLabel": "Email do owner",
+    "ownerEmailPlaceholder": "owner@acme.com",
+    "companyNameRequired": "Nome da empresa obrigatorio",
+    "slugRequired": "Slug obrigatorio",
+    "ownerNameRequired": "Nome do owner obrigatorio",
+    "ownerEmailRequired": "Email valido obrigatorio",
+    "createAccountCta": "Criar conta"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Bem-vindo",
+    "underConstruction": "Dashboard em construcao"
+  }
+}

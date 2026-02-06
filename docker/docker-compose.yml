@@ -22,6 +22,17 @@ services:
       minio:
         condition: service_started
 
+  web:
+    image: node:24-alpine
+    working_dir: /app
+    volumes:
+      - ..:/app
+    ports:
+      - '3001:3001'
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000/digital-signer/v1
+    command: sh -c "corepack enable && pnpm install && pnpm --filter web dev -- --hostname 0.0.0.0 --port 3001"
+
   postgres:
     image: postgres:16-alpine
     environment:

@@ -8,7 +8,9 @@
     "lint": "turbo run lint",
     "test": "turbo run test",
     "dev:api": "pnpm --filter api dev",
-    "build:api": "pnpm --filter api build"
+    "build:api": "pnpm --filter api build",
+    "dev:web": "pnpm --filter web dev",
+    "build:web": "pnpm --filter web build"
   },
   "devDependencies": {
     "@eslint/js": "^9.0.0",
