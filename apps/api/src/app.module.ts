@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
+import { LoggerModule } from 'nestjs-pino';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
@@ -15,6 +16,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { TenantAuthGuard } from './shared/guards/tenant-auth.guard';
+import { getLoggerConfig } from './common/config/logger.config';
 
 @Module({
   imports: [
@@ -27,6 +29,7 @@ import { TenantAuthGuard } from './shared/guards/tenant-auth.guard';
         '.env',
       ],
     }),
+    LoggerModule.forRoot(getLoggerConfig()),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env['DB_HOST'] ?? 'localhost',
