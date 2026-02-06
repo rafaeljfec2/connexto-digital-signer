@@ -1,0 +1,22 @@
+import { Controller, Get, Post, Body } from '@nestjs/common';
+import { TenantId } from '@connexto/shared';
+import { WebhooksService } from '../services/webhooks.service';
+import { CreateWebhookConfigDto } from '../dto/create-webhook-config.dto';
+
+@Controller('webhooks')
+export class WebhooksController {
+  constructor(private readonly webhooksService: WebhooksService) {}
+
+  @Post('configs')
+  create(
+    @TenantId() tenantId: string,
+    @Body() dto: CreateWebhookConfigDto
+  ) {
+    return this.webhooksService.create(tenantId, dto);
+  }
+
+  @Get('configs')
+  list(@TenantId() tenantId: string) {
+    return this.webhooksService.findByTenant(tenantId);
+  }
+}
