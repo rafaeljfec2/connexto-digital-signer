@@ -9,6 +9,11 @@ services:
       - '3000:3000'
     env_file:
       - ../apps/api/.env
+    environment:
+      DB_HOST: postgres
+      REDIS_HOST: redis
+      S3_ENDPOINT: http://minio:9000
+      APP_BASE_URL: http://localhost:3000
     depends_on:
       postgres:
         condition: service_healthy
