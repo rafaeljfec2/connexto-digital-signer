@@ -4,6 +4,8 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  HeadBucketCommand,
+  CreateBucketCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { IStorageService, PutObjectResult } from '@connexto/shared';
@@ -12,6 +14,7 @@ import { IStorageService, PutObjectResult } from '@connexto/shared';
 export class S3StorageService implements IStorageService {
   private readonly client: S3Client;
   private readonly bucket: string;
+  private bucketReady: Promise<void> | null = null;
 
   constructor() {
     const region = process.env['S3_REGION'] ?? 'us-east-1';
@@ -31,6 +34,7 @@ export class S3StorageService implements IStorageService {
   }
 
   async put(key: string, body: Buffer, contentType?: string): Promise<PutObjectResult> {
+    await this.ensureBucket();
     const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
@@ -61,5 +65,24 @@ export class S3StorageService implements IStorageService {
   async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
+  }
+
+  private ensureBucket(): Promise<void> {
+    if (this.bucketReady) return this.bucketReady;
+    this.bucketReady = (async () => {
+      try {
+        await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
+      } catch (error) {
+        const name = error instanceof Error ? error.name : '';
+        const statusCode = (error as { $metadata?: { httpStatusCode?: number } })?.$metadata
+          ?.httpStatusCode;
+        if (statusCode === 404 || name === 'NotFound' || name === 'NoSuchBucket') {
+          await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
+          return;
+        }
+        throw error;
+      }
+    })();
+    return this.bucketReady;
   }
 }

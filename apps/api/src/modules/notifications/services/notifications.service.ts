@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { renderTemplate } from './template.service';
 
 export interface SendEmailJobPayload {
   to: string;
@@ -27,16 +28,35 @@ export class NotificationsService {
     signerName: string;
     documentTitle: string;
     signUrl: string;
+    message?: string;
   }): Promise<string> {
+    const subject = `You are invited to sign: ${params.documentTitle}`;
     return this.sendEmail({
       to: params.signerEmail,
-      subject: `You are invited to sign: ${params.documentTitle}`,
+      subject,
       template: 'signature-invite',
       context: {
         signerName: params.signerName,
         documentTitle: params.documentTitle,
         signUrl: params.signUrl,
+        message: params.message,
       },
     });
+  }
+
+  buildSignatureInvite(params: {
+    signerName: string;
+    documentTitle: string;
+    signUrl: string;
+    message?: string;
+  }): { subject: string; body: string } {
+    const subject = `You are invited to sign: ${params.documentTitle}`;
+    const body = renderTemplate('signature-invite', {
+      signerName: params.signerName,
+      documentTitle: params.documentTitle,
+      signUrl: params.signUrl,
+      message: params.message,
+    });
+    return { subject, body };
   }
 }

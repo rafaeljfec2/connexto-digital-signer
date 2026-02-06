@@ -14,6 +14,11 @@ export enum DocumentStatus {
   EXPIRED = 'expired',
 }
 
+export enum SigningMode {
+  PARALLEL = 'parallel',
+  SEQUENTIAL = 'sequential',
+}
+
 @Entity('documents')
 @Index(['tenantId'])
 @Index(['tenantId', 'status'])
@@ -46,6 +51,14 @@ export class Document {
     default: DocumentStatus.DRAFT,
   })
   status!: DocumentStatus;
+
+  @Column({
+    name: 'signing_mode',
+    type: 'enum',
+    enum: SigningMode,
+    default: SigningMode.PARALLEL,
+  })
+  signingMode!: SigningMode;
 
   @Column({ name: 'expires_at', type: 'timestamptz', nullable: true })
   expiresAt!: Date | null;

@@ -6,3 +6,6 @@ export * from './badge';
 export * from './table';
 export * from './pagination';
 export * from './dropzone';
+export * from './stepper';
+export * from './dialog';
+export * from './select';

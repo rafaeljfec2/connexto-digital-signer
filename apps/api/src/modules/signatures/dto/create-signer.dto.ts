@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsEmail, MaxLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsString, IsEmail, MaxLength, IsInt, IsOptional, Min } from 'class-validator';
 
 export class CreateSignerDto {
   @IsString()
@@ -11,4 +11,10 @@ export class CreateSignerDto {
   @MaxLength(255)
   @ApiProperty({ example: 'jane.doe@acme.com' })
   readonly email!: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @ApiPropertyOptional({ example: 1 })
+  readonly order?: number;
 }

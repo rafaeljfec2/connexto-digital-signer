@@ -2,7 +2,7 @@ import { NotFoundException } from '@nestjs/common';
 import type { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { DocumentsService } from './documents.service';
-import { Document, DocumentStatus } from '../entities/document.entity';
+import { Document, DocumentStatus, SigningMode } from '../entities/document.entity';
 import { EVENT_DOCUMENT_COMPLETED, EVENT_DOCUMENT_CREATED, EVENT_DOCUMENT_EXPIRED } from '@connexto/events';
 import type { DocumentCompletedEvent, DocumentCreatedEvent, DocumentExpiredEvent } from '@connexto/events';
 import { sha256 } from '@connexto/shared';
@@ -17,6 +17,7 @@ const buildDocument = (overrides?: Partial<Document>): Document => ({
   originalHash: 'hash-original',
   finalHash: null,
   status: DocumentStatus.DRAFT,
+  signingMode: SigningMode.PARALLEL,
   expiresAt: null,
   version: 1,
   createdAt: new Date('2026-01-01T00:00:00.000Z'),

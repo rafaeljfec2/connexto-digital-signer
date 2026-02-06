@@ -105,5 +105,64 @@
         "failed": "Upload failed"
       }
     }
+  },
+  "wizard": {
+    "title": "Prepare document",
+    "steps": {
+      "signers": "Signers",
+      "fields": "Fields",
+      "review": "Review"
+    },
+    "next": "Next",
+    "back": "Back",
+    "hint": "Complete all steps before sending",
+    "restart": "Restart",
+    "notFound": "Document not found"
+  },
+  "signers": {
+    "title": "Define signers",
+    "subtitle": "Add people who will sign this document",
+    "mode": "Signing mode",
+    "modeParallel": "Parallel",
+    "modeSequential": "Sequential",
+    "namePlaceholder": "Signer name",
+    "emailPlaceholder": "signer@email.com",
+    "orderPlaceholder": "Order (1, 2, 3)",
+    "orderLabel": "Order",
+    "add": "Add signer",
+    "listTitle": "Signers list",
+    "empty": "No signers yet"
+  },
+  "fields": {
+    "title": "Signature fields",
+    "subtitle": "Drag a field to the PDF and assign it to a signer",
+    "activeSigner": "Active signer",
+    "paletteTitle": "Fields",
+    "type": {
+      "signature": "Signature",
+      "name": "Name",
+      "date": "Date",
+      "initials": "Initials",
+      "text": "Text"
+    }
+  },
+  "review": {
+    "title": "Review and send",
+    "subtitle": "Check everything before sending",
+    "checklist": {
+      "signers": "Signers added",
+      "fields": "Required fields added"
+    },
+    "preview": "Preview email",
+    "send": "Send for signature",
+    "sending": "Sending",
+    "previewTitle": "Email preview",
+    "previewSubject": "Subject",
+    "previewBody": "Body",
+    "close": "Close",
+    "status": {
+      "ok": "OK",
+      "pending": "Pending"
+    }
   }
 }

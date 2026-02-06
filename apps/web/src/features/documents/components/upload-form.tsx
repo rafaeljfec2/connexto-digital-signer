@@ -44,9 +44,9 @@ export function UploadForm() {
     if (!validate()) return;
     if (!file) return;
     try {
-      await uploadMutation.mutateAsync({ title: title.trim(), file });
+      const created = await uploadMutation.mutateAsync({ title: title.trim(), file });
       toast.success(tDocuments('upload.success'));
-      router.push('/documents');
+      router.push(`/documents/${created.id}`);
     } catch {
       toast.error(tDocuments('upload.errors.failed'));
     }

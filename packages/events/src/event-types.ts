@@ -24,6 +24,13 @@ export interface DocumentCreatedEvent {
   createdAt: Date;
 }
 
+export interface DocumentSentEvent {
+  documentId: string;
+  tenantId: string;
+  signingMode: 'parallel' | 'sequential';
+  sentAt: Date;
+}
+
 export interface SignerAddedEvent {
   documentId: string;
   documentTitle: string;
@@ -63,6 +70,7 @@ export type DomainEvent =
   | { type: 'document.completed'; payload: DocumentCompletedEvent }
   | { type: 'document.expired'; payload: DocumentExpiredEvent }
   | { type: 'document.created'; payload: DocumentCreatedEvent }
+  | { type: 'document.sent'; payload: DocumentSentEvent }
   | { type: 'signer.added'; payload: SignerAddedEvent }
   | { type: 'user.login.success'; payload: UserLoginSuccessEvent }
   | { type: 'user.login.failed'; payload: UserLoginFailedEvent }

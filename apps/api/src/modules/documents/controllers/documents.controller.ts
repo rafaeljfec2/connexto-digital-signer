@@ -10,6 +10,8 @@ import {
   Query,
   UseInterceptors,
   UploadedFile,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -66,6 +68,17 @@ export class DocumentsController {
     @TenantId() tenantId: string
   ) {
     return this.documentsService.findOne(id, tenantId);
+  }
+
+  @Get(':id/file')
+  @Header('Content-Type', 'application/pdf')
+  async getFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string
+  ) {
+    const document = await this.documentsService.findOne(id, tenantId);
+    const buffer = await this.documentsService.getOriginalFile(document);
+    return new StreamableFile(buffer);
   }
 
   @Patch(':id')

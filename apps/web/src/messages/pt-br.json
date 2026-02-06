@@ -105,5 +105,64 @@
         "failed": "Falha no envio"
       }
     }
+  },
+  "wizard": {
+    "title": "Preparar documento",
+    "steps": {
+      "signers": "Signatarios",
+      "fields": "Campos",
+      "review": "Revisao"
+    },
+    "next": "Proximo",
+    "back": "Voltar",
+    "hint": "Complete todas as etapas antes de enviar",
+    "restart": "Reiniciar",
+    "notFound": "Documento nao encontrado"
+  },
+  "signers": {
+    "title": "Definir signatarios",
+    "subtitle": "Adicione pessoas que vao assinar este documento",
+    "mode": "Modo de assinatura",
+    "modeParallel": "Paralelo",
+    "modeSequential": "Sequencial",
+    "namePlaceholder": "Nome do signatario",
+    "emailPlaceholder": "signatario@email.com",
+    "orderPlaceholder": "Ordem (1, 2, 3)",
+    "orderLabel": "Ordem",
+    "add": "Adicionar signatario",
+    "listTitle": "Lista de signatarios",
+    "empty": "Nenhum signatario ainda"
+  },
+  "fields": {
+    "title": "Campos de assinatura",
+    "subtitle": "Arraste um campo para o PDF e atribua a um signatario",
+    "activeSigner": "Signatario ativo",
+    "paletteTitle": "Campos",
+    "type": {
+      "signature": "Assinatura",
+      "name": "Nome",
+      "date": "Data",
+      "initials": "Iniciais",
+      "text": "Texto"
+    }
+  },
+  "review": {
+    "title": "Revisao e envio",
+    "subtitle": "Verifique tudo antes de enviar",
+    "checklist": {
+      "signers": "Signatarios adicionados",
+      "fields": "Campos obrigatorios adicionados"
+    },
+    "preview": "Preview do email",
+    "send": "Enviar para assinatura",
+    "sending": "Enviando",
+    "previewTitle": "Preview do email",
+    "previewSubject": "Assunto",
+    "previewBody": "Corpo",
+    "close": "Fechar",
+    "status": {
+      "ok": "OK",
+      "pending": "Pendente"
+    }
   }
 }

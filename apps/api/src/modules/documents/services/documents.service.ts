@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -21,6 +21,8 @@ import { S3StorageService } from '../../../shared/storage/s3-storage.service';
 
 @Injectable()
 export class DocumentsService {
+  private readonly logger = new Logger(DocumentsService.name);
+
   constructor(
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
@@ -35,7 +37,14 @@ export class DocumentsService {
   ): Promise<Document> {
     const hash = sha256(file);
     const key = `tenants/${tenantId}/documents/${Date.now()}-${hash.slice(0, 16)}.pdf`;
-    await this.storage.put(key, file);
+    try {
+      await this.storage.put(key, file);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to upload file: ${message}`, stack);
+      throw error;
+    }
     const document = this.documentRepository.create({
       ...createDocumentDto,
       tenantId,
@@ -46,7 +55,15 @@ export class DocumentsService {
         ? new Date(createDocumentDto.expiresAt)
         : null,
     });
-    const saved = await this.documentRepository.save(document);
+    let saved: Document;
+    try {
+      saved = await this.documentRepository.save(document);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to persist document: ${message}`, stack);
+      throw error;
+    }
     const createdPayload: DocumentCreatedEvent = {
       documentId: saved.id,
       tenantId: saved.tenantId,
@@ -140,6 +157,16 @@ export class DocumentsService {
         ? new Date(updateDocumentDto.expiresAt)
         : document.expiresAt,
     });
+    return this.documentRepository.save(document);
+  }
+
+  async setStatus(
+    id: string,
+    tenantId: string,
+    status: DocumentStatus
+  ): Promise<Document> {
+    const document = await this.findOne(id, tenantId);
+    document.status = status;
     return this.documentRepository.save(document);
   }
 

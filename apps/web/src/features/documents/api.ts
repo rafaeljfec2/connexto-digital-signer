@@ -13,6 +13,56 @@ export type DocumentSummary = {
   readonly createdAt: string;
 };
 
+export type DocumentDetail = DocumentSummary & {
+  readonly tenantId: string;
+  readonly signingMode: 'parallel' | 'sequential';
+  readonly expiresAt: string | null;
+  readonly updatedAt: string;
+};
+
+export type Signer = {
+  readonly id: string;
+  readonly name: string;
+  readonly email: string;
+  readonly status: 'pending' | 'signed';
+  readonly order: number | null;
+  readonly notifiedAt: string | null;
+  readonly createdAt: string;
+};
+
+export type CreateSignerInput = {
+  readonly name: string;
+  readonly email: string;
+  readonly order?: number;
+};
+
+export type SignatureFieldType = 'signature' | 'name' | 'date' | 'initials' | 'text';
+
+export type SignatureField = {
+  readonly id: string;
+  readonly signerId: string;
+  readonly type: SignatureFieldType;
+  readonly page: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly required: boolean;
+  readonly value: string | null;
+};
+
+export type SignatureFieldInput = {
+  readonly id?: string;
+  readonly signerId: string;
+  readonly type: SignatureFieldType;
+  readonly page: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly required?: boolean;
+};
+
 export type DocumentsStats = {
   readonly pending: number;
   readonly completed: number;
@@ -42,6 +92,14 @@ export type UploadDocumentInput = {
   readonly file: File;
 };
 
+export type SendDocumentInput = {
+  readonly message?: string;
+};
+
+export type UpdateDocumentInput = {
+  readonly signingMode?: 'parallel' | 'sequential';
+};
+
 export const getDocumentsStats = async (): Promise<DocumentsStats> => {
   const response = await apiClient.get<DocumentsStats>('/documents/stats');
   return response.data;
@@ -65,5 +123,80 @@ export const uploadDocument = async (
   const response = await apiClient.post<DocumentSummary>('/documents', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
+  return response.data;
+};
+
+export const getDocument = async (id: string): Promise<DocumentDetail> => {
+  const response = await apiClient.get<DocumentDetail>(`/documents/${id}`);
+  return response.data;
+};
+
+export const getDocumentFile = async (id: string): Promise<Blob> => {
+  const response = await apiClient.get(`/documents/${id}/file`, {
+    responseType: 'blob',
+  });
+  return response.data as Blob;
+};
+
+export const listSigners = async (documentId: string): Promise<Signer[]> => {
+  const response = await apiClient.get<Signer[]>(`/documents/${documentId}/signers`);
+  return response.data;
+};
+
+export const addSigner = async (
+  documentId: string,
+  input: CreateSignerInput
+): Promise<Signer> => {
+  const response = await apiClient.post<Signer>(`/documents/${documentId}/signers`, input);
+  return response.data;
+};
+
+export const removeSigner = async (documentId: string, signerId: string): Promise<void> => {
+  await apiClient.delete(`/documents/${documentId}/signers/${signerId}`);
+};
+
+export const listFields = async (documentId: string): Promise<SignatureField[]> => {
+  const response = await apiClient.get<SignatureField[]>(`/documents/${documentId}/fields`);
+  return response.data;
+};
+
+export const batchUpdateFields = async (
+  documentId: string,
+  fields: SignatureFieldInput[]
+): Promise<SignatureField[]> => {
+  const response = await apiClient.put<SignatureField[]>(
+    `/documents/${documentId}/fields/batch`,
+    { fields }
+  );
+  return response.data;
+};
+
+export const sendDocument = async (
+  documentId: string,
+  input: SendDocumentInput
+): Promise<{ notified: string[] }> => {
+  const response = await apiClient.post<{ notified: string[] }>(
+    `/documents/${documentId}/send`,
+    input
+  );
+  return response.data;
+};
+
+export const previewEmail = async (
+  documentId: string,
+  input: SendDocumentInput
+): Promise<{ subject: string; body: string }> => {
+  const response = await apiClient.get<{ subject: string; body: string }>(
+    `/documents/${documentId}/send/preview`,
+    { params: input }
+  );
+  return response.data;
+};
+
+export const updateDocument = async (
+  documentId: string,
+  input: UpdateDocumentInput
+): Promise<DocumentDetail> => {
+  const response = await apiClient.patch<DocumentDetail>(`/documents/${documentId}`, input);
   return response.data;
 };

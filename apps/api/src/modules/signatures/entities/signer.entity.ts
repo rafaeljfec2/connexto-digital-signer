@@ -40,6 +40,12 @@ export class Signer {
   @Column({ name: 'access_token', type: 'varchar', length: 64, unique: true })
   accessToken!: string;
 
+  @Column({ name: 'order', type: 'int', nullable: true })
+  order!: number | null;
+
+  @Column({ name: 'notified_at', type: 'timestamptz', nullable: true })
+  notifiedAt!: Date | null;
+
   @Column({ name: 'signed_at', type: 'timestamptz', nullable: true })
   signedAt!: Date | null;
 
