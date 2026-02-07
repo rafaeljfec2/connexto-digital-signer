@@ -28,9 +28,6 @@ export default function DocumentWizardPage() {
   }
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-2xl font-semibold text-white">{tWizard('title')}</h1>
-      <DocumentWizard documentId={documentId} hasFile={hasFile} />
-    </div>
+    <DocumentWizard documentId={documentId} hasFile={hasFile} />
   );
 }
