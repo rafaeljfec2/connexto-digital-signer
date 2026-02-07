@@ -4,7 +4,7 @@ import { Button } from '@/shared/ui';
 
 import { usePdfDocument } from '../hooks/use-pdf-document';
 import { usePdfEngine } from '../hooks/use-pdf-engine';
-import { SignatureFieldData, SignatureFieldType } from '../types';
+import { FieldPreview, SignatureFieldData, SignatureFieldType } from '../types';
 import { PdfPage } from './PdfPage';
 import { SignatureField } from './SignatureField';
 
@@ -19,6 +19,7 @@ type PdfViewerProps = Readonly<{
   selectedFieldId?: string;
   onSelectField?: (id: string) => void;
   onPageClick?: (pageNumber: number, x: number, y: number) => void;
+  fieldPreview?: FieldPreview;
 }>;
 
 const clampScale = (value: number) => Math.min(2.5, Math.max(0.5, value));
@@ -34,6 +35,7 @@ export const PdfViewer = ({
   selectedFieldId,
   onSelectField,
   onPageClick,
+  fieldPreview,
 }: PdfViewerProps) => {
   const { pdfjsLib, isReady, error } = usePdfEngine();
   const { pdfDocument, pageCount, isLoading, error: documentError } = usePdfDocument({
@@ -158,6 +160,7 @@ export const PdfViewer = ({
             fields={currentPageFields}
             onContainerReady={onPageContainerReady}
             onPageClick={onPageClick}
+            fieldPreview={fieldPreview}
             renderField={(field) => (
               <SignatureField
                 field={field}

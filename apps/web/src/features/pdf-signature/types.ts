@@ -15,6 +15,15 @@ export type SignatureFieldData = {
   readonly value: SignatureFieldValue;
 };
 
+export type FieldPreview = {
+  readonly type: SignatureFieldType;
+  readonly label: string;
+  readonly signerName: string;
+  readonly color: string;
+  readonly width: number;
+  readonly height: number;
+};
+
 export type PdfDocumentLoadingTask = {
   readonly promise: Promise<PdfDocument>;
   destroy: () => void;

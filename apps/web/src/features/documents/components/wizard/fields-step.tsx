@@ -18,6 +18,7 @@ import {
   SignatureFieldType,
   usePdfFields,
 } from '@/features/pdf-signature';
+import type { FieldPreview } from '@/features/pdf-signature';
 
 type PositionFieldType = 'signature' | 'initials';
 
@@ -90,6 +91,18 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
     [signerNamesMap]
   );
 
+  const fieldPreview = useMemo<FieldPreview | undefined>(() => {
+    if (!activeSignerId) return undefined;
+    return {
+      type: activeFieldType,
+      label: tFields(`type.${activeFieldType}`),
+      signerName: signerNamesMap[activeSignerId] ?? '',
+      color: signerColors[activeSignerId] ?? '#4F46E5',
+      width: 0.25,
+      height: 0.08,
+    };
+  }, [activeFieldType, activeSignerId, signerNamesMap, signerColors, tFields]);
+
   const handleSave = async () => {
     const payload: SignatureFieldInput[] = fields.map((field) => ({
       id: field.id.startsWith('temp-') ? undefined : field.id,
@@ -121,8 +134,8 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
         signerId: activeSignerId,
         type: activeFieldType,
         page: pageNumber,
-        x: clamp(x, 0, 1 - width),
-        y: clamp(y, 0, 1 - height),
+        x: clamp(x - width / 2, 0, 1 - width),
+        y: clamp(y - height / 2, 0, 1 - height),
         width,
         height,
         required: true,
@@ -218,6 +231,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
               onRemoveField={removeField}
               onPageContainerReady={handlePageReady}
               onPageClick={handleAddFieldToPage}
+              fieldPreview={fieldPreview}
             />
           ) : null}
         </DndContext>
