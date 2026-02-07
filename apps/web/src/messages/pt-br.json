@@ -113,6 +113,7 @@
       "titlePlaceholder": "Contrato de vendas - Fevereiro",
       "dropzoneLabel": "Arraste e solte seu PDF aqui",
       "dropzoneHelper": "Apenas PDF, ate 10MB",
+      "fileLoaded": "PDF carregado",
       "removeFile": "Remover",
       "submit": "Continuar",
       "submitting": "Enviando",
@@ -129,6 +130,7 @@
   "wizard": {
     "title": "Preparar documento",
     "steps": {
+      "upload": "Documento",
       "signers": "Signatarios",
       "fields": "Campos",
       "review": "Revisao"

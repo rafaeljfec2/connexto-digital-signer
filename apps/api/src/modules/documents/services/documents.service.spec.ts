@@ -89,6 +89,33 @@ describe('DocumentsService', () => {
     });
   });
 
+  describe('updateOriginalFile', () => {
+    test('should store file and update document metadata', async () => {
+      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1700000000000);
+      const document = buildDocument();
+      jest.spyOn(service, 'findOne').mockResolvedValue(document);
+      const buffer = Buffer.from('updated');
+      const hash = sha256(buffer);
+      const key = `tenants/tenant-1/documents/doc-1/original-1700000000000-${hash.slice(0, 16)}.pdf`;
+      (documentRepository.save as jest.Mock).mockResolvedValue({
+        ...document,
+        originalFileKey: key,
+        originalHash: hash,
+        finalFileKey: null,
+        finalHash: null,
+        status: DocumentStatus.DRAFT,
+      });
+
+      const result = await service.updateOriginalFile('doc-1', 'tenant-1', buffer);
+
+      expect(storage.put).toHaveBeenCalledWith(key, buffer);
+      expect(result.originalFileKey).toBe(key);
+      expect(result.originalHash).toBe(hash);
+      expect(result.status).toBe(DocumentStatus.DRAFT);
+      nowSpy.mockRestore();
+    });
+  });
+
   describe('findOne', () => {
     test('should throw NotFoundException when missing', async () => {
       (documentRepository.findOne as jest.Mock).mockResolvedValue(null);

@@ -9,10 +9,12 @@ import {
   previewEmail,
   removeSigner,
   sendDocument,
+  uploadDocumentFile,
   updateDocument,
   type CreateSignerInput,
   type SendDocumentInput,
   type SignatureFieldInput,
+  type UploadDocumentFileInput,
   type UpdateDocumentInput,
 } from '../api';
 
@@ -72,4 +74,9 @@ export const useEmailPreview = (documentId: string) =>
 export const useUpdateDocument = (documentId: string) =>
   useMutation({
     mutationFn: (input: UpdateDocumentInput) => updateDocument(documentId, input),
+  });
+
+export const useUploadDocumentFile = (documentId: string) =>
+  useMutation({
+    mutationFn: (input: UploadDocumentFileInput) => uploadDocumentFile(documentId, input),
   });

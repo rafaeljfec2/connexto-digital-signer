@@ -81,6 +81,27 @@ export class DocumentsController {
     return new StreamableFile(buffer);
   }
 
+  @Post(':id/file')
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string,
+    @UploadedFile() file: Express.Multer.File
+  ) {
+    if (file === undefined || !Buffer.isBuffer(file.buffer)) {
+      throw new BadRequestException('File is required');
+    }
+    if (file.mimetype !== 'application/pdf') {
+      throw new BadRequestException('Only PDF files are allowed');
+    }
+    const maxSizeMb = Number.parseInt(process.env['MAX_UPLOAD_SIZE_MB'] ?? '10', 10);
+    const maxBytes = maxSizeMb * 1024 * 1024;
+    if (file.size > maxBytes) {
+      throw new BadRequestException(`File size exceeds ${maxSizeMb}MB`);
+    }
+    return this.documentsService.updateOriginalFile(id, tenantId, file.buffer);
+  }
+
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,

@@ -113,6 +113,7 @@
       "titlePlaceholder": "Sales contract - February",
       "dropzoneLabel": "Drag and drop your PDF here",
       "dropzoneHelper": "PDF only, up to 10MB",
+      "fileLoaded": "PDF loaded",
       "removeFile": "Remove",
       "submit": "Continue",
       "submitting": "Uploading",
@@ -129,6 +130,7 @@
   "wizard": {
     "title": "Prepare document",
     "steps": {
+      "upload": "Document",
       "signers": "Signers",
       "fields": "Fields",
       "review": "Review"

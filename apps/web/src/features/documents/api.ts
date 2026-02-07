@@ -92,11 +92,16 @@ export type UploadDocumentInput = {
   readonly file: File;
 };
 
+export type UploadDocumentFileInput = {
+  readonly file: File;
+};
+
 export type SendDocumentInput = {
   readonly message?: string;
 };
 
 export type UpdateDocumentInput = {
+  readonly title?: string;
   readonly signingMode?: 'parallel' | 'sequential';
 };
 
@@ -121,6 +126,18 @@ export const uploadDocument = async (
   formData.append('title', input.title);
   formData.append('file', input.file);
   const response = await apiClient.post<DocumentSummary>('/documents', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+export const uploadDocumentFile = async (
+  documentId: string,
+  input: UploadDocumentFileInput
+): Promise<DocumentDetail> => {
+  const formData = new FormData();
+  formData.append('file', input.file);
+  const response = await apiClient.post<DocumentDetail>(`/documents/${documentId}/file`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   });
   return response.data;

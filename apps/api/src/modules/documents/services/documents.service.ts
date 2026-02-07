@@ -74,6 +74,30 @@ export class DocumentsService {
     return saved;
   }
 
+  async updateOriginalFile(
+    id: string,
+    tenantId: string,
+    file: Buffer
+  ): Promise<Document> {
+    const document = await this.findOne(id, tenantId);
+    const hash = sha256(file);
+    const key = `tenants/${tenantId}/documents/${id}/original-${Date.now()}-${hash.slice(0, 16)}.pdf`;
+    try {
+      await this.storage.put(key, file);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      const stack = error instanceof Error ? error.stack : undefined;
+      this.logger.error(`Failed to upload file: ${message}`, stack);
+      throw error;
+    }
+    document.originalFileKey = key;
+    document.originalHash = hash;
+    document.finalFileKey = null;
+    document.finalHash = null;
+    document.status = DocumentStatus.DRAFT;
+    return this.documentRepository.save(document);
+  }
+
   async getStats(tenantId: string): Promise<{
     pending: number;
     completed: number;
