@@ -1,10 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PenTool, Fingerprint, Check, ZoomIn, ZoomOut } from 'lucide-react';
+import { PenTool, Fingerprint, Check, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
 import { usePdfEngine } from '@/features/pdf-signature/hooks/use-pdf-engine';
 import { usePdfDocument } from '@/features/pdf-signature/hooks/use-pdf-document';
-import { Button } from '@/shared/ui';
 import type { SignerField } from '@/features/signing/api';
 import type { PdfDocument } from '@/features/pdf-signature/types';
 
@@ -265,40 +264,38 @@ export const SignerPdfViewer = ({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-2 py-1.5">
-        <div className="flex items-center gap-0.5">
-          <Button
+      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-white/5 px-2 py-1">
+        <div className="flex items-center gap-1">
+          <button
             type="button"
-            variant="ghost"
             onClick={() => setScale((s) => clampScale((s ?? 1) - 0.15))}
             disabled={!showPages}
-            className="h-7 w-7 p-0"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-white/70 transition hover:bg-white/10 hover:text-white disabled:opacity-30"
           >
-            <ZoomOut className="h-3.5 w-3.5" />
-          </Button>
-          <span className="min-w-[2.5rem] text-center text-[10px] text-neutral-100/50">
-            {Math.round(displayScale * 100)}%
+            <ZoomOut className="h-4 w-4" />
+          </button>
+          <span className="min-w-[2.5rem] text-center text-[11px] font-medium text-white/60">
+            {Math.round(displayScale * 100)} %
           </span>
-          <Button
+          <button
             type="button"
-            variant="ghost"
             onClick={() => setScale((s) => clampScale((s ?? 1) + 0.15))}
             disabled={!showPages}
-            className="h-7 w-7 p-0"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-white/70 transition hover:bg-white/10 hover:text-white disabled:opacity-30"
           >
-            <ZoomIn className="h-3.5 w-3.5" />
-          </Button>
-          <Button
+            <ZoomIn className="h-4 w-4" />
+          </button>
+          <button
             type="button"
-            variant="ghost"
             onClick={handleFitToWidth}
             disabled={!showPages}
-            className="h-7 px-1.5 text-[10px]"
+            className="flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-white/70 transition hover:bg-white/10 hover:text-white disabled:opacity-30"
           >
-            Fit
-          </Button>
+            <Maximize2 className="h-3.5 w-3.5" />
+            Ajustar
+          </button>
         </div>
-        <span className="text-[10px] text-neutral-100/50">
+        <span className="text-[11px] font-medium text-white/50">
           {showPages ? `${pageCount} pg` : ''}
         </span>
       </div>

@@ -12,6 +12,7 @@ import {
   Calendar,
   FileText as FileTextIcon,
   ShieldCheck,
+  Eye,
 } from 'lucide-react';
 import { Avatar, Badge, Button, Card } from '@/shared/ui';
 import type { SignerField, SignerWithDocument } from '@/features/signing/api';
@@ -22,6 +23,7 @@ type ReviewStepProps = Readonly<{
   fieldValues: Readonly<Record<string, string>>;
   onBack: () => void;
   onSubmit: () => void;
+  onViewDocument: () => void;
   isSubmitting: boolean;
   labels: Readonly<{
     title: string;
@@ -29,6 +31,7 @@ type ReviewStepProps = Readonly<{
     signerInfo: string;
     filledFields: string;
     fieldPreview: string;
+    viewDocument: string;
     consentLabel: string;
     consentRequired: string;
     signAction: string;
@@ -52,6 +55,7 @@ export function ReviewStep({
   fieldValues,
   onBack,
   onSubmit,
+  onViewDocument,
   isSubmitting,
   labels,
   fieldTypeLabels,
@@ -66,13 +70,13 @@ export function ReviewStep({
 
   return (
     <div className="flex flex-1 flex-col">
-      <div className="mx-auto w-full max-w-2xl space-y-4 pb-24 md:pb-4">
+      <div className="mx-auto w-full max-w-2xl space-y-4 overflow-auto pb-24 md:pb-4">
         <Card variant="glass" className="space-y-3 p-4 md:p-6">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-400/20 text-accent-400">
               <FileText className="h-4 w-4" />
             </div>
-            <div>
+            <div className="flex-1">
               <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-100/40">
                 {labels.documentTitle}
               </p>
@@ -80,6 +84,15 @@ export function ReviewStep({
                 {signerData.document.title}
               </p>
             </div>
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={onViewDocument}
+              className="gap-1.5 text-xs text-accent-400 hover:text-accent-300"
+            >
+              <Eye className="h-3.5 w-3.5" />
+              {labels.viewDocument}
+            </Button>
           </div>
         </Card>
 
@@ -163,11 +176,11 @@ export function ReviewStep({
               </span>
             </label>
           </div>
-          {!consentAccepted ? (
+          {consentAccepted ? null : (
             <p className="pl-8 text-[10px] text-warning/70">
               {labels.consentRequired}
             </p>
-          ) : null}
+          )}
         </Card>
       </div>
 

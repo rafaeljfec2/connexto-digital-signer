@@ -18,6 +18,7 @@ import { ViewStep } from './components/view-step';
 import { FillFieldsStep } from './components/fill-fields-step';
 import { ReviewStep } from './components/review-step';
 import { SignatureModal } from './components/signature-modal';
+import { PdfPreviewModal } from './components/pdf-preview-modal';
 
 export default function SignerDocumentPage() {
   const params = useParams<{ token: string }>();
@@ -35,6 +36,7 @@ export default function SignerDocumentPage() {
   const [currentStep, setCurrentStep] = useState<SignStep>('view');
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
+  const [showPdfPreview, setShowPdfPreview] = useState(false);
 
   useEffect(() => {
     const signingLang = signerQuery.data?.document.signingLanguage;
@@ -249,6 +251,7 @@ export default function SignerDocumentPage() {
             fieldValues={fieldValues}
             onBack={() => setCurrentStep('fill')}
             onSubmit={handleSubmit}
+            onViewDocument={() => setShowPdfPreview(true)}
             isSubmitting={acceptMutation.isPending}
             labels={{
               title: t('reviewStep.title'),
@@ -256,6 +259,7 @@ export default function SignerDocumentPage() {
               signerInfo: t('reviewStep.signerInfo'),
               filledFields: t('reviewStep.filledFields'),
               fieldPreview: t('reviewStep.fieldPreview'),
+              viewDocument: t('reviewStep.viewDocument'),
               consentLabel: t('consent.label'),
               consentRequired: t('consent.required'),
               signAction: t('signAction'),
@@ -272,6 +276,19 @@ export default function SignerDocumentPage() {
         labels={signaturePadLabels}
         onConfirm={handleSignatureConfirm}
         onClose={() => setActiveFieldId(null)}
+      />
+
+      <PdfPreviewModal
+        open={showPdfPreview}
+        fileUrl={fileUrl}
+        fields={fields as import('@/features/signing/api').SignerField[]}
+        fieldValues={fieldValues}
+        onClose={() => setShowPdfPreview(false)}
+        labels={{
+          title: signerData.document.title,
+          clickToSign: t('clickToSign'),
+          clickToInitials: t('clickToInitials'),
+        }}
       />
     </div>
   );

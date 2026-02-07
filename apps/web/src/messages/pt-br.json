@@ -309,7 +309,8 @@
       "documentTitle": "Documento",
       "signerInfo": "Signatário",
       "filledFields": "Campos preenchidos",
-      "fieldPreview": "{type} - Página {page}"
+      "fieldPreview": "{type} - Página {page}",
+      "viewDocument": "Visualizar documento"
     },
     "consent": {
       "label": "Li e concordo com os termos do documento e reconheço a validade jurídica desta assinatura eletrônica.",

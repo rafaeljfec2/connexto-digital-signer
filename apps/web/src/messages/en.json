@@ -309,7 +309,8 @@
       "documentTitle": "Document",
       "signerInfo": "Signer",
       "filledFields": "Filled fields",
-      "fieldPreview": "{type} - Page {page}"
+      "fieldPreview": "{type} - Page {page}",
+      "viewDocument": "View document"
     },
     "consent": {
       "label": "I have read and agree to the terms of the document and acknowledge the legal validity of this electronic signature.",
