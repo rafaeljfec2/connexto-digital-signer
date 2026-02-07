@@ -61,7 +61,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
         <p className="mt-1 text-sm text-white/60">{tSettings('subtitle')}</p>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-3">
         <div>
           <label className="mb-1.5 block text-sm font-medium text-white/80">
             {tSettings('deadlineLabel')}
@@ -97,20 +97,19 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
           </Select>
           <p className="mt-1 text-xs text-white/50">{tSettings('reminderHelper')}</p>
         </div>
-      </div>
 
-      <div className="mt-6">
-        <label className="mb-1.5 block text-sm font-medium text-white/80">
-          {tSettings('languageLabel')}
-        </label>
-        <Select
-          value={signingLanguage}
-          onChange={(e) => setSigningLanguage(e.target.value as SigningLanguage)}
-          className="max-w-xs"
-        >
-          <option value="pt-br">{tSettings('languagePtBr')}</option>
-          <option value="en">{tSettings('languageEn')}</option>
-        </Select>
+        <div>
+          <label className="mb-1.5 block text-sm font-medium text-white/80">
+            {tSettings('languageLabel')}
+          </label>
+          <Select
+            value={signingLanguage}
+            onChange={(e) => setSigningLanguage(e.target.value as SigningLanguage)}
+          >
+            <option value="pt-br">{tSettings('languagePtBr')}</option>
+            <option value="en">{tSettings('languageEn')}</option>
+          </Select>
+        </div>
       </div>
 
       <hr className="my-6 border-white/10" />
