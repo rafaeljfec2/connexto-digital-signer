@@ -222,7 +222,6 @@ export default function SignerDocumentPage() {
 
         {currentStep === 'fill' ? (
           <FillFieldsStep
-            fileUrl={fileUrl}
             fields={fields}
             fieldValues={fieldValues}
             onFieldClick={handleFieldClick}
@@ -238,8 +237,6 @@ export default function SignerDocumentPage() {
               tapToFill: t('fillStep.tapToFill'),
               next: t('fillStep.next'),
               back: t('back'),
-              clickToSign: t('clickToSign'),
-              clickToInitials: t('clickToInitials'),
             }}
             fieldTypeLabels={fieldTypeLabels}
           />
