@@ -24,7 +24,8 @@
     "settingsTitle": "Configurações",
     "settingsSubtitle": "Preferencias e ajustes da conta",
     "settingsEmptyTitle": "Configurações em breve",
-    "settingsEmptyDescription": "Novas opcoes estarao disponiveis nesta area."
+    "settingsEmptyDescription": "Novas opcoes estarao disponiveis nesta area.",
+    "signOut": "Sair"
   },
   "auth": {
     "emailLabel": "Email",

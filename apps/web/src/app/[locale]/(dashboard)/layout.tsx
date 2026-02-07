@@ -12,6 +12,7 @@ export default async function DashboardLayout({
       appName={tCommon('appName')}
       tenantLabel={tCommon('tenantLabel')}
       helpLabel={tCommon('help')}
+      signOutLabel={tCommon('signOut')}
       navItems={[
         { id: 'home', label: tCommon('nav.home'), href: '/', iconKey: 'home' },
         { id: 'documents', label: tCommon('nav.documents'), href: '/documents', iconKey: 'documents' },

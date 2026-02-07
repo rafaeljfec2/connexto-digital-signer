@@ -24,7 +24,8 @@
     "settingsTitle": "Settings",
     "settingsSubtitle": "Account preferences and configuration",
     "settingsEmptyTitle": "Settings coming soon",
-    "settingsEmptyDescription": "New options will be available in this area."
+    "settingsEmptyDescription": "New options will be available in this area.",
+    "signOut": "Sign out"
   },
   "auth": {
     "emailLabel": "Email",

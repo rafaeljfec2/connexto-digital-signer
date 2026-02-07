@@ -45,10 +45,10 @@ export function SignUpForm() {
     setValue,
     watch,
     control,
-    formState: { errors, isSubmitting },
+    formState: { errors, isSubmitting, isSubmitted },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    mode: 'onChange',
+    mode: 'onSubmit',
     reValidateMode: 'onChange',
   });
   const nameValue = watch('name');
@@ -78,7 +78,7 @@ export function SignUpForm() {
             {tAuth('companyNameLabel')}
           </label>
           <Input id="name" placeholder={tAuth('companyNamePlaceholder')} {...register('name')} />
-          {errors.name && <p className="text-xs text-error">{tAuth('companyNameRequired')}</p>}
+          {isSubmitted && errors.name ? <p className="text-xs text-error">{tAuth('companyNameRequired')}</p> : null}
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-neutral-100" htmlFor="slug">
@@ -96,10 +96,10 @@ export function SignUpForm() {
             name={slugField.name}
             ref={slugField.ref}
           />
-          {!errors.slug && slugValue ? (
+          {slugValue ? (
             <p className="text-xs text-neutral-100/70">{tAuth('companySlugHelper')}</p>
           ) : null}
-          {errors.slug && <p className="text-xs text-error">{tAuth('slugRequired')}</p>}
+          {isSubmitted && errors.slug ? <p className="text-xs text-error">{tAuth('slugRequired')}</p> : null}
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-neutral-100" htmlFor="ownerName">
@@ -110,9 +110,9 @@ export function SignUpForm() {
             placeholder={tAuth('ownerNamePlaceholder')}
             {...register('ownerName')}
           />
-          {errors.ownerName && (
+          {isSubmitted && errors.ownerName ? (
             <p className="text-xs text-error">{tAuth('ownerNameRequired')}</p>
-          )}
+          ) : null}
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-neutral-100" htmlFor="ownerEmail">
@@ -124,9 +124,9 @@ export function SignUpForm() {
             placeholder={tAuth('ownerEmailPlaceholder')}
             {...register('ownerEmail')}
           />
-          {errors.ownerEmail && (
+          {isSubmitted && errors.ownerEmail ? (
             <p className="text-xs text-error">{tAuth('ownerEmailRequired')}</p>
-          )}
+          ) : null}
         </div>
         <div className="space-y-2">
           <label className="text-sm font-medium text-neutral-100" htmlFor="ownerPassword">
@@ -138,7 +138,7 @@ export function SignUpForm() {
             placeholder={tAuth('ownerPasswordPlaceholder')}
             {...register('ownerPassword')}
           />
-          {errors.ownerPassword ? (
+          {isSubmitted && errors.ownerPassword ? (
             <p className="text-xs text-error">{tAuth('ownerPasswordRequired')}</p>
           ) : (
             <p className="text-xs text-neutral-100/70">{tAuth('ownerPasswordHelper')}</p>
@@ -154,9 +154,9 @@ export function SignUpForm() {
             placeholder={tAuth('ownerPasswordConfirmPlaceholder')}
             {...register('ownerPasswordConfirm')}
           />
-          {errors.ownerPasswordConfirm && (
+          {isSubmitted && errors.ownerPasswordConfirm ? (
             <p className="text-xs text-error">{tAuth('ownerPasswordConfirmError')}</p>
-          )}
+          ) : null}
         </div>
         <Button className="w-full" type="submit" disabled={isSubmitting}>
           {tAuth('createAccountCta')}

@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
-import { Menu, HelpCircle, Home, FileText, Users, Settings } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Menu, HelpCircle, Home, FileText, Users, Settings, LogOut } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Avatar, Button, Sidebar } from '@/shared/ui';
 import { useAuth } from '@/features/auth/hooks/use-auth';
@@ -27,6 +28,7 @@ export type AppShellProps = {
   readonly helpLabel: string;
   readonly appName: string;
   readonly tenantLabel: string;
+  readonly signOutLabel: string;
 };
 
 export function AppShell({
@@ -36,14 +38,34 @@ export function AppShell({
   helpLabel,
   appName,
   tenantLabel,
+  signOutLabel,
 }: Readonly<AppShellProps>) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  const profileRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(event.target as Node)) {
+        setProfileOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSignOut = async () => {
+    setProfileOpen(false);
+    await logout();
+    router.push('/');
+  };
 
   const displayName = isMounted ? (user?.name ?? appName) : appName;
   const initials = isMounted ? (user?.name ?? tenantLabel) : tenantLabel;
@@ -100,11 +122,38 @@ export function AppShell({
                 <HelpCircle className="h-4 w-4" />
                 {helpLabel}
               </Button>
-              <div className="hidden sm:block text-right text-xs text-neutral-100/70">
+              <div className="hidden text-right text-xs text-neutral-100/70 sm:block">
                 <div>{tenantLabel}</div>
                 <div className="text-sm font-semibold text-white">{displayName}</div>
               </div>
-              <Avatar name={initials} size="md" statusColor="#14B8A6" />
+              <div ref={profileRef} className="relative">
+                <button
+                  type="button"
+                  onClick={() => setProfileOpen((prev) => !prev)}
+                  className="rounded-full transition-opacity hover:opacity-80"
+                >
+                  <Avatar name={initials} size="md" statusColor="#14B8A6" />
+                </button>
+                {profileOpen ? (
+                  <div
+                    className="absolute right-0 top-full z-50 mt-2 w-48 overflow-hidden rounded-xl border border-white/10 shadow-xl"
+                    style={{ backgroundColor: '#0b1f3b' }}
+                  >
+                    <div className="border-b border-white/10 px-4 py-3">
+                      <p className="truncate text-sm font-semibold text-white">{displayName}</p>
+                      <p className="truncate text-xs text-white/50">{user?.email}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleSignOut}
+                      className="flex w-full items-center gap-2.5 px-4 py-3 text-sm text-red-400 transition-colors hover:bg-white/5"
+                    >
+                      <LogOut className="h-4 w-4" />
+                      {signOutLabel}
+                    </button>
+                  </div>
+                ) : null}
+              </div>
             </div>
           </header>
           <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">{children}</main>
