@@ -135,7 +135,7 @@
     "steps": {
       "upload": "Documento",
       "signers": "Signatarios",
-      "fields": "Campos",
+      "fields": "Assinaturas",
       "review": "Revisao"
     },
     "next": "Proximo",
@@ -169,6 +169,8 @@
     "activeSigner": "Signatario ativo",
     "paletteTitle": "Campos",
     "paletteColorHint": "Os campos usarao esta cor",
+    "addFieldTitle": "Tipo de campo",
+    "clickToAdd": "Clique no PDF para adicionar o campo selecionado",
     "type": {
       "signature": "Assinatura",
       "name": "Nome",

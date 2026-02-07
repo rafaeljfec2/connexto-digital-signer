@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import type { MouseEvent } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 
 import { PdfDocument, SignatureFieldData } from '../types';
@@ -10,6 +11,7 @@ type PdfPageProps = Readonly<{
   fields: SignatureFieldData[];
   renderField: (field: SignatureFieldData) => React.ReactNode;
   onContainerReady?: (pageNumber: number, element: HTMLDivElement | null) => void;
+  onPageClick?: (pageNumber: number, x: number, y: number) => void;
 }>;
 
 export const PdfPage = ({
@@ -19,6 +21,7 @@ export const PdfPage = ({
   fields,
   renderField,
   onContainerReady,
+  onPageClick,
 }: PdfPageProps) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const droppable = useDroppable({ id: `page-${pageNumber}` });
@@ -59,6 +62,19 @@ export const PdfPage = ({
     };
   }, [pdfDocument, pageNumber, scale]);
 
+  const handleOverlayClick = useCallback(
+    (event: MouseEvent<HTMLDivElement>) => {
+      if (!onPageClick || !containerRef.current) return;
+      if ((event.target as HTMLElement).closest('[data-field]')) return;
+
+      const rect = containerRef.current.getBoundingClientRect();
+      const x = (event.clientX - rect.left) / rect.width;
+      const y = (event.clientY - rect.top) / rect.height;
+      onPageClick(pageNumber, x, y);
+    },
+    [onPageClick, pageNumber]
+  );
+
   return (
     <div className="flex justify-center">
       <div
@@ -72,9 +88,13 @@ export const PdfPage = ({
         style={{ width: size.width || undefined, height: size.height || undefined }}
       >
         <canvas ref={canvasRef} className="block" />
-        <div className="absolute inset-0">
+        {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
+        <div
+          className="absolute inset-0"
+          onClick={handleOverlayClick}
+        >
           {fields.map((field) => (
-            <div key={field.id}>{renderField(field)}</div>
+            <div key={field.id} data-field>{renderField(field)}</div>
           ))}
         </div>
       </div>

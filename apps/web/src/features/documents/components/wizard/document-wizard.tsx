@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { FileUp, Users, LayoutGrid, CheckCircle } from 'lucide-react';
+import { FileUp, Users, PenTool, CheckCircle } from 'lucide-react';
 import { Stepper } from '@/shared/ui';
 import { UploadStep } from './upload-step';
 import { SignersStep } from './signers-step';
@@ -14,7 +14,7 @@ export type WizardStepId = 'upload' | 'signers' | 'fields' | 'review';
 const STEP_ICONS: Record<WizardStepId, React.ReactNode> = {
   upload: <FileUp className="h-5 w-5" />,
   signers: <Users className="h-5 w-5" />,
-  fields: <LayoutGrid className="h-5 w-5" />,
+  fields: <PenTool className="h-5 w-5" />,
   review: <CheckCircle className="h-5 w-5" />,
 };
 

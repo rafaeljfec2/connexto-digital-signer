@@ -13,13 +13,12 @@ import {
 import { Avatar, Badge, Button, Card, Input } from '@/shared/ui';
 import type { SignatureFieldInput } from '@/features/documents/api';
 import {
-  FieldPalette,
   PdfViewer,
   SignatureFieldType,
   usePdfFields,
 } from '@/features/pdf-signature';
 
-const fieldTypes: SignatureFieldType[] = ['signature', 'name', 'date', 'initials', 'text'];
+const FIELD_TYPES: SignatureFieldType[] = ['signature', 'name', 'date', 'initials', 'text'];
 
 const createTempId = () => `temp-${Math.random().toString(36).slice(2, 10)}`;
 
@@ -41,6 +40,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
   const fileQuery = useDocumentFile(documentId);
   const [activeSignerId, setActiveSignerId] = useState<string>('');
   const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
+  const [activeFieldType, setActiveFieldType] = useState<SignatureFieldType>('signature');
   const pageRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
 
   const initialFields = useMemo(() => fieldsQuery.data ?? undefined, [fieldsQuery.data]);
@@ -98,6 +98,27 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
   const handlePageReady = useCallback((pageNumber: number, element: HTMLDivElement | null) => {
     pageRefs.current.set(pageNumber, element);
   }, []);
+
+  const handleAddFieldToPage = useCallback(
+    (pageNumber: number, x: number, y: number) => {
+      if (!activeSignerId) return;
+      const width = 0.25;
+      const height = 0.08;
+      addField({
+        id: createTempId(),
+        signerId: activeSignerId,
+        type: activeFieldType,
+        page: pageNumber,
+        x: clamp(x, 0, 1 - width),
+        y: clamp(y, 0, 1 - height),
+        width,
+        height,
+        required: true,
+        value: null,
+      });
+    },
+    [activeSignerId, activeFieldType, addField]
+  );
 
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
@@ -160,20 +181,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
         <h2 className="text-lg font-semibold text-white">{tFields('title')}</h2>
         <p className="text-sm text-neutral-100/70">{tFields('subtitle')}</p>
       </div>
-      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[260px_1fr_320px]">
-        <Card variant="glass" className="space-y-4 p-4">
-          <FieldPalette
-            signers={signersQuery.data ?? []}
-            activeSignerId={activeSignerId}
-            onSignerChange={setActiveSignerId}
-            fieldTypes={fieldTypes}
-            getFieldLabel={(type) => tFields(`type.${type}`)}
-            signerColors={signerColors}
-            activeSignerLabel={tFields('activeSigner')}
-            paletteTitle={tFields('paletteTitle')}
-            colorHint={tFields('paletteColorHint')}
-          />
-        </Card>
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[1fr_320px]">
         <Card variant="glass" className="p-3">
           <DndContext onDragEnd={handleDragEnd}>
             {fileUrl ? (
@@ -186,12 +194,13 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
                 onPageContainerReady={handlePageReady}
                 selectedFieldId={selectedFieldId ?? undefined}
                 onSelectField={(id) => setSelectedFieldId(id)}
+                onPageClick={handleAddFieldToPage}
               />
             ) : null}
           </DndContext>
         </Card>
-        <Card variant="glass" className="space-y-4 p-4">
-          <div className="space-y-3">
+        <div className="space-y-4">
+          <Card variant="glass" className="space-y-4 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-100/70">
               {tFields('activeSigner')}
             </p>
@@ -226,8 +235,34 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
                 </button>
               ))}
             </div>
-          </div>
-          <div className="space-y-3 border-t border-white/10 pt-4">
+          </Card>
+
+          <Card variant="glass" className="space-y-3 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-100/70">
+              {tFields('addFieldTitle')}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {FIELD_TYPES.map((type) => (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => setActiveFieldType(type)}
+                  className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
+                    activeFieldType === type
+                      ? 'border-accent-400/40 bg-accent-600/20 text-accent-400'
+                      : 'border-white/15 bg-white/5 text-neutral-100/60 hover:bg-white/10'
+                  }`}
+                >
+                  {tFields(`type.${type}`)}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-neutral-100/50">
+              {tFields('clickToAdd')}
+            </p>
+          </Card>
+
+          <Card variant="glass" className="space-y-3 p-4">
             <p className="text-xs font-semibold uppercase tracking-wide text-neutral-100/70">
               {tFields('properties.title')}
             </p>
@@ -291,8 +326,8 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
                 {tFields('properties.empty')}
               </p>
             )}
-          </div>
-        </Card>
+          </Card>
+        </div>
       </div>
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

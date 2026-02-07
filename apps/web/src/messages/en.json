@@ -135,7 +135,7 @@
     "steps": {
       "upload": "Document",
       "signers": "Signers",
-      "fields": "Fields",
+      "fields": "Signatures",
       "review": "Review"
     },
     "next": "Next",
@@ -169,6 +169,8 @@
     "activeSigner": "Active signer",
     "paletteTitle": "Fields",
     "paletteColorHint": "Fields will use this color",
+    "addFieldTitle": "Field type",
+    "clickToAdd": "Click on the PDF to add the selected field",
     "type": {
       "signature": "Signature",
       "name": "Name",

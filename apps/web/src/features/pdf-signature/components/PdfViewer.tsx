@@ -17,6 +17,7 @@ type PdfViewerProps = Readonly<{
   onPageContainerReady?: (pageNumber: number, element: HTMLDivElement | null) => void;
   selectedFieldId?: string;
   onSelectField?: (id: string) => void;
+  onPageClick?: (pageNumber: number, x: number, y: number) => void;
 }>;
 
 const clampScale = (value: number) => Math.min(2.5, Math.max(0.5, value));
@@ -30,6 +31,7 @@ export const PdfViewer = ({
   onPageContainerReady,
   selectedFieldId,
   onSelectField,
+  onPageClick,
 }: PdfViewerProps) => {
   const { pdfjsLib, isReady, error } = usePdfEngine();
   const { pdfDocument, pageCount, isLoading, error: documentError } = usePdfDocument({
@@ -153,6 +155,7 @@ export const PdfViewer = ({
             scale={scale}
             fields={currentPageFields}
             onContainerReady={onPageContainerReady}
+            onPageClick={onPageClick}
             renderField={(field) => (
               <SignatureField
                 field={field}
