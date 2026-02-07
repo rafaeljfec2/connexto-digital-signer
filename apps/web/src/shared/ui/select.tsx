@@ -129,7 +129,8 @@ export function Select({ value, onChange, className = '', children, disabled }: 
       {open ? (
         <div
           ref={listRef}
-          className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-white/20 bg-brand-800 py-1 shadow-xl backdrop-blur-sm"
+          style={{ backgroundColor: '#0b1f3b' }}
+          className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-white/30 py-1 shadow-2xl"
         >
           {options.map((option) => (
             <button
@@ -137,11 +138,18 @@ export function Select({ value, onChange, className = '', children, disabled }: 
               type="button"
               data-selected={option.value === value}
               onClick={() => handleSelect(option.value)}
-              className={`flex w-full items-center gap-2 px-3 py-2 text-left text-sm transition-colors ${
+              style={option.value === value ? { backgroundColor: '#123a6f' } : undefined}
+              className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors ${
                 option.value === value
-                  ? 'bg-accent-600/20 text-accent-400'
-                  : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  ? 'text-accent-400'
+                  : 'text-white hover:text-white'
               }`}
+              onMouseEnter={(e) => {
+                if (option.value !== value) e.currentTarget.style.backgroundColor = '#123a6f';
+              }}
+              onMouseLeave={(e) => {
+                if (option.value !== value) e.currentTarget.style.backgroundColor = 'transparent';
+              }}
             >
               {option.value === value ? (
                 <Check className="h-3.5 w-3.5 shrink-0" />
