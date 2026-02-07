@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { FileUp, Users, LayoutGrid, CheckCircle } from 'lucide-react';
 import { Stepper, Button } from '@/shared/ui';
 import { UploadStep } from './upload-step';
 import { SignersStep } from './signers-step';
@@ -9,6 +10,13 @@ import { FieldsStep } from './fields-step';
 import { ReviewStep } from './review-step';
 
 export type WizardStepId = 'upload' | 'signers' | 'fields' | 'review';
+
+const STEP_ICONS: Record<WizardStepId, React.ReactNode> = {
+  upload: <FileUp className="h-5 w-5" />,
+  signers: <Users className="h-5 w-5" />,
+  fields: <LayoutGrid className="h-5 w-5" />,
+  review: <CheckCircle className="h-5 w-5" />,
+};
 
 export type DocumentWizardProps = {
   readonly documentId: string;
@@ -31,9 +39,14 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
     if (!uploadComplete && step !== 'upload') setStep('upload');
   }, [step, uploadComplete]);
 
+  const stepOrder: WizardStepId[] = useMemo(
+    () => ['upload', 'signers', 'fields', 'review'],
+    []
+  );
+
+  const currentIndex = stepOrder.indexOf(step);
+
   const steps = useMemo(() => {
-    const stepOrder: WizardStepId[] = ['upload', 'signers', 'fields', 'review'];
-    const currentIndex = stepOrder.indexOf(step);
     return stepOrder.map((id, index) => {
       let status: 'completed' | 'active' | 'pending';
       if (index < currentIndex) {
@@ -47,13 +60,23 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
         id,
         label: tWizard(`steps.${id}`),
         status,
+        icon: STEP_ICONS[id],
       };
     });
-  }, [step, tWizard]);
+  }, [step, tWizard, stepOrder, currentIndex]);
+
+  const counterLabel = tWizard('progressCounter', {
+    current: currentIndex + 1,
+    total: stepOrder.length,
+  });
 
   return (
     <div className="space-y-6">
-      <Stepper steps={steps.map(({ label, status }) => ({ label, status }))} />
+      <Stepper
+        steps={steps.map(({ label, status, icon }) => ({ label, status, icon }))}
+        progressLabel={tWizard('progress')}
+        counterLabel={counterLabel}
+      />
       {step === 'upload' ? (
         <UploadStep
           documentId={documentId}

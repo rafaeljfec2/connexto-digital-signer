@@ -130,6 +130,8 @@
   },
   "wizard": {
     "title": "Prepare document",
+    "progress": "Progress",
+    "progressCounter": "{current} of {total}",
     "steps": {
       "upload": "Document",
       "signers": "Signers",
