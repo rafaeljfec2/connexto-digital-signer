@@ -19,16 +19,22 @@ export function middleware(request: NextRequest) {
   }
 
   const pathWithoutLocale = `/${segments.slice(1).join('/')}`;
-  const isPublic = pathWithoutLocale === '/login' || pathWithoutLocale === '/signup';
+
+  const isAuthPage =
+    pathWithoutLocale === '/login' || pathWithoutLocale === '/signup';
+
+  const isOpenPage =
+    pathWithoutLocale.startsWith('/sign/') || pathWithoutLocale === '/success';
+
   const token = request.cookies.get('auth_token')?.value;
 
-  if (!token && !isPublic) {
+  if (!token && !isAuthPage && !isOpenPage) {
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}/login`;
     return NextResponse.redirect(url);
   }
 
-  if (token && isPublic) {
+  if (token && isAuthPage) {
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}`;
     return NextResponse.redirect(url);

@@ -267,23 +267,75 @@
     "signerLabel": "Signer",
     "signerEmail": "Signer email",
     "legalNotice": "By signing, you agree to the document terms and acknowledge the legal validity of this signature.",
-    "signAction": "Sign document",
+    "signAction": "Confirm and sign",
     "signing": "Submitting signature...",
     "signatureStatus": "Signature status",
     "signatureLabel": "Signature",
-    "clickToSign": "Click to sign",
-    "clickToInitials": "Click to initial",
+    "clickToSign": "Sign",
+    "clickToInitials": "Initial",
     "signed": "Signed",
     "loading": "Loading document...",
     "error": "Error loading document",
+    "errorSubtitle": "The link may have expired or the document is no longer available.",
     "alreadySigned": "You have already signed this document.",
+    "alreadySignedSubtitle": "Your signature was successfully recorded. You will receive a copy by email when all signers have signed.",
     "allFieldsRequired": "Please fill all required fields before signing.",
     "fillFieldTitle": "Fill field",
     "fieldsProgress": "{filled} of {total} fields filled",
     "status": {
       "pending": "Pending",
       "signed": "Signed"
-    }
+    },
+    "steps": {
+      "view": "View",
+      "fill": "Fill",
+      "review": "Sign"
+    },
+    "viewStep": {
+      "instruction": "Read the document below before proceeding with the signature.",
+      "next": "I read the document, proceed"
+    },
+    "fillStep": {
+      "instruction": "Click on the fields below to fill in your signature.",
+      "fieldLabel": "Field {index}",
+      "required": "Required",
+      "optional": "Optional",
+      "filled": "Filled",
+      "tapToFill": "Tap to fill",
+      "next": "Proceed to review"
+    },
+    "reviewStep": {
+      "title": "Review and sign",
+      "documentTitle": "Document",
+      "signerInfo": "Signer",
+      "filledFields": "Filled fields",
+      "fieldPreview": "{type} - Page {page}"
+    },
+    "consent": {
+      "label": "I have read and agree to the terms of the document and acknowledge the legal validity of this electronic signature.",
+      "required": "You must accept the terms to sign."
+    },
+    "signaturePad": {
+      "title": "Your signature",
+      "draw": "Draw",
+      "type": "Type",
+      "clear": "Clear",
+      "cancel": "Cancel",
+      "confirm": "Confirm",
+      "placeholder": "Type your full name",
+      "drawHint": "Draw your signature in the area below",
+      "typeHint": "Type your name as signature"
+    },
+    "fieldType": {
+      "signature": "Signature",
+      "initials": "Initials",
+      "name": "Name",
+      "date": "Date",
+      "text": "Text"
+    },
+    "back": "Back",
+    "expired": "This document has expired and no longer accepts signatures.",
+    "completed": "This document has already been finalized."
   },
   "success": {
     "title": "Document signed successfully",

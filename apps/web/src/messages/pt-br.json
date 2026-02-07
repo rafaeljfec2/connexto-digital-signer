@@ -267,23 +267,75 @@
     "signerLabel": "Signatário",
     "signerEmail": "Email do signatário",
     "legalNotice": "Ao assinar, você concorda com os termos do documento e reconhece a valididade jurídica desta assinatura.",
-    "signAction": "Assinar documento",
+    "signAction": "Confirmar e assinar",
     "signing": "Enviando assinatura...",
     "signatureStatus": "Status da assinatura",
     "signatureLabel": "Assinatura",
-    "clickToSign": "Clique para assinar",
-    "clickToInitials": "Clique para rubricar",
+    "clickToSign": "Assinar",
+    "clickToInitials": "Rubricar",
     "signed": "Assinado",
     "loading": "Carregando documento...",
     "error": "Erro ao carregar documento",
+    "errorSubtitle": "O link pode ter expirado ou o documento nao esta mais disponivel.",
     "alreadySigned": "Você já assinou este documento.",
+    "alreadySignedSubtitle": "Sua assinatura foi registrada com sucesso. Voce recebera uma copia por email quando todos assinarem.",
     "allFieldsRequired": "Preencha todos os campos obrigatórios antes de assinar.",
     "fillFieldTitle": "Preencher campo",
     "fieldsProgress": "{filled} de {total} campos preenchidos",
     "status": {
       "pending": "Pendente",
       "signed": "Assinado"
-    }
+    },
+    "steps": {
+      "view": "Visualizar",
+      "fill": "Preencher",
+      "review": "Assinar"
+    },
+    "viewStep": {
+      "instruction": "Leia o documento abaixo antes de prosseguir com a assinatura.",
+      "next": "Li o documento, prosseguir"
+    },
+    "fillStep": {
+      "instruction": "Clique nos campos abaixo para preencher sua assinatura.",
+      "fieldLabel": "Campo {index}",
+      "required": "Obrigatório",
+      "optional": "Opcional",
+      "filled": "Preenchido",
+      "tapToFill": "Toque para preencher",
+      "next": "Prosseguir para revisão"
+    },
+    "reviewStep": {
+      "title": "Revisão e assinatura",
+      "documentTitle": "Documento",
+      "signerInfo": "Signatário",
+      "filledFields": "Campos preenchidos",
+      "fieldPreview": "{type} - Página {page}"
+    },
+    "consent": {
+      "label": "Li e concordo com os termos do documento e reconheço a validade jurídica desta assinatura eletrônica.",
+      "required": "Voce deve aceitar os termos para assinar."
+    },
+    "signaturePad": {
+      "title": "Sua assinatura",
+      "draw": "Desenhar",
+      "type": "Digitar",
+      "clear": "Limpar",
+      "cancel": "Cancelar",
+      "confirm": "Confirmar",
+      "placeholder": "Digite seu nome completo",
+      "drawHint": "Desenhe sua assinatura no campo abaixo",
+      "typeHint": "Digite seu nome como assinatura"
+    },
+    "fieldType": {
+      "signature": "Assinatura",
+      "initials": "Rubrica",
+      "name": "Nome",
+      "date": "Data",
+      "text": "Texto"
+    },
+    "back": "Voltar",
+    "expired": "Este documento expirou e nao aceita mais assinaturas.",
+    "completed": "Este documento ja foi finalizado."
   },
   "success": {
     "title": "Documento assinado com sucesso",

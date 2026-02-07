@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { PenTool, Fingerprint, Check } from 'lucide-react';
+import { PenTool, Fingerprint, Check, ZoomIn, ZoomOut } from 'lucide-react';
 import { usePdfEngine } from '@/features/pdf-signature/hooks/use-pdf-engine';
 import { usePdfDocument } from '@/features/pdf-signature/hooks/use-pdf-document';
 import { Button } from '@/shared/ui';
@@ -13,9 +13,15 @@ type SignerPdfViewerProps = Readonly<{
   fieldValues: Record<string, string>;
   onFieldClick: (fieldId: string) => void;
   disabled?: boolean;
+  labels: Readonly<{
+    clickToSign: string;
+    clickToInitials: string;
+  }>;
 }>;
 
-const clampScale = (value: number) => Math.min(2.5, Math.max(0.5, value));
+const MIN_SCALE = 0.3;
+const MAX_SCALE = 3;
+const clampScale = (value: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
 
 export const SignerPdfViewer = ({
   fileUrl,
@@ -23,6 +29,7 @@ export const SignerPdfViewer = ({
   fieldValues,
   onFieldClick,
   disabled = false,
+  labels,
 }: SignerPdfViewerProps) => {
   const { pdfjsLib, isReady, error } = usePdfEngine();
   const {
@@ -32,42 +39,82 @@ export const SignerPdfViewer = ({
     error: docError,
   } = usePdfDocument({ pdfjsLib, fileUrl });
 
-  const [scale, setScale] = useState(1);
+  const [scale, setScale] = useState<number | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
-  const [size, setSize] = useState<{ width: number; height: number }>({
-    width: 0,
-    height: 0,
-  });
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  const renderingRef = useRef(false);
+  const pendingRenderRef = useRef<{ page: number; scale: number } | null>(null);
+
+  const pdfReady = isReady && !isLoading && !!pdfDocument;
+
+  const doRender = useCallback(
+    (pageNum: number, renderScale: number) => {
+      if (!pdfDocument) return;
+      if (renderingRef.current) {
+        pendingRenderRef.current = { page: pageNum, scale: renderScale };
+        return;
+      }
+      renderingRef.current = true;
+      pdfDocument
+        .getPage(pageNum)
+        .then((page) => {
+          const viewport = page.getViewport({ scale: renderScale });
+          const canvas = canvasRef.current;
+          const ctx = canvas?.getContext('2d');
+          if (!canvas || !ctx) {
+            renderingRef.current = false;
+            return;
+          }
+          canvas.width = viewport.width;
+          canvas.height = viewport.height;
+          setSize({ width: viewport.width, height: viewport.height });
+          return page.render({ canvasContext: ctx, viewport }).promise;
+        })
+        .then(() => {
+          renderingRef.current = false;
+          const pending = pendingRenderRef.current;
+          if (pending) {
+            pendingRenderRef.current = null;
+            doRender(pending.page, pending.scale);
+          }
+        })
+        .catch(() => {
+          renderingRef.current = false;
+        });
+    },
+    [pdfDocument]
+  );
 
   useEffect(() => {
-    if (!pdfDocument) return;
-    let active = true;
-    pdfDocument
-      .getPage(currentPage)
-      .then((page) => {
-        if (!active) return;
-        const viewport = page.getViewport({ scale });
-        const canvas = canvasRef.current;
-        const ctx = canvas?.getContext('2d');
-        if (!canvas || !ctx) return;
-        canvas.width = viewport.width;
-        canvas.height = viewport.height;
-        setSize({ width: viewport.width, height: viewport.height });
-        return page.render({ canvasContext: ctx, viewport }).promise;
-      })
-      .catch(() => undefined);
-    return () => {
-      active = false;
-    };
-  }, [pdfDocument, currentPage, scale]);
+    if (!pdfReady || scale !== null) return;
+    const container = scrollRef.current;
+    if (!container) return;
+
+    pdfDocument!.getPage(1).then((page) => {
+      const viewport = page.getViewport({ scale: 1 });
+      const containerWidth = container.clientWidth;
+      if (containerWidth <= 0) {
+        setScale(1);
+        return;
+      }
+      setScale(clampScale(containerWidth / viewport.width));
+    });
+  }, [pdfReady, pdfDocument, scale]);
+
+  useEffect(() => {
+    if (scale === null || !pdfDocument) return;
+    doRender(currentPage, scale);
+  }, [pdfDocument, currentPage, scale, doRender]);
 
   const handleFitToWidth = useCallback(() => {
-    if (!scrollContainerRef.current || !pdfDocument) return;
-    const containerWidth = scrollContainerRef.current.clientWidth - 32;
+    const container = scrollRef.current;
+    if (!container || !pdfDocument) return;
     pdfDocument.getPage(currentPage).then((page) => {
       const viewport = page.getViewport({ scale: 1 });
+      const containerWidth = container.clientWidth;
+      if (containerWidth <= 0) return;
       setScale(clampScale(containerWidth / viewport.width));
     });
   }, [pdfDocument, currentPage]);
@@ -81,65 +128,63 @@ export const SignerPdfViewer = ({
     return <div className="p-4 text-sm text-red-400">{error ?? docError}</div>;
   }
 
-  if (!isReady || isLoading || !pdfDocument) {
-    return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="text-sm text-neutral-100/50">Loading PDF...</div>
-      </div>
-    );
-  }
+  const showCanvas = pdfReady && scale !== null;
+  const displayScale = scale ?? 1;
 
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 px-3 py-2">
-        <div className="flex items-center gap-1">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="flex shrink-0 items-center justify-between border-b border-white/10 px-2 py-1.5">
+        <div className="flex items-center gap-0.5">
           <Button
             type="button"
             variant="ghost"
-            onClick={() => setScale((s) => clampScale(s - 0.15))}
-            className="h-8 w-8 p-0 text-lg"
+            onClick={() => setScale((s) => clampScale((s ?? 1) - 0.15))}
+            disabled={!showCanvas}
+            className="h-7 w-7 p-0"
           >
-            −
+            <ZoomOut className="h-3.5 w-3.5" />
           </Button>
-          <span className="min-w-[3rem] text-center text-xs text-neutral-100/50">
-            {Math.round(scale * 100)}%
+          <span className="min-w-[2.5rem] text-center text-[10px] text-neutral-100/50">
+            {Math.round(displayScale * 100)}%
           </span>
           <Button
             type="button"
             variant="ghost"
-            onClick={() => setScale((s) => clampScale(s + 0.15))}
-            className="h-8 w-8 p-0 text-lg"
+            onClick={() => setScale((s) => clampScale((s ?? 1) + 0.15))}
+            disabled={!showCanvas}
+            className="h-7 w-7 p-0"
           >
-            +
+            <ZoomIn className="h-3.5 w-3.5" />
           </Button>
           <Button
             type="button"
             variant="ghost"
             onClick={handleFitToWidth}
-            className="h-8 px-2 text-xs"
+            disabled={!showCanvas}
+            className="h-7 px-1.5 text-[10px]"
           >
             Fit
           </Button>
         </div>
-        <div className="flex items-center gap-1">
+        <div className="flex items-center gap-0.5">
           <Button
             type="button"
             variant="ghost"
             onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage <= 1}
-            className="h-8 w-8 p-0 text-sm"
+            disabled={!showCanvas || currentPage <= 1}
+            className="h-7 w-7 p-0 text-xs"
           >
             ‹
           </Button>
-          <span className="min-w-[4rem] text-center text-xs text-neutral-100/50">
-            {currentPage} / {pageCount}
+          <span className="min-w-[3rem] text-center text-[10px] text-neutral-100/50">
+            {showCanvas ? `${currentPage} / ${pageCount}` : '- / -'}
           </span>
           <Button
             type="button"
             variant="ghost"
             onClick={() => setCurrentPage((p) => Math.min(pageCount, p + 1))}
-            disabled={currentPage >= pageCount}
-            className="h-8 w-8 p-0 text-sm"
+            disabled={!showCanvas || currentPage >= pageCount}
+            className="h-7 w-7 p-0 text-xs"
           >
             ›
           </Button>
@@ -147,15 +192,14 @@ export const SignerPdfViewer = ({
       </div>
 
       <div
-        ref={scrollContainerRef}
-        className="overflow-auto rounded-xl bg-white/80 p-4"
-        style={{ maxHeight: 'calc(100vh - 320px)' }}
+        ref={scrollRef}
+        className="min-h-0 flex-1 overflow-auto bg-neutral-100"
       >
-        <div className="flex justify-center">
+        {showCanvas ? (
           <div
-            className="relative overflow-hidden rounded-lg bg-white shadow-md"
+            className="relative bg-white"
             style={{
-              width: size.width || undefined,
+              width: size.width || '100%',
               height: size.height || undefined,
             }}
           >
@@ -170,11 +214,11 @@ export const SignerPdfViewer = ({
                     type="button"
                     disabled={disabled}
                     onClick={() => onFieldClick(field.id)}
-                    className={`absolute flex items-center justify-center gap-1.5 rounded-md border-2 border-dashed px-2 py-1 text-xs font-medium transition ${
+                    className={`absolute flex min-h-[36px] min-w-[80px] items-center justify-center gap-1.5 rounded-md border-2 border-dashed px-2 py-1 text-xs font-medium transition ${
                       isFilled
                         ? 'border-green-500 bg-green-50/90 text-green-700'
                         : 'border-orange-400 bg-white/80 text-orange-600 hover:bg-orange-50'
-                    } ${disabled ? 'cursor-default opacity-60' : 'cursor-pointer'}`}
+                    } ${disabled ? 'cursor-default opacity-60' : 'cursor-pointer active:scale-95'}`}
                     style={{
                       left: `${field.x * 100}%`,
                       top: `${field.y * 100}%`,
@@ -204,7 +248,9 @@ export const SignerPdfViewer = ({
                           <PenTool className="h-3.5 w-3.5 shrink-0" />
                         )}
                         <span className="truncate">
-                          {field.type === 'initials' ? 'Rubrica' : 'Assinar'}
+                          {field.type === 'initials'
+                            ? labels.clickToInitials
+                            : labels.clickToSign}
                         </span>
                       </>
                     )}
@@ -213,7 +259,11 @@ export const SignerPdfViewer = ({
               })}
             </div>
           </div>
-        </div>
+        ) : (
+          <div className="flex h-64 items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+          </div>
+        )}
       </div>
     </div>
   );

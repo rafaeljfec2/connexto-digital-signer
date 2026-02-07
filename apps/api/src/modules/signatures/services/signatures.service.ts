@@ -256,12 +256,13 @@ export class SignaturesService {
     if (!target) {
       throw new BadRequestException('At least one signer is required');
     }
-    const signUrl = this.buildSignUrl(target.accessToken);
+    const locale = document.signingLanguage ?? 'en';
+    const signUrl = this.buildSignUrl(target.accessToken, locale);
     return this.notificationsService.buildSignatureInvite({
       signerName: target.name,
       documentTitle: document.title,
       signUrl,
-      locale: document.signingLanguage ?? 'en',
+      locale,
       message,
     });
   }
@@ -272,9 +273,9 @@ export class SignaturesService {
     return [sorted[0]];
   }
 
-  private buildSignUrl(accessToken: string): string {
-    const baseUrl = process.env['APP_BASE_URL'] ?? 'http://localhost:3000';
-    return `${baseUrl}/sign/${accessToken}`;
+  private buildSignUrl(accessToken: string, locale = 'pt-br'): string {
+    const baseUrl = process.env['WEB_BASE_URL'] ?? 'http://localhost:3001';
+    return `${baseUrl}/${locale}/sign/${accessToken}`;
   }
 
   private async notifySigners(
@@ -296,7 +297,7 @@ export class SignaturesService {
           signerEmail: signer.email,
           signerName: signer.name,
           documentTitle: document.title,
-          signUrl: this.buildSignUrl(signer.accessToken),
+          signUrl: this.buildSignUrl(signer.accessToken, document.signingLanguage ?? 'en'),
           locale: document.signingLanguage ?? 'en',
           message,
         });

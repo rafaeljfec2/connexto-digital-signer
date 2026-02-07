@@ -2,14 +2,34 @@ import { useEffect, useRef, useState } from 'react';
 
 import { Button, Input } from '@/shared/ui';
 
+type SignaturePadLabels = Readonly<{
+  draw: string;
+  type: string;
+  clear: string;
+  cancel: string;
+  confirm: string;
+  placeholder: string;
+}>;
+
+const DEFAULT_LABELS: SignaturePadLabels = {
+  draw: 'Draw',
+  type: 'Type',
+  clear: 'Clear',
+  cancel: 'Cancel',
+  confirm: 'Confirm',
+  placeholder: 'Type your name',
+};
+
 type SignaturePadProps = Readonly<{
   onConfirm: (value: string) => void;
   onCancel?: () => void;
+  labels?: Partial<SignaturePadLabels>;
 }>;
 
 type Mode = 'draw' | 'type';
 
-export const SignaturePad = ({ onConfirm, onCancel }: SignaturePadProps) => {
+export const SignaturePad = ({ onConfirm, onCancel, labels: labelsProp }: SignaturePadProps) => {
+  const labels = { ...DEFAULT_LABELS, ...labelsProp };
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const [isDrawing, setIsDrawing] = useState(false);
   const [hasDrawn, setHasDrawn] = useState(false);
@@ -96,10 +116,10 @@ export const SignaturePad = ({ onConfirm, onCancel }: SignaturePadProps) => {
     <div className="space-y-3">
       <div className="flex gap-2">
         <Button type="button" variant={mode === 'draw' ? 'primary' : 'ghost'} onClick={() => setMode('draw')}>
-          Draw
+          {labels.draw}
         </Button>
         <Button type="button" variant={mode === 'type' ? 'primary' : 'ghost'} onClick={() => setMode('type')}>
-          Type
+          {labels.type}
         </Button>
       </div>
       {mode === 'draw' ? (
@@ -107,30 +127,31 @@ export const SignaturePad = ({ onConfirm, onCancel }: SignaturePadProps) => {
           <canvas
             ref={canvasRef}
             className="h-32 w-full rounded-md border border-border bg-white"
+            style={{ touchAction: 'none' }}
             onPointerDown={handlePointerDown}
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerLeave={handlePointerUp}
           />
           <Button type="button" variant="ghost" onClick={clearCanvas}>
-            Clear
+            {labels.clear}
           </Button>
         </div>
       ) : (
         <Input
           value={typedValue}
           onChange={(event) => setTypedValue(event.target.value)}
-          placeholder="Type your name"
+          placeholder={labels.placeholder}
         />
       )}
       <div className="flex items-center justify-end gap-2">
         {onCancel ? (
           <Button type="button" variant="ghost" onClick={onCancel}>
-            Cancel
+            {labels.cancel}
           </Button>
         ) : null}
         <Button type="button" onClick={handleConfirm} disabled={!canConfirm}>
-          Confirm
+          {labels.confirm}
         </Button>
       </div>
     </div>

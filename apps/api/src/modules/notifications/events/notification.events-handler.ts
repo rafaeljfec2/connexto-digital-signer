@@ -16,7 +16,7 @@ import { User, UserRole } from '../../users/entities/user.entity';
 import { Document } from '../../documents/entities/document.entity';
 import { NotificationsService } from '../services/notifications.service';
 
-const BASE_URL = process.env['APP_BASE_URL'] ?? 'http://localhost:3000';
+const WEB_URL = process.env['WEB_BASE_URL'] ?? 'http://localhost:3001';
 
 @Injectable()
 export class NotificationEventsHandler {
@@ -32,7 +32,7 @@ export class NotificationEventsHandler {
 
   @OnEvent(EVENT_SIGNER_ADDED)
   async handleSignerAdded(payload: SignerAddedEvent): Promise<void> {
-    const signUrl = `${BASE_URL}/sign/${payload.accessToken}`;
+    const signUrl = `${WEB_URL}/pt-br/sign/${payload.accessToken}`;
     await this.notificationsService.sendSignatureInvite({
       tenantId: payload.tenantId,
       signerEmail: payload.signerEmail,
@@ -57,14 +57,15 @@ export class NotificationEventsHandler {
 
       if (!owner) return;
 
-      const documentUrl = `${BASE_URL}/documents/${document.id}`;
+      const locale = document.signingLanguage ?? 'pt-br';
+      const documentUrl = `${WEB_URL}/${locale}/documents/${document.id}`;
 
       await this.notificationsService.sendDocumentCompleted({
         ownerEmail: owner.email,
         ownerName: owner.name,
         documentTitle: document.title,
         documentUrl,
-        locale: document.signingLanguage ?? 'en',
+        locale,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -77,7 +78,7 @@ export class NotificationEventsHandler {
   @OnEvent(EVENT_TENANT_CREATED)
   async handleTenantCreated(payload: TenantCreatedEvent): Promise<void> {
     try {
-      const dashboardUrl = `${BASE_URL}`;
+      const dashboardUrl = `${WEB_URL}/pt-br`;
 
       await this.notificationsService.sendWelcome({
         ownerEmail: payload.ownerEmail,

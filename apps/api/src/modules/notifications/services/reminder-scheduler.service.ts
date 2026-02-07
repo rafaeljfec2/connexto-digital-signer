@@ -93,7 +93,7 @@ export class ReminderSchedulerService {
     if (now - lastNotified < intervalMs) return;
 
     try {
-      const signUrl = this.buildSignUrl(signer.accessToken);
+      const signUrl = this.buildSignUrl(signer.accessToken, document.signingLanguage ?? 'en');
       const nextCount = signer.reminderCount + 1;
 
       await this.notificationsService.sendSignatureReminder({
@@ -143,8 +143,8 @@ export class ReminderSchedulerService {
     );
   }
 
-  private buildSignUrl(accessToken: string): string {
-    const baseUrl = process.env['APP_BASE_URL'] ?? 'http://localhost:3000';
-    return `${baseUrl}/sign/${accessToken}`;
+  private buildSignUrl(accessToken: string, locale = 'pt-br'): string {
+    const baseUrl = process.env['WEB_BASE_URL'] ?? 'http://localhost:3001';
+    return `${baseUrl}/${locale}/sign/${accessToken}`;
   }
 }

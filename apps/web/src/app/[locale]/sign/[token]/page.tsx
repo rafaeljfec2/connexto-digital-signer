@@ -3,31 +3,38 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
-import { FileText, PenTool, Fingerprint, Check } from 'lucide-react';
+import { FileText, Check, AlertTriangle, ShieldCheck } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
-import { Avatar, Badge, Button, Card, Dialog } from '@/shared/ui';
-import { SignaturePad } from '@/features/pdf-signature/components/SignaturePad';
+import { Avatar, Badge, Card } from '@/shared/ui';
 import {
   useSignerData,
   useSignerPdf,
   useSignerFields,
   useAcceptSignature,
 } from '@/features/signing/hooks';
-import { SignerPdfViewer } from './signer-pdf-viewer';
+import { SignStepper } from './components/sign-stepper';
+import type { SignStep } from './components/sign-stepper';
+import { ViewStep } from './components/view-step';
+import { FillFieldsStep } from './components/fill-fields-step';
+import { ReviewStep } from './components/review-step';
+import { SignatureModal } from './components/signature-modal';
 
 export default function SignerDocumentPage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
-  const tSigner = useTranslations('signer');
+  const t = useTranslations('signer');
   const tCommon = useTranslations('common');
   const router = useRouter();
-
   const currentLocale = useLocale();
 
   const signerQuery = useSignerData(token);
   const pdfQuery = useSignerPdf(token);
   const fieldsQuery = useSignerFields(token);
   const acceptMutation = useAcceptSignature(token);
+
+  const [currentStep, setCurrentStep] = useState<SignStep>('view');
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
 
   useEffect(() => {
     const signingLang = signerQuery.data?.document.signingLanguage;
@@ -36,17 +43,9 @@ export default function SignerDocumentPage() {
     }
   }, [signerQuery.data?.document.signingLanguage, currentLocale, token]);
 
-  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
-  const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
-
   const signerData = signerQuery.data;
   const fields = useMemo(() => fieldsQuery.data ?? [], [fieldsQuery.data]);
   const alreadySigned = signerData?.signer.status === 'signed';
-
-  const activeField = useMemo(
-    () => fields.find((f) => f.id === activeFieldId) ?? null,
-    [fields, activeFieldId]
-  );
 
   const fileUrl = useMemo(() => {
     if (!pdfQuery.data) return '';
@@ -58,21 +57,6 @@ export default function SignerDocumentPage() {
       if (fileUrl) URL.revokeObjectURL(fileUrl);
     };
   }, [fileUrl]);
-
-  const requiredFields = useMemo(
-    () => fields.filter((f) => f.required),
-    [fields]
-  );
-
-  const filledCount = useMemo(
-    () =>
-      requiredFields.filter(
-        (f) => (fieldValues[f.id] ?? f.value ?? '').length > 0
-      ).length,
-    [requiredFields, fieldValues]
-  );
-
-  const allRequiredFilled = filledCount === requiredFields.length && requiredFields.length > 0;
 
   const handleFieldClick = useCallback(
     (fieldId: string) => {
@@ -92,7 +76,6 @@ export default function SignerDocumentPage() {
   );
 
   const handleSubmit = async () => {
-    if (!allRequiredFilled) return;
     const fieldPayload = fields
       .filter((f) => (fieldValues[f.id] ?? '').length > 0)
       .map((f) => ({
@@ -101,19 +84,45 @@ export default function SignerDocumentPage() {
       }));
 
     await acceptMutation.mutateAsync({
-      consent: 'I agree to sign this document',
+      consent: t('consent.label'),
       fields: fieldPayload,
     });
 
     router.push('/success');
   };
 
+  const fieldTypeLabels = useMemo(
+    () => ({
+      signature: t('fieldType.signature'),
+      initials: t('fieldType.initials'),
+      name: t('fieldType.name'),
+      date: t('fieldType.date'),
+      text: t('fieldType.text'),
+    }),
+    [t]
+  );
+
+  const signaturePadLabels = useMemo(
+    () => ({
+      title: t('signaturePad.title'),
+      draw: t('signaturePad.draw'),
+      type: t('signaturePad.type'),
+      clear: t('signaturePad.clear'),
+      cancel: t('signaturePad.cancel'),
+      confirm: t('signaturePad.confirm'),
+      placeholder: t('signaturePad.placeholder'),
+      drawHint: t('signaturePad.drawHint'),
+      typeHint: t('signaturePad.typeHint'),
+    }),
+    [t]
+  );
+
   if (signerQuery.isLoading || pdfQuery.isLoading || fieldsQuery.isLoading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-main text-white">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-main text-white">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          <p className="text-sm text-neutral-100/70">{tSigner('loading')}</p>
+          <p className="text-sm text-neutral-100/70">{t('loading')}</p>
         </div>
       </div>
     );
@@ -121,10 +130,13 @@ export default function SignerDocumentPage() {
 
   if (signerQuery.isError || !signerData) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-main text-white">
-        <Card variant="glass" className="max-w-md p-8 text-center">
-          <FileText className="mx-auto mb-4 h-10 w-10 text-neutral-100/50" />
-          <p className="text-lg font-semibold">{tSigner('error')}</p>
+      <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-main px-4 text-white">
+        <Card variant="glass" className="max-w-sm space-y-4 p-8 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/20">
+            <AlertTriangle className="h-6 w-6 text-error" />
+          </div>
+          <p className="text-lg font-semibold">{t('error')}</p>
+          <p className="text-sm text-neutral-100/60">{t('errorSubtitle')}</p>
         </Card>
       </div>
     );
@@ -132,132 +144,138 @@ export default function SignerDocumentPage() {
 
   const { signer, document: doc } = signerData;
 
-  return (
-    <div className="min-h-screen bg-gradient-main px-4 py-8 text-white">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between pb-6">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
-            <FileText className="h-5 w-5" />
+  if (alreadySigned) {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-main px-4 text-white">
+        <Card variant="glass" className="max-w-sm space-y-4 p-8 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/20">
+            <Check className="h-6 w-6 text-success" />
           </div>
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-100/70">
+          <p className="text-lg font-semibold">{t('alreadySigned')}</p>
+          <p className="text-sm text-neutral-100/60">{t('alreadySignedSubtitle')}</p>
+          <div className="flex items-center justify-center gap-2 pt-2">
+            <ShieldCheck className="h-4 w-4 text-success/60" />
+            <span className="text-xs text-neutral-100/40">ICP-Brasil</span>
+          </div>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex min-h-[100dvh] flex-col bg-gradient-main text-white">
+      <header className="border-b border-white/10 px-3 py-2.5 md:px-6 md:py-3">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
+            <FileText className="h-4 w-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[9px] font-semibold uppercase tracking-[0.15em] text-neutral-100/50">
               {tCommon('appName')}
             </div>
-            <div className="text-lg font-semibold">{doc.title}</div>
+            <div className="truncate text-xs font-semibold md:text-sm">
+              {doc.title}
+            </div>
           </div>
+          <div className="hidden items-center gap-2 sm:flex">
+            <Avatar name={signer.name} size="sm" />
+            <div className="min-w-0">
+              <p className="truncate text-xs font-medium">{signer.name}</p>
+              <p className="truncate text-[10px] text-neutral-100/50">
+                {signer.email}
+              </p>
+            </div>
+          </div>
+          <Badge variant="info" className="shrink-0">
+            {t('status.pending')}
+          </Badge>
         </div>
-        <Badge variant={alreadySigned ? 'success' : 'info'}>
-          {alreadySigned ? tSigner('status.signed') : tSigner('status.pending')}
-        </Badge>
       </header>
 
-      <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <Card variant="glass" className="p-4">
-          {fileUrl ? (
-            <SignerPdfViewer
-              fileUrl={fileUrl}
-              fields={fields}
-              fieldValues={fieldValues}
-              onFieldClick={handleFieldClick}
-              disabled={alreadySigned}
-            />
-          ) : null}
-        </Card>
-
-        <div className="space-y-6">
-          <Card variant="glass" className="space-y-4 p-6">
-            <div className="flex items-center gap-3">
-              <Avatar name={signer.name} size="md" statusColor="#14B8A6" />
-              <div>
-                <p className="text-sm font-semibold">{signer.name}</p>
-                <p className="text-xs text-neutral-100/70">{signer.email}</p>
-              </div>
-            </div>
-
-            {alreadySigned ? (
-              <div className="rounded-xl border border-green-400/30 bg-green-400/10 p-4 text-sm text-green-300">
-                <Check className="mb-1 inline h-4 w-4" /> {tSigner('alreadySigned')}
-              </div>
-            ) : (
-              <>
-                <div className="rounded-xl border border-white/20 bg-white/10 p-4 text-sm text-neutral-100/80">
-                  {tSigner('legalNotice')}
-                </div>
-
-                <div className="text-xs text-neutral-100/60">
-                  {tSigner('fieldsProgress', {
-                    filled: filledCount,
-                    total: requiredFields.length,
-                  })}
-                </div>
-
-                <div className="space-y-2">
-                  {fields.map((field) => {
-                    const value = fieldValues[field.id] ?? field.value ?? '';
-                    const isFilled = value.length > 0;
-                    return (
-                      <button
-                        key={field.id}
-                        type="button"
-                        onClick={() => handleFieldClick(field.id)}
-                        className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition ${
-                          isFilled
-                            ? 'border-green-400/30 bg-green-400/10 text-green-300'
-                            : 'border-white/20 bg-white/5 text-neutral-100/70 hover:bg-white/10'
-                        }`}
-                      >
-                        {field.type === 'initials' ? (
-                          <Fingerprint className="h-4 w-4 shrink-0" />
-                        ) : (
-                          <PenTool className="h-4 w-4 shrink-0" />
-                        )}
-                        <span className="flex-1">
-                          {field.type === 'initials'
-                            ? tSigner('clickToInitials')
-                            : tSigner('clickToSign')}
-                          {field.required ? ' *' : ''}
-                        </span>
-                        {isFilled ? (
-                          <Check className="h-4 w-4 shrink-0 text-green-400" />
-                        ) : null}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <Button
-                  type="button"
-                  onClick={handleSubmit}
-                  disabled={!allRequiredFilled || acceptMutation.isPending}
-                  isLoading={acceptMutation.isPending}
-                  className="w-full"
-                >
-                  <PenTool className="h-4 w-4" />
-                  {acceptMutation.isPending
-                    ? tSigner('signing')
-                    : tSigner('signAction')}
-                </Button>
-              </>
-            )}
-          </Card>
+      <div className="border-b border-white/5 px-4 py-2 md:px-6 md:py-3">
+        <div className="mx-auto max-w-6xl">
+          <SignStepper
+            currentStep={currentStep}
+            labels={{
+              view: t('steps.view'),
+              fill: t('steps.fill'),
+              review: t('steps.review'),
+            }}
+          />
         </div>
       </div>
 
-      <Dialog
+      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 py-2 pb-20 md:px-6 md:pb-4">
+        {currentStep === 'view' ? (
+          <ViewStep
+            fileUrl={fileUrl}
+            fields={fields}
+            labels={{
+              instruction: t('viewStep.instruction'),
+              next: t('viewStep.next'),
+              clickToSign: t('clickToSign'),
+              clickToInitials: t('clickToInitials'),
+            }}
+            onNext={() => setCurrentStep('fill')}
+          />
+        ) : null}
+
+        {currentStep === 'fill' ? (
+          <FillFieldsStep
+            fileUrl={fileUrl}
+            fields={fields}
+            fieldValues={fieldValues}
+            onFieldClick={handleFieldClick}
+            onNext={() => setCurrentStep('review')}
+            onBack={() => setCurrentStep('view')}
+            labels={{
+              instruction: t('fillStep.instruction'),
+              progressFormat: (filled: number, total: number) =>
+                t('fieldsProgress', { filled, total }),
+              required: t('fillStep.required'),
+              optional: t('fillStep.optional'),
+              filled: t('fillStep.filled'),
+              tapToFill: t('fillStep.tapToFill'),
+              next: t('fillStep.next'),
+              back: t('back'),
+              clickToSign: t('clickToSign'),
+              clickToInitials: t('clickToInitials'),
+            }}
+            fieldTypeLabels={fieldTypeLabels}
+          />
+        ) : null}
+
+        {currentStep === 'review' ? (
+          <ReviewStep
+            signerData={signerData}
+            fields={fields}
+            fieldValues={fieldValues}
+            onBack={() => setCurrentStep('fill')}
+            onSubmit={handleSubmit}
+            isSubmitting={acceptMutation.isPending}
+            labels={{
+              title: t('reviewStep.title'),
+              documentTitle: t('reviewStep.documentTitle'),
+              signerInfo: t('reviewStep.signerInfo'),
+              filledFields: t('reviewStep.filledFields'),
+              fieldPreview: t('reviewStep.fieldPreview'),
+              consentLabel: t('consent.label'),
+              consentRequired: t('consent.required'),
+              signAction: t('signAction'),
+              signing: t('signing'),
+              back: t('back'),
+            }}
+            fieldTypeLabels={fieldTypeLabels}
+          />
+        ) : null}
+      </main>
+
+      <SignatureModal
         open={activeFieldId !== null}
+        labels={signaturePadLabels}
+        onConfirm={handleSignatureConfirm}
         onClose={() => setActiveFieldId(null)}
-        title={
-          activeField?.type === 'initials'
-            ? tSigner('clickToInitials')
-            : tSigner('fillFieldTitle')
-        }
-        footer={null}
-      >
-        <SignaturePad
-          onConfirm={handleSignatureConfirm}
-          onCancel={() => setActiveFieldId(null)}
-        />
-      </Dialog>
+      />
     </div>
   );
 }
