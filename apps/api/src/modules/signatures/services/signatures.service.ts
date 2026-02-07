@@ -1,28 +1,58 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import type { DocumentSentEvent, SignatureCompletedEvent } from '@connexto/events';
+import { EVENT_DOCUMENT_SENT, EVENT_SIGNATURE_COMPLETED } from '@connexto/events';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
-import { Signer, SignerStatus } from '../entities/signer.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { randomBytes } from 'node:crypto';
+import { Repository } from 'typeorm';
+import { PdfService } from '../../../shared/pdf/pdf.service';
+import { DocumentStatus, SigningMode } from '../../documents/entities/document.entity';
+import { DocumentsService } from '../../documents/services/documents.service';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
 import { UpdateSignerDto } from '../dto/update-signer.dto';
-import { DocumentsService } from '../../documents/services/documents.service';
-import { DocumentStatus, SigningMode } from '../../documents/entities/document.entity';
-import {
-  EVENT_SIGNATURE_COMPLETED,
-  EVENT_DOCUMENT_SENT,
-} from '@connexto/events';
-import type {
-  SignatureCompletedEvent,
-  DocumentSentEvent,
-} from '@connexto/events';
-import { randomBytes } from 'crypto';
-import { PdfService } from '../../../shared/pdf/pdf.service';
+import { Signer, SignerStatus } from '../entities/signer.entity';
 import { SignatureFieldsService } from './signature-fields.service';
-import { NotificationsService } from '../../notifications/services/notifications.service';
 
 export interface SigningContext {
   ipAddress: string;
   userAgent: string;
+}
+
+export interface AuditTimelineEvent {
+  type: 'sent' | 'signed' | 'completed' | 'verified';
+  actorName: string;
+  actorEmail: string;
+  timestamp: Date;
+}
+
+export interface AuditSignerInfo {
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  authMethod: string;
+  notifiedAt: Date | null;
+  signedAt: Date | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  verifiedAt: Date | null;
+}
+
+export interface DocumentAuditSummary {
+  document: {
+    id: string;
+    title: string;
+    status: string;
+    signingMode: string;
+    createdAt: Date;
+    expiresAt: Date | null;
+    completedAt: Date | null;
+    originalHash: string | null;
+    finalHash: string | null;
+  };
+  signers: AuditSignerInfo[];
+  timeline: AuditTimelineEvent[];
 }
 
 @Injectable()
@@ -42,7 +72,7 @@ export class SignaturesService {
     documentId: string,
     createSignerDto: CreateSignerDto
   ): Promise<Signer> {
-    const document = await this.documentsService.findOne(documentId, tenantId);
+    await this.documentsService.findOne(documentId, tenantId);
     const accessToken = randomBytes(32).toString('hex');
     const signer = this.signerRepository.create({
       ...createSignerDto,
@@ -70,11 +100,7 @@ export class SignaturesService {
     return this.signerRepository.save(signer);
   }
 
-  async removeSigner(
-    tenantId: string,
-    documentId: string,
-    signerId: string
-  ): Promise<void> {
+  async removeSigner(tenantId: string, documentId: string, signerId: string): Promise<void> {
     const signer = await this.signerRepository.findOne({
       where: { id: signerId, documentId, tenantId },
     });
@@ -106,10 +132,7 @@ export class SignaturesService {
     document: { id: string; title: string; status: DocumentStatus; signingLanguage: string };
   }> {
     const signer = await this.findByToken(accessToken);
-    const document = await this.documentsService.findOne(
-      signer.documentId,
-      signer.tenantId
-    );
+    const document = await this.documentsService.findOne(signer.documentId, signer.tenantId);
     return {
       signer,
       document: {
@@ -123,29 +146,19 @@ export class SignaturesService {
 
   async getSignerPdf(accessToken: string): Promise<Buffer> {
     const signer = await this.findByToken(accessToken);
-    const document = await this.documentsService.findOne(
-      signer.documentId,
-      signer.tenantId
-    );
+    const document = await this.documentsService.findOne(signer.documentId, signer.tenantId);
     return this.documentsService.getOriginalFile(document);
   }
 
   async getSignerSignedPdf(accessToken: string): Promise<Buffer | null> {
     const signer = await this.findByToken(accessToken);
-    const document = await this.documentsService.findOne(
-      signer.documentId,
-      signer.tenantId
-    );
+    const document = await this.documentsService.findOne(signer.documentId, signer.tenantId);
     return this.documentsService.getFinalFile(document);
   }
 
   async getSignerFields(accessToken: string) {
     const signer = await this.findByToken(accessToken);
-    return this.fieldsService.findBySigner(
-      signer.tenantId,
-      signer.documentId,
-      signer.id
-    );
+    return this.fieldsService.findBySigner(signer.tenantId, signer.documentId, signer.id);
   }
 
   async acceptSignature(
@@ -160,17 +173,11 @@ export class SignaturesService {
     if (signer.authMethod === 'email' && signer.verifiedAt === null) {
       throw new BadRequestException('Verification required');
     }
-    const document = await this.documentsService.findOne(
-      signer.documentId,
-      signer.tenantId
-    );
+    const document = await this.documentsService.findOne(signer.documentId, signer.tenantId);
     if (document.status === DocumentStatus.COMPLETED) {
       throw new BadRequestException('Document is already completed');
     }
-    if (
-      document.expiresAt !== null &&
-      new Date() > document.expiresAt
-    ) {
+    if (document.expiresAt !== null && new Date() > document.expiresAt) {
       throw new BadRequestException('Document has expired');
     }
     await Promise.all(
@@ -221,7 +228,7 @@ export class SignaturesService {
       throw new BadRequestException('At least one signer is required');
     }
     const fields = await this.fieldsService.findByDocument(tenantId, documentId);
-    if (fields.length === 0 || fields.every((field) => field.required === false)) {
+    if (fields.every((field) => field.required === false)) {
       throw new BadRequestException('At least one required field is required');
     }
     if (document.signingMode === SigningMode.SEQUENTIAL) {
@@ -235,9 +242,7 @@ export class SignaturesService {
       }
     }
     const toNotify =
-      document.signingMode === SigningMode.SEQUENTIAL
-        ? this.pickFirstSigner(signers)
-        : signers;
+      document.signingMode === SigningMode.SEQUENTIAL ? this.pickFirstSigner(signers) : signers;
     const now = new Date();
     const notified = await this.notifySigners(document, toNotify, now, message);
     await this.documentsService.setStatus(documentId, tenantId, DocumentStatus.PENDING_SIGNATURES);
@@ -291,10 +296,16 @@ export class SignaturesService {
   }
 
   private async notifySigners(
-    document: { id: string; tenantId: string; title: string; signingMode: SigningMode; signingLanguage?: string },
+    document: {
+      id: string;
+      tenantId: string;
+      title: string;
+      signingMode: SigningMode;
+      signingLanguage?: string;
+    },
     signers: Signer[],
     notifiedAt: Date,
-    message?: string,
+    message?: string
   ): Promise<Signer[]> {
     if (signers.length === 0) return [];
     const updated = signers.map((signer) => ({
@@ -313,7 +324,7 @@ export class SignaturesService {
           locale: document.signingLanguage ?? 'en',
           message,
         });
-      }),
+      })
     );
     return saved;
   }
@@ -366,6 +377,88 @@ export class SignaturesService {
       document.title
     );
     await this.documentsService.setFinalPdf(documentId, tenantId, finalBuffer);
+  }
+
+  async getDocumentAuditSummary(
+    documentId: string,
+    tenantId: string
+  ): Promise<DocumentAuditSummary> {
+    const document = await this.documentsService.findOne(documentId, tenantId);
+    const signers = await this.findByDocument(documentId, tenantId);
+
+    const timeline: AuditTimelineEvent[] = [];
+
+    for (const signer of signers) {
+      if (signer.notifiedAt) {
+        timeline.push({
+          type: 'sent',
+          actorName: signer.name,
+          actorEmail: signer.email,
+          timestamp: signer.notifiedAt,
+        });
+      }
+      if (signer.verifiedAt) {
+        timeline.push({
+          type: 'verified',
+          actorName: signer.name,
+          actorEmail: signer.email,
+          timestamp: signer.verifiedAt,
+        });
+      }
+      if (signer.signedAt) {
+        timeline.push({
+          type: 'signed',
+          actorName: signer.name,
+          actorEmail: signer.email,
+          timestamp: signer.signedAt,
+        });
+      }
+    }
+
+    if (document.status === DocumentStatus.COMPLETED) {
+      timeline.push({
+        type: 'completed',
+        actorName: document.title,
+        actorEmail: '',
+        timestamp: document.updatedAt,
+      });
+    }
+
+    timeline.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
+
+    const completedAt = document.status === DocumentStatus.COMPLETED ? document.updatedAt : null;
+
+    return {
+      document: {
+        id: document.id,
+        title: document.title,
+        status: document.status,
+        signingMode: document.signingMode,
+        createdAt: document.createdAt,
+        expiresAt: document.expiresAt,
+        completedAt,
+        originalHash: document.originalHash,
+        finalHash: document.finalHash,
+      },
+      signers: signers.map((s) => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        status: s.status,
+        authMethod: s.authMethod,
+        notifiedAt: s.notifiedAt,
+        signedAt: s.signedAt,
+        ipAddress: s.ipAddress,
+        userAgent: s.userAgent,
+        verifiedAt: s.verifiedAt,
+      })),
+      timeline,
+    };
+  }
+
+  async getDocumentAuditSummaryByToken(accessToken: string): Promise<DocumentAuditSummary> {
+    const signer = await this.findByToken(accessToken);
+    return this.getDocumentAuditSummary(signer.documentId, signer.tenantId);
   }
 
   async areAllSignersSigned(documentId: string, tenantId: string): Promise<boolean> {

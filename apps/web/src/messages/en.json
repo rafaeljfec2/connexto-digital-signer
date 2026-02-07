@@ -364,6 +364,60 @@
     "downloading": "Downloading...",
     "cta": "Back to Dashboard",
     "badge": "ICP-Brasil",
-    "securityNote": "Electronic signature with legal validity"
+    "securityNote": "Electronic signature with legal validity",
+    "viewSummary": "View document summary"
+  },
+  "audit": {
+    "title": "Document summary",
+    "documentDetails": "Document details",
+    "signingMode": "Signing mode",
+    "signingModeParallel": "Parallel",
+    "signingModeSequential": "Sequential",
+    "createdAt": "Created at",
+    "expiresAt": "Deadline",
+    "completedAt": "Completed at",
+    "noExpiry": "No deadline",
+    "status": {
+      "draft": "Draft",
+      "pending_signatures": "Pending",
+      "completed": "Completed",
+      "expired": "Expired"
+    },
+    "hashes": "Document integrity",
+    "originalHash": "Original hash (SHA-256)",
+    "signedHash": "Signed hash (SHA-256)",
+    "hashUnavailable": "Unavailable",
+    "copied": "Copied!",
+    "copy": "Copy",
+    "timeline": "Timeline",
+    "events": {
+      "sent": "Invitation sent to {name}",
+      "signed": "{name} signed the document",
+      "completed": "Document completed",
+      "verified": "{name} verified identity"
+    },
+    "signers": "Signers",
+    "signerCard": {
+      "signedAt": "Signed at",
+      "notifiedAt": "Notified at",
+      "ip": "IP address",
+      "userAgent": "Browser",
+      "authMethod": "Authentication",
+      "authMethodEmail": "Token via email",
+      "authMethodNone": "No authentication",
+      "verifiedAt": "Verified at",
+      "pending": "Pending",
+      "signed": "Signed"
+    },
+    "downloads": "Downloads",
+    "downloadOriginal": "Original document",
+    "downloadOriginalDesc": "PDF without signatures",
+    "downloadSigned": "Signed document",
+    "downloadSignedDesc": "PDF with all signatures",
+    "downloadSignedUnavailable": "Available when all signers complete",
+    "downloading": "Downloading...",
+    "loading": "Loading summary...",
+    "error": "Error loading summary",
+    "errorSubtitle": "Could not load document data."
   }
 }

@@ -8,10 +8,11 @@ import {
   FileBadge,
   ShieldCheck,
   Loader2,
+  FileSearch,
 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
-import { useRouter } from '@/i18n/navigation';
+import { useRouter, Link } from '@/i18n/navigation';
 import { Button, Card } from '@/shared/ui';
 import { getSignerByToken, getSignerPdf, getSignerSignedPdf } from '@/features/signing/api';
 
@@ -31,6 +32,100 @@ type SignerInfo = Readonly<{
   documentTitle: string;
   documentStatus: string;
 }>;
+
+type SuccessActionsProps = Readonly<{
+  token: string;
+  signerInfo: SignerInfo | null;
+  signedAvailable: boolean | null;
+  downloadingOriginal: boolean;
+  downloadingSigned: boolean;
+  onDownloadOriginal: () => void;
+  onDownloadSigned: () => void;
+  labels: Readonly<{
+    downloads: string;
+    downloadOriginal: string;
+    downloadOriginalDesc: string;
+    downloadSigned: string;
+    downloadSignedDesc: string;
+    downloadSignedUnavailable: string;
+    viewSummary: string;
+  }>;
+}>;
+
+function SuccessActions({
+  token,
+  signedAvailable,
+  downloadingOriginal,
+  downloadingSigned,
+  onDownloadOriginal,
+  onDownloadSigned,
+  labels,
+}: SuccessActionsProps) {
+  return (
+    <>
+      <div className="space-y-3">
+        <p className="text-xs font-semibold uppercase tracking-wider text-neutral-100/40">
+          {labels.downloads}
+        </p>
+        <button
+          type="button"
+          onClick={onDownloadOriginal}
+          disabled={downloadingOriginal}
+          className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5 text-left transition-all hover:border-white/20 hover:bg-white/10 disabled:opacity-50"
+        >
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-400/20">
+            <FileText className="h-5 w-5 text-accent-400" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">{labels.downloadOriginal}</p>
+            <p className="text-xs text-neutral-100/50">{labels.downloadOriginalDesc}</p>
+          </div>
+          {downloadingOriginal ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-neutral-100/50" />
+          ) : (
+            <Download className="h-4 w-4 shrink-0 text-neutral-100/40" />
+          )}
+        </button>
+        <button
+          type="button"
+          onClick={onDownloadSigned}
+          disabled={downloadingSigned || signedAvailable === false}
+          className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5 text-left transition-all hover:border-white/20 hover:bg-white/10 disabled:opacity-50"
+        >
+          <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+            signedAvailable ? 'bg-success/20' : 'bg-white/10'
+          }`}>
+            <FileBadge className={`h-5 w-5 ${
+              signedAvailable ? 'text-success' : 'text-neutral-100/40'
+            }`} />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold">{labels.downloadSigned}</p>
+            <p className="text-xs text-neutral-100/50">
+              {signedAvailable === false
+                ? labels.downloadSignedUnavailable
+                : labels.downloadSignedDesc}
+            </p>
+          </div>
+          {downloadingSigned ? (
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-neutral-100/50" />
+          ) : (
+            <Download className={`h-4 w-4 shrink-0 ${
+              signedAvailable ? 'text-neutral-100/40' : 'text-neutral-100/20'
+            }`} />
+          )}
+        </button>
+      </div>
+      <Link
+        href={`/sign/${token}/summary`}
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition-all hover:border-white/20 hover:bg-white/10"
+      >
+        <FileSearch className="h-4 w-4" />
+        {labels.viewSummary}
+      </Link>
+    </>
+  );
+}
 
 export default function SuccessPage() {
   const t = useTranslations('success');
@@ -110,61 +205,24 @@ export default function SuccessPage() {
           </div>
 
           {token ? (
-            <div className="space-y-3">
-              <p className="text-xs font-semibold uppercase tracking-wider text-neutral-100/40">
-                {t('downloads')}
-              </p>
-
-              <button
-                type="button"
-                onClick={handleDownloadOriginal}
-                disabled={downloadingOriginal}
-                className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5 text-left transition-all hover:border-white/20 hover:bg-white/10 disabled:opacity-50"
-              >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-400/20">
-                  <FileText className="h-5 w-5 text-accent-400" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold">{t('downloadOriginal')}</p>
-                  <p className="text-xs text-neutral-100/50">{t('downloadOriginalDesc')}</p>
-                </div>
-                {downloadingOriginal ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-neutral-100/50" />
-                ) : (
-                  <Download className="h-4 w-4 shrink-0 text-neutral-100/40" />
-                )}
-              </button>
-
-              <button
-                type="button"
-                onClick={handleDownloadSigned}
-                disabled={downloadingSigned || signedAvailable === false}
-                className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5 text-left transition-all hover:border-white/20 hover:bg-white/10 disabled:opacity-50"
-              >
-                <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                  signedAvailable ? 'bg-success/20' : 'bg-white/10'
-                }`}>
-                  <FileBadge className={`h-5 w-5 ${
-                    signedAvailable ? 'text-success' : 'text-neutral-100/40'
-                  }`} />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-sm font-semibold">{t('downloadSigned')}</p>
-                  <p className="text-xs text-neutral-100/50">
-                    {signedAvailable === false
-                      ? t('downloadSignedUnavailable')
-                      : t('downloadSignedDesc')}
-                  </p>
-                </div>
-                {downloadingSigned ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin text-neutral-100/50" />
-                ) : (
-                  <Download className={`h-4 w-4 shrink-0 ${
-                    signedAvailable ? 'text-neutral-100/40' : 'text-neutral-100/20'
-                  }`} />
-                )}
-              </button>
-            </div>
+            <SuccessActions
+              token={token}
+              signerInfo={signerInfo}
+              signedAvailable={signedAvailable}
+              downloadingOriginal={downloadingOriginal}
+              downloadingSigned={downloadingSigned}
+              onDownloadOriginal={handleDownloadOriginal}
+              onDownloadSigned={handleDownloadSigned}
+              labels={{
+                downloads: t('downloads'),
+                downloadOriginal: t('downloadOriginal'),
+                downloadOriginalDesc: t('downloadOriginalDesc'),
+                downloadSigned: t('downloadSigned'),
+                downloadSignedDesc: t('downloadSignedDesc'),
+                downloadSignedUnavailable: t('downloadSignedUnavailable'),
+                viewSummary: t('viewSummary'),
+              }}
+            />
           ) : null}
 
           <div className="flex justify-center pt-1">

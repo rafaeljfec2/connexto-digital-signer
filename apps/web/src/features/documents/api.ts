@@ -129,6 +129,42 @@ export type UpdateDocumentInput = {
   readonly closureMode?: ClosureMode;
 };
 
+export type AuditTimelineEvent = Readonly<{
+  type: 'sent' | 'signed' | 'completed' | 'verified';
+  actorName: string;
+  actorEmail: string;
+  timestamp: string;
+}>;
+
+export type AuditSignerInfo = Readonly<{
+  id: string;
+  name: string;
+  email: string;
+  status: string;
+  authMethod: string;
+  notifiedAt: string | null;
+  signedAt: string | null;
+  ipAddress: string | null;
+  userAgent: string | null;
+  verifiedAt: string | null;
+}>;
+
+export type DocumentAuditSummary = Readonly<{
+  document: Readonly<{
+    id: string;
+    title: string;
+    status: string;
+    signingMode: string;
+    createdAt: string;
+    expiresAt: string | null;
+    completedAt: string | null;
+    originalHash: string | null;
+    finalHash: string | null;
+  }>;
+  signers: readonly AuditSignerInfo[];
+  timeline: readonly AuditTimelineEvent[];
+}>;
+
 export const getDocumentsStats = async (): Promise<DocumentsStats> => {
   const response = await apiClient.get<DocumentsStats>('/documents/stats');
   return response.data;
@@ -258,4 +294,24 @@ export const updateDocument = async (
 ): Promise<DocumentDetail> => {
   const response = await apiClient.patch<DocumentDetail>(`/documents/${documentId}`, input);
   return response.data;
+};
+
+export const getDocumentAuditSummary = async (
+  documentId: string,
+): Promise<DocumentAuditSummary> => {
+  const response = await apiClient.get<DocumentAuditSummary>(
+    `/documents/${documentId}/summary`,
+  );
+  return response.data;
+};
+
+export const getDocumentSignedFile = async (documentId: string): Promise<Blob | null> => {
+  try {
+    const response = await apiClient.get(`/documents/${documentId}/signed-file`, {
+      responseType: 'blob',
+    });
+    return response.data as Blob;
+  } catch {
+    return null;
+  }
 };

@@ -34,7 +34,11 @@ export default function DashboardPage() {
 
   const handleDocumentClick = useCallback(
     (doc: DocumentSummary) => {
-      router.push(`/documents/${doc.id}`);
+      if (doc.status === 'completed') {
+        router.push(`/documents/${doc.id}/summary`);
+      } else {
+        router.push(`/documents/${doc.id}`);
+      }
     },
     [router]
   );

@@ -84,6 +84,15 @@ export const getSignerSignedPdf = async (token: string): Promise<Blob | null> =>
   }
 };
 
+export const getSignerSummary = async (
+  token: string
+): Promise<import('@/features/documents/api').DocumentAuditSummary> => {
+  const response = await publicClient.get<import('@/features/documents/api').DocumentAuditSummary>(
+    `/sign/${token}/summary`
+  );
+  return response.data;
+};
+
 export const sendVerificationCode = async (
   token: string
 ): Promise<{ readonly sent: boolean }> => {

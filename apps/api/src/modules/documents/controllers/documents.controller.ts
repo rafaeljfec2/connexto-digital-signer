@@ -6,6 +6,7 @@ import {
   Body,
   Patch,
   Param,
+  Res,
   ParseUUIDPipe,
   Query,
   UseInterceptors,
@@ -13,6 +14,7 @@ import {
   StreamableFile,
   Header,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TenantId } from '@connexto/shared';
@@ -82,6 +84,27 @@ export class DocumentsController {
     const document = await this.documentsService.findOne(id, tenantId);
     const buffer = await this.documentsService.getOriginalFile(document);
     return new StreamableFile(buffer);
+  }
+
+  @Get(':id/signed-file')
+  async getSignedFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string,
+    @Res() res: Response,
+  ) {
+    const document = await this.documentsService.findOne(id, tenantId);
+    const buffer = await this.documentsService.getFinalFile(document);
+    if (buffer === null) {
+      res.status(404).json({ message: 'Signed document is not available yet' });
+      return;
+    }
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Length': buffer.length,
+      'Content-Disposition': `attachment; filename="${document.title}-signed.pdf"`,
+      'Cache-Control': 'private, max-age=300',
+    });
+    res.end(buffer);
   }
 
   @Post(':id/file')

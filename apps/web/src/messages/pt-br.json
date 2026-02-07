@@ -364,6 +364,60 @@
     "downloading": "Baixando...",
     "cta": "Voltar para Início",
     "badge": "ICP-Brasil",
-    "securityNote": "Assinatura eletrônica com validade jurídica"
+    "securityNote": "Assinatura eletrônica com validade jurídica",
+    "viewSummary": "Ver resumo do documento"
+  },
+  "audit": {
+    "title": "Resumo do documento",
+    "documentDetails": "Detalhes do documento",
+    "signingMode": "Modo de assinatura",
+    "signingModeParallel": "Paralelo",
+    "signingModeSequential": "Sequencial",
+    "createdAt": "Criado em",
+    "expiresAt": "Data limite",
+    "completedAt": "Concluído em",
+    "noExpiry": "Sem prazo",
+    "status": {
+      "draft": "Rascunho",
+      "pending_signatures": "Pendente",
+      "completed": "Concluído",
+      "expired": "Expirado"
+    },
+    "hashes": "Integridade do documento",
+    "originalHash": "Hash do original (SHA-256)",
+    "signedHash": "Hash do assinado (SHA-256)",
+    "hashUnavailable": "Indisponível",
+    "copied": "Copiado!",
+    "copy": "Copiar",
+    "timeline": "Linha do tempo",
+    "events": {
+      "sent": "Convite enviado para {name}",
+      "signed": "{name} assinou o documento",
+      "completed": "Documento concluído",
+      "verified": "{name} verificou identidade"
+    },
+    "signers": "Signatários",
+    "signerCard": {
+      "signedAt": "Assinado em",
+      "notifiedAt": "Notificado em",
+      "ip": "Endereço IP",
+      "userAgent": "Navegador",
+      "authMethod": "Autenticação",
+      "authMethodEmail": "Token via email",
+      "authMethodNone": "Sem autenticação",
+      "verifiedAt": "Verificado em",
+      "pending": "Pendente",
+      "signed": "Assinado"
+    },
+    "downloads": "Downloads",
+    "downloadOriginal": "Documento original",
+    "downloadOriginalDesc": "PDF sem assinaturas",
+    "downloadSigned": "Documento assinado",
+    "downloadSignedDesc": "PDF com todas as assinaturas",
+    "downloadSignedUnavailable": "Disponível quando todos assinarem",
+    "downloading": "Baixando...",
+    "loading": "Carregando resumo...",
+    "error": "Erro ao carregar resumo",
+    "errorSubtitle": "Não foi possível carregar os dados do documento."
   }
 }

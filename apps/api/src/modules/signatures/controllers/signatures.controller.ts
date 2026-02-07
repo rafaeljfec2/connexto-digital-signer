@@ -218,6 +218,13 @@ export class SignController {
 
   @Public()
   @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Get(':token/summary')
+  getSignerSummary(@Param('token') token: string) {
+    return this.signaturesService.getDocumentAuditSummaryByToken(token);
+  }
+
+  @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Post(':token/send-code')
   sendCode(@Param('token') token: string) {
     return this.verificationService.sendCode(token);
@@ -239,6 +246,14 @@ export class SignController {
 @Controller('documents/:documentId')
 export class DocumentSendController {
   constructor(private readonly signaturesService: SignaturesService) {}
+
+  @Get('summary')
+  getDocumentSummary(
+    @Param('documentId') documentId: string,
+    @TenantId() tenantId: string,
+  ) {
+    return this.signaturesService.getDocumentAuditSummary(documentId, tenantId);
+  }
 
   @Get('send/preview')
   previewSend(

@@ -4,6 +4,7 @@ import {
   batchUpdateFields,
   getDocument,
   getDocumentFile,
+  getDocumentAuditSummary,
   listFields,
   listSigners,
   previewEmail,
@@ -87,4 +88,11 @@ export const useUpdateDocument = (documentId: string) =>
 export const useUploadDocumentFile = (documentId: string) =>
   useMutation({
     mutationFn: (input: UploadDocumentFileInput) => uploadDocumentFile(documentId, input),
+  });
+
+export const useDocumentAuditSummary = (documentId: string) =>
+  useQuery({
+    queryKey: ['documents', documentId, 'audit-summary'],
+    queryFn: () => getDocumentAuditSummary(documentId),
+    enabled: documentId.length > 0,
   });

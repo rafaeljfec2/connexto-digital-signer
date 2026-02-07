@@ -6,6 +6,7 @@ import {
   acceptSignature,
   sendVerificationCode,
   verifyCode,
+  getSignerSummary,
 } from './api';
 import type { AcceptSignatureInput } from './api';
 
@@ -47,4 +48,12 @@ export const useSendVerificationCode = (token: string) =>
 export const useVerifyCode = (token: string) =>
   useMutation({
     mutationFn: (code: string) => verifyCode(token, code),
+  });
+
+export const useSignerSummary = (token: string) =>
+  useQuery({
+    queryKey: ['signer-summary', token],
+    queryFn: () => getSignerSummary(token),
+    enabled: token.length > 0,
+    retry: false,
   });
