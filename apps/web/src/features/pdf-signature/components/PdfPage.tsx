@@ -23,25 +23,7 @@ export const PdfPage = ({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const droppable = useDroppable({ id: `page-${pageNumber}` });
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const [isVisible, setIsVisible] = useState(false);
   const [size, setSize] = useState<{ width: number; height: number }>({ width: 0, height: 0 });
-
-  useEffect(() => {
-    if (!containerRef.current) {
-      return;
-    }
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const entry = entries[0];
-        if (entry?.isIntersecting) {
-          setIsVisible(true);
-        }
-      },
-      { rootMargin: '200px' }
-    );
-    observer.observe(containerRef.current);
-    return () => observer.disconnect();
-  }, []);
 
   useEffect(() => {
     if (!onContainerReady) {
@@ -51,10 +33,6 @@ export const PdfPage = ({
   }, [onContainerReady, pageNumber]);
 
   useEffect(() => {
-    if (!isVisible) {
-      return;
-    }
-
     let isActive = true;
 
     pdfDocument
@@ -79,7 +57,7 @@ export const PdfPage = ({
     return () => {
       isActive = false;
     };
-  }, [isVisible, pdfDocument, pageNumber, scale]);
+  }, [pdfDocument, pageNumber, scale]);
 
   return (
     <div className="flex justify-center">
@@ -88,7 +66,7 @@ export const PdfPage = ({
           containerRef.current = node;
           droppable.setNodeRef(node);
         }}
-        className={`relative overflow-hidden rounded-lg bg-white shadow-sm ${
+        className={`relative overflow-hidden rounded-lg bg-white shadow-md ${
           droppable.isOver ? 'ring-2 ring-primary' : ''
         }`}
         style={{ width: size.width || undefined, height: size.height || undefined }}

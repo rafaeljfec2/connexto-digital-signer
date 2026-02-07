@@ -17,7 +17,7 @@ type PdfViewerProps = Readonly<{
   onPageContainerReady?: (pageNumber: number, element: HTMLDivElement | null) => void;
 }>;
 
-const clampScale = (value: number) => Math.min(2.5, Math.max(0.6, value));
+const clampScale = (value: number) => Math.min(2.5, Math.max(0.5, value));
 
 export const PdfViewer = ({
   fileUrl,
@@ -33,44 +33,42 @@ export const PdfViewer = ({
     fileUrl,
   });
   const [scale, setScale] = useState(1);
-  const containerRef = useRef<HTMLDivElement | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const fieldsByPage = useMemo(() => {
-    const map = new Map<number, SignatureFieldData[]>();
-    fields.forEach((field) => {
-      const list = map.get(field.page) ?? [];
-      list.push(field);
-      map.set(field.page, list);
-    });
-    return map;
-  }, [fields]);
-
-  const pages = useMemo(
-    () => Array.from({ length: pageCount }, (_, index) => index + 1),
-    [pageCount]
+  const currentPageFields = useMemo(
+    () => fields.filter((field) => field.page === currentPage),
+    [fields, currentPage]
   );
 
-  const handleZoomIn = () => setScale((current) => clampScale(current + 0.1));
-  const handleZoomOut = () => setScale((current) => clampScale(current - 0.1));
+  const handleZoomIn = () => setScale((current) => clampScale(current + 0.15));
+  const handleZoomOut = () => setScale((current) => clampScale(current - 0.15));
 
   const handleFitToWidth = useCallback(() => {
-    if (!containerRef.current || !pdfDocument) {
+    if (!scrollContainerRef.current || !pdfDocument) {
       return;
     }
-    const containerWidth = containerRef.current.clientWidth;
-    pdfDocument.getPage(1).then((page) => {
+    const containerWidth = scrollContainerRef.current.clientWidth - 32;
+    pdfDocument.getPage(currentPage).then((page) => {
       const viewport = page.getViewport({ scale: 1 });
       const nextScale = containerWidth / viewport.width;
       setScale(clampScale(nextScale));
     });
-  }, [pdfDocument]);
+  }, [pdfDocument, currentPage]);
+
+  const handlePrevPage = () => setCurrentPage((p) => Math.max(1, p - 1));
+  const handleNextPage = () => setCurrentPage((p) => Math.min(pageCount, p + 1));
 
   if (error) {
     return <div className="p-4 text-sm text-danger">{error}</div>;
   }
 
   if (!isReady || isLoading) {
-    return <div className="p-4 text-sm text-muted">Loading PDF...</div>;
+    return (
+      <div className="flex h-64 items-center justify-center">
+        <div className="text-sm text-muted">Loading PDF...</div>
+      </div>
+    );
   }
 
   if (documentError) {
@@ -82,40 +80,69 @@ export const PdfViewer = ({
   }
 
   return (
-    <div className="space-y-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <Button type="button" variant="ghost" onClick={handleZoomOut}>
-          -
-        </Button>
-        <Button type="button" variant="ghost" onClick={handleZoomIn}>
-          +
-        </Button>
-        <Button type="button" variant="ghost" onClick={handleFitToWidth}>
-          Fit
-        </Button>
-        <span className="text-xs text-muted">
-          {pageCount} {pageCount === 1 ? 'page' : 'pages'}
-        </span>
+    <div className="flex flex-col">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface px-3 py-2">
+        <div className="flex items-center gap-1">
+          <Button type="button" variant="ghost" onClick={handleZoomOut} className="h-8 w-8 p-0 text-lg">
+            −
+          </Button>
+          <span className="min-w-[3rem] text-center text-xs text-muted">
+            {Math.round(scale * 100)}%
+          </span>
+          <Button type="button" variant="ghost" onClick={handleZoomIn} className="h-8 w-8 p-0 text-lg">
+            +
+          </Button>
+          <Button type="button" variant="ghost" onClick={handleFitToWidth} className="h-8 px-2 text-xs">
+            Fit
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handlePrevPage}
+            disabled={currentPage <= 1}
+            className="h-8 w-8 p-0 text-sm"
+          >
+            ‹
+          </Button>
+          <span className="min-w-[4rem] text-center text-xs text-muted">
+            {currentPage} / {pageCount}
+          </span>
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={handleNextPage}
+            disabled={currentPage >= pageCount}
+            className="h-8 w-8 p-0 text-sm"
+          >
+            ›
+          </Button>
+        </div>
       </div>
-      <div ref={containerRef} className="space-y-6">
-        {pages.map((pageNumber) => (
-          <PdfPage
-            key={pageNumber}
-            pdfDocument={pdfDocument}
-            pageNumber={pageNumber}
-            scale={scale}
-            fields={fieldsByPage.get(pageNumber) ?? []}
-            onContainerReady={onPageContainerReady}
-            renderField={(field) => (
-              <SignatureField
-                field={field}
-                label={getFieldLabel(field.type)}
-                color={signerColors[field.signerId] ?? '#4F46E5'}
-                onRemove={onRemoveField}
-              />
-            )}
-          />
-        ))}
+
+      <div
+        ref={scrollContainerRef}
+        className="overflow-auto bg-neutral-100 p-4"
+        style={{ maxHeight: 'calc(100vh - 280px)' }}
+      >
+        <PdfPage
+          key={currentPage}
+          pdfDocument={pdfDocument}
+          pageNumber={currentPage}
+          scale={scale}
+          fields={currentPageFields}
+          onContainerReady={onPageContainerReady}
+          renderField={(field) => (
+            <SignatureField
+              field={field}
+              label={getFieldLabel(field.type)}
+              color={signerColors[field.signerId] ?? '#4F46E5'}
+              onRemove={onRemoveField}
+            />
+          )}
+        />
       </div>
     </div>
   );
