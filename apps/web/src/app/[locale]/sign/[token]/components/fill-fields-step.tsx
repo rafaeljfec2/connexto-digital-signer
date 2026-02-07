@@ -54,12 +54,12 @@ export function FillFieldsStep({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <p className="mb-2 text-center text-[10px] text-neutral-100/60 md:mb-3 md:text-xs">
-        {labels.instruction}
-      </p>
+      <div className="flex min-h-0 flex-1 flex-col items-center justify-center">
+        <p className="mb-3 text-center text-xs text-neutral-100/60 md:mb-4 md:text-sm">
+          {labels.instruction}
+        </p>
 
-      <div className="mx-auto w-full max-w-lg flex-1 overflow-auto">
-        <Card variant="glass" className="p-3 md:p-4">
+        <Card variant="glass" className="w-full max-w-md p-4 md:p-5">
           <FieldListPanel
             fields={fields}
             fieldValues={fieldValues as Record<string, string>}

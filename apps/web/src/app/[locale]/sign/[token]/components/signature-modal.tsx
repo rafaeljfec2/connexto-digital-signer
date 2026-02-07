@@ -127,8 +127,8 @@ export function SignatureModal({
     mode === 'draw' ? hasDrawn : typedValue.trim().length > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-      <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/15 bg-brand-800 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
+      <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/15 bg-brand-900 shadow-2xl">
         <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 md:px-5">
           <h2 className="text-sm font-semibold text-white md:text-base">
             {labels.title}
