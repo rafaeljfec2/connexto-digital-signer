@@ -166,6 +166,13 @@
   "fields": {
     "title": "Signature fields",
     "subtitle": "Click on the PDF to position fields",
+    "decisionTitle": "Position signatures",
+    "decisionDescription": "You can define where each signer should sign on the document, or proceed without positioning fields.",
+    "openEditor": "Position signatures",
+    "editPositioning": "Edit positioning",
+    "skipPositioning": "Proceed without positioning",
+    "fieldsCount": "{count, plural, one {# field positioned} other {# fields positioned}}",
+    "saveAndContinue": "Save and continue",
     "signersLabel": "Signers",
     "positionLabel": "Position",
     "activeSigner": "Active signer",

@@ -20,6 +20,7 @@ type PdfViewerProps = Readonly<{
   onSelectField?: (id: string) => void;
   onPageClick?: (pageNumber: number, x: number, y: number) => void;
   fieldPreview?: FieldPreview;
+  fillContainer?: boolean;
 }>;
 
 const clampScale = (value: number) => Math.min(2.5, Math.max(0.5, value));
@@ -36,6 +37,7 @@ export const PdfViewer = ({
   onSelectField,
   onPageClick,
   fieldPreview,
+  fillContainer = false,
 }: PdfViewerProps) => {
   const { pdfjsLib, isReady, error } = usePdfEngine();
   const { pdfDocument, pageCount, isLoading, error: documentError } = usePdfDocument({
@@ -90,8 +92,8 @@ export const PdfViewer = ({
   }
 
   return (
-    <div className="flex flex-col">
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-surface px-3 py-2">
+    <div className={`flex flex-col ${fillContainer ? 'h-full' : ''}`}>
+      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-surface px-3 py-2">
         <div className="flex items-center gap-1">
           <Button type="button" variant="ghost" onClick={handleZoomOut} className="h-8 w-8 p-0 text-lg">
             −
@@ -132,7 +134,7 @@ export const PdfViewer = ({
         </div>
       </div>
 
-      <div className="flex gap-3 bg-white/5 p-3">
+      <div className={`flex gap-3 bg-white/5 p-3 ${fillContainer ? 'min-h-0 flex-1' : ''}`}>
         <div className="hidden w-24 flex-col gap-2 overflow-y-auto rounded-xl border border-white/10 bg-white/10 p-2 md:flex">
           {Array.from({ length: pageCount }).map((_, index) => {
             const pageNumber = index + 1;
@@ -150,7 +152,7 @@ export const PdfViewer = ({
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-auto rounded-xl bg-white/80 p-4"
-          style={{ maxHeight: 'calc(100vh - 320px)' }}
+          style={fillContainer ? undefined : { maxHeight: 'calc(100vh - 320px)' }}
         >
           <PdfPage
             key={currentPage}

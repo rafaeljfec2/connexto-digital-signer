@@ -166,6 +166,13 @@
   "fields": {
     "title": "Campos de assinatura",
     "subtitle": "Clique no PDF para posicionar os campos",
+    "decisionTitle": "Posicionar assinaturas",
+    "decisionDescription": "Voce pode definir onde cada signatario deve assinar no documento, ou prosseguir sem posicionar os campos.",
+    "openEditor": "Posicionar assinaturas",
+    "editPositioning": "Editar posicionamento",
+    "skipPositioning": "Prosseguir sem posicionar",
+    "fieldsCount": "{count, plural, one {# campo posicionado} other {# campos posicionados}}",
+    "saveAndContinue": "Salvar e continuar",
     "signersLabel": "Signatarios",
     "positionLabel": "Posicionar",
     "activeSigner": "Signatario ativo",
