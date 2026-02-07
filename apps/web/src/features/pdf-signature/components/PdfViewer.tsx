@@ -13,6 +13,7 @@ type PdfViewerProps = Readonly<{
   fields: SignatureFieldData[];
   signerColors: Record<string, string>;
   getFieldLabel: (type: SignatureFieldType) => string;
+  getSignerName?: (signerId: string) => string;
   onRemoveField?: (id: string) => void;
   onPageContainerReady?: (pageNumber: number, element: HTMLDivElement | null) => void;
   selectedFieldId?: string;
@@ -27,6 +28,7 @@ export const PdfViewer = ({
   fields,
   signerColors,
   getFieldLabel,
+  getSignerName,
   onRemoveField,
   onPageContainerReady,
   selectedFieldId,
@@ -160,6 +162,7 @@ export const PdfViewer = ({
               <SignatureField
                 field={field}
                 label={getFieldLabel(field.type)}
+                signerName={getSignerName?.(field.signerId) ?? ''}
                 color={signerColors[field.signerId] ?? '#4F46E5'}
                 onRemove={onRemoveField}
                 onSelect={onSelectField}

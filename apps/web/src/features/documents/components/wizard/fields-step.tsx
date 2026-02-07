@@ -49,7 +49,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
   const pageRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
 
   const initialFields = useMemo(() => fieldsQuery.data ?? undefined, [fieldsQuery.data]);
-  const { fields, addField, moveField, removeField } = usePdfFields({
+  const { fields, addField, moveField } = usePdfFields({
     initialFields,
   });
 
@@ -77,6 +77,18 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
       return acc;
     }, {});
   }, [signersQuery.data]);
+
+  const signerNamesMap = useMemo(() => {
+    return (signersQuery.data ?? []).reduce<Record<string, string>>((acc, signer) => {
+      acc[signer.id] = signer.name;
+      return acc;
+    }, {});
+  }, [signersQuery.data]);
+
+  const getSignerName = useCallback(
+    (signerId: string) => signerNamesMap[signerId] ?? '',
+    [signerNamesMap]
+  );
 
   const handleSave = async () => {
     const payload: SignatureFieldInput[] = fields.map((field) => ({
@@ -203,7 +215,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
               fields={fields}
               signerColors={signerColors}
               getFieldLabel={(type) => tFields(`type.${type}`)}
-              onRemoveField={removeField}
+              getSignerName={getSignerName}
               onPageContainerReady={handlePageReady}
               onPageClick={handleAddFieldToPage}
             />
