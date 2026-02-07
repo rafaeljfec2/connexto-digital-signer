@@ -190,7 +190,7 @@ export default function SignerDocumentPage() {
         </div>
       </header>
 
-      <div className="shrink-0 border-b border-white/5 px-4 py-3 md:px-6 md:py-4">
+      <div className="shrink-0 border-b border-white/5 px-4 py-1.5 md:px-6 md:py-2">
         <div className="mx-auto max-w-6xl">
           <SignStepper
             currentStep={currentStep}
@@ -203,7 +203,7 @@ export default function SignerDocumentPage() {
         </div>
       </div>
 
-      <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 py-1.5 pb-16 md:px-6 md:pb-2">
+      <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 pt-6 pb-16 md:px-6 md:pt-8 md:pb-2">
         {currentStep === 'view' ? (
           <ViewStep
             fileUrl={fileUrl}
