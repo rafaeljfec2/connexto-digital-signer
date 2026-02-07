@@ -2,6 +2,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { apiReference } from '@scalar/nestjs-api-reference';
+import cookieParser from 'cookie-parser';
 import { Logger } from 'nestjs-pino';
 import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
@@ -39,6 +40,7 @@ const bootstrap = async (): Promise<void> => {
   app.useLogger(app.get(Logger));
   app.setGlobalPrefix(apiPrefix);
   const allowedOrigins = resolveAllowedOrigins();
+  app.use(cookieParser());
   app.enableCors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : true,
     credentials: true,

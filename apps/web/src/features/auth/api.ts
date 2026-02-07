@@ -36,6 +36,10 @@ export const loginWithEmail = async (payload: LoginInput): Promise<LoginResponse
   return data;
 };
 
+export const logoutFromApi = async (): Promise<void> => {
+  await apiClient.post('/auth/logout');
+};
+
 export const createTenant = async (payload: SignUpInput): Promise<SignUpResponse> => {
   const { data } = await apiClient.post<SignUpResponse>('/tenants', payload);
   return data;

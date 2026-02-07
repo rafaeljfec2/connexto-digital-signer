@@ -2,6 +2,7 @@ import type { LoginResponse } from './api';
 
 const TOKEN_KEY = 'auth_token';
 const USER_KEY = 'auth_user';
+const MIDDLEWARE_COOKIE_MAX_AGE = 7 * 24 * 60 * 60;
 
 export const readToken = (): string | null => {
   if (globalThis.window === undefined) return null;
@@ -22,7 +23,7 @@ export const readStoredUser = (): LoginResponse['user'] | null => {
 export const writeAuthStorage = (token: string, user: LoginResponse['user']): void => {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
-  document.cookie = `auth_token=${token}; path=/; max-age=86400`;
+  document.cookie = `auth_token=${token}; path=/; max-age=${MIDDLEWARE_COOKIE_MAX_AGE}`;
 };
 
 export const clearAuthStorage = (): void => {

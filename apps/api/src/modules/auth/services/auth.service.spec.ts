@@ -1,5 +1,6 @@
 import { UnauthorizedException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { Repository } from 'typeorm';
 import { AuthService } from './auth.service';
 import { TenantsService } from '../../tenants/services/tenants.service';
 import type { JwtPayload } from '@connexto/shared';
@@ -7,6 +8,7 @@ import { Tenant } from '../../tenants/entities/tenant.entity';
 import { UsersService } from '../../users/services/users.service';
 import { User, UserRole } from '../../users/entities/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
+import { RefreshToken } from '../entities/refresh-token.entity';
 import bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs', () => ({
@@ -50,6 +52,7 @@ describe('AuthService', () => {
   let usersService: jest.Mocked<UsersService>;
   let jwtService: jest.Mocked<JwtService>;
   let eventEmitter: jest.Mocked<EventEmitter2>;
+  let refreshTokenRepository: jest.Mocked<Repository<RefreshToken>>;
 
   beforeEach(() => {
     tenantsService = {
@@ -70,7 +73,21 @@ describe('AuthService', () => {
     eventEmitter = {
       emitAsync: jest.fn(),
     } as unknown as jest.Mocked<EventEmitter2>;
-    service = new AuthService(tenantsService, usersService, jwtService, eventEmitter);
+    refreshTokenRepository = {
+      create: jest.fn().mockReturnValue({}),
+      save: jest.fn().mockResolvedValue({}),
+      findOne: jest.fn(),
+      update: jest.fn(),
+      delete: jest.fn(),
+    } as unknown as jest.Mocked<Repository<RefreshToken>>;
+
+    service = new AuthService(
+      tenantsService,
+      usersService,
+      jwtService,
+      eventEmitter,
+      refreshTokenRepository
+    );
   });
 
   describe('loginWithApiKey', () => {
@@ -98,7 +115,7 @@ describe('AuthService', () => {
   });
 
   describe('loginWithEmail', () => {
-    test('should login and return token with user data', async () => {
+    test('should login and return access token, refresh token, and user data', async () => {
       const user = buildUser();
       usersService.findByEmail.mockResolvedValue(user);
       tenantsService.findOne.mockResolvedValue(buildTenant({ isActive: true }));
@@ -112,17 +129,20 @@ describe('AuthService', () => {
         userAgent: 'jest',
       });
 
-      expect(result).toEqual({
-        accessToken: 'token-1',
-        expiresIn: 100,
-        user: {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          tenantId: user.tenantId,
-        },
+      expect(result.accessToken).toBe('token-1');
+      expect(result.expiresIn).toBe(100);
+      expect(result.refreshToken).toBeDefined();
+      expect(typeof result.refreshToken).toBe('string');
+      expect(result.refreshToken.length).toBeGreaterThan(0);
+      expect(result.user).toEqual({
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        tenantId: user.tenantId,
       });
+      expect(refreshTokenRepository.create).toHaveBeenCalled();
+      expect(refreshTokenRepository.save).toHaveBeenCalled();
     });
 
     test('should throw when user does not exist', async () => {
@@ -148,6 +168,90 @@ describe('AuthService', () => {
           userAgent: 'jest',
         })
       ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('refresh', () => {
+    test('should throw when token is not found', async () => {
+      refreshTokenRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.refresh('invalid-token')).rejects.toThrow(UnauthorizedException);
+    });
+
+    test('should throw and revoke all tokens when token is expired', async () => {
+      const expiredToken: RefreshToken = {
+        id: 'rt-1',
+        userId: 'user-1',
+        tenantId: 'tenant-1',
+        tokenHash: 'hash',
+        expiresAt: new Date('2020-01-01'),
+        revokedAt: null,
+        createdAt: new Date(),
+      };
+      refreshTokenRepository.findOne.mockResolvedValue(expiredToken);
+
+      await expect(service.refresh('some-token')).rejects.toThrow(UnauthorizedException);
+      expect(refreshTokenRepository.update).toHaveBeenCalled();
+    });
+
+    test('should rotate tokens and return new access and refresh tokens', async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const storedToken: RefreshToken = {
+        id: 'rt-1',
+        userId: 'user-1',
+        tenantId: 'tenant-1',
+        tokenHash: 'hash',
+        expiresAt: futureDate,
+        revokedAt: null,
+        createdAt: new Date(),
+      };
+      refreshTokenRepository.findOne.mockResolvedValue(storedToken);
+      usersService.findOne.mockResolvedValue(buildUser());
+      tenantsService.findOne.mockResolvedValue(buildTenant());
+      jwtService.sign.mockReturnValue('new-access-token');
+      jwtService.decode.mockReturnValue({ exp: 200, iat: 100 });
+
+      const result = await service.refresh('raw-refresh-token');
+
+      expect(result.accessToken).toBe('new-access-token');
+      expect(result.refreshToken).toBeDefined();
+      expect(result.expiresIn).toBe(100);
+      expect(result.user).toEqual({
+        id: 'user-1',
+        name: 'Owner',
+        email: 'owner@acme.com',
+        role: UserRole.OWNER,
+        tenantId: 'tenant-1',
+      });
+      expect(refreshTokenRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ revokedAt: expect.any(Date) })
+      );
+    });
+
+    test('should throw when user is inactive', async () => {
+      const futureDate = new Date();
+      futureDate.setDate(futureDate.getDate() + 1);
+      const storedToken: RefreshToken = {
+        id: 'rt-1',
+        userId: 'user-1',
+        tenantId: 'tenant-1',
+        tokenHash: 'hash',
+        expiresAt: futureDate,
+        revokedAt: null,
+        createdAt: new Date(),
+      };
+      refreshTokenRepository.findOne.mockResolvedValue(storedToken);
+      usersService.findOne.mockResolvedValue(buildUser({ isActive: false }));
+
+      await expect(service.refresh('raw-token')).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('revokeRefreshToken', () => {
+    test('should update token as revoked', async () => {
+      await service.revokeRefreshToken('raw-token');
+      expect(refreshTokenRepository.update).toHaveBeenCalled();
     });
   });
 

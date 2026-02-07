@@ -2,7 +2,7 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { loginWithEmail, type LoginInput, type LoginResponse } from '../api';
+import { loginWithEmail, logoutFromApi, type LoginInput, type LoginResponse } from '../api';
 import { clearAuthStorage, readStoredUser, writeAuthStorage } from '../storage';
 
 export const useAuth = () => {
@@ -16,7 +16,12 @@ export const useAuth = () => {
     },
   });
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      await logoutFromApi();
+    } catch {
+      // best-effort
+    }
     clearAuthStorage();
     setUser(null);
   }, []);
