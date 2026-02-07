@@ -23,7 +23,7 @@ type SignerPdfViewerProps = Readonly<{
 const MIN_SCALE = 0.3;
 const MAX_SCALE = 3;
 const DEFAULT_DESKTOP_SCALE = 1.4;
-const DEFAULT_MOBILE_SCALE = 0.7;
+const DEFAULT_MOBILE_SCALE = 0.75;
 const MOBILE_BREAKPOINT = 768;
 const clampScale = (value: number) => Math.min(MAX_SCALE, Math.max(MIN_SCALE, value));
 
@@ -202,10 +202,13 @@ export const SignerPdfViewer = ({
         setScale(1);
         return;
       }
-      const fitScale = clampScale(containerWidth / viewport.width);
       const isMobile = containerWidth < MOBILE_BREAKPOINT;
-      const cap = isMobile ? DEFAULT_MOBILE_SCALE : DEFAULT_DESKTOP_SCALE;
-      setScale(Math.min(fitScale, cap));
+      if (isMobile) {
+        setScale(DEFAULT_MOBILE_SCALE);
+      } else {
+        const fitScale = clampScale(containerWidth / viewport.width);
+        setScale(Math.min(fitScale, DEFAULT_DESKTOP_SCALE));
+      }
     });
   }, [pdfReady, pdfDocument, scale]);
 
