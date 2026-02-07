@@ -93,12 +93,16 @@ export const PdfViewer = ({
 
   return (
     <div className={`flex flex-col ${fillContainer ? 'h-full overflow-hidden' : ''}`}>
-      <div className="flex shrink-0 flex-wrap items-center justify-between gap-2 border-b border-border bg-surface px-3 py-2">
+      <div className={`flex shrink-0 flex-wrap items-center justify-between gap-2 px-3 py-2 ${
+        fillContainer
+          ? 'border-b border-white/10 bg-brand-800 text-white'
+          : 'border-b border-border bg-surface'
+      }`}>
         <div className="flex items-center gap-1">
           <Button type="button" variant="ghost" onClick={handleZoomOut} className="h-8 w-8 p-0 text-lg">
             −
           </Button>
-          <span className="min-w-[3rem] text-center text-xs text-muted">
+          <span className={`min-w-[3rem] text-center text-xs ${fillContainer ? 'text-neutral-100/70' : 'text-muted'}`}>
             {Math.round(scale * 100)}%
           </span>
           <Button type="button" variant="ghost" onClick={handleZoomIn} className="h-8 w-8 p-0 text-lg">
@@ -119,7 +123,7 @@ export const PdfViewer = ({
           >
             ‹
           </Button>
-          <span className="min-w-[4rem] text-center text-xs text-muted">
+          <span className={`min-w-[4rem] text-center text-xs ${fillContainer ? 'text-neutral-100/70' : 'text-muted'}`}>
             {currentPage} / {pageCount}
           </span>
           <Button
