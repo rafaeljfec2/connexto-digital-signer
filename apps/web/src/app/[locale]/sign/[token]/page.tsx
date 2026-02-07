@@ -1,24 +1,24 @@
-"use client";
+'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { useLocale, useTranslations } from 'next-intl';
-import { FileText, Check, AlertTriangle, ShieldCheck } from 'lucide-react';
+import {
+  useAcceptSignature,
+  useSignerData,
+  useSignerFields,
+  useSignerPdf,
+} from '@/features/signing/hooks';
 import { useRouter } from '@/i18n/navigation';
 import { Avatar, Badge, Card } from '@/shared/ui';
-import {
-  useSignerData,
-  useSignerPdf,
-  useSignerFields,
-  useAcceptSignature,
-} from '@/features/signing/hooks';
-import { SignStepper } from './components/sign-stepper';
-import type { SignStep } from './components/sign-stepper';
-import { ViewStep } from './components/view-step';
+import { AlertTriangle, Check, FileText, ShieldCheck } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useParams } from 'next/navigation';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FillFieldsStep } from './components/fill-fields-step';
-import { ReviewStep } from './components/review-step';
-import { SignatureModal } from './components/signature-modal';
 import { PdfPreviewModal } from './components/pdf-preview-modal';
+import { ReviewStep } from './components/review-step';
+import type { SignStep } from './components/sign-stepper';
+import { SignStepper } from './components/sign-stepper';
+import { SignatureModal } from './components/signature-modal';
+import { ViewStep } from './components/view-step';
 
 export default function SignerDocumentPage() {
   const params = useParams<{ token: string }>();
@@ -175,17 +175,13 @@ export default function SignerDocumentPage() {
             <div className="text-[8px] font-semibold uppercase tracking-[0.15em] text-neutral-100/50">
               {tCommon('appName')}
             </div>
-            <div className="truncate text-[11px] font-semibold md:text-xs">
-              {doc.title}
-            </div>
+            <div className="truncate text-[11px] font-semibold md:text-xs">{doc.title}</div>
           </div>
           <div className="hidden items-center gap-2 sm:flex">
             <Avatar name={signer.name} size="sm" />
             <div className="min-w-0">
               <p className="truncate text-[11px] font-medium">{signer.name}</p>
-              <p className="truncate text-[9px] text-neutral-100/50">
-                {signer.email}
-              </p>
+              <p className="truncate text-[9px] text-neutral-100/50">{signer.email}</p>
             </div>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">
@@ -194,7 +190,7 @@ export default function SignerDocumentPage() {
         </div>
       </header>
 
-      <div className="shrink-0 border-b border-white/5 px-4 py-1.5 md:px-6 md:py-2">
+      <div className="shrink-0 border-b border-white/5 px-4 py-3 md:px-6 md:py-4">
         <div className="mx-auto max-w-6xl">
           <SignStepper
             currentStep={currentStep}
@@ -258,7 +254,8 @@ export default function SignerDocumentPage() {
               documentTitle: t('reviewStep.documentTitle'),
               signerInfo: t('reviewStep.signerInfo'),
               filledFields: t('reviewStep.filledFields'),
-              fieldPreview: t('reviewStep.fieldPreview'),
+              fieldPreviewFormat: (type: string, page: number) =>
+                t('reviewStep.fieldPreview', { type, page }),
               viewDocument: t('reviewStep.viewDocument'),
               consentLabel: t('consent.label'),
               consentRequired: t('consent.required'),

@@ -30,7 +30,7 @@ type ReviewStepProps = Readonly<{
     documentTitle: string;
     signerInfo: string;
     filledFields: string;
-    fieldPreview: string;
+    fieldPreviewFormat: (type: string, page: number) => string;
     viewDocument: string;
     consentLabel: string;
     consentRequired: string;
@@ -138,9 +138,10 @@ export function ReviewStep({
                       {fieldTypeLabels[field.type] ?? field.type}
                     </p>
                     <p className="text-[10px] text-neutral-100/40">
-                      {labels.fieldPreview
-                        .replace('{type}', fieldTypeLabels[field.type] ?? field.type)
-                        .replace('{page}', String(field.page))}
+                      {labels.fieldPreviewFormat(
+                        fieldTypeLabels[field.type] ?? field.type,
+                        field.page
+                      )}
                     </p>
                   </div>
                   {value.startsWith('data:image/') ? (
