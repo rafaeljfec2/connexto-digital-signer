@@ -8,7 +8,7 @@ import {
   useSigners,
   useUpdateDocument,
 } from '@/features/documents/hooks/use-document-wizard';
-import { Button, Card, Input, Select } from '@/shared/ui';
+import { Avatar, Badge, Button, Card, Input, Select } from '@/shared/ui';
 
 export type SignersStepProps = {
   readonly documentId: string;
@@ -55,8 +55,8 @@ export function SignersStep({ documentId, onNext }: Readonly<SignersStepProps>) 
   if (!isMounted) {
     return (
       <div className="space-y-4">
-        <div className="h-4 w-40 rounded bg-border/60" />
-        <div className="h-24 rounded-lg border border-border bg-surface" />
+        <div className="h-4 w-40 rounded bg-white/10" />
+        <div className="h-24 rounded-lg border border-white/10 bg-white/10" />
       </div>
     );
   }
@@ -64,12 +64,12 @@ export function SignersStep({ documentId, onNext }: Readonly<SignersStepProps>) 
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-text">{tSigners('title')}</h2>
-        <p className="text-sm text-muted">{tSigners('subtitle')}</p>
+        <h2 className="text-lg font-semibold text-white">{tSigners('title')}</h2>
+        <p className="text-sm text-neutral-100/70">{tSigners('subtitle')}</p>
       </div>
-      <Card className="space-y-4 p-4">
+      <Card variant="glass" className="space-y-4 p-4">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-text">{tSigners('mode')}</label>
+          <label className="text-sm font-medium text-neutral-100">{tSigners('mode')}</label>
           <Select
             value={signingMode}
             onChange={(event) =>
@@ -101,31 +101,36 @@ export function SignersStep({ documentId, onNext }: Readonly<SignersStepProps>) 
             />
           ) : null}
         </div>
-        <Button type="button" onClick={handleAdd} disabled={addSignerMutation.isPending}>
+        <Button type="button" onClick={handleAdd} isLoading={addSignerMutation.isPending}>
           {tSigners('add')}
         </Button>
       </Card>
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-text">{tSigners('listTitle')}</h3>
+        <h3 className="text-sm font-semibold text-white">{tSigners('listTitle')}</h3>
         <div className="space-y-2">
           {(signersQuery.data ?? []).map((signer) => (
             <div
               key={signer.id}
-              className="flex items-center justify-between rounded-lg border border-border bg-surface px-4 py-3 text-sm"
+              className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white"
             >
-              <div>
-                <p className="font-medium text-text">{signer.name}</p>
-                <p className="text-muted">{signer.email}</p>
+              <div className="flex items-center gap-3">
+                <Avatar name={signer.name} size="sm" statusColor="#14B8A6" />
+                <div>
+                  <p className="font-medium">{signer.name}</p>
+                  <p className="text-neutral-100/70">{signer.email}</p>
+                </div>
               </div>
-              {signingMode === 'sequential' && signer.order ? (
-                <span className="text-xs text-muted">
-                  {tSigners('orderLabel')} {signer.order}
-                </span>
-              ) : null}
+              <div className="flex items-center gap-2">
+                {signingMode === 'sequential' && signer.order ? (
+                  <Badge variant="info">
+                    {tSigners('orderLabel')} {signer.order}
+                  </Badge>
+                ) : null}
+              </div>
             </div>
           ))}
-          {signersQuery.data && signersQuery.data.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-border p-4 text-sm text-muted">
+          {signersQuery.data?.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-white/20 p-4 text-sm text-neutral-100/70">
               {tSigners('empty')}
             </div>
           ) : null}

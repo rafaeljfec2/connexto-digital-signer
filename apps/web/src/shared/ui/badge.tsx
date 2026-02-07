@@ -7,11 +7,11 @@ export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 };
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-border text-text',
-  success: 'bg-emerald-100 text-emerald-800',
-  warning: 'bg-amber-100 text-amber-800',
-  danger: 'bg-red-100 text-red-800',
-  info: 'bg-blue-100 text-blue-800',
+  default: 'bg-neutral-100/80 text-neutral-700 border border-white/30',
+  success: 'bg-success/15 text-success border border-success/20',
+  warning: 'bg-warning/15 text-warning border border-warning/20',
+  danger: 'bg-error/15 text-error border border-error/20',
+  info: 'bg-brand-300/20 text-brand-300 border border-brand-300/30',
 };
 
 export function Badge({
@@ -19,7 +19,8 @@ export function Badge({
   variant = 'default',
   ...props
 }: Readonly<BadgeProps>) {
-  const base = 'inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium';
+  const base =
+    'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide';
   return (
     <span className={`${base} ${variantStyles[variant]} ${className}`} {...props} />
   );

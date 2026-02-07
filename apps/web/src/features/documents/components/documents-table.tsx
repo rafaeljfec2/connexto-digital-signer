@@ -43,6 +43,7 @@ export function DocumentsTable({
   actionLabels,
   onDocumentClick,
 }: Readonly<DocumentsTableProps>) {
+  const skeletonRows = ['row-1', 'row-2', 'row-3', 'row-4', 'row-5'];
   if (!isLoading && documents.length === 0) {
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
   }
@@ -51,16 +52,18 @@ export function DocumentsTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>{headers.title}</TableHead>
-          <TableHead>{headers.status}</TableHead>
-          <TableHead className="hidden sm:table-cell">{headers.created}</TableHead>
-          <TableHead className="text-right">{headers.actions}</TableHead>
+          <TableHead className="text-neutral-100/70">{headers.title}</TableHead>
+          <TableHead className="text-neutral-100/70">{headers.status}</TableHead>
+          <TableHead className="hidden sm:table-cell text-neutral-100/70">
+            {headers.created}
+          </TableHead>
+          <TableHead className="text-right text-neutral-100/70">{headers.actions}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
         {isLoading
-          ? Array.from({ length: 5 }).map((_, index) => (
-              <TableRow key={`skeleton-${index}`}>
+          ? skeletonRows.map((row) => (
+              <TableRow key={row}>
                 <TableCell>
                   <Skeleton className="h-4 w-40" />
                 </TableCell>
@@ -78,16 +81,16 @@ export function DocumentsTable({
           : documents.map((doc) => (
               <TableRow
                 key={doc.id}
-                className="cursor-pointer transition-colors hover:bg-neutral-50"
+                className="cursor-pointer transition-colors hover:bg-white/10"
                 onClick={() => onDocumentClick(doc)}
               >
-                <TableCell className="font-medium text-text">{doc.title}</TableCell>
+                <TableCell className="font-medium text-white">{doc.title}</TableCell>
                 <TableCell>
                   <Badge variant={statusVariant[doc.status]}>
                     {statusLabels[doc.status]}
                   </Badge>
                 </TableCell>
-                <TableCell className="hidden sm:table-cell text-muted">
+                <TableCell className="hidden sm:table-cell text-neutral-100/70">
                   {formatDate(doc.createdAt)}
                 </TableCell>
                 <TableCell className="text-right">

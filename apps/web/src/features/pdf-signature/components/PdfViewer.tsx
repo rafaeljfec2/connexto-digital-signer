@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Button } from '@/shared/ui';
 
@@ -15,6 +15,8 @@ type PdfViewerProps = Readonly<{
   getFieldLabel: (type: SignatureFieldType) => string;
   onRemoveField?: (id: string) => void;
   onPageContainerReady?: (pageNumber: number, element: HTMLDivElement | null) => void;
+  selectedFieldId?: string;
+  onSelectField?: (id: string) => void;
 }>;
 
 const clampScale = (value: number) => Math.min(2.5, Math.max(0.5, value));
@@ -26,6 +28,8 @@ export const PdfViewer = ({
   getFieldLabel,
   onRemoveField,
   onPageContainerReady,
+  selectedFieldId,
+  onSelectField,
 }: PdfViewerProps) => {
   const { pdfjsLib, isReady, error } = usePdfEngine();
   const { pdfDocument, pageCount, isLoading, error: documentError } = usePdfDocument({
@@ -122,28 +126,89 @@ export const PdfViewer = ({
         </div>
       </div>
 
-      <div
-        ref={scrollContainerRef}
-        className="overflow-auto bg-neutral-100 p-4"
-        style={{ maxHeight: 'calc(100vh - 280px)' }}
-      >
-        <PdfPage
-          key={currentPage}
-          pdfDocument={pdfDocument}
-          pageNumber={currentPage}
-          scale={scale}
-          fields={currentPageFields}
-          onContainerReady={onPageContainerReady}
-          renderField={(field) => (
-            <SignatureField
-              field={field}
-              label={getFieldLabel(field.type)}
-              color={signerColors[field.signerId] ?? '#4F46E5'}
-              onRemove={onRemoveField}
-            />
-          )}
-        />
+      <div className="flex gap-3 bg-white/5 p-3">
+        <div className="hidden w-24 flex-col gap-2 overflow-y-auto rounded-xl border border-white/10 bg-white/10 p-2 md:flex">
+          {Array.from({ length: pageCount }).map((_, index) => {
+            const pageNumber = index + 1;
+            return (
+              <PdfThumbnail
+                key={`thumb-${pageNumber}`}
+                pdfDocument={pdfDocument}
+                pageNumber={pageNumber}
+                isActive={pageNumber === currentPage}
+                onSelect={() => setCurrentPage(pageNumber)}
+              />
+            );
+          })}
+        </div>
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-auto rounded-xl bg-white/80 p-4"
+          style={{ maxHeight: 'calc(100vh - 320px)' }}
+        >
+          <PdfPage
+            key={currentPage}
+            pdfDocument={pdfDocument}
+            pageNumber={currentPage}
+            scale={scale}
+            fields={currentPageFields}
+            onContainerReady={onPageContainerReady}
+            renderField={(field) => (
+              <SignatureField
+                field={field}
+                label={getFieldLabel(field.type)}
+                color={signerColors[field.signerId] ?? '#4F46E5'}
+                onRemove={onRemoveField}
+                onSelect={onSelectField}
+                isSelected={selectedFieldId === field.id}
+              />
+            )}
+          />
+        </div>
       </div>
     </div>
+  );
+};
+
+type PdfThumbnailProps = Readonly<{
+  pdfDocument: PdfDocument;
+  pageNumber: number;
+  isActive: boolean;
+  onSelect: () => void;
+}>;
+
+const PdfThumbnail = ({ pdfDocument, pageNumber, isActive, onSelect }: PdfThumbnailProps) => {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+
+  useEffect(() => {
+    let isActiveRender = true;
+    pdfDocument
+      .getPage(pageNumber)
+      .then((page) => {
+        if (!isActiveRender) return;
+        const viewport = page.getViewport({ scale: 0.2 });
+        const canvas = canvasRef.current;
+        const context = canvas?.getContext('2d');
+        if (!canvas || !context) return;
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        return page.render({ canvasContext: context, viewport }).promise;
+      })
+      .catch(() => undefined);
+    return () => {
+      isActiveRender = false;
+    };
+  }, [pdfDocument, pageNumber]);
+
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={`rounded-lg border p-1 transition ${
+        isActive ? 'border-accent-400 bg-white/30' : 'border-white/20 bg-white/10'
+      }`}
+    >
+      <canvas ref={canvasRef} className="block h-auto w-full rounded-md" />
+    </button>
   );
 };

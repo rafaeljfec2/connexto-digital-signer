@@ -3,17 +3,36 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #1f3c88;
+  --color-brand-900: #0b1f3b;
+  --color-brand-700: #123a6f;
+  --color-brand-500: #1f5ea8;
+  --color-brand-300: #6fa8e5;
+  --color-accent-600: #14b8a6;
+  --color-accent-400: #5eead4;
+  --color-accent-200: #a7f3d0;
+  --color-neutral-900: #0f172a;
+  --color-neutral-700: #334155;
+  --color-neutral-500: #64748b;
+  --color-neutral-300: #cbd5e1;
+  --color-neutral-100: #f1f5f9;
+  --color-neutral-50: #f8fafc;
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+  --color-surface-glass: rgba(255, 255, 255, 0.08);
+  --color-surface-card: rgba(255, 255, 255, 0.12);
+  --gradient-main: linear-gradient(135deg, #0b1f3b 0%, #123a6f 50%, #14b8a6 100%);
+  --gradient-cta: linear-gradient(135deg, #1f5ea8 0%, #14b8a6 100%);
+  --color-primary: var(--color-brand-500);
   --color-primary-foreground: #ffffff;
-  --color-accent: #14b8a6;
+  --color-accent: var(--color-accent-600);
   --color-accent-foreground: #ffffff;
-  --color-background: #f0f4f8;
+  --color-background: var(--color-neutral-50);
   --color-surface: #ffffff;
-  --color-text: #1e293b;
-  --color-text-muted: #64748b;
-  --color-border: #e2e8f0;
-  --color-destructive: #ef4444;
-  --gradient-auth: linear-gradient(135deg, #1f3c88 0%, #14b8a6 100%);
+  --color-text: var(--color-neutral-900);
+  --color-text-muted: var(--color-neutral-500);
+  --color-border: var(--color-neutral-300);
+  --color-destructive: var(--color-error);
 }
 
 * {
@@ -22,5 +41,18 @@
 
 body {
   color: var(--color-text);
-  background: var(--color-background);
+  background: var(--gradient-main);
+}
+
+.glass-card {
+  background: var(--color-surface-card);
+  backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 20px 50px rgba(11, 31, 59, 0.15);
+}
+
+.glass-surface {
+  background: var(--color-surface-glass);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
 }

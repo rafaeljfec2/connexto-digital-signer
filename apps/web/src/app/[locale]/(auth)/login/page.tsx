@@ -7,16 +7,16 @@ export default async function LoginPage() {
   const tCommon = await getTranslations('common');
 
   return (
-    <Card className="w-full max-w-md p-8">
+    <Card variant="glass" className="w-full max-w-md p-8 text-white">
       <div className="flex flex-col gap-6">
         <div className="text-center">
-          <div className="text-2xl font-semibold text-text">{tCommon('appName')}</div>
-          <p className="mt-1 text-sm text-muted">{tCommon('accessAccount')}</p>
+          <div className="text-2xl font-semibold">{tCommon('appName')}</div>
+          <p className="mt-1 text-sm text-neutral-100/70">{tCommon('accessAccount')}</p>
         </div>
         <LoginForm />
-        <p className="text-center text-xs text-muted">
+        <p className="text-center text-xs text-neutral-100/70">
           {tCommon('newHere')}{' '}
-          <Link className="text-primary underline" href="/signup">
+          <Link className="text-accent-200 underline" href="/signup">
             {tCommon('createAccountLink')}
           </Link>
         </p>

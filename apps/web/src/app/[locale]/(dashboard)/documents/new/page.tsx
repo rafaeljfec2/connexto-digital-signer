@@ -8,10 +8,12 @@ export default function NewDocumentPage() {
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold text-text">{tDocuments('upload.title')}</h1>
-        <p className="text-sm text-muted">{tDocuments('upload.subtitle')}</p>
+        <h1 className="text-2xl font-semibold text-white">{tDocuments('upload.title')}</h1>
+        <p className="text-sm text-neutral-100/70">{tDocuments('upload.subtitle')}</p>
       </div>
-      <UploadForm />
+      <div className="glass-card rounded-2xl p-6">
+        <UploadForm />
+      </div>
     </div>
   );
 }

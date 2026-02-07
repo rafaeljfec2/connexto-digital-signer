@@ -74,16 +74,14 @@ export function SignUpForm() {
     <div className="space-y-6">
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-text" htmlFor="name">
+          <label className="text-sm font-medium text-neutral-100" htmlFor="name">
             {tAuth('companyNameLabel')}
           </label>
           <Input id="name" placeholder={tAuth('companyNamePlaceholder')} {...register('name')} />
-          {errors.name && (
-            <p className="text-xs text-destructive">{tAuth('companyNameRequired')}</p>
-          )}
+          {errors.name && <p className="text-xs text-error">{tAuth('companyNameRequired')}</p>}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-text" htmlFor="slug">
+          <label className="text-sm font-medium text-neutral-100" htmlFor="slug">
             {tAuth('companySlugLabel')}
           </label>
           <Input
@@ -99,14 +97,12 @@ export function SignUpForm() {
             ref={slugField.ref}
           />
           {!errors.slug && slugValue ? (
-            <p className="text-xs text-muted">{tAuth('companySlugHelper')}</p>
+            <p className="text-xs text-neutral-100/70">{tAuth('companySlugHelper')}</p>
           ) : null}
-          {errors.slug && (
-            <p className="text-xs text-destructive">{tAuth('slugRequired')}</p>
-          )}
+          {errors.slug && <p className="text-xs text-error">{tAuth('slugRequired')}</p>}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-text" htmlFor="ownerName">
+          <label className="text-sm font-medium text-neutral-100" htmlFor="ownerName">
             {tAuth('ownerNameLabel')}
           </label>
           <Input
@@ -115,11 +111,11 @@ export function SignUpForm() {
             {...register('ownerName')}
           />
           {errors.ownerName && (
-            <p className="text-xs text-destructive">{tAuth('ownerNameRequired')}</p>
+            <p className="text-xs text-error">{tAuth('ownerNameRequired')}</p>
           )}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-text" htmlFor="ownerEmail">
+          <label className="text-sm font-medium text-neutral-100" htmlFor="ownerEmail">
             {tAuth('ownerEmailLabel')}
           </label>
           <Input
@@ -129,11 +125,11 @@ export function SignUpForm() {
             {...register('ownerEmail')}
           />
           {errors.ownerEmail && (
-            <p className="text-xs text-destructive">{tAuth('ownerEmailRequired')}</p>
+            <p className="text-xs text-error">{tAuth('ownerEmailRequired')}</p>
           )}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-text" htmlFor="ownerPassword">
+          <label className="text-sm font-medium text-neutral-100" htmlFor="ownerPassword">
             {tAuth('ownerPasswordLabel')}
           </label>
           <Input
@@ -143,13 +139,13 @@ export function SignUpForm() {
             {...register('ownerPassword')}
           />
           {errors.ownerPassword ? (
-            <p className="text-xs text-destructive">{tAuth('ownerPasswordRequired')}</p>
+            <p className="text-xs text-error">{tAuth('ownerPasswordRequired')}</p>
           ) : (
-            <p className="text-xs text-muted">{tAuth('ownerPasswordHelper')}</p>
+            <p className="text-xs text-neutral-100/70">{tAuth('ownerPasswordHelper')}</p>
           )}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-text" htmlFor="ownerPasswordConfirm">
+          <label className="text-sm font-medium text-neutral-100" htmlFor="ownerPasswordConfirm">
             {tAuth('ownerPasswordConfirmLabel')}
           </label>
           <Input
@@ -159,7 +155,7 @@ export function SignUpForm() {
             {...register('ownerPasswordConfirm')}
           />
           {errors.ownerPasswordConfirm && (
-            <p className="text-xs text-destructive">{tAuth('ownerPasswordConfirmError')}</p>
+            <p className="text-xs text-error">{tAuth('ownerPasswordConfirmError')}</p>
           )}
         </div>
         <Button className="w-full" type="submit" disabled={isSubmitting}>
@@ -168,9 +164,11 @@ export function SignUpForm() {
       </form>
 
       {result && (
-        <div className="rounded-md border border-border bg-surface p-4 text-sm text-text">
+        <div className="rounded-xl border border-white/20 bg-white/10 p-4 text-sm text-white">
           <div className="font-semibold">{tCommon('accountCreatedTitle')}</div>
-          <p className="mt-2 text-sm text-muted">{tCommon('accountCreatedSubtitle')}</p>
+          <p className="mt-2 text-sm text-neutral-100/70">
+            {tCommon('accountCreatedSubtitle')}
+          </p>
         </div>
       )}
     </div>

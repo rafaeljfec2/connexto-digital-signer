@@ -9,7 +9,7 @@ import { Button, Input } from '@/shared/ui';
 import { useAuth } from '../hooks/use-auth';
 
 const schema = z.object({
-  email: z.string().email(),
+  email: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
   password: z.string().min(1),
 });
 
@@ -36,7 +36,7 @@ export function LoginForm() {
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-2">
-        <label className="text-sm font-medium text-text" htmlFor="email">
+        <label className="text-sm font-medium text-neutral-100" htmlFor="email">
           {tAuth('emailLabel')}
         </label>
         <Input
@@ -45,12 +45,10 @@ export function LoginForm() {
           placeholder={tAuth('emailPlaceholder')}
           {...register('email')}
         />
-        {errors.email && (
-          <p className="text-xs text-destructive">{tAuth('emailInvalid')}</p>
-        )}
+        {errors.email && <p className="text-xs text-error">{tAuth('emailInvalid')}</p>}
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium text-text" htmlFor="password">
+        <label className="text-sm font-medium text-neutral-100" htmlFor="password">
           {tAuth('passwordLabel')}
         </label>
         <Input
@@ -60,7 +58,7 @@ export function LoginForm() {
           {...register('password')}
         />
         {errors.password && (
-          <p className="text-xs text-destructive">{tAuth('passwordRequired')}</p>
+          <p className="text-xs text-error">{tAuth('passwordRequired')}</p>
         )}
       </div>
       <Button className="w-full" type="submit" disabled={loginStatus === 'pending'}>

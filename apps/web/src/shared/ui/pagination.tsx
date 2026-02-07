@@ -1,3 +1,5 @@
+import { Button } from './button';
+
 export type PaginationProps = {
   readonly page: number;
   readonly totalPages: number;
@@ -18,26 +20,16 @@ export function Pagination({
   const canPrev = page > 1;
   const canNext = page < totalPages;
   return (
-    <div className="flex items-center justify-between gap-3 text-sm">
-      <button
-        type="button"
-        className="rounded-md border border-border px-3 py-2 text-text disabled:opacity-50"
-        onClick={() => onPageChange(page - 1)}
-        disabled={!canPrev}
-      >
+    <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-neutral-100/80">
+      <Button type="button" variant="ghost" onClick={() => onPageChange(page - 1)} disabled={!canPrev}>
         {previousLabel}
-      </button>
-      <span className="text-muted">
+      </Button>
+      <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs">
         {pageLabel} {page} / {totalPages}
       </span>
-      <button
-        type="button"
-        className="rounded-md border border-border px-3 py-2 text-text disabled:opacity-50"
-        onClick={() => onPageChange(page + 1)}
-        disabled={!canNext}
-      >
+      <Button type="button" variant="ghost" onClick={() => onPageChange(page + 1)} disabled={!canNext}>
         {nextLabel}
-      </button>
+      </Button>
     </div>
   );
 }

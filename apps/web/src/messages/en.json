@@ -9,7 +9,22 @@
     "createAccountLink": "Create an account",
     "tenantLabel": "Tenant",
     "accountCreatedTitle": "Account created",
-    "accountCreatedSubtitle": "You are now signed in."
+    "accountCreatedSubtitle": "You are now signed in.",
+    "help": "Help",
+    "nav": {
+      "home": "Home",
+      "documents": "Documents",
+      "signers": "Signers",
+      "settings": "Settings"
+    },
+    "signersTitle": "Signers",
+    "signersSubtitle": "Manage signers and track status",
+    "signersEmptyTitle": "No signers found",
+    "signersEmptyDescription": "Add signers to a document to see them here.",
+    "settingsTitle": "Settings",
+    "settingsSubtitle": "Account preferences and configuration",
+    "settingsEmptyTitle": "Settings coming soon",
+    "settingsEmptyDescription": "New options will be available in this area."
   },
   "auth": {
     "emailLabel": "Email",
@@ -150,11 +165,24 @@
       "date": "Date",
       "initials": "Initials",
       "text": "Text"
+    },
+    "properties": {
+      "title": "Field properties",
+      "required": "Required",
+      "width": "Width",
+      "height": "Height",
+      "remove": "Remove field",
+      "empty": "Select a field to edit its properties."
+    },
+    "signerStatus": {
+      "signed": "Signed",
+      "pending": "Pending"
     }
   },
   "review": {
     "title": "Review and send",
     "subtitle": "Check everything before sending",
+    "saveDraft": "Save draft",
     "checklist": {
       "signers": "Signers added",
       "fields": "Required fields added"
@@ -170,5 +198,28 @@
       "ok": "OK",
       "pending": "Pending"
     }
+  },
+  "signer": {
+    "title": "Sign document",
+    "documentLabel": "Document",
+    "documentHint": "Secure preview",
+    "preview": "Preview",
+    "pdfLoaded": "PDF loaded",
+    "signerLabel": "Signer",
+    "signerEmail": "Signer email",
+    "legalNotice": "By signing, you agree to the document terms and acknowledge the legal validity of this signature.",
+    "signAction": "Sign document",
+    "signatureStatus": "Signature status",
+    "signatureLabel": "Signature",
+    "status": {
+      "pending": "Pending",
+      "signed": "Signed"
+    }
+  },
+  "success": {
+    "title": "Document signed successfully",
+    "subtitle": "You completed your electronic signature. A signed copy was sent to your email and is available in the document history.",
+    "cta": "Back to Dashboard",
+    "badge": "ICP-Brasil"
   }
 }

@@ -22,12 +22,12 @@ export function Dialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <button
         type="button"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-brand-900/70 backdrop-blur-sm"
         onClick={onClose}
       />
-      <div className="relative z-10 w-full max-w-lg rounded-xl border border-border bg-surface p-6 shadow-lg">
-        {title ? <h3 className="text-base font-semibold text-text">{title}</h3> : null}
-        <div className="mt-3 text-sm text-text">{children}</div>
+      <div className="relative z-10 w-full max-w-lg rounded-2xl border border-white/20 bg-white/10 p-6 text-white shadow-2xl backdrop-blur-xl">
+        {title ? <h3 className="text-lg font-semibold">{title}</h3> : null}
+        <div className="mt-3 text-sm text-neutral-100">{children}</div>
         {footer ? <div className="mt-5 flex justify-end gap-2">{footer}</div> : null}
       </div>
     </div>

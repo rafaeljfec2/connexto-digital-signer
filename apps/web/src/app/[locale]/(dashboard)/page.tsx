@@ -41,8 +41,8 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-text">{tDashboard('title')}</h1>
-      <p className="text-sm text-muted">
+      <h1 className="text-2xl font-semibold text-white">{tDashboard('title')}</h1>
+      <p className="text-sm text-neutral-100/70">
         {isMounted && user
           ? `${tDashboard('welcome')}, ${user.name}`
           : tDashboard('welcome')}
@@ -57,30 +57,32 @@ export default function DashboardPage() {
         isLoading={statsQuery.isLoading}
       />
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold text-text">{tDashboard('recentTitle')}</h2>
+        <h2 className="text-lg font-semibold text-white">{tDashboard('recentTitle')}</h2>
         <Button type="button" onClick={() => router.push('/documents/new')}>
           {tDashboard('newDocument')}
         </Button>
       </div>
-      <DocumentsTable
-        documents={recentQuery.data?.data ?? []}
-        isLoading={recentQuery.isLoading}
-        statusLabels={statusLabels}
-        headers={{
-          title: tDocuments('table.title'),
-          status: tDocuments('table.status'),
-          created: tDocuments('table.created'),
-          actions: tDocuments('table.actions'),
-        }}
-        emptyTitle={tDashboard('empty.title')}
-        emptyDescription={tDashboard('empty.description')}
-        formatDate={formatDate}
-        actionLabels={{
-          continue: tDocuments('actions.continue'),
-          view: tDocuments('actions.view'),
-        }}
-        onDocumentClick={handleDocumentClick}
-      />
+      <div className="glass-card rounded-2xl p-4">
+        <DocumentsTable
+          documents={recentQuery.data?.data ?? []}
+          isLoading={recentQuery.isLoading}
+          statusLabels={statusLabels}
+          headers={{
+            title: tDocuments('table.title'),
+            status: tDocuments('table.status'),
+            created: tDocuments('table.created'),
+            actions: tDocuments('table.actions'),
+          }}
+          emptyTitle={tDashboard('empty.title')}
+          emptyDescription={tDashboard('empty.description')}
+          formatDate={formatDate}
+          actionLabels={{
+            continue: tDocuments('actions.continue'),
+            view: tDocuments('actions.view'),
+          }}
+          onDocumentClick={handleDocumentClick}
+        />
+      </div>
     </div>
   );
 }

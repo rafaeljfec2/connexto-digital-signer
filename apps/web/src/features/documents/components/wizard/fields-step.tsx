@@ -10,7 +10,7 @@ import {
   useSignatureFields,
   useSigners,
 } from '@/features/documents/hooks/use-document-wizard';
-import { Button, Card } from '@/shared/ui';
+import { Avatar, Badge, Button, Card, Input } from '@/shared/ui';
 import type { SignatureFieldInput } from '@/features/documents/api';
 import {
   FieldPalette,
@@ -39,6 +39,7 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
   const batchUpdate = useBatchUpdateFields(documentId);
   const fileQuery = useDocumentFile(documentId);
   const [activeSignerId, setActiveSignerId] = useState<string>('');
+  const [selectedFieldId, setSelectedFieldId] = useState<string | null>(null);
   const pageRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
 
   const initialFields = useMemo(() => fieldsQuery.data ?? undefined, [fieldsQuery.data]);
@@ -70,6 +71,11 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
       return acc;
     }, {});
   }, [signersQuery.data]);
+
+  const selectedField = useMemo(
+    () => fields.find((field) => field.id === selectedFieldId) ?? null,
+    [fields, selectedFieldId]
+  );
 
   const handleSave = async () => {
     const payload: SignatureFieldInput[] = fields.map((field) => ({
@@ -150,11 +156,11 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-text">{tFields('title')}</h2>
-        <p className="text-sm text-muted">{tFields('subtitle')}</p>
+        <h2 className="text-lg font-semibold text-white">{tFields('title')}</h2>
+        <p className="text-sm text-neutral-100/70">{tFields('subtitle')}</p>
       </div>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
-        <Card className="space-y-4 p-4">
+      <div className="grid grid-cols-1 gap-4 xl:grid-cols-[260px_1fr_320px]">
+        <Card variant="glass" className="space-y-4 p-4">
           <FieldPalette
             signers={signersQuery.data ?? []}
             activeSignerId={activeSignerId}
@@ -167,7 +173,7 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
             colorHint={tFields('paletteColorHint')}
           />
         </Card>
-        <Card className="p-3">
+        <Card variant="glass" className="p-3">
           <DndContext onDragEnd={handleDragEnd}>
             {fileUrl ? (
               <PdfViewer
@@ -177,16 +183,121 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
                 getFieldLabel={(type) => tFields(`type.${type}`)}
                 onRemoveField={removeField}
                 onPageContainerReady={handlePageReady}
+                selectedFieldId={selectedFieldId ?? undefined}
+                onSelectField={(id) => setSelectedFieldId(id)}
               />
             ) : null}
           </DndContext>
+        </Card>
+        <Card variant="glass" className="space-y-4 p-4">
+          <div className="space-y-3">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-100/70">
+              {tFields('activeSigner')}
+            </p>
+            <div className="space-y-2">
+              {(signersQuery.data ?? []).map((signer) => (
+                <button
+                  key={signer.id}
+                  type="button"
+                  onClick={() => setActiveSignerId(signer.id)}
+                  className={`flex w-full items-center justify-between rounded-xl border px-3 py-2 text-left text-sm transition ${
+                    activeSignerId === signer.id
+                      ? 'border-white/40 bg-white/20 text-white'
+                      : 'border-white/10 bg-white/5 text-neutral-100/70 hover:bg-white/10'
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <Avatar
+                      name={signer.name}
+                      size="sm"
+                      statusColor={signerColors[signer.id] ?? '#14B8A6'}
+                    />
+                    <div>
+                      <p className="font-semibold">{signer.name}</p>
+                      <p className="text-xs text-neutral-100/70">{signer.email}</p>
+                    </div>
+                  </div>
+                  <Badge variant={signer.status === 'signed' ? 'success' : 'info'}>
+                    {signer.status === 'signed'
+                      ? tFields('signerStatus.signed')
+                      : tFields('signerStatus.pending')}
+                  </Badge>
+                </button>
+              ))}
+            </div>
+          </div>
+          <div className="space-y-3 border-t border-white/10 pt-4">
+            <p className="text-xs font-semibold uppercase tracking-wide text-neutral-100/70">
+              {tFields('properties.title')}
+            </p>
+            {selectedField ? (
+              <div className="space-y-3 text-sm text-white">
+                <div className="flex items-center justify-between">
+                  <span>{tFields('properties.required')}</span>
+                  <input
+                    type="checkbox"
+                    checked={selectedField.required}
+                    onChange={(event) =>
+                      moveField({ id: selectedField.id, required: event.target.checked })
+                    }
+                    className="h-4 w-4 accent-accent-400"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="space-y-1">
+                    <label className="text-xs text-neutral-100/70">
+                      {tFields('properties.width')}
+                    </label>
+                    <Input
+                      type="number"
+                      min={0.05}
+                      max={1}
+                      step={0.01}
+                      value={selectedField.width}
+                      onChange={(event) =>
+                        moveField({
+                          id: selectedField.id,
+                          width: Number(event.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <label className="text-xs text-neutral-100/70">
+                      {tFields('properties.height')}
+                    </label>
+                    <Input
+                      type="number"
+                      min={0.03}
+                      max={1}
+                      step={0.01}
+                      value={selectedField.height}
+                      onChange={(event) =>
+                        moveField({
+                          id: selectedField.id,
+                          height: Number(event.target.value),
+                        })
+                      }
+                    />
+                  </div>
+                </div>
+                <Button type="button" variant="ghost" onClick={() => removeField(selectedField.id)}>
+                  {tFields('properties.remove')}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm text-neutral-100/70">
+                {tFields('properties.empty')}
+              </p>
+            )}
+          </div>
         </Card>
       </div>
       <div className="flex items-center justify-between">
         <Button type="button" variant="ghost" onClick={onBack}>
           {tWizard('back')}
         </Button>
-        <Button type="button" onClick={handleSave} disabled={batchUpdate.isPending}>
+        <Button type="button" onClick={handleSave} isLoading={batchUpdate.isPending}>
           {tWizard('next')}
         </Button>
       </div>

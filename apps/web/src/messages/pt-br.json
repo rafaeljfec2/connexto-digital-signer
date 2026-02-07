@@ -9,7 +9,22 @@
     "createAccountLink": "Criar conta",
     "tenantLabel": "Tenant",
     "accountCreatedTitle": "Conta criada",
-    "accountCreatedSubtitle": "Voce ja esta logado."
+    "accountCreatedSubtitle": "Voce ja esta logado.",
+    "help": "Ajuda",
+    "nav": {
+      "home": "Inicio",
+      "documents": "Documentos",
+      "signers": "Signatarios",
+      "settings": "Configuracoes"
+    },
+    "signersTitle": "Signatarios",
+    "signersSubtitle": "Gerencie signatarios e acompanhe status",
+    "signersEmptyTitle": "Nenhum signatario encontrado",
+    "signersEmptyDescription": "Adicione signatarios em um documento para visualizar aqui.",
+    "settingsTitle": "Configuracoes",
+    "settingsSubtitle": "Preferencias e ajustes da conta",
+    "settingsEmptyTitle": "Configuracoes em breve",
+    "settingsEmptyDescription": "Novas opcoes estarao disponiveis nesta area."
   },
   "auth": {
     "emailLabel": "Email",
@@ -150,11 +165,24 @@
       "date": "Data",
       "initials": "Iniciais",
       "text": "Texto"
+    },
+    "properties": {
+      "title": "Propriedades do campo",
+      "required": "Obrigatorio",
+      "width": "Largura",
+      "height": "Altura",
+      "remove": "Remover campo",
+      "empty": "Selecione um campo para editar propriedades."
+    },
+    "signerStatus": {
+      "signed": "Assinado",
+      "pending": "Pendente"
     }
   },
   "review": {
     "title": "Revisao e envio",
     "subtitle": "Verifique tudo antes de enviar",
+    "saveDraft": "Salvar rascunho",
     "checklist": {
       "signers": "Signatarios adicionados",
       "fields": "Campos obrigatorios adicionados"
@@ -170,5 +198,28 @@
       "ok": "OK",
       "pending": "Pendente"
     }
+  },
+  "signer": {
+    "title": "Assinar documento",
+    "documentLabel": "Documento",
+    "documentHint": "Visualizacao segura",
+    "preview": "Visualizar",
+    "pdfLoaded": "PDF carregado",
+    "signerLabel": "Signatario",
+    "signerEmail": "Email do signatario",
+    "legalNotice": "Ao assinar, voce concorda com os termos do documento e reconhece a validade juridica desta assinatura.",
+    "signAction": "Assinar documento",
+    "signatureStatus": "Status da assinatura",
+    "signatureLabel": "Assinatura",
+    "status": {
+      "pending": "Pendente",
+      "signed": "Assinado"
+    }
+  },
+  "success": {
+    "title": "Documento assinado com sucesso",
+    "subtitle": "Voce concluiu sua assinatura eletronica. Uma copia assinada foi enviada para seu email e esta disponivel no historico do documento.",
+    "cta": "Voltar para Dashboard",
+    "badge": "ICP-Brasil"
   }
 }
