@@ -15,15 +15,15 @@
       "home": "Inicio",
       "documents": "Documentos",
       "signers": "Signatarios",
-      "settings": "Configuracoes"
+      "settings": "Configurações"
     },
     "signersTitle": "Signatarios",
     "signersSubtitle": "Gerencie signatarios e acompanhe status",
     "signersEmptyTitle": "Nenhum signatario encontrado",
     "signersEmptyDescription": "Adicione signatarios em um documento para visualizar aqui.",
-    "settingsTitle": "Configuracoes",
+    "settingsTitle": "Configurações",
     "settingsSubtitle": "Preferencias e ajustes da conta",
-    "settingsEmptyTitle": "Configuracoes em breve",
+    "settingsEmptyTitle": "Configurações em breve",
     "settingsEmptyDescription": "Novas opcoes estarao disponiveis nesta area."
   },
   "auth": {
@@ -59,7 +59,7 @@
   "dashboard": {
     "title": "Dashboard",
     "welcome": "Bem-vindo",
-    "underConstruction": "Dashboard em construcao",
+    "underConstruction": "Dashboard em construção",
     "kpi": {
       "pending": "Pendentes",
       "completed": "Concluidos",
@@ -134,10 +134,10 @@
     "progressCounter": "{current} de {total}",
     "steps": {
       "upload": "Documento",
-      "signers": "Signatarios",
+      "signers": "Signatários",
       "fields": "Assinaturas",
-      "settings": "Configuracoes",
-      "review": "Revisao"
+      "settings": "Configurações",
+      "review": "Revisão"
     },
     "next": "Proximo",
     "back": "Voltar",
@@ -146,13 +146,13 @@
     "notFound": "Documento nao encontrado"
   },
   "signers": {
-    "title": "Definir signatarios",
+    "title": "Definir signatários",
     "subtitle": "Adicione pessoas que vao assinar este documento",
     "mode": "Modo de assinatura",
     "modeParallel": "Paralelo",
     "modeSequential": "Sequencial",
     "nameLabel": "Nome completo",
-    "namePlaceholder": "Nome completo do signatario",
+    "namePlaceholder": "Nome completo do signatário",
     "emailLabel": "Email",
     "emailPlaceholder": "signatario@email.com",
     "cpfLabel": "CPF",
@@ -201,7 +201,7 @@
     },
     "properties": {
       "title": "Propriedades do campo",
-      "required": "Obrigatorio",
+      "required": "Obrigatório",
       "width": "Largura",
       "height": "Altura",
       "remove": "Remover campo",
@@ -213,7 +213,7 @@
     }
   },
   "settings": {
-    "title": "Configuracoes",
+    "title": "Configurações",
     "subtitle": "Defina prazos, lembretes e regras de encerramento do documento",
     "deadlineLabel": "Data limite para assinatura",
     "deadlinePlaceholder": "Selecione uma data",
@@ -225,15 +225,15 @@
     "reminder2Days": "A cada 2 dias",
     "reminder3Days": "A cada 3 dias",
     "reminder7Days": "A cada 7 dias",
-    "reminderHelper": "Maximo de 3 lembretes por destinatario.",
+    "reminderHelper": "Máximo de 3 lembretes por destinatário.",
     "languageLabel": "Idioma da tela de assinatura",
     "languagePtBr": "Portugues",
     "languageEn": "English",
     "closureTitle": "Encerramento do documento",
     "closureAutomatic": "Automatico",
-    "closureAutomaticDesc": "O documento sera encerrado automaticamente quando todos os signatarios assinarem.",
+    "closureAutomaticDesc": "O documento será encerrado automaticamente quando todos os signatários assinarem.",
     "closureManual": "Manual",
-    "closureManualDesc": "O documento so sera encerrado quando voce decidir. Util para documentos com prazo flexivel.",
+    "closureManualDesc": "O documento so será encerrado quando você decidir. Util para documentos com prazo flexível.",
     "closureNote": "Independente do modo selecionado, se a data limite for atingida, o documento sera finalizado (com assinaturas existentes) ou cancelado (sem assinaturas)."
   },
   "review": {
@@ -241,7 +241,7 @@
     "subtitle": "Verifique tudo antes de enviar",
     "saveDraft": "Salvar rascunho",
     "checklist": {
-      "signers": "Signatarios adicionados",
+      "signers": "Signatários adicionados",
       "fields": "Assinaturas posicionadas"
     },
     "preview": "Preview do email",
@@ -262,9 +262,9 @@
     "documentHint": "Visualizacao segura",
     "preview": "Visualizar",
     "pdfLoaded": "PDF carregado",
-    "signerLabel": "Signatario",
-    "signerEmail": "Email do signatario",
-    "legalNotice": "Ao assinar, voce concorda com os termos do documento e reconhece a validade juridica desta assinatura.",
+    "signerLabel": "Signatário",
+    "signerEmail": "Email do signatário",
+    "legalNotice": "Ao assinar, você concorda com os termos do documento e reconhece a valididade jurídica desta assinatura.",
     "signAction": "Assinar documento",
     "signing": "Enviando assinatura...",
     "signatureStatus": "Status da assinatura",
@@ -274,8 +274,8 @@
     "signed": "Assinado",
     "loading": "Carregando documento...",
     "error": "Erro ao carregar documento",
-    "alreadySigned": "Voce ja assinou este documento.",
-    "allFieldsRequired": "Preencha todos os campos obrigatorios antes de assinar.",
+    "alreadySigned": "Você já assinou este documento.",
+    "allFieldsRequired": "Preencha todos os campos obrigatórios antes de assinar.",
     "fillFieldTitle": "Preencher campo",
     "fieldsProgress": "{filled} de {total} campos preenchidos",
     "status": {
@@ -285,8 +285,8 @@
   },
   "success": {
     "title": "Documento assinado com sucesso",
-    "subtitle": "Voce concluiu sua assinatura eletronica. Uma copia assinada foi enviada para seu email e esta disponivel no historico do documento.",
-    "cta": "Voltar para Dashboard",
+    "subtitle": "Você concluiu sua assinatura eletrônica. Uma copia assinada foi enviada para seu email e está disponível no histórico do documento.",
+    "cta": "Voltar para Início",
     "badge": "ICP-Brasil"
   }
 }
