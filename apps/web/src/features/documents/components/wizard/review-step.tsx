@@ -63,16 +63,16 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
             {sendMutation.isPending ? tReview('sending') : tReview('send')}
           </Button>
         </div>
+        <div className="flex items-center gap-2 pt-4">
+          <Button type="button" variant="ghost" onClick={onBack}>
+            {tWizard('back')}
+          </Button>
+          <Button type="button" variant="ghost" onClick={onRestart}>
+            {tWizard('restart')}
+          </Button>
+        </div>
       </Card>
 
-      <div className="flex items-center gap-2">
-        <Button type="button" variant="ghost" onClick={onBack}>
-          {tWizard('back')}
-        </Button>
-        <Button type="button" variant="ghost" onClick={onRestart}>
-          {tWizard('restart')}
-        </Button>
-      </div>
       <Dialog
         open={previewOpen}
         onClose={() => setPreviewOpen(false)}

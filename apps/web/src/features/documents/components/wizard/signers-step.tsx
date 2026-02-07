@@ -206,21 +206,21 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
             ) : null}
           </div>
         </div>
-      </Card>
 
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" onClick={onBack}>
-            {tWizard('back')}
-          </Button>
-          <Button type="button" variant="ghost" onClick={onRestart}>
-            {tWizard('restart')}
+        <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="ghost" onClick={onBack}>
+              {tWizard('back')}
+            </Button>
+            <Button type="button" variant="ghost" onClick={onRestart}>
+              {tWizard('restart')}
+            </Button>
+          </div>
+          <Button type="button" onClick={onNext}>
+            {tWizard('next')}
           </Button>
         </div>
-        <Button type="button" onClick={onNext}>
-          {tWizard('next')}
-        </Button>
-      </div>
+      </Card>
 
       <Dialog
         open={modalOpen}

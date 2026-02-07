@@ -118,7 +118,7 @@
       "removeFile": "Remover",
       "submit": "Continuar",
       "submitting": "Enviando",
-      "success": "Documento enviado",
+      "success": "Documento salvo como rascunho",
       "errors": {
         "titleRequired": "Titulo obrigatorio",
         "fileRequired": "Arquivo obrigatorio",
@@ -237,7 +237,7 @@
     "closureNote": "Independente do modo selecionado, se a data limite for atingida, o documento sera finalizado (com assinaturas existentes) ou cancelado (sem assinaturas)."
   },
   "review": {
-    "title": "Revisao e envio",
+    "title": "Revisão e envio para assinatura",
     "subtitle": "Verifique tudo antes de enviar",
     "saveDraft": "Salvar rascunho",
     "checklist": {

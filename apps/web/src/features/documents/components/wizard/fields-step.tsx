@@ -76,18 +76,17 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStep
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
-      </Card>
-
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" onClick={onBack}>
-            {tWizard('back')}
-          </Button>
-          <Button type="button" variant="ghost" onClick={onRestart}>
-            {tWizard('restart')}
-          </Button>
+        <div className="flex items-center justify-between pt-4">
+          <div className="flex items-center gap-2">
+            <Button type="button" variant="ghost" onClick={onBack}>
+              {tWizard('back')}
+            </Button>
+            <Button type="button" variant="ghost" onClick={onRestart}>
+              {tWizard('restart')}
+            </Button>
+          </div>
         </div>
-      </div>
+      </Card>
     </div>
   );
 }
