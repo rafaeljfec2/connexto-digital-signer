@@ -115,6 +115,7 @@
       "dropzoneLabel": "Arraste e solte seu PDF aqui",
       "dropzoneHelper": "Apenas PDF, ate 10MB",
       "fileLoaded": "PDF carregado",
+      "replaceFile": "Trocar PDF",
       "defaultTitle": "Novo documento",
       "removeFile": "Remover",
       "submit": "Continuar",

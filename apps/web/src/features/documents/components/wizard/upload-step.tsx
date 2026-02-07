@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
+import { FileCheck, RefreshCw } from 'lucide-react';
 import {
   useDocument,
   useUpdateDocument,
@@ -30,6 +31,7 @@ export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: R
   const [title, setTitle] = useState('');
   const [titleInitialized, setTitleInitialized] = useState(false);
   const [file, setFile] = useState<File | null>(null);
+  const [replacing, setReplacing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const maxSizeMb = 10;
   const maxSizeBytes = useMemo(() => maxSizeMb * 1024 * 1024, [maxSizeMb]);
@@ -47,7 +49,11 @@ export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: R
       setError(tDocuments('upload.errors.titleRequired'));
       return false;
     }
-    if (!hasFile && !file) {
+    if (!hasFile && !file && !replacing) {
+      setError(tDocuments('upload.errors.fileRequired'));
+      return false;
+    }
+    if (replacing && !file) {
       setError(tDocuments('upload.errors.fileRequired'));
       return false;
     }
@@ -73,9 +79,10 @@ export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: R
         await updateDocumentMutation.mutateAsync({ title: title.trim() });
       }
 
-      if (!hasFile && file) {
+      if (file) {
         await uploadMutation.mutateAsync({ file });
         await queryClient.invalidateQueries({ queryKey: ['documents', 'file', documentId] });
+        setReplacing(false);
       }
 
       toast.success(tDocuments('upload.success'));
@@ -98,9 +105,26 @@ export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: R
             placeholder={tDocuments('upload.titlePlaceholder')}
           />
         </div>
-        {hasFile ? (
-          <div className="rounded-xl border border-white/20 bg-white/10 p-4 text-sm text-neutral-100/80">
-            {tDocuments('upload.fileLoaded')}
+        {hasFile && !replacing ? (
+          <div className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 p-4">
+            <div className="flex items-center gap-3">
+              <FileCheck className="h-5 w-5 text-success" />
+              <span className="text-sm text-neutral-100/80">
+                {tDocuments('upload.fileLoaded')}
+              </span>
+            </div>
+            <Button
+              type="button"
+              variant="ghost"
+              className="gap-1.5 text-sm"
+              onClick={() => {
+                setReplacing(true);
+                setFile(null);
+              }}
+            >
+              <RefreshCw className="h-4 w-4" />
+              {tDocuments('upload.replaceFile')}
+            </Button>
           </div>
         ) : (
           <UploadDropzone
