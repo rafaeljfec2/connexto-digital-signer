@@ -40,6 +40,18 @@ export class Signer {
   @Column({ name: 'access_token', type: 'varchar', length: 64, unique: true })
   accessToken!: string;
 
+  @Column({ type: 'varchar', length: 14, nullable: true })
+  cpf!: string | null;
+
+  @Column({ name: 'birth_date', type: 'date', nullable: true })
+  birthDate!: string | null;
+
+  @Column({ name: 'request_cpf', type: 'boolean', default: false })
+  requestCpf!: boolean;
+
+  @Column({ name: 'auth_method', type: 'varchar', length: 50, default: 'email' })
+  authMethod!: string;
+
   @Column({ name: 'order', type: 'int', nullable: true })
   order!: number | null;
 

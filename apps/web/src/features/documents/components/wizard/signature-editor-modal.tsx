@@ -185,7 +185,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
       >
         <div className="flex-1 space-y-6 overflow-y-auto p-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-100/70">
+            <label className="text-xs font-semibold uppercase tracking-wide text-white/80">
               {tFields('signersLabel')}
             </label>
             <Select
@@ -201,7 +201,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-neutral-100/70">
+            <label className="text-xs font-semibold uppercase tracking-wide text-white/80">
               {tFields('positionLabel')}
             </label>
             <div className="flex flex-col gap-2">
@@ -213,7 +213,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
                   className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
                     activeFieldType === type
                       ? 'border-accent-400/50 bg-accent-600/20 text-accent-400'
-                      : 'border-white/15 bg-white/5 text-neutral-100/60 hover:bg-white/10 hover:text-white'
+                      : 'border-white/20 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
                   }`}
                 >
                   {icon}
@@ -223,7 +223,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
             </div>
           </div>
 
-          <p className="text-xs text-neutral-100/40">
+          <p className="text-xs text-white/50">
             {tFields('clickToAdd')}
           </p>
         </div>
@@ -257,7 +257,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
           >
             <PenTool className="h-4 w-4" />
           </Button>
-          <span className="text-xs text-neutral-100/60">
+          <span className="text-xs text-white/70">
             {tFields('title')}
           </span>
         </div>
