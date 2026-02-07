@@ -14,6 +14,14 @@ import {
 } from '@/features/documents/hooks/use-document-wizard';
 import { Avatar, Badge, Button, Card, Dialog, Input, Select } from '@/shared/ui';
 
+function formatCpf(value: string): string {
+  const digits = value.replaceAll(/\D/g, '').slice(0, 11);
+  if (digits.length <= 3) return digits;
+  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
+  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
+  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
+}
+
 export type SignersStepProps = {
   readonly documentId: string;
   readonly onBack: () => void;
@@ -69,7 +77,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
     setEditingSigner(signer);
     setName(signer.name);
     setEmail(signer.email);
-    setCpf(signer.cpf ?? '');
+    setCpf(formatCpf(signer.cpf ?? ''));
     setBirthDate(signer.birthDate ?? '');
     setRequestCpf(signer.requestCpf);
     setAuthMethod(signer.authMethod);
@@ -276,7 +284,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
             </label>
             <Input
               value={cpf}
-              onChange={(event) => setCpf(event.target.value)}
+              onChange={(event) => setCpf(formatCpf(event.target.value))}
               placeholder={tSigners('cpfPlaceholder')}
             />
           </div>
