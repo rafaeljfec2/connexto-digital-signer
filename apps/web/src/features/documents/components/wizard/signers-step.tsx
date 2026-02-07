@@ -5,10 +5,12 @@ import { useTranslations } from 'next-intl';
 import { Plus } from 'lucide-react';
 import {
   useAddSigner,
+  useDocument,
   useRemoveSigner,
   useSigners,
+  useUpdateDocument,
 } from '@/features/documents/hooks/use-document-wizard';
-import { Avatar, Button, Card, Dialog, Input, Select } from '@/shared/ui';
+import { Avatar, Badge, Button, Card, Dialog, Input, Select } from '@/shared/ui';
 
 export type SignersStepProps = {
   readonly documentId: string;
@@ -20,9 +22,11 @@ export type SignersStepProps = {
 export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<SignersStepProps>) {
   const tSigners = useTranslations('signers');
   const tWizard = useTranslations('wizard');
+  const documentQuery = useDocument(documentId);
   const signersQuery = useSigners(documentId);
   const addSignerMutation = useAddSigner(documentId);
   const removeSignerMutation = useRemoveSigner(documentId);
+  const updateDocument = useUpdateDocument(documentId);
 
   const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState('');
@@ -31,11 +35,14 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
   const [birthDate, setBirthDate] = useState('');
   const [requestCpf, setRequestCpf] = useState(false);
   const [authMethod, setAuthMethod] = useState('email');
+  const [order, setOrder] = useState('');
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  const signingMode = documentQuery.data?.signingMode ?? 'parallel';
 
   const resetForm = () => {
     setName('');
@@ -44,6 +51,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
     setBirthDate('');
     setRequestCpf(false);
     setAuthMethod('email');
+    setOrder('');
   };
 
   const handleAdd = async () => {
@@ -55,6 +63,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
       birthDate: birthDate.trim() || undefined,
       requestCpf,
       authMethod,
+      order: signingMode === 'sequential' && order ? Number(order) : undefined,
     });
     resetForm();
     setModalOpen(false);
@@ -64,6 +73,11 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
   const handleRemove = async (signerId: string) => {
     await removeSignerMutation.mutateAsync(signerId);
     await signersQuery.refetch();
+  };
+
+  const handleModeChange = async (mode: 'parallel' | 'sequential') => {
+    await updateDocument.mutateAsync({ signingMode: mode });
+    await documentQuery.refetch();
   };
 
   const handleCloseModal = () => {
@@ -118,6 +132,11 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
+                  {signingMode === 'sequential' && signer.order ? (
+                    <Badge variant="info">
+                      {tSigners('orderLabel')} {signer.order}
+                    </Badge>
+                  ) : null}
                   <Button
                     type="button"
                     variant="ghost"
@@ -173,6 +192,20 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
         }
       >
         <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-100">
+              {tSigners('mode')}
+            </label>
+            <Select
+              value={signingMode}
+              onChange={(event) =>
+                handleModeChange(event.target.value as 'parallel' | 'sequential')
+              }
+            >
+              <option value="parallel">{tSigners('modeParallel')}</option>
+              <option value="sequential">{tSigners('modeSequential')}</option>
+            </Select>
+          </div>
           <div className="space-y-2">
             <label className="text-sm font-medium text-neutral-100">
               {tSigners('nameLabel')}
@@ -236,6 +269,20 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
               <option value="none">{tSigners('authMethodNone')}</option>
             </Select>
           </div>
+          {signingMode === 'sequential' ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-100">
+                {tSigners('orderLabel')}
+              </label>
+              <Input
+                value={order}
+                onChange={(event) => setOrder(event.target.value)}
+                placeholder={tSigners('orderPlaceholder')}
+                type="number"
+                min={1}
+              />
+            </div>
+          ) : null}
         </div>
       </Dialog>
     </div>

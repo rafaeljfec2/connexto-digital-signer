@@ -147,6 +147,9 @@
   "signers": {
     "title": "Define signers",
     "subtitle": "Add people who will sign this document",
+    "mode": "Signing mode",
+    "modeParallel": "Parallel",
+    "modeSequential": "Sequential",
     "nameLabel": "Full name",
     "namePlaceholder": "Signer full name",
     "emailLabel": "Email",
