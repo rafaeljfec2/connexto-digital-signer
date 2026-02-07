@@ -15,11 +15,14 @@ import { UploadDropzone } from '../upload-dropzone';
 export type UploadStepProps = {
   readonly documentId: string;
   readonly hasFile: boolean;
+  readonly onBack?: () => void;
+  readonly onRestart?: () => void;
   readonly onNext: () => void;
 };
 
-export function UploadStep({ documentId, hasFile, onNext }: Readonly<UploadStepProps>) {
+export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: Readonly<UploadStepProps>) {
   const tDocuments = useTranslations('documents');
+  const tWizard = useTranslations('wizard');
   const queryClient = useQueryClient();
   const documentQuery = useDocument(documentId);
   const updateDocumentMutation = useUpdateDocument(documentId);
@@ -110,9 +113,23 @@ export function UploadStep({ documentId, hasFile, onNext }: Readonly<UploadStepP
             maxSizeMb={maxSizeMb}
           />
         )}
-        <Button type="submit" disabled={isSubmitting}>
-          {isSubmitting ? tDocuments('upload.submitting') : tDocuments('upload.submit')}
-        </Button>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            {onBack ? (
+              <Button type="button" variant="ghost" onClick={onBack}>
+                {tWizard('back')}
+              </Button>
+            ) : null}
+            {onRestart ? (
+              <Button type="button" variant="ghost" onClick={onRestart} className="text-xs">
+                {tWizard('restart')}
+              </Button>
+            ) : null}
+          </div>
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? tDocuments('upload.submitting') : tDocuments('upload.submit')}
+          </Button>
+        </div>
       </Card>
     </form>
   );

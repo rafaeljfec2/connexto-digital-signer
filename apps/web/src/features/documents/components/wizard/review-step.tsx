@@ -14,9 +14,10 @@ import { Button, Card, Dialog } from '@/shared/ui';
 export type ReviewStepProps = {
   readonly documentId: string;
   readonly onBack: () => void;
+  readonly onRestart: () => void;
 };
 
-export function ReviewStep({ documentId, onBack }: Readonly<ReviewStepProps>) {
+export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewStepProps>) {
   const tReview = useTranslations('review');
   const tWizard = useTranslations('wizard');
   const signersQuery = useSigners(documentId);
@@ -61,9 +62,12 @@ export function ReviewStep({ documentId, onBack }: Readonly<ReviewStepProps>) {
           {sendMutation.isPending ? tReview('sending') : tReview('send')}
         </Button>
       </div>
-      <div className="flex justify-start">
+      <div className="flex items-center gap-2">
         <Button type="button" variant="ghost" onClick={onBack}>
           {tWizard('back')}
+        </Button>
+        <Button type="button" variant="ghost" onClick={onRestart} className="text-xs">
+          {tWizard('restart')}
         </Button>
       </div>
       <Dialog

@@ -2,27 +2,33 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { Plus } from 'lucide-react';
 import {
   useAddSigner,
   useDocument,
+  useRemoveSigner,
   useSigners,
   useUpdateDocument,
 } from '@/features/documents/hooks/use-document-wizard';
-import { Avatar, Badge, Button, Card, Input, Select } from '@/shared/ui';
+import { Avatar, Badge, Button, Dialog, Input, Select } from '@/shared/ui';
 
 export type SignersStepProps = {
   readonly documentId: string;
+  readonly onBack: () => void;
+  readonly onRestart: () => void;
   readonly onNext: () => void;
 };
 
-export function SignersStep({ documentId, onNext }: Readonly<SignersStepProps>) {
+export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<SignersStepProps>) {
   const tSigners = useTranslations('signers');
   const tWizard = useTranslations('wizard');
   const documentQuery = useDocument(documentId);
   const signersQuery = useSigners(documentId);
   const addSignerMutation = useAddSigner(documentId);
+  const removeSignerMutation = useRemoveSigner(documentId);
   const updateDocument = useUpdateDocument(documentId);
 
+  const [modalOpen, setModalOpen] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [order, setOrder] = useState('');
@@ -34,6 +40,12 @@ export function SignersStep({ documentId, onNext }: Readonly<SignersStepProps>) 
 
   const signingMode = documentQuery.data?.signingMode ?? 'parallel';
 
+  const resetForm = () => {
+    setName('');
+    setEmail('');
+    setOrder('');
+  };
+
   const handleAdd = async () => {
     if (!name.trim() || !email.trim()) return;
     await addSignerMutation.mutateAsync({
@@ -41,15 +53,24 @@ export function SignersStep({ documentId, onNext }: Readonly<SignersStepProps>) 
       email: email.trim(),
       order: signingMode === 'sequential' && order ? Number(order) : undefined,
     });
-    setName('');
-    setEmail('');
-    setOrder('');
+    resetForm();
+    setModalOpen(false);
+    await signersQuery.refetch();
+  };
+
+  const handleRemove = async (signerId: string) => {
+    await removeSignerMutation.mutateAsync(signerId);
     await signersQuery.refetch();
   };
 
   const handleModeChange = async (mode: 'parallel' | 'sequential') => {
     await updateDocument.mutateAsync({ signingMode: mode });
     await documentQuery.refetch();
+  };
+
+  const handleCloseModal = () => {
+    resetForm();
+    setModalOpen(false);
   };
 
   if (!isMounted) {
@@ -61,54 +82,31 @@ export function SignersStep({ documentId, onNext }: Readonly<SignersStepProps>) 
     );
   }
 
+  const signers = signersQuery.data ?? [];
+
   return (
     <div className="space-y-6">
       <div className="space-y-2">
         <h2 className="text-lg font-semibold text-white">{tSigners('title')}</h2>
         <p className="text-sm text-neutral-100/70">{tSigners('subtitle')}</p>
       </div>
-      <Card variant="glass" className="space-y-4 p-4">
-        <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-100">{tSigners('mode')}</label>
-          <Select
-            value={signingMode}
-            onChange={(event) =>
-              handleModeChange(event.target.value as 'parallel' | 'sequential')
-            }
-          >
-            <option value="parallel">{tSigners('modeParallel')}</option>
-            <option value="sequential">{tSigners('modeSequential')}</option>
-          </Select>
-        </div>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Input
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            placeholder={tSigners('namePlaceholder')}
-          />
-          <Input
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder={tSigners('emailPlaceholder')}
-          />
-          {signingMode === 'sequential' ? (
-            <Input
-              value={order}
-              onChange={(event) => setOrder(event.target.value)}
-              placeholder={tSigners('orderPlaceholder')}
-              type="number"
-              min={1}
-            />
-          ) : null}
-        </div>
-        <Button type="button" onClick={handleAdd} isLoading={addSignerMutation.isPending}>
-          {tSigners('add')}
-        </Button>
-      </Card>
+
       <div className="space-y-3">
-        <h3 className="text-sm font-semibold text-white">{tSigners('listTitle')}</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-semibold text-white">{tSigners('listTitle')}</h3>
+          <Button
+            type="button"
+            variant="secondary"
+            className="gap-2 text-sm"
+            onClick={() => setModalOpen(true)}
+          >
+            <Plus className="h-4 w-4" />
+            {tSigners('add')}
+          </Button>
+        </div>
+
         <div className="space-y-2">
-          {(signersQuery.data ?? []).map((signer) => (
+          {signers.map((signer) => (
             <div
               key={signer.id}
               className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white"
@@ -126,21 +124,111 @@ export function SignersStep({ documentId, onNext }: Readonly<SignersStepProps>) 
                     {tSigners('orderLabel')} {signer.order}
                   </Badge>
                 ) : null}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="text-xs text-error hover:text-error/80"
+                  onClick={() => handleRemove(signer.id)}
+                >
+                  {tSigners('remove')}
+                </Button>
               </div>
             </div>
           ))}
-          {signersQuery.data?.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-white/20 p-4 text-sm text-neutral-100/70">
+          {signers.length === 0 ? (
+            <div className="rounded-lg border border-dashed border-white/20 p-6 text-center text-sm text-neutral-100/70">
               {tSigners('empty')}
             </div>
           ) : null}
         </div>
       </div>
-      <div className="flex justify-end">
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="ghost" onClick={onBack}>
+            {tWizard('back')}
+          </Button>
+          <Button type="button" variant="ghost" onClick={onRestart} className="text-xs">
+            {tWizard('restart')}
+          </Button>
+        </div>
         <Button type="button" onClick={onNext}>
           {tWizard('next')}
         </Button>
       </div>
+
+      <Dialog
+        open={modalOpen}
+        onClose={handleCloseModal}
+        title={tSigners('add')}
+        footer={
+          <>
+            <Button type="button" variant="ghost" onClick={handleCloseModal}>
+              {tSigners('cancel')}
+            </Button>
+            <Button
+              type="button"
+              onClick={handleAdd}
+              isLoading={addSignerMutation.isPending}
+              disabled={!name.trim() || !email.trim()}
+            >
+              {tSigners('confirm')}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-100">
+              {tSigners('mode')}
+            </label>
+            <Select
+              value={signingMode}
+              onChange={(event) =>
+                handleModeChange(event.target.value as 'parallel' | 'sequential')
+              }
+            >
+              <option value="parallel">{tSigners('modeParallel')}</option>
+              <option value="sequential">{tSigners('modeSequential')}</option>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-100">
+              {tSigners('nameLabel')}
+            </label>
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder={tSigners('namePlaceholder')}
+            />
+          </div>
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-neutral-100">
+              {tSigners('emailLabel')}
+            </label>
+            <Input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder={tSigners('emailPlaceholder')}
+              type="email"
+            />
+          </div>
+          {signingMode === 'sequential' ? (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-neutral-100">
+                {tSigners('orderLabel')}
+              </label>
+              <Input
+                value={order}
+                onChange={(event) => setOrder(event.target.value)}
+                placeholder={tSigners('orderPlaceholder')}
+                type="number"
+                min={1}
+              />
+            </div>
+          ) : null}
+        </div>
+      </Dialog>
     </div>
   );
 }

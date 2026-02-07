@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { FileUp, Users, LayoutGrid, CheckCircle } from 'lucide-react';
-import { Stepper, Button } from '@/shared/ui';
+import { Stepper } from '@/shared/ui';
 import { UploadStep } from './upload-step';
 import { SignersStep } from './signers-step';
 import { FieldsStep } from './fields-step';
@@ -81,6 +81,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
         <UploadStep
           documentId={documentId}
           hasFile={uploadComplete}
+          onRestart={() => setStep(uploadComplete ? 'signers' : 'upload')}
           onNext={() => {
             setUploadComplete(true);
             setStep('signers');
@@ -88,29 +89,28 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
         />
       ) : null}
       {step === 'signers' ? (
-        <SignersStep documentId={documentId} onNext={() => setStep('fields')} />
+        <SignersStep
+          documentId={documentId}
+          onBack={() => setStep('upload')}
+          onRestart={() => setStep(uploadComplete ? 'signers' : 'upload')}
+          onNext={() => setStep('fields')}
+        />
       ) : null}
       {step === 'fields' ? (
         <FieldsStep
           documentId={documentId}
           onBack={() => setStep('signers')}
+          onRestart={() => setStep(uploadComplete ? 'signers' : 'upload')}
           onNext={() => setStep('review')}
         />
       ) : null}
       {step === 'review' ? (
-        <ReviewStep documentId={documentId} onBack={() => setStep('fields')} />
+        <ReviewStep
+          documentId={documentId}
+          onBack={() => setStep('fields')}
+          onRestart={() => setStep(uploadComplete ? 'signers' : 'upload')}
+        />
       ) : null}
-      <div className="flex items-center justify-between text-xs text-muted">
-        <span>{tWizard('hint')}</span>
-        <Button
-          type="button"
-          variant="ghost"
-          onClick={() => setStep(uploadComplete ? 'signers' : 'upload')}
-          className="text-xs"
-        >
-          {tWizard('restart')}
-        </Button>
-      </div>
     </div>
   );
 }

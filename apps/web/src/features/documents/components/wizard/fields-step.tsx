@@ -28,10 +28,11 @@ const clamp = (value: number, min: number, max: number) => Math.min(max, Math.ma
 export type FieldsStepProps = {
   readonly documentId: string;
   readonly onBack: () => void;
+  readonly onRestart: () => void;
   readonly onNext: () => void;
 };
 
-export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepProps>) {
+export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<FieldsStepProps>) {
   const tFields = useTranslations('fields');
   const tWizard = useTranslations('wizard');
   const signersQuery = useSigners(documentId);
@@ -294,9 +295,14 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
         </Card>
       </div>
       <div className="flex items-center justify-between">
-        <Button type="button" variant="ghost" onClick={onBack}>
-          {tWizard('back')}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button type="button" variant="ghost" onClick={onBack}>
+            {tWizard('back')}
+          </Button>
+          <Button type="button" variant="ghost" onClick={onRestart} className="text-xs">
+            {tWizard('restart')}
+          </Button>
+        </div>
         <Button type="button" onClick={handleSave} isLoading={batchUpdate.isPending}>
           {tWizard('next')}
         </Button>
