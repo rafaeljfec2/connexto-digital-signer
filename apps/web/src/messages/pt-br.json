@@ -165,7 +165,9 @@
   },
   "fields": {
     "title": "Campos de assinatura",
-    "subtitle": "Arraste um campo para o PDF e atribua a um signatario",
+    "subtitle": "Clique no PDF para posicionar os campos",
+    "signersLabel": "Signatarios",
+    "positionLabel": "Posicionar",
     "activeSigner": "Signatario ativo",
     "paletteTitle": "Campos",
     "paletteColorHint": "Os campos usarao esta cor",
@@ -175,7 +177,7 @@
       "signature": "Assinatura",
       "name": "Nome",
       "date": "Data",
-      "initials": "Iniciais",
+      "initials": "Rubrica",
       "text": "Texto"
     },
     "properties": {

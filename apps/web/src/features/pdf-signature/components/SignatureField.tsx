@@ -1,6 +1,15 @@
+import { PenTool, Fingerprint, X } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 
-import { SignatureFieldData } from '../types';
+import { SignatureFieldData, SignatureFieldType } from '../types';
+
+const FIELD_ICON: Record<SignatureFieldType, React.ReactNode> = {
+  signature: <PenTool className="h-3.5 w-3.5 shrink-0" />,
+  initials: <Fingerprint className="h-3.5 w-3.5 shrink-0" />,
+  name: <PenTool className="h-3.5 w-3.5 shrink-0" />,
+  date: <PenTool className="h-3.5 w-3.5 shrink-0" />,
+  text: <PenTool className="h-3.5 w-3.5 shrink-0" />,
+};
 
 type SignatureFieldProps = Readonly<{
   field: SignatureFieldData;
@@ -34,8 +43,8 @@ export const SignatureField = ({
         event.stopPropagation();
         onSelect?.(field.id);
       }}
-      className={`absolute flex items-center justify-between gap-2 rounded-md border bg-white/90 px-2 py-1 text-[10px] text-text shadow-sm ${
-        isSelected ? 'ring-2 ring-accent-400/70' : ''
+      className={`absolute flex items-center justify-center gap-1.5 rounded-md border-2 border-dashed bg-white/80 px-3 py-1 text-xs font-medium shadow-sm transition-shadow ${
+        isSelected ? 'ring-2 ring-accent-400/70 shadow-md' : 'hover:shadow-md'
       }`}
       style={{
         left: `${field.x * 100}%`,
@@ -47,6 +56,7 @@ export const SignatureField = ({
         touchAction: 'none',
       }}
     >
+      {FIELD_ICON[field.type]}
       <span className="truncate">{label}</span>
       {onRemove ? (
         <button
@@ -55,9 +65,9 @@ export const SignatureField = ({
             event.stopPropagation();
             onRemove(field.id);
           }}
-          className="text-[10px] font-semibold text-neutral-500"
+          className="ml-auto flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-neutral-200/80 text-neutral-600 transition hover:bg-red-100 hover:text-red-600"
         >
-          ×
+          <X className="h-3 w-3" />
         </button>
       ) : null}
     </button>

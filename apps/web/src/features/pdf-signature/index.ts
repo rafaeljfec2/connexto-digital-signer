@@ -6,4 +6,3 @@ export * from './components/PdfViewer';
 export * from './components/PdfPage';
 export * from './components/SignatureField';
 export * from './components/SignaturePad';
-export * from './components/FieldPalette';

@@ -165,7 +165,9 @@
   },
   "fields": {
     "title": "Signature fields",
-    "subtitle": "Drag a field to the PDF and assign it to a signer",
+    "subtitle": "Click on the PDF to position fields",
+    "signersLabel": "Signers",
+    "positionLabel": "Position",
     "activeSigner": "Active signer",
     "paletteTitle": "Fields",
     "paletteColorHint": "Fields will use this color",
