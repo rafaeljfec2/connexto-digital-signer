@@ -3,6 +3,7 @@ import { renderSignatureInvite } from '../templates/signature-invite';
 import { renderSignatureReminder } from '../templates/signature-reminder';
 import { renderDocumentCompleted } from '../templates/document-completed';
 import { renderWelcome } from '../templates/welcome';
+import { renderVerificationCode } from '../templates/verification-code';
 
 export interface RenderedEmail {
   subject: string;
@@ -36,6 +37,11 @@ export class TemplateService {
       case 'welcome':
         return renderWelcome(
           context as unknown as Parameters<typeof renderWelcome>[0],
+          locale,
+        );
+      case 'verification-code':
+        return renderVerificationCode(
+          context as unknown as Parameters<typeof renderVerificationCode>[0],
           locale,
         );
       default:

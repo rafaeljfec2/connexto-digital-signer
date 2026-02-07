@@ -19,9 +19,11 @@ import type { RequestWithHeaders } from '@connexto/shared';
 import { TenantId, Public } from '@connexto/shared';
 import { SignaturesService } from '../services/signatures.service';
 import { SignatureFieldsService } from '../services/signature-fields.service';
+import { VerificationService } from '../services/verification.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
 import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { AcceptSignatureDto } from '../dto/accept-signature.dto';
+import { VerifyCodeDto } from '../dto/verify-code.dto';
 import { CreateSignatureFieldDto } from '../dto/create-signature-field.dto';
 import { UpdateSignatureFieldDto } from '../dto/update-signature-field.dto';
 import { BatchUpdateFieldsDto } from '../dto/batch-update-fields.dto';
@@ -140,7 +142,10 @@ export class SignatureFieldsController {
 @ApiTags('Sign')
 @Controller('sign')
 export class SignController {
-  constructor(private readonly signaturesService: SignaturesService) {}
+  constructor(
+    private readonly signaturesService: SignaturesService,
+    private readonly verificationService: VerificationService,
+  ) {}
 
   @Public()
   @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
@@ -188,6 +193,23 @@ export class SignController {
         userAgent: (req.headers['user-agent'] as string) ?? '',
       }
     );
+  }
+
+  @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Post(':token/send-code')
+  sendCode(@Param('token') token: string) {
+    return this.verificationService.sendCode(token);
+  }
+
+  @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Post(':token/verify-code')
+  verifyCode(
+    @Param('token') token: string,
+    @Body() dto: VerifyCodeDto,
+  ) {
+    return this.verificationService.verifyCode(token, dto.code);
   }
 }
 

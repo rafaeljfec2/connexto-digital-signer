@@ -4,6 +4,8 @@ import {
   getSignerPdf,
   getSignerFields,
   acceptSignature,
+  sendVerificationCode,
+  verifyCode,
 } from './api';
 import type { AcceptSignatureInput } from './api';
 
@@ -35,4 +37,14 @@ export const useAcceptSignature = (token: string) =>
   useMutation({
     mutationFn: (input: AcceptSignatureInput) =>
       acceptSignature(token, input),
+  });
+
+export const useSendVerificationCode = (token: string) =>
+  useMutation({
+    mutationFn: () => sendVerificationCode(token),
+  });
+
+export const useVerifyCode = (token: string) =>
+  useMutation({
+    mutationFn: (code: string) => verifyCode(token, code),
   });

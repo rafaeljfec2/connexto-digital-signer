@@ -109,6 +109,26 @@ export class NotificationsService {
     return this.sendEmail({ to: params.ownerEmail, subject, text, html });
   }
 
+  async sendVerificationCode(params: {
+    signerEmail: string;
+    signerName: string;
+    documentTitle: string;
+    code: string;
+    locale?: string;
+  }): Promise<string> {
+    const { subject, text, html } = this.templateService.renderTemplate(
+      'verification-code',
+      {
+        signerName: params.signerName,
+        documentTitle: params.documentTitle,
+        code: params.code,
+      },
+      params.locale ?? 'en',
+    );
+
+    return this.sendEmail({ to: params.signerEmail, subject, text, html });
+  }
+
   buildSignatureInvite(params: {
     signerName: string;
     documentTitle: string;

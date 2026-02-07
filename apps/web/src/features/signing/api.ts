@@ -13,6 +13,7 @@ export type SignerWithDocument = {
     readonly status: 'pending' | 'signed';
     readonly documentId: string;
     readonly signedAt: string | null;
+    readonly authMethod: string;
   };
   readonly document: {
     readonly id: string;
@@ -70,4 +71,24 @@ export const acceptSignature = async (
   input: AcceptSignatureInput
 ): Promise<void> => {
   await publicClient.post(`/sign/${token}/accept`, input);
+};
+
+export const sendVerificationCode = async (
+  token: string
+): Promise<{ readonly sent: boolean }> => {
+  const response = await publicClient.post<{ readonly sent: boolean }>(
+    `/sign/${token}/send-code`
+  );
+  return response.data;
+};
+
+export const verifyCode = async (
+  token: string,
+  code: string
+): Promise<{ readonly verified: boolean }> => {
+  const response = await publicClient.post<{ readonly verified: boolean }>(
+    `/sign/${token}/verify-code`,
+    { code }
+  );
+  return response.data;
 };

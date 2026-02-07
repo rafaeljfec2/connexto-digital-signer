@@ -36,4 +36,13 @@ export const emailMessages = {
     textBody:
       'Welcome to Connexto Digital Signer! Your account has been created successfully.\nAccess: {dashboardUrl}',
   },
+  'verification-code': {
+    subject: 'Your verification code: {code}',
+    greeting: 'Hello {signerName},',
+    body: 'Use the code below to verify your identity before signing the document <strong>{documentTitle}</strong>.',
+    expiry: 'This code expires in 10 minutes.',
+    footer: 'If you did not request this code, please ignore this email.',
+    textBody:
+      'Your verification code is: {code}\nUse it to verify your identity before signing the document: {documentTitle}.\nThis code expires in 10 minutes.',
+  },
 } as const;

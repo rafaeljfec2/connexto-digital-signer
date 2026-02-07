@@ -2,9 +2,11 @@
 
 import {
   useAcceptSignature,
+  useSendVerificationCode,
   useSignerData,
   useSignerFields,
   useSignerPdf,
+  useVerifyCode,
 } from '@/features/signing/hooks';
 import { useRouter } from '@/i18n/navigation';
 import { Avatar, Badge, Card } from '@/shared/ui';
@@ -18,6 +20,7 @@ import { ReviewStep } from './components/review-step';
 import type { SignStep } from './components/sign-stepper';
 import { SignStepper } from './components/sign-stepper';
 import { SignatureModal } from './components/signature-modal';
+import { ValidateStep } from './components/validate-step';
 import { ViewStep } from './components/view-step';
 
 export default function SignerDocumentPage() {
@@ -32,6 +35,8 @@ export default function SignerDocumentPage() {
   const pdfQuery = useSignerPdf(token);
   const fieldsQuery = useSignerFields(token);
   const acceptMutation = useAcceptSignature(token);
+  const sendCodeMutation = useSendVerificationCode(token);
+  const verifyCodeMutation = useVerifyCode(token);
 
   const [currentStep, setCurrentStep] = useState<SignStep>('view');
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
@@ -48,6 +53,7 @@ export default function SignerDocumentPage() {
   const signerData = signerQuery.data;
   const fields = useMemo(() => fieldsQuery.data ?? [], [fieldsQuery.data]);
   const alreadySigned = signerData?.signer.status === 'signed';
+  const requiresValidation = signerData?.signer.authMethod === 'email';
 
   const fileUrl = useMemo(() => {
     if (!pdfQuery.data) return '';
@@ -77,6 +83,26 @@ export default function SignerDocumentPage() {
     [activeFieldId]
   );
 
+  const handleFillNext = useCallback(() => {
+    if (requiresValidation) {
+      setCurrentStep('validate');
+    } else {
+      setCurrentStep('review');
+    }
+  }, [requiresValidation]);
+
+  const handleValidateBack = useCallback(() => {
+    setCurrentStep('fill');
+  }, []);
+
+  const handleReviewBack = useCallback(() => {
+    if (requiresValidation) {
+      setCurrentStep('validate');
+    } else {
+      setCurrentStep('fill');
+    }
+  }, [requiresValidation]);
+
   const handleSubmit = async () => {
     const fieldPayload = fields
       .filter((f) => (fieldValues[f.id] ?? '').length > 0)
@@ -92,6 +118,14 @@ export default function SignerDocumentPage() {
 
     router.push('/success');
   };
+
+  const verifyErrorMessage = useMemo(() => {
+    if (!verifyCodeMutation.isError) return null;
+    const error = verifyCodeMutation.error as { response?: { data?: { message?: string } } };
+    const msg = error?.response?.data?.message ?? '';
+    if (msg.includes('expired')) return t('validateStep.expiredCode');
+    return t('validateStep.invalidCode');
+  }, [verifyCodeMutation.isError, verifyCodeMutation.error, t]);
 
   const fieldTypeLabels = useMemo(
     () => ({
@@ -194,9 +228,11 @@ export default function SignerDocumentPage() {
         <div className="mx-auto max-w-6xl">
           <SignStepper
             currentStep={currentStep}
+            showValidation={requiresValidation ?? false}
             labels={{
               view: t('steps.view'),
               fill: t('steps.fill'),
+              validate: t('steps.validate'),
               review: t('steps.review'),
             }}
           />
@@ -223,7 +259,7 @@ export default function SignerDocumentPage() {
             fields={fields}
             fieldValues={fieldValues}
             onFieldClick={handleFieldClick}
-            onNext={() => setCurrentStep('review')}
+            onNext={handleFillNext}
             onBack={() => setCurrentStep('view')}
             labels={{
               instruction: t('fillStep.instruction'),
@@ -240,12 +276,37 @@ export default function SignerDocumentPage() {
           />
         ) : null}
 
+        {currentStep === 'validate' ? (
+          <ValidateStep
+            signerEmail={signer.email}
+            onSendCode={() => sendCodeMutation.mutateAsync()}
+            onVerifyCode={(code) => verifyCodeMutation.mutateAsync(code)}
+            onNext={() => setCurrentStep('review')}
+            onBack={handleValidateBack}
+            isSending={sendCodeMutation.isPending}
+            isVerifying={verifyCodeMutation.isPending}
+            verifyError={verifyErrorMessage}
+            labels={{
+              title: t('validateStep.title'),
+              instruction: t('validateStep.instruction'),
+              sendCode: t('validateStep.sendCode'),
+              resendCode: t('validateStep.resendCode'),
+              resendIn: t('validateStep.resendIn'),
+              placeholder: t('validateStep.placeholder'),
+              verify: t('validateStep.verify'),
+              invalidCode: t('validateStep.invalidCode'),
+              expiredCode: t('validateStep.expiredCode'),
+              back: t('validateStep.back'),
+            }}
+          />
+        ) : null}
+
         {currentStep === 'review' ? (
           <ReviewStep
             signerData={signerData}
             fields={fields}
             fieldValues={fieldValues}
-            onBack={() => setCurrentStep('fill')}
+            onBack={handleReviewBack}
             onSubmit={handleSubmit}
             onViewDocument={() => setShowPdfPreview(true)}
             isSubmitting={acceptMutation.isPending}

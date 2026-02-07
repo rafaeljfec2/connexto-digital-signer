@@ -289,6 +289,7 @@
     "steps": {
       "view": "Visualizar",
       "fill": "Preencher",
+      "validate": "Validar",
       "review": "Assinar"
     },
     "viewStep": {
@@ -303,6 +304,18 @@
       "filled": "Preenchido",
       "tapToFill": "Toque para preencher",
       "next": "Prosseguir para revisão"
+    },
+    "validateStep": {
+      "title": "Verificação de identidade",
+      "instruction": "Enviamos um código de 6 dígitos para {email}",
+      "sendCode": "Enviar código",
+      "resendCode": "Reenviar código",
+      "resendIn": "Reenviar em {seconds}s",
+      "placeholder": "000000",
+      "verify": "Verificar",
+      "invalidCode": "Código inválido. Tente novamente.",
+      "expiredCode": "Código expirado. Solicite um novo.",
+      "back": "Voltar"
     },
     "reviewStep": {
       "title": "Revisão e assinatura",

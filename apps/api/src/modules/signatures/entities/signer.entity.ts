@@ -70,6 +70,18 @@ export class Signer {
   @Column({ name: 'user_agent', type: 'text', nullable: true })
   userAgent!: string | null;
 
+  @Column({ name: 'verification_code', type: 'varchar', length: 128, nullable: true })
+  verificationCode!: string | null;
+
+  @Column({ name: 'verification_expires_at', type: 'timestamptz', nullable: true })
+  verificationExpiresAt!: Date | null;
+
+  @Column({ name: 'verification_attempts', type: 'int', default: 0 })
+  verificationAttempts!: number;
+
+  @Column({ name: 'verified_at', type: 'timestamptz', nullable: true })
+  verifiedAt!: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

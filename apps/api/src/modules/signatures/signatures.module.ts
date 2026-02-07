@@ -12,6 +12,7 @@ import {
 } from './controllers/signatures.controller';
 import { SignaturesService } from './services/signatures.service';
 import { SignatureFieldsService } from './services/signature-fields.service';
+import { VerificationService } from './services/verification.service';
 
 @Module({
   imports: [
@@ -25,7 +26,7 @@ import { SignatureFieldsService } from './services/signature-fields.service';
     DocumentSendController,
     SignController,
   ],
-  providers: [SignaturesService, SignatureFieldsService],
+  providers: [SignaturesService, SignatureFieldsService, VerificationService],
   exports: [SignaturesService],
 })
 export class SignaturesModule {}

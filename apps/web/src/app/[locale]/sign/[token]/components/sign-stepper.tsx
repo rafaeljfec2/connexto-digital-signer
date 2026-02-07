@@ -1,33 +1,45 @@
 "use client";
 
-import { Check, Eye, PenTool, FileCheck } from 'lucide-react';
+import { Check, Eye, PenTool, ShieldCheck, FileCheck } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
+import { useMemo } from 'react';
 
-export type SignStep = 'view' | 'fill' | 'review';
+export type SignStep = 'view' | 'fill' | 'validate' | 'review';
+
+type StepDefinition = Readonly<{
+  id: SignStep;
+  icon: LucideIcon;
+}>;
 
 type SignStepperProps = Readonly<{
   currentStep: SignStep;
+  showValidation: boolean;
   labels: Readonly<{
     view: string;
     fill: string;
+    validate: string;
     review: string;
   }>;
 }>;
 
-const STEPS: ReadonlyArray<{ id: SignStep; icon: typeof Eye }> = [
+const ALL_STEPS: readonly StepDefinition[] = [
   { id: 'view', icon: Eye },
   { id: 'fill', icon: PenTool },
+  { id: 'validate', icon: ShieldCheck },
   { id: 'review', icon: FileCheck },
 ];
 
-const stepIndex = (step: SignStep): number =>
-  STEPS.findIndex((s) => s.id === step);
+export function SignStepper({ currentStep, showValidation, labels }: SignStepperProps) {
+  const steps = useMemo(() => {
+    if (showValidation) return ALL_STEPS;
+    return ALL_STEPS.filter((s) => s.id !== 'validate');
+  }, [showValidation]);
 
-export function SignStepper({ currentStep, labels }: SignStepperProps) {
-  const activeIdx = stepIndex(currentStep);
+  const activeIdx = steps.findIndex((s) => s.id === currentStep);
 
   return (
     <div className="flex w-full items-center justify-center gap-0">
-      {STEPS.map((step, idx) => {
+      {steps.map((step, idx) => {
         const isCompleted = idx < activeIdx;
         const isActive = idx === activeIdx;
         const Icon = step.icon;
@@ -61,7 +73,7 @@ export function SignStepper({ currentStep, labels }: SignStepperProps) {
               </span>
             </div>
 
-            {idx < STEPS.length - 1 ? (
+            {idx < steps.length - 1 ? (
               <div
                 className={`mx-1.5 h-0.5 w-6 rounded-full md:mx-2 md:w-10 ${
                   idx < activeIdx ? 'bg-success' : 'bg-white/10'

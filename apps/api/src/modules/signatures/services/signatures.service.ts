@@ -148,6 +148,9 @@ export class SignaturesService {
     if (signer.status === SignerStatus.SIGNED) {
       throw new BadRequestException('Document already signed by this signer');
     }
+    if (signer.authMethod === 'email' && signer.verifiedAt === null) {
+      throw new BadRequestException('Verification required');
+    }
     const document = await this.documentsService.findOne(
       signer.documentId,
       signer.tenantId

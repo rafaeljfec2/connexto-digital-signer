@@ -289,6 +289,7 @@
     "steps": {
       "view": "View",
       "fill": "Fill",
+      "validate": "Validate",
       "review": "Sign"
     },
     "viewStep": {
@@ -303,6 +304,18 @@
       "filled": "Filled",
       "tapToFill": "Tap to fill",
       "next": "Proceed to review"
+    },
+    "validateStep": {
+      "title": "Identity verification",
+      "instruction": "We sent a 6-digit code to {email}",
+      "sendCode": "Send code",
+      "resendCode": "Resend code",
+      "resendIn": "Resend in {seconds}s",
+      "placeholder": "000000",
+      "verify": "Verify",
+      "invalidCode": "Invalid code. Please try again.",
+      "expiredCode": "Code expired. Please request a new one.",
+      "back": "Back"
     },
     "reviewStep": {
       "title": "Review and sign",
