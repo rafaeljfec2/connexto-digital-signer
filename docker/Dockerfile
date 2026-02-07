@@ -5,16 +5,17 @@ WORKDIR /app
 FROM base AS deps
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/api/package.json ./apps/api/
+COPY apps/web/package.json ./apps/web/
 COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
 COPY packages/events/package.json ./packages/events/
 RUN pnpm install --frozen-lockfile
 
 FROM base AS builder
-COPY --from=deps /app/node_modules ./node_modules
+COPY --from=deps /app .
 COPY . .
-RUN pnpm install
-RUN pnpm build
+RUN pnpm install --frozen-lockfile
+RUN pnpm --filter api --filter shared --filter database --filter events build
 
 FROM base AS runner
 ENV NODE_ENV=production

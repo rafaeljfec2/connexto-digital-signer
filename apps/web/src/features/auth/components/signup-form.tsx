@@ -63,6 +63,7 @@ export function SignUpForm() {
   }, [nameValue, setValue, slugTouched]);
 
   const onSubmit = async (data: FormData) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { ownerPasswordConfirm: _confirm, ...payload } = data;
     const created = await createTenant(payload);
     setResult(created);

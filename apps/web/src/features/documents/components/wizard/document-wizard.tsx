@@ -65,7 +65,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
         icon: STEP_ICONS[id],
       };
     });
-  }, [step, tWizard, stepOrder, currentIndex]);
+  }, [tWizard, stepOrder, currentIndex]);
 
   const counterLabel = tWizard('progressCounter', {
     current: currentIndex + 1,

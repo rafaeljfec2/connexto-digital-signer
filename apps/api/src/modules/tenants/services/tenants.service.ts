@@ -1,11 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Repository } from 'typeorm';
 import { randomBytes } from 'node:crypto';
 import { Tenant } from '../entities/tenant.entity';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
 import { sha256 } from '@connexto/shared';
+import { EVENT_TENANT_CREATED } from '@connexto/events';
+import type { TenantCreatedEvent } from '@connexto/events';
 import { UsersService } from '../../users/services/users.service';
 
 @Injectable()
@@ -13,7 +16,8 @@ export class TenantsService {
   constructor(
     @InjectRepository(Tenant)
     private readonly tenantRepository: Repository<Tenant>,
-    private readonly usersService: UsersService
+    private readonly usersService: UsersService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(createTenantDto: CreateTenantDto): Promise<Tenant> {
@@ -26,8 +30,17 @@ export class TenantsService {
       saved.id,
       ownerEmail,
       ownerName,
-      ownerPassword
+      ownerPassword,
     );
+
+    const eventPayload: TenantCreatedEvent = {
+      tenantId: saved.id,
+      ownerEmail,
+      ownerName,
+      createdAt: new Date(),
+    };
+    this.eventEmitter.emit(EVENT_TENANT_CREATED, eventPayload);
+
     return saved;
   }
 

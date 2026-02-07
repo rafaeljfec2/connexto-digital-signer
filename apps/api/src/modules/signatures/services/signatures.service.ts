@@ -261,6 +261,7 @@ export class SignaturesService {
       signerName: target.name,
       documentTitle: document.title,
       signUrl,
+      locale: document.signingLanguage ?? 'en',
       message,
     });
   }
@@ -277,10 +278,10 @@ export class SignaturesService {
   }
 
   private async notifySigners(
-    document: { id: string; tenantId: string; title: string; signingMode: SigningMode },
+    document: { id: string; tenantId: string; title: string; signingMode: SigningMode; signingLanguage?: string },
     signers: Signer[],
     notifiedAt: Date,
-    message?: string
+    message?: string,
   ): Promise<Signer[]> {
     if (signers.length === 0) return [];
     const updated = signers.map((signer) => ({
@@ -296,9 +297,10 @@ export class SignaturesService {
           signerName: signer.name,
           documentTitle: document.title,
           signUrl: this.buildSignUrl(signer.accessToken),
+          locale: document.signingLanguage ?? 'en',
           message,
         });
-      })
+      }),
     );
     return saved;
   }

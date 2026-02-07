@@ -94,16 +94,21 @@ export class ReminderSchedulerService {
 
     try {
       const signUrl = this.buildSignUrl(signer.accessToken);
-      await this.notificationsService.sendSignatureInvite({
+      const nextCount = signer.reminderCount + 1;
+
+      await this.notificationsService.sendSignatureReminder({
         tenantId: document.tenantId,
         signerEmail: signer.email,
         signerName: signer.name,
         documentTitle: document.title,
         signUrl,
+        reminderCount: nextCount,
+        maxReminders: MAX_REMINDERS,
+        locale: document.signingLanguage ?? 'en',
       });
 
       signer.notifiedAt = new Date();
-      signer.reminderCount += 1;
+      signer.reminderCount = nextCount;
       await this.signerRepository.save(signer);
 
       this.logger.log(

@@ -40,7 +40,7 @@ export default function SignerDocumentPage() {
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
 
   const signerData = signerQuery.data;
-  const fields = fieldsQuery.data ?? [];
+  const fields = useMemo(() => fieldsQuery.data ?? [], [fieldsQuery.data]);
   const alreadySigned = signerData?.signer.status === 'signed';
 
   const activeField = useMemo(

@@ -3,14 +3,16 @@ import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Document } from '../documents/entities/document.entity';
 import { Signer } from '../signatures/entities/signer.entity';
+import { User } from '../users/entities/user.entity';
 import { NotificationsService } from './services/notifications.service';
+import { TemplateService } from './services/template.service';
 import { ReminderSchedulerService } from './services/reminder-scheduler.service';
 import { EmailProcessor } from './processors/email.processor';
 import { NotificationEventsHandler } from './events/notification.events-handler';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Document, Signer]),
+    TypeOrmModule.forFeature([Document, Signer, User]),
     BullModule.registerQueue({
       name: 'notifications',
       defaultJobOptions: {
@@ -20,6 +22,7 @@ import { NotificationEventsHandler } from './events/notification.events-handler'
     }),
   ],
   providers: [
+    TemplateService,
     NotificationsService,
     ReminderSchedulerService,
     EmailProcessor,

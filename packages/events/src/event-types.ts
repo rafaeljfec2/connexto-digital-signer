@@ -65,6 +65,13 @@ export interface UserLogoutEvent {
   logoutAt: Date;
 }
 
+export interface TenantCreatedEvent {
+  tenantId: string;
+  ownerEmail: string;
+  ownerName: string;
+  createdAt: Date;
+}
+
 export type DomainEvent =
   | { type: 'signature.completed'; payload: SignatureCompletedEvent }
   | { type: 'document.completed'; payload: DocumentCompletedEvent }
@@ -74,4 +81,5 @@ export type DomainEvent =
   | { type: 'signer.added'; payload: SignerAddedEvent }
   | { type: 'user.login.success'; payload: UserLoginSuccessEvent }
   | { type: 'user.login.failed'; payload: UserLoginFailedEvent }
-  | { type: 'user.logout'; payload: UserLogoutEvent };
+  | { type: 'user.logout'; payload: UserLogoutEvent }
+  | { type: 'tenant.created'; payload: TenantCreatedEvent };

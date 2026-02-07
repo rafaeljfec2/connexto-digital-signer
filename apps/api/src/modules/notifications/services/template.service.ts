@@ -1,30 +1,49 @@
-export function renderSignatureInvite(context: {
-  signerName: string;
-  documentTitle: string;
-  signUrl: string;
-  message?: string;
-}): string {
-  const messageBlock = context.message
-    ? `\nMessage from sender:\n${context.message}\n`
-    : '';
-  return `
-Hello ${context.signerName},
+import { Injectable } from '@nestjs/common';
+import { renderSignatureInvite } from '../templates/signature-invite';
+import { renderSignatureReminder } from '../templates/signature-reminder';
+import { renderDocumentCompleted } from '../templates/document-completed';
+import { renderWelcome } from '../templates/welcome';
 
-You have been invited to sign the document: ${context.documentTitle}.
-
-Please follow this link to review and sign: ${context.signUrl}
-${messageBlock}
-
-This link is unique and should not be shared.
-`.trim();
+export interface RenderedEmail {
+  subject: string;
+  text: string;
+  html: string;
 }
 
-export function renderTemplate(
-  template: string,
-  context: Record<string, unknown>
-): string {
-  if (template === 'signature-invite') {
-    return renderSignatureInvite(context as Parameters<typeof renderSignatureInvite>[0]);
+@Injectable()
+export class TemplateService {
+  renderTemplate(
+    template: string,
+    context: Record<string, unknown>,
+    locale = 'en',
+  ): RenderedEmail {
+    switch (template) {
+      case 'signature-invite':
+        return renderSignatureInvite(
+          context as unknown as Parameters<typeof renderSignatureInvite>[0],
+          locale,
+        );
+      case 'signature-reminder':
+        return renderSignatureReminder(
+          context as unknown as Parameters<typeof renderSignatureReminder>[0],
+          locale,
+        );
+      case 'document-completed':
+        return renderDocumentCompleted(
+          context as unknown as Parameters<typeof renderDocumentCompleted>[0],
+          locale,
+        );
+      case 'welcome':
+        return renderWelcome(
+          context as unknown as Parameters<typeof renderWelcome>[0],
+          locale,
+        );
+      default:
+        return {
+          subject: '',
+          text: JSON.stringify(context),
+          html: `<pre>${JSON.stringify(context, null, 2)}</pre>`,
+        };
+    }
   }
-  return JSON.stringify(context);
 }

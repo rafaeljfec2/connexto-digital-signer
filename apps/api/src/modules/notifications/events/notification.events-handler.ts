@@ -1,14 +1,34 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
-import { EVENT_SIGNER_ADDED } from '@connexto/events';
-import type { SignerAddedEvent } from '@connexto/events';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import {
+  EVENT_SIGNER_ADDED,
+  EVENT_DOCUMENT_COMPLETED,
+  EVENT_TENANT_CREATED,
+} from '@connexto/events';
+import type {
+  SignerAddedEvent,
+  DocumentCompletedEvent,
+  TenantCreatedEvent,
+} from '@connexto/events';
+import { User, UserRole } from '../../users/entities/user.entity';
+import { Document } from '../../documents/entities/document.entity';
 import { NotificationsService } from '../services/notifications.service';
 
 const BASE_URL = process.env['APP_BASE_URL'] ?? 'http://localhost:3000';
 
 @Injectable()
 export class NotificationEventsHandler {
-  constructor(private readonly notificationsService: NotificationsService) {}
+  private readonly logger = new Logger(NotificationEventsHandler.name);
+
+  constructor(
+    private readonly notificationsService: NotificationsService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    @InjectRepository(Document)
+    private readonly documentRepository: Repository<Document>,
+  ) {}
 
   @OnEvent(EVENT_SIGNER_ADDED)
   async handleSignerAdded(payload: SignerAddedEvent): Promise<void> {
@@ -20,5 +40,56 @@ export class NotificationEventsHandler {
       documentTitle: payload.documentTitle,
       signUrl,
     });
+  }
+
+  @OnEvent(EVENT_DOCUMENT_COMPLETED)
+  async handleDocumentCompleted(payload: DocumentCompletedEvent): Promise<void> {
+    try {
+      const document = await this.documentRepository.findOne({
+        where: { id: payload.documentId, tenantId: payload.tenantId },
+      });
+
+      if (!document) return;
+
+      const owner = await this.userRepository.findOne({
+        where: { tenantId: payload.tenantId, role: UserRole.OWNER },
+      });
+
+      if (!owner) return;
+
+      const documentUrl = `${BASE_URL}/documents/${document.id}`;
+
+      await this.notificationsService.sendDocumentCompleted({
+        ownerEmail: owner.email,
+        ownerName: owner.name,
+        documentTitle: document.title,
+        documentUrl,
+        locale: document.signingLanguage ?? 'en',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `Failed to send document completed email for ${payload.documentId}: ${message}`,
+      );
+    }
+  }
+
+  @OnEvent(EVENT_TENANT_CREATED)
+  async handleTenantCreated(payload: TenantCreatedEvent): Promise<void> {
+    try {
+      const dashboardUrl = `${BASE_URL}`;
+
+      await this.notificationsService.sendWelcome({
+        ownerEmail: payload.ownerEmail,
+        ownerName: payload.ownerName,
+        dashboardUrl,
+        locale: 'pt-br',
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(
+        `Failed to send welcome email for tenant ${payload.tenantId}: ${message}`,
+      );
+    }
   }
 }

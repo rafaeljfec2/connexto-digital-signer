@@ -1,5 +1,6 @@
 import { NotFoundException } from '@nestjs/common';
 import type { Repository } from 'typeorm';
+import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { TenantsService } from './tenants.service';
 import { Tenant } from '../entities/tenant.entity';
 import { sha256 } from '@connexto/shared';
@@ -29,6 +30,7 @@ describe('TenantsService', () => {
   let service: TenantsService;
   let tenantRepository: Repository<Tenant>;
   let usersService: jest.Mocked<UsersService>;
+  let eventEmitter: jest.Mocked<EventEmitter2>;
 
   beforeEach(() => {
     tenantRepository = {
@@ -43,7 +45,10 @@ describe('TenantsService', () => {
       findOne: jest.fn(),
       findByTenantId: jest.fn(),
     } as unknown as jest.Mocked<UsersService>;
-    service = new TenantsService(tenantRepository, usersService);
+    eventEmitter = {
+      emit: jest.fn(),
+    } as unknown as jest.Mocked<EventEmitter2>;
+    service = new TenantsService(tenantRepository, usersService, eventEmitter);
   });
 
   describe('create', () => {

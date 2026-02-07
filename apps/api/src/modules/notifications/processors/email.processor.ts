@@ -1,28 +1,33 @@
 import { Processor, Process } from '@nestjs/bull';
+import { Logger } from '@nestjs/common';
 import { Job } from 'bull';
-import { renderTemplate } from '../services/template.service';
+import type { Transporter } from 'nodemailer';
 import type { SendEmailJobPayload } from '../services/notifications.service';
 
 @Processor('notifications')
 export class EmailProcessor {
+  private readonly logger = new Logger(EmailProcessor.name);
+  private transporter: Transporter | null = null;
+
   @Process('email')
   async handleEmail(job: Job<SendEmailJobPayload>): Promise<void> {
-    const { to, subject, template, context } = job.data;
-    const body = renderTemplate(template, context);
+    const { to, subject, text, html } = job.data;
+
     if (process.env['SMTP_HOST']) {
-      await this.sendViaSmtp(to, subject, body);
+      await this.sendViaSmtp(to, subject, text, html);
     } else {
-      console.log(`[Email] To: ${to}, Subject: ${subject}\n${body}`);
+      this.logger.log(`[Email] To: ${to}, Subject: ${subject}\n${text}`);
     }
   }
 
-  private async sendViaSmtp(
-    to: string,
-    subject: string,
-    body: string
-  ): Promise<void> {
+  private async getTransporter(): Promise<Transporter> {
+    if (this.transporter) {
+      return this.transporter;
+    }
+
     const { createTransport } = await import('nodemailer');
-    const transporter = createTransport({
+
+    this.transporter = createTransport({
       host: process.env['SMTP_HOST'],
       port: parseInt(process.env['SMTP_PORT'] ?? '587', 10),
       secure: process.env['SMTP_SECURE'] === 'true',
@@ -34,11 +39,27 @@ export class EmailProcessor {
             }
           : undefined,
     });
+
+    return this.transporter;
+  }
+
+  private async sendViaSmtp(
+    to: string,
+    subject: string,
+    text: string,
+    html?: string,
+  ): Promise<void> {
+    const transporter = await this.getTransporter();
+    const from = process.env['SMTP_FROM'] ?? 'noreply@localhost';
+
     await transporter.sendMail({
-      from: process.env['SMTP_FROM'] ?? 'noreply@localhost',
+      from,
       to,
       subject,
-      text: body,
+      text,
+      ...(html ? { html } : {}),
     });
+
+    this.logger.log(`Email sent to ${to}: ${subject}`);
   }
 }
