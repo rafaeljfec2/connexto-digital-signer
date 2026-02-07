@@ -138,6 +138,7 @@
     "subtitle": "Drag a field to the PDF and assign it to a signer",
     "activeSigner": "Active signer",
     "paletteTitle": "Fields",
+    "paletteColorHint": "Fields will use this color",
     "type": {
       "signature": "Signature",
       "name": "Name",

@@ -138,6 +138,7 @@
     "subtitle": "Arraste um campo para o PDF e atribua a um signatario",
     "activeSigner": "Signatario ativo",
     "paletteTitle": "Campos",
+    "paletteColorHint": "Os campos usarao esta cor",
     "type": {
       "signature": "Assinatura",
       "name": "Nome",

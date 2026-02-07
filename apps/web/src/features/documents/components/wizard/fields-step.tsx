@@ -1,35 +1,29 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { DndContext, useDraggable, useDroppable } from '@dnd-kit/core';
+import type { DragEndEvent } from '@dnd-kit/core';
+import { DndContext } from '@dnd-kit/core';
 import {
   useBatchUpdateFields,
   useDocumentFile,
   useSignatureFields,
   useSigners,
 } from '@/features/documents/hooks/use-document-wizard';
-import { Button, Card, Select } from '@/shared/ui';
-import type { SignatureField, SignatureFieldInput, SignatureFieldType } from '@/features/documents/api';
-import dynamic from 'next/dynamic';
+import { Button, Card } from '@/shared/ui';
+import type { SignatureFieldInput } from '@/features/documents/api';
+import {
+  FieldPalette,
+  PdfViewer,
+  SignatureFieldType,
+  usePdfFields,
+} from '@/features/pdf-signature';
 
-const PdfViewer = dynamic(() => import('./pdf-viewer').then((mod) => mod.PdfViewer), {
-  ssr: false,
-});
-
-type LocalField = SignatureField & {
-  readonly tempId: string;
-};
-
-const fieldTypes: SignatureFieldType[] = [
-  'signature',
-  'name',
-  'date',
-  'initials',
-  'text',
-];
+const fieldTypes: SignatureFieldType[] = ['signature', 'name', 'date', 'initials', 'text'];
 
 const createTempId = () => `temp-${Math.random().toString(36).slice(2, 10)}`;
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 export type FieldsStepProps = {
   readonly documentId: string;
@@ -45,23 +39,18 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
   const batchUpdate = useBatchUpdateFields(documentId);
   const fileQuery = useDocumentFile(documentId);
   const [activeSignerId, setActiveSignerId] = useState<string>('');
-  const [localFields, setLocalFields] = useState<LocalField[]>([]);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const page = 1;
+  const pageRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
+
+  const initialFields = useMemo(() => fieldsQuery.data ?? undefined, [fieldsQuery.data]);
+  const { fields, addField, moveField, removeField } = usePdfFields({
+    initialFields,
+  });
 
   useEffect(() => {
     if (signersQuery.data && signersQuery.data.length > 0 && !activeSignerId) {
       setActiveSignerId(signersQuery.data[0].id);
     }
   }, [signersQuery.data, activeSignerId]);
-
-  useEffect(() => {
-    if (fieldsQuery.data) {
-      setLocalFields(
-        fieldsQuery.data.map((field) => ({ ...field, tempId: createTempId() }))
-      );
-    }
-  }, [fieldsQuery.data]);
 
   const fileUrl = useMemo(() => {
     if (!fileQuery.data) return '';
@@ -74,8 +63,16 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
     };
   }, [fileUrl]);
 
+  const signerColors = useMemo(() => {
+    const palette = ['#2563EB', '#16A34A', '#F97316', '#7C3AED', '#DC2626', '#0EA5E9'];
+    return (signersQuery.data ?? []).reduce<Record<string, string>>((acc, signer, index) => {
+      acc[signer.id] = palette[index % palette.length];
+      return acc;
+    }, {});
+  }, [signersQuery.data]);
+
   const handleSave = async () => {
-    const payload: SignatureFieldInput[] = localFields.map((field) => ({
+    const payload: SignatureFieldInput[] = fields.map((field) => ({
       id: field.id.startsWith('temp-') ? undefined : field.id,
       signerId: field.signerId,
       type: field.type,
@@ -91,33 +88,64 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
     onNext();
   };
 
-  const clamp = (value: number) => Math.min(1, Math.max(0, value));
+  const handlePageReady = useCallback((pageNumber: number, element: HTMLDivElement | null) => {
+    pageRefs.current.set(pageNumber, element);
+  }, []);
 
-  const handleDrop = (type: SignatureFieldType, x: number, y: number) => {
-    if (!activeSignerId) return;
-    const newField: LocalField = {
-      id: createTempId(),
-      tempId: createTempId(),
-      signerId: activeSignerId,
-      type,
-      page,
-      x,
-      y,
-      width: 0.25,
-      height: 0.08,
-      required: true,
-      value: null,
-    };
-    setLocalFields((prev) => [...prev, newField]);
-  };
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const overId = event.over?.id?.toString();
+      if (!overId?.startsWith('page-')) {
+        return;
+      }
+      const pageNumber = Number(overId.replace('page-', ''));
+      const container = pageRefs.current.get(pageNumber);
+      if (!container) {
+        return;
+      }
+      const rect = container.getBoundingClientRect();
+      const pointer = event.activatorEvent as PointerEvent;
+      const rawX = (pointer.clientX - rect.left) / rect.width;
+      const rawY = (pointer.clientY - rect.top) / rect.height;
+      const activeId = event.active.id.toString();
 
-  const updateFieldPosition = (id: string, x: number, y: number) => {
-    setLocalFields((prev) =>
-      prev.map((field) => (field.id === id ? { ...field, x, y } : field))
-    );
-  };
+      if (activeId.startsWith('palette-')) {
+        if (!activeSignerId) {
+          return;
+        }
+        const type = activeId.replace('palette-', '') as SignatureFieldType;
+        const width = 0.25;
+        const height = 0.08;
+        const x = clamp(rawX, 0, 1 - width);
+        const y = clamp(rawY, 0, 1 - height);
+        addField({
+          id: createTempId(),
+          signerId: activeSignerId,
+          type,
+          page: pageNumber,
+          x,
+          y,
+          width,
+          height,
+          required: true,
+          value: null,
+        });
+        return;
+      }
 
-  const droppable = useDroppable({ id: 'pdf-canvas' });
+      if (activeId.startsWith('field-')) {
+        const fieldId = activeId.replace('field-', '');
+        const current = fields.find((fieldItem) => fieldItem.id === fieldId);
+        if (!current) {
+          return;
+        }
+        const x = clamp(rawX, 0, 1 - current.width);
+        const y = clamp(rawY, 0, 1 - current.height);
+        moveField({ id: fieldId, x, y, page: pageNumber });
+      }
+    },
+    [activeSignerId, addField, fields, moveField]
+  );
 
   return (
     <div className="space-y-6">
@@ -127,68 +155,30 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
       </div>
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[260px_1fr]">
         <Card className="space-y-4 p-4">
-          <div className="space-y-2">
-            <label className="text-sm font-medium text-text">{tFields('activeSigner')}</label>
-            <Select
-              value={activeSignerId}
-              onChange={(event) => setActiveSignerId(event.target.value)}
-            >
-              {(signersQuery.data ?? []).map((signer) => (
-                <option key={signer.id} value={signer.id}>
-                  {signer.name}
-                </option>
-              ))}
-            </Select>
-          </div>
-          <div className="space-y-2">
-            <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-              {tFields('paletteTitle')}
-            </p>
-            <div className="flex flex-col gap-2">
-              {fieldTypes.map((type) => (
-                <PaletteItem key={type} id={`palette-${type}`} label={tFields(`type.${type}`)} />
-              ))}
-            </div>
-          </div>
+          <FieldPalette
+            signers={signersQuery.data ?? []}
+            activeSignerId={activeSignerId}
+            onSignerChange={setActiveSignerId}
+            fieldTypes={fieldTypes}
+            getFieldLabel={(type) => tFields(`type.${type}`)}
+            signerColors={signerColors}
+            activeSignerLabel={tFields('activeSigner')}
+            paletteTitle={tFields('paletteTitle')}
+            colorHint={tFields('paletteColorHint')}
+          />
         </Card>
         <Card className="p-3">
-          <DndContext
-            onDragEnd={(event) => {
-              const overId = event.over?.id?.toString() ?? '';
-              if (overId !== 'pdf-canvas') return;
-              const rect = containerRef.current?.getBoundingClientRect();
-              if (!rect) return;
-              const pointer = event.activatorEvent as PointerEvent;
-              const x = clamp((pointer.clientX - rect.left) / rect.width);
-              const y = clamp((pointer.clientY - rect.top) / rect.height);
-              const activeId = event.active.id.toString();
-              if (activeId.startsWith('palette-')) {
-                const type = activeId.replace('palette-', '') as SignatureFieldType;
-                handleDrop(type, x, y);
-              } else if (activeId.startsWith('field-')) {
-                const fieldId = activeId.replace('field-', '');
-                updateFieldPosition(fieldId, x, y);
-              }
-            }}
-          >
-            <div
-              ref={(node) => {
-                containerRef.current = node;
-                droppable.setNodeRef(node);
-              }}
-              className="relative overflow-hidden rounded-lg border border-border bg-background"
-            >
-              {fileUrl ? <PdfViewer fileUrl={fileUrl} /> : null}
-              <div className="absolute inset-0">
-                {localFields.map((field) => (
-                  <FieldItem
-                    key={field.tempId}
-                    field={field}
-                    label={tFields(`type.${field.type}`)}
-                  />
-                ))}
-              </div>
-            </div>
+          <DndContext onDragEnd={handleDragEnd}>
+            {fileUrl ? (
+              <PdfViewer
+                fileUrl={fileUrl}
+                fields={fields}
+                signerColors={signerColors}
+                getFieldLabel={(type) => tFields(`type.${type}`)}
+                onRemoveField={removeField}
+                onPageContainerReady={handlePageReady}
+              />
+            ) : null}
           </DndContext>
         </Card>
       </div>
@@ -200,50 +190,6 @@ export function FieldsStep({ documentId, onBack, onNext }: Readonly<FieldsStepPr
           {tWizard('next')}
         </Button>
       </div>
-    </div>
-  );
-}
-
-type PaletteItemProps = {
-  readonly id: string;
-  readonly label: string;
-};
-
-function PaletteItem({ id, label }: Readonly<PaletteItemProps>) {
-  const draggable = useDraggable({ id });
-  return (
-    <div
-      ref={draggable.setNodeRef}
-      {...draggable.listeners}
-      {...draggable.attributes}
-      className="cursor-grab rounded-md border border-border bg-surface px-3 py-2 text-sm text-text"
-    >
-      {label}
-    </div>
-  );
-}
-
-type FieldItemProps = {
-  readonly field: LocalField;
-  readonly label: string;
-};
-
-function FieldItem({ field, label }: Readonly<FieldItemProps>) {
-  const draggable = useDraggable({ id: `field-${field.id}` });
-  return (
-    <div
-      ref={draggable.setNodeRef}
-      {...draggable.listeners}
-      {...draggable.attributes}
-      className="absolute rounded-md border border-accent bg-accent/20 px-2 py-1 text-[10px] text-text"
-      style={{
-        left: `${field.x * 100}%`,
-        top: `${field.y * 100}%`,
-        width: `${field.width * 100}%`,
-        height: `${field.height * 100}%`,
-      }}
-    >
-      {label}
     </div>
   );
 }
