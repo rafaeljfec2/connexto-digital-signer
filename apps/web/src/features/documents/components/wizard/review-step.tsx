@@ -8,7 +8,16 @@ import {
   useSignatureFields,
   useSigners,
 } from '@/features/documents/hooks/use-document-wizard';
-import { AlertCircle, CheckCircle2 } from 'lucide-react';
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Eye,
+  Mail,
+  RotateCcw,
+  Save,
+  Send,
+} from 'lucide-react';
 import { Button, Card, Dialog } from '@/shared/ui';
 
 export type ReviewStepProps = {
@@ -32,6 +41,8 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
     return { signersOk, fieldsOk };
   }, [signersQuery.data, fieldsQuery.data]);
 
+  const allReady = checklist.signersOk && checklist.fieldsOk;
+
   const handlePreview = async () => {
     await previewMutation.mutateAsync({});
     setPreviewOpen(true);
@@ -42,36 +53,79 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
   };
 
   return (
-    <div className="space-y-4">
-      <Card variant="glass" className="space-y-6 p-8">
-        <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-white">{tReview('title')}</h2>
-          <p className="text-sm text-neutral-100/70">{tReview('subtitle')}</p>
-        </div>
-        <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
-          <ChecklistItem label={tReview('checklist.signers')} ok={checklist.signersOk} />
-          <ChecklistItem label={tReview('checklist.fields')} ok={checklist.fieldsOk} />
-        </div>
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <Button type="button" variant="ghost">
-            {tReview('saveDraft')}
-          </Button>
-          <Button type="button" variant="secondary" onClick={handlePreview}>
-            {tReview('preview')}
-          </Button>
-          <Button type="button" onClick={handleSend} isLoading={sendMutation.isPending}>
-            {sendMutation.isPending ? tReview('sending') : tReview('send')}
-          </Button>
-        </div>
-        <div className="flex items-center gap-2 pt-4">
+    <Card variant="glass" className="w-full p-6 md:p-8">
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-white">{tReview('title')}</h2>
+        <p className="mt-1 text-sm text-white/60">{tReview('subtitle')}</p>
+      </div>
+
+      <div className="space-y-4">
+        {[
+          { label: tReview('checklist.signers'), ok: checklist.signersOk },
+          { label: tReview('checklist.fields'), ok: checklist.fieldsOk },
+        ].map((item) => (
+          <div
+            key={item.label}
+            className={`flex items-center justify-between rounded-lg border p-4 ${
+              item.ok
+                ? 'border-success/30 bg-success/5'
+                : 'border-warning/30 bg-warning/5'
+            }`}
+          >
+            <div className="flex items-center gap-3">
+              {item.ok ? (
+                <CheckCircle2 className="h-5 w-5 text-success" />
+              ) : (
+                <AlertCircle className="h-5 w-5 text-warning" />
+              )}
+              <span className="text-sm font-medium text-white">{item.label}</span>
+            </div>
+            <span className={`text-xs font-semibold uppercase tracking-wide ${item.ok ? 'text-success' : 'text-warning'}`}>
+              {item.ok ? tReview('status.ok') : tReview('status.pending')}
+            </span>
+          </div>
+        ))}
+      </div>
+
+      <hr className="my-6 border-white/10" />
+
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
+        <Button type="button" variant="ghost" onClick={() => {}}>
+          <Save className="mr-1.5 h-4 w-4" />
+          {tReview('saveDraft')}
+        </Button>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handlePreview}
+          isLoading={previewMutation.isPending}
+        >
+          <Eye className="mr-1.5 h-4 w-4" />
+          {tReview('preview')}
+        </Button>
+        <Button
+          type="button"
+          onClick={handleSend}
+          isLoading={sendMutation.isPending}
+          disabled={!allReady || sendMutation.isPending}
+        >
+          <Send className="mr-1.5 h-4 w-4" />
+          {sendMutation.isPending ? tReview('sending') : tReview('send')}
+        </Button>
+      </div>
+
+      <div className="mt-8 flex items-center justify-between">
+        <div className="flex items-center gap-2">
           <Button type="button" variant="ghost" onClick={onBack}>
+            <ArrowLeft className="mr-1 h-4 w-4" />
             {tWizard('back')}
           </Button>
           <Button type="button" variant="ghost" onClick={onRestart}>
+            <RotateCcw className="mr-1 h-4 w-4" />
             {tWizard('restart')}
           </Button>
         </div>
-      </Card>
+      </div>
 
       <Dialog
         open={previewOpen}
@@ -83,39 +137,26 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
           </Button>
         }
       >
-        <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase text-neutral-100/70">
-            {tReview('previewSubject')}
-          </p>
-          <p className="text-sm text-white">{previewMutation.data?.subject}</p>
-          <p className="text-xs font-semibold uppercase text-neutral-100/70">
-            {tReview('previewBody')}
-          </p>
-          <pre className="whitespace-pre-wrap text-sm text-white">
-            {previewMutation.data?.body}
-          </pre>
+        <div className="space-y-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">
+              {tReview('previewSubject')}
+            </p>
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+              <Mail className="h-4 w-4 shrink-0 text-accent-400" />
+              <p className="text-sm text-white">{previewMutation.data?.subject}</p>
+            </div>
+          </div>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">
+              {tReview('previewBody')}
+            </p>
+            <pre className="mt-1.5 whitespace-pre-wrap rounded-lg border border-white/10 bg-white/5 p-3 text-sm leading-relaxed text-white/80">
+              {previewMutation.data?.body}
+            </pre>
+          </div>
         </div>
       </Dialog>
-    </div>
-  );
-}
-
-type ChecklistItemProps = {
-  readonly label: string;
-  readonly ok: boolean;
-};
-
-function ChecklistItem({ label, ok }: Readonly<ChecklistItemProps>) {
-  const tReview = useTranslations('review');
-  return (
-    <div className="flex items-center justify-between text-sm">
-      <div className="flex items-center gap-2 text-white">
-        {ok ? <CheckCircle2 className="h-4 w-4 text-success" /> : <AlertCircle className="h-4 w-4 text-warning" />}
-        <span>{label}</span>
-      </div>
-      <span className={ok ? 'text-success' : 'text-warning'}>
-        {ok ? tReview('status.ok') : tReview('status.pending')}
-      </span>
-    </div>
+    </Card>
   );
 }
