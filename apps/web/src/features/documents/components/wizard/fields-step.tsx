@@ -49,7 +49,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
   const pageRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
 
   const initialFields = useMemo(() => fieldsQuery.data ?? undefined, [fieldsQuery.data]);
-  const { fields, addField, moveField } = usePdfFields({
+  const { fields, addField, moveField, removeField } = usePdfFields({
     initialFields,
   });
 
@@ -143,10 +143,6 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
       if (!container) {
         return;
       }
-      const rect = container.getBoundingClientRect();
-      const pointer = event.activatorEvent as PointerEvent;
-      const rawX = (pointer.clientX - rect.left) / rect.width;
-      const rawY = (pointer.clientY - rect.top) / rect.height;
       const activeId = event.active.id.toString();
 
       if (activeId.startsWith('field-')) {
@@ -155,8 +151,11 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
         if (!current) {
           return;
         }
-        const x = clamp(rawX, 0, 1 - current.width);
-        const y = clamp(rawY, 0, 1 - current.height);
+        const rect = container.getBoundingClientRect();
+        const deltaXRel = event.delta.x / rect.width;
+        const deltaYRel = event.delta.y / rect.height;
+        const x = clamp(current.x + deltaXRel, 0, 1 - current.width);
+        const y = clamp(current.y + deltaYRel, 0, 1 - current.height);
         moveField({ id: fieldId, x, y, page: pageNumber });
       }
     },
@@ -216,6 +215,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: Readonly<F
               signerColors={signerColors}
               getFieldLabel={(type) => tFields(`type.${type}`)}
               getSignerName={getSignerName}
+              onRemoveField={removeField}
               onPageContainerReady={handlePageReady}
               onPageClick={handleAddFieldToPage}
             />
