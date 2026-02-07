@@ -46,7 +46,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStep
 
   return (
     <div className="space-y-4">
-      <Card variant="glass" className="mx-auto max-w-lg space-y-6 p-8 text-center">
+      <Card variant="glass" className="space-y-6 p-8 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-accent-400/30 bg-accent-600/10">
           <PenTool className="h-7 w-7 text-accent-400" />
         </div>
@@ -67,7 +67,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStep
           </div>
         ) : null}
 
-        <div className="flex flex-col gap-3">
+        <div className="mx-auto flex max-w-sm flex-col gap-3">
           <Button type="button" onClick={() => setEditorOpen(true)}>
             <PenTool className="mr-2 h-4 w-4" />
             {hasFields ? tFields('editPositioning') : tFields('openEditor')}

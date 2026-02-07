@@ -10,7 +10,7 @@ import {
   useSigners,
   useUpdateDocument,
 } from '@/features/documents/hooks/use-document-wizard';
-import { Avatar, Badge, Button, Dialog, Input, Select } from '@/shared/ui';
+import { Avatar, Badge, Button, Card, Dialog, Input, Select } from '@/shared/ui';
 
 export type SignersStepProps = {
   readonly documentId: string;
@@ -85,63 +85,65 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
   const signers = signersQuery.data ?? [];
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-white">{tSigners('title')}</h2>
-        <p className="text-sm text-neutral-100/70">{tSigners('subtitle')}</p>
-      </div>
-
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold text-white">{tSigners('listTitle')}</h3>
-          <Button
-            type="button"
-            variant="secondary"
-            className="gap-2 text-sm"
-            onClick={() => setModalOpen(true)}
-          >
-            <Plus className="h-4 w-4" />
-            {tSigners('add')}
-          </Button>
+    <div className="space-y-4">
+      <Card variant="glass" className="space-y-6 p-8">
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold text-white">{tSigners('title')}</h2>
+          <p className="text-sm text-neutral-100/70">{tSigners('subtitle')}</p>
         </div>
 
-        <div className="space-y-2">
-          {signers.map((signer) => (
-            <div
-              key={signer.id}
-              className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white"
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-white">{tSigners('listTitle')}</h3>
+            <Button
+              type="button"
+              variant="secondary"
+              className="gap-2 text-sm"
+              onClick={() => setModalOpen(true)}
             >
-              <div className="flex items-center gap-3">
-                <Avatar name={signer.name} size="sm" statusColor="#14B8A6" />
-                <div>
-                  <p className="font-medium">{signer.name}</p>
-                  <p className="text-neutral-100/70">{signer.email}</p>
+              <Plus className="h-4 w-4" />
+              {tSigners('add')}
+            </Button>
+          </div>
+
+          <div className="space-y-2">
+            {signers.map((signer) => (
+              <div
+                key={signer.id}
+                className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white"
+              >
+                <div className="flex items-center gap-3">
+                  <Avatar name={signer.name} size="sm" statusColor="#14B8A6" />
+                  <div>
+                    <p className="font-medium">{signer.name}</p>
+                    <p className="text-neutral-100/70">{signer.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  {signingMode === 'sequential' && signer.order ? (
+                    <Badge variant="info">
+                      {tSigners('orderLabel')} {signer.order}
+                    </Badge>
+                  ) : null}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="text-xs text-error hover:text-error/80"
+                    onClick={() => handleRemove(signer.id)}
+                  >
+                    {tSigners('remove')}
+                  </Button>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                {signingMode === 'sequential' && signer.order ? (
-                  <Badge variant="info">
-                    {tSigners('orderLabel')} {signer.order}
-                  </Badge>
-                ) : null}
-                <Button
-                  type="button"
-                  variant="ghost"
-                  className="text-xs text-error hover:text-error/80"
-                  onClick={() => handleRemove(signer.id)}
-                >
-                  {tSigners('remove')}
-                </Button>
+            ))}
+            {signers.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-white/20 p-6 text-center text-sm text-neutral-100/70">
+                {tSigners('empty')}
               </div>
-            </div>
-          ))}
-          {signers.length === 0 ? (
-            <div className="rounded-lg border border-dashed border-white/20 p-6 text-center text-sm text-neutral-100/70">
-              {tSigners('empty')}
-            </div>
-          ) : null}
+            ) : null}
+          </div>
         </div>
-      </div>
+      </Card>
 
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">

@@ -42,26 +42,29 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
   };
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h2 className="text-lg font-semibold text-white">{tReview('title')}</h2>
-        <p className="text-sm text-neutral-100/70">{tReview('subtitle')}</p>
-      </div>
-      <Card variant="glass" className="space-y-3 p-4">
-        <ChecklistItem label={tReview('checklist.signers')} ok={checklist.signersOk} />
-        <ChecklistItem label={tReview('checklist.fields')} ok={checklist.fieldsOk} />
+    <div className="space-y-4">
+      <Card variant="glass" className="space-y-6 p-8">
+        <div className="space-y-2">
+          <h2 className="text-lg font-semibold text-white">{tReview('title')}</h2>
+          <p className="text-sm text-neutral-100/70">{tReview('subtitle')}</p>
+        </div>
+        <div className="space-y-3 rounded-xl border border-white/10 bg-white/5 p-4">
+          <ChecklistItem label={tReview('checklist.signers')} ok={checklist.signersOk} />
+          <ChecklistItem label={tReview('checklist.fields')} ok={checklist.fieldsOk} />
+        </div>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+          <Button type="button" variant="ghost">
+            {tReview('saveDraft')}
+          </Button>
+          <Button type="button" variant="secondary" onClick={handlePreview}>
+            {tReview('preview')}
+          </Button>
+          <Button type="button" onClick={handleSend} isLoading={sendMutation.isPending}>
+            {sendMutation.isPending ? tReview('sending') : tReview('send')}
+          </Button>
+        </div>
       </Card>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <Button type="button" variant="ghost">
-          {tReview('saveDraft')}
-        </Button>
-        <Button type="button" variant="secondary" onClick={handlePreview}>
-          {tReview('preview')}
-        </Button>
-        <Button type="button" onClick={handleSend} isLoading={sendMutation.isPending}>
-          {sendMutation.isPending ? tReview('sending') : tReview('send')}
-        </Button>
-      </div>
+
       <div className="flex items-center gap-2">
         <Button type="button" variant="ghost" onClick={onBack}>
           {tWizard('back')}

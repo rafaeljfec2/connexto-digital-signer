@@ -246,7 +246,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
         />
       ) : null}
 
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
         <div className="flex shrink-0 items-center gap-2 border-b border-white/10 px-3 py-2 xl:hidden">
           <Button
             type="button"
@@ -261,7 +261,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
           </span>
         </div>
 
-        <div className="min-h-0 flex-1">
+        <div className="min-h-0 flex-1 overflow-hidden">
           <DndContext onDragEnd={handleDragEnd}>
             {fileUrl ? (
               <PdfViewer
