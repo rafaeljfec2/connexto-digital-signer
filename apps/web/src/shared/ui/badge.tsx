@@ -7,11 +7,11 @@ export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 };
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-neutral-100/80 text-neutral-700 border border-white/30',
+  default: 'bg-white/15 text-white border border-white/20',
   success: 'bg-success/15 text-success border border-success/20',
   warning: 'bg-warning/15 text-warning border border-warning/20',
   danger: 'bg-error/15 text-error border border-error/20',
-  info: 'bg-brand-300/20 text-brand-300 border border-brand-300/30',
+  info: 'bg-accent-400/15 text-accent-400 border border-accent-400/20',
 };
 
 export function Badge({

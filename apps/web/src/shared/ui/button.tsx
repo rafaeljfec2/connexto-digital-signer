@@ -9,10 +9,10 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const getVariantClass = (variant: ButtonVariant): string => {
   if (variant === 'ghost') {
-    return 'bg-transparent text-brand-300 border border-white/20 hover:bg-white/10';
+    return 'bg-transparent text-white border border-white/20 hover:bg-white/10';
   }
   if (variant === 'secondary') {
-    return 'bg-transparent text-brand-300 border border-brand-300/50 hover:bg-brand-300/10';
+    return 'bg-white/10 text-white border border-white/20 hover:bg-white/15';
   }
   if (variant === 'destructive') {
     return 'bg-error text-white hover:bg-error/90';

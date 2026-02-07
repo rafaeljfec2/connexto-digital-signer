@@ -60,14 +60,13 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStep
           </p>
         </div>
 
-        {hasFields ? (
-          <div className="flex items-center justify-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-400">
-            <CheckCircle className="h-4 w-4" />
-            {tFields('fieldsCount', { count: fieldCount })}
-          </div>
-        ) : null}
-
         <div className="mx-auto flex max-w-sm flex-col gap-3">
+          {hasFields ? (
+            <div className="flex items-center justify-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-400">
+              <CheckCircle className="h-4 w-4" />
+              {tFields('fieldsCount', { count: fieldCount })}
+            </div>
+          ) : null}
           <Button type="button" onClick={() => setEditorOpen(true)}>
             <PenTool className="mr-2 h-4 w-4" />
             {hasFields ? tFields('editPositioning') : tFields('openEditor')}

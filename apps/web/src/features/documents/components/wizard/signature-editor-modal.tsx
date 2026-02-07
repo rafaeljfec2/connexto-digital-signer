@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
 import { PenTool, Fingerprint, ChevronLeft } from 'lucide-react';
 import type { DragEndEvent } from '@dnd-kit/core';
@@ -175,8 +176,8 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
     [fields, moveField]
   );
 
-  return (
-    <div className="fixed inset-0 z-50 flex bg-brand-900">
+  return createPortal(
+    <div className="fixed inset-0 z-[9999] flex bg-brand-900">
       <div
         className={`absolute inset-y-0 left-0 z-10 flex w-64 flex-col border-r border-white/10 bg-brand-800 transition-transform duration-200 xl:relative xl:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'
@@ -280,6 +281,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
           </DndContext>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
