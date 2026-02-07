@@ -10,9 +10,10 @@ export type StepperProps = {
   readonly steps: StepperItem[];
   readonly progressLabel?: string;
   readonly counterLabel?: string;
+  readonly onStepClick?: (index: number) => void;
 };
 
-export function Stepper({ steps, progressLabel, counterLabel }: Readonly<StepperProps>) {
+export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Readonly<StepperProps>) {
   const activeIndex = steps.findIndex((s) => s.status === 'active');
   const currentIndex = activeIndex >= 0 ? activeIndex : steps.length;
   const progressPercent = ((currentIndex + 1) / steps.length) * 100;
@@ -59,13 +60,22 @@ export function Stepper({ steps, progressLabel, counterLabel }: Readonly<Stepper
             labelClass = 'text-neutral-100/50 font-medium';
           }
 
+          const isClickable = isCompleted && !!onStepClick;
+
           return (
-            <div
+            <button
+              type="button"
               key={`step-${step.label}-${index}`}
-              className="flex flex-1 flex-col items-center gap-2"
+              className={`flex flex-1 flex-col items-center gap-2 bg-transparent ${
+                isClickable ? 'cursor-pointer' : 'cursor-default'
+              }`}
+              disabled={!isClickable}
+              onClick={() => isClickable && onStepClick(index)}
             >
               <div
-                className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-colors duration-300 ${circleClass}`}
+                className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-300 ${circleClass} ${
+                  isClickable ? 'hover:scale-110 hover:brightness-125' : ''
+                }`}
               >
                 {step.icon ?? (
                   <span className="text-sm font-bold">{index + 1}</span>
@@ -74,7 +84,7 @@ export function Stepper({ steps, progressLabel, counterLabel }: Readonly<Stepper
               <span className={`text-center text-xs leading-tight ${labelClass}`}>
                 {step.label}
               </span>
-            </div>
+            </button>
           );
         })}
       </div>

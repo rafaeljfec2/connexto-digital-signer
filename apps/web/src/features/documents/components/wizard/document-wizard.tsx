@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { FileUp, Users, PenTool, Settings, CheckCircle } from 'lucide-react';
 import { Stepper } from '@/shared/ui';
@@ -72,12 +72,22 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
     total: stepOrder.length,
   });
 
+  const handleStepClick = useCallback(
+    (index: number) => {
+      if (index < currentIndex) {
+        setStep(stepOrder[index]);
+      }
+    },
+    [currentIndex, stepOrder],
+  );
+
   return (
     <div className="space-y-6">
       <Stepper
         steps={steps.map(({ label, status, icon }) => ({ label, status, icon }))}
         progressLabel={tWizard('progress')}
         counterLabel={counterLabel}
+        onStepClick={handleStepClick}
       />
       {step === 'upload' ? (
         <UploadStep
