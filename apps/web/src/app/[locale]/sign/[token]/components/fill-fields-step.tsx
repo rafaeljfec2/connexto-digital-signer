@@ -76,7 +76,7 @@ export function FillFieldsStep({
         </Card>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between border-t border-white/10 bg-brand-900/95 px-4 py-2.5 backdrop-blur-sm md:static md:mt-3 md:border-0 md:bg-transparent md:p-0 md:backdrop-blur-none">
+      <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between border-t border-white/10 bg-brand-900/95 px-4 py-3 backdrop-blur-sm">
         <Button
           type="button"
           variant="ghost"
