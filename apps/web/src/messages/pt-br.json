@@ -223,8 +223,18 @@
     "signerEmail": "Email do signatario",
     "legalNotice": "Ao assinar, voce concorda com os termos do documento e reconhece a validade juridica desta assinatura.",
     "signAction": "Assinar documento",
+    "signing": "Enviando assinatura...",
     "signatureStatus": "Status da assinatura",
     "signatureLabel": "Assinatura",
+    "clickToSign": "Clique para assinar",
+    "clickToInitials": "Clique para rubricar",
+    "signed": "Assinado",
+    "loading": "Carregando documento...",
+    "error": "Erro ao carregar documento",
+    "alreadySigned": "Voce ja assinou este documento.",
+    "allFieldsRequired": "Preencha todos os campos obrigatorios antes de assinar.",
+    "fillFieldTitle": "Preencher campo",
+    "fieldsProgress": "{filled} de {total} campos preenchidos",
     "status": {
       "pending": "Pendente",
       "signed": "Assinado"

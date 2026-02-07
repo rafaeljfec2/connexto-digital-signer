@@ -223,8 +223,18 @@
     "signerEmail": "Signer email",
     "legalNotice": "By signing, you agree to the document terms and acknowledge the legal validity of this signature.",
     "signAction": "Sign document",
+    "signing": "Submitting signature...",
     "signatureStatus": "Signature status",
     "signatureLabel": "Signature",
+    "clickToSign": "Click to sign",
+    "clickToInitials": "Click to initial",
+    "signed": "Signed",
+    "loading": "Loading document...",
+    "error": "Error loading document",
+    "alreadySigned": "You have already signed this document.",
+    "allFieldsRequired": "Please fill all required fields before signing.",
+    "fillFieldTitle": "Fill field",
+    "fieldsProgress": "{filled} of {total} fields filled",
     "status": {
       "pending": "Pending",
       "signed": "Signed"

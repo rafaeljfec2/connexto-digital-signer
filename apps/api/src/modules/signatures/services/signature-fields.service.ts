@@ -67,6 +67,33 @@ export class SignatureFieldsService {
     }
   }
 
+  async findBySigner(
+    tenantId: string,
+    documentId: string,
+    signerId: string
+  ): Promise<SignatureField[]> {
+    return this.fieldRepository.find({
+      where: { tenantId, documentId, signerId },
+      order: { createdAt: 'ASC' },
+    });
+  }
+
+  async updateValue(
+    tenantId: string,
+    documentId: string,
+    fieldId: string,
+    value: string
+  ): Promise<SignatureField> {
+    const field = await this.fieldRepository.findOne({
+      where: { id: fieldId, tenantId, documentId },
+    });
+    if (field === null) {
+      throw new NotFoundException('Signature field not found');
+    }
+    field.value = value;
+    return this.fieldRepository.save(field);
+  }
+
   async replaceAll(
     tenantId: string,
     documentId: string,

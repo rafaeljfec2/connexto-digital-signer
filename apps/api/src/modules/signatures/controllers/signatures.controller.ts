@@ -5,11 +5,13 @@ import {
   Body,
   Param,
   Req,
+  Res,
   Put,
   Delete,
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { RequestWithHeaders } from '@connexto/shared';
@@ -123,7 +125,30 @@ export class SignController {
   @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Get(':token')
   getSignerByToken(@Param('token') token: string) {
-    return this.signaturesService.findByToken(token);
+    return this.signaturesService.findByTokenWithDocument(token);
+  }
+
+  @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Get(':token/pdf')
+  async getSignerPdf(
+    @Param('token') token: string,
+    @Res() res: Response
+  ) {
+    const buffer = await this.signaturesService.getSignerPdf(token);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Length': buffer.length,
+      'Cache-Control': 'private, max-age=300',
+    });
+    res.end(buffer);
+  }
+
+  @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Get(':token/fields')
+  getSignerFields(@Param('token') token: string) {
+    return this.signaturesService.getSignerFields(token);
   }
 
   @Public()

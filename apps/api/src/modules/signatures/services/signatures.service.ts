@@ -70,9 +70,46 @@ export class SignaturesService {
     return signer;
   }
 
+  async findByTokenWithDocument(accessToken: string): Promise<{
+    signer: Signer;
+    document: { id: string; title: string; status: DocumentStatus };
+  }> {
+    const signer = await this.findByToken(accessToken);
+    const document = await this.documentsService.findOne(
+      signer.documentId,
+      signer.tenantId
+    );
+    return {
+      signer,
+      document: {
+        id: document.id,
+        title: document.title,
+        status: document.status,
+      },
+    };
+  }
+
+  async getSignerPdf(accessToken: string): Promise<Buffer> {
+    const signer = await this.findByToken(accessToken);
+    const document = await this.documentsService.findOne(
+      signer.documentId,
+      signer.tenantId
+    );
+    return this.documentsService.getOriginalFile(document);
+  }
+
+  async getSignerFields(accessToken: string) {
+    const signer = await this.findByToken(accessToken);
+    return this.fieldsService.findBySigner(
+      signer.tenantId,
+      signer.documentId,
+      signer.id
+    );
+  }
+
   async acceptSignature(
     accessToken: string,
-    _dto: { consent: string },
+    dto: { consent: string; fields: { fieldId: string; value: string }[] },
     context: SigningContext
   ): Promise<Signer> {
     const signer = await this.findByToken(accessToken);
@@ -92,6 +129,16 @@ export class SignaturesService {
     ) {
       throw new BadRequestException('Document has expired');
     }
+    await Promise.all(
+      dto.fields.map((field) =>
+        this.fieldsService.updateValue(
+          signer.tenantId,
+          signer.documentId,
+          field.fieldId,
+          field.value
+        )
+      )
+    );
     signer.status = SignerStatus.SIGNED;
     signer.signedAt = new Date();
     signer.ipAddress = context.ipAddress;
@@ -245,6 +292,19 @@ export class SignaturesService {
   private async finalizeDocument(documentId: string, tenantId: string): Promise<void> {
     const document = await this.documentsService.findOne(documentId, tenantId);
     const originalBuffer = await this.documentsService.getOriginalFile(document);
+    const allFields = await this.fieldsService.findByDocument(tenantId, documentId);
+    const withSignatures = await this.pdfService.embedSignatures(
+      originalBuffer,
+      allFields.map((f) => ({
+        type: f.type,
+        page: f.page,
+        x: f.x,
+        y: f.y,
+        width: f.width,
+        height: f.height,
+        value: f.value,
+      }))
+    );
     const signers = await this.findByDocument(documentId, tenantId);
     const evidence = signers.map((s) => ({
       name: s.name,
@@ -254,7 +314,7 @@ export class SignaturesService {
       userAgent: s.userAgent,
     }));
     const finalBuffer = await this.pdfService.appendEvidencePage(
-      originalBuffer,
+      withSignatures,
       evidence,
       document.title
     );

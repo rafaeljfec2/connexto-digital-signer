@@ -72,10 +72,13 @@ describe('SignaturesService', () => {
     eventEmitter = { emit: jest.fn() } as unknown as EventEmitter2;
     pdfService = {
       appendEvidencePage: jest.fn(),
+      embedSignatures: jest.fn(),
       computeHash: jest.fn(),
     } as unknown as jest.Mocked<PdfService>;
     fieldsService = {
       findByDocument: jest.fn(),
+      findBySigner: jest.fn(),
+      updateValue: jest.fn(),
     } as unknown as jest.Mocked<SignatureFieldsService>;
     notificationsService = {
       sendSignatureInvite: jest.fn(),
@@ -130,7 +133,7 @@ describe('SignaturesService', () => {
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
 
       await expect(
-        service.acceptSignature('token-1', { consent: 'ok' }, {
+        service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
           ipAddress: '127.0.0.1',
           userAgent: 'jest',
         })
@@ -144,7 +147,7 @@ describe('SignaturesService', () => {
       documentsService.findOne.mockResolvedValue(document);
 
       await expect(
-        service.acceptSignature('token-1', { consent: 'ok' }, {
+        service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
           ipAddress: '127.0.0.1',
           userAgent: 'jest',
         })
@@ -158,7 +161,7 @@ describe('SignaturesService', () => {
       documentsService.findOne.mockResolvedValue(document);
 
       await expect(
-        service.acceptSignature('token-1', { consent: 'ok' }, {
+        service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
           ipAddress: '127.0.0.1',
           userAgent: 'jest',
         })
@@ -181,7 +184,7 @@ describe('SignaturesService', () => {
         'finalizeDocument'
       ).mockResolvedValue();
 
-      const result = await service.acceptSignature('token-1', { consent: 'ok' }, {
+      const result = await service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
         ipAddress: '127.0.0.1',
         userAgent: 'jest',
       });
@@ -216,7 +219,7 @@ describe('SignaturesService', () => {
         'notifyNextSigner'
       ).mockResolvedValue();
 
-      await service.acceptSignature('token-1', { consent: 'ok' }, {
+      await service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
         ipAddress: '127.0.0.1',
         userAgent: 'jest',
       });
@@ -237,7 +240,7 @@ describe('SignaturesService', () => {
         'finalizeDocument'
       ).mockResolvedValue();
 
-      await service.acceptSignature('token-1', { consent: 'ok' }, {
+      await service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
         ipAddress: '127.0.0.1',
         userAgent: 'jest',
       });
@@ -260,7 +263,7 @@ describe('SignaturesService', () => {
   });
 
   describe('finalizeDocument', () => {
-    test('should append evidence page and persist final pdf', async () => {
+    test('should embed signatures, append evidence page and persist final pdf', async () => {
       const signerA = buildSigner({ signedAt: new Date('2026-01-02T00:00:00.000Z') });
       const signerB = buildSigner({
         id: 'signer-2',
@@ -270,10 +273,13 @@ describe('SignaturesService', () => {
       });
       const document = buildDocument({ title: 'Agreement' });
       const original = Buffer.from('pdf');
+      const withSignatures = Buffer.from('pdf-with-signatures');
       const finalized = Buffer.from('final');
       documentsService.findOne.mockResolvedValue(document);
       documentsService.getOriginalFile.mockResolvedValue(original);
+      fieldsService.findByDocument.mockResolvedValue([]);
       (signerRepository.find as jest.Mock).mockResolvedValue([signerA, signerB]);
+      pdfService.embedSignatures.mockResolvedValue(withSignatures);
       pdfService.appendEvidencePage.mockResolvedValue(finalized);
 
       const servicePrivate = service as unknown as {
@@ -281,8 +287,9 @@ describe('SignaturesService', () => {
       };
       await servicePrivate.finalizeDocument('doc-1', 'tenant-1');
 
+      expect(pdfService.embedSignatures).toHaveBeenCalledWith(original, []);
       expect(pdfService.appendEvidencePage).toHaveBeenCalledWith(
-        original,
+        withSignatures,
         [
           {
             name: signerA.name,

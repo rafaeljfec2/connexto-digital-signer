@@ -1,16 +1,127 @@
 "use client";
 
-import { useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { FileText, PenTool } from 'lucide-react';
+import { FileText, PenTool, Fingerprint, Check } from 'lucide-react';
+import { useRouter } from '@/i18n/navigation';
 import { Avatar, Badge, Button, Card, Dialog } from '@/shared/ui';
 import { SignaturePad } from '@/features/pdf-signature/components/SignaturePad';
+import {
+  useSignerData,
+  useSignerPdf,
+  useSignerFields,
+  useAcceptSignature,
+} from '@/features/signing/hooks';
+import { SignerPdfViewer } from './signer-pdf-viewer';
 
 export default function SignerDocumentPage() {
+  const params = useParams<{ token: string }>();
+  const token = params.token;
   const tSigner = useTranslations('signer');
   const tCommon = useTranslations('common');
-  const [isSigning, setIsSigning] = useState(false);
-  const [signatureValue, setSignatureValue] = useState<string | null>(null);
+  const router = useRouter();
+
+  const signerQuery = useSignerData(token);
+  const pdfQuery = useSignerPdf(token);
+  const fieldsQuery = useSignerFields(token);
+  const acceptMutation = useAcceptSignature(token);
+
+  const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
+  const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
+
+  const signerData = signerQuery.data;
+  const fields = fieldsQuery.data ?? [];
+  const alreadySigned = signerData?.signer.status === 'signed';
+
+  const activeField = useMemo(
+    () => fields.find((f) => f.id === activeFieldId) ?? null,
+    [fields, activeFieldId]
+  );
+
+  const fileUrl = useMemo(() => {
+    if (!pdfQuery.data) return '';
+    return URL.createObjectURL(pdfQuery.data);
+  }, [pdfQuery.data]);
+
+  useEffect(() => {
+    return () => {
+      if (fileUrl) URL.revokeObjectURL(fileUrl);
+    };
+  }, [fileUrl]);
+
+  const requiredFields = useMemo(
+    () => fields.filter((f) => f.required),
+    [fields]
+  );
+
+  const filledCount = useMemo(
+    () =>
+      requiredFields.filter(
+        (f) => (fieldValues[f.id] ?? f.value ?? '').length > 0
+      ).length,
+    [requiredFields, fieldValues]
+  );
+
+  const allRequiredFilled = filledCount === requiredFields.length && requiredFields.length > 0;
+
+  const handleFieldClick = useCallback(
+    (fieldId: string) => {
+      if (alreadySigned) return;
+      setActiveFieldId(fieldId);
+    },
+    [alreadySigned]
+  );
+
+  const handleSignatureConfirm = useCallback(
+    (value: string) => {
+      if (!activeFieldId) return;
+      setFieldValues((prev) => ({ ...prev, [activeFieldId]: value }));
+      setActiveFieldId(null);
+    },
+    [activeFieldId]
+  );
+
+  const handleSubmit = async () => {
+    if (!allRequiredFilled) return;
+    const fieldPayload = fields
+      .filter((f) => (fieldValues[f.id] ?? '').length > 0)
+      .map((f) => ({
+        fieldId: f.id,
+        value: fieldValues[f.id],
+      }));
+
+    await acceptMutation.mutateAsync({
+      consent: 'I agree to sign this document',
+      fields: fieldPayload,
+    });
+
+    router.push('/success');
+  };
+
+  if (signerQuery.isLoading || pdfQuery.isLoading || fieldsQuery.isLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-main text-white">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+          <p className="text-sm text-neutral-100/70">{tSigner('loading')}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (signerQuery.isError || !signerData) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-main text-white">
+        <Card variant="glass" className="max-w-md p-8 text-center">
+          <FileText className="mx-auto mb-4 h-10 w-10 text-neutral-100/50" />
+          <p className="text-lg font-semibold">{tSigner('error')}</p>
+        </Card>
+      </div>
+    );
+  }
+
+  const { signer, document: doc } = signerData;
 
   return (
     <div className="min-h-screen bg-gradient-main px-4 py-8 text-white">
@@ -23,73 +134,119 @@ export default function SignerDocumentPage() {
             <div className="text-xs font-semibold uppercase tracking-[0.2em] text-neutral-100/70">
               {tCommon('appName')}
             </div>
-            <div className="text-lg font-semibold">{tSigner('title')}</div>
+            <div className="text-lg font-semibold">{doc.title}</div>
           </div>
         </div>
-        <Badge variant="info">{tSigner('status.pending')}</Badge>
+        <Badge variant={alreadySigned ? 'success' : 'info'}>
+          {alreadySigned ? tSigner('status.signed') : tSigner('status.pending')}
+        </Badge>
       </header>
 
       <div className="mx-auto grid w-full max-w-6xl grid-cols-1 gap-6 lg:grid-cols-[1.5fr_1fr]">
-        <Card variant="glass" className="p-6">
-          <div className="flex items-center justify-between pb-4">
-            <div>
-              <p className="text-sm font-semibold">{tSigner('documentLabel')}</p>
-              <p className="text-xs text-neutral-100/70">{tSigner('documentHint')}</p>
-            </div>
-            <Button type="button" variant="ghost">
-              {tSigner('preview')}
-            </Button>
-          </div>
-          <div className="flex h-[560px] items-center justify-center rounded-2xl border border-white/20 bg-white/10">
-            <div className="text-center text-neutral-100/70">
-              <FileText className="mx-auto mb-3 h-8 w-8" />
-              {tSigner('pdfLoaded')}
-            </div>
-          </div>
+        <Card variant="glass" className="p-4">
+          {fileUrl ? (
+            <SignerPdfViewer
+              fileUrl={fileUrl}
+              fields={fields}
+              fieldValues={fieldValues}
+              onFieldClick={handleFieldClick}
+              disabled={alreadySigned}
+            />
+          ) : null}
         </Card>
 
         <div className="space-y-6">
           <Card variant="glass" className="space-y-4 p-6">
             <div className="flex items-center gap-3">
-              <Avatar name={tSigner('signerLabel')} size="md" statusColor="#14B8A6" />
+              <Avatar name={signer.name} size="md" statusColor="#14B8A6" />
               <div>
-                <p className="text-sm font-semibold">{tSigner('signerLabel')}</p>
-                <p className="text-xs text-neutral-100/70">{tSigner('signerEmail')}</p>
+                <p className="text-sm font-semibold">{signer.name}</p>
+                <p className="text-xs text-neutral-100/70">{signer.email}</p>
               </div>
             </div>
-            <div className="rounded-xl border border-white/20 bg-white/10 p-4 text-sm text-neutral-100/80">
-              {tSigner('legalNotice')}
-            </div>
-            <Button type="button" onClick={() => setIsSigning(true)}>
-              <PenTool className="h-4 w-4" />
-              {tSigner('signAction')}
-            </Button>
-          </Card>
 
-          <Card variant="glass" className="space-y-4 p-6">
-            <p className="text-sm font-semibold">{tSigner('signatureStatus')}</p>
-            <div className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm">
-              <span>{tSigner('signatureLabel')}</span>
-              <Badge variant={signatureValue ? 'success' : 'warning'}>
-                {signatureValue ? tSigner('status.signed') : tSigner('status.pending')}
-              </Badge>
-            </div>
+            {alreadySigned ? (
+              <div className="rounded-xl border border-green-400/30 bg-green-400/10 p-4 text-sm text-green-300">
+                <Check className="mb-1 inline h-4 w-4" /> {tSigner('alreadySigned')}
+              </div>
+            ) : (
+              <>
+                <div className="rounded-xl border border-white/20 bg-white/10 p-4 text-sm text-neutral-100/80">
+                  {tSigner('legalNotice')}
+                </div>
+
+                <div className="text-xs text-neutral-100/60">
+                  {tSigner('fieldsProgress', {
+                    filled: filledCount,
+                    total: requiredFields.length,
+                  })}
+                </div>
+
+                <div className="space-y-2">
+                  {fields.map((field) => {
+                    const value = fieldValues[field.id] ?? field.value ?? '';
+                    const isFilled = value.length > 0;
+                    return (
+                      <button
+                        key={field.id}
+                        type="button"
+                        onClick={() => handleFieldClick(field.id)}
+                        className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition ${
+                          isFilled
+                            ? 'border-green-400/30 bg-green-400/10 text-green-300'
+                            : 'border-white/20 bg-white/5 text-neutral-100/70 hover:bg-white/10'
+                        }`}
+                      >
+                        {field.type === 'initials' ? (
+                          <Fingerprint className="h-4 w-4 shrink-0" />
+                        ) : (
+                          <PenTool className="h-4 w-4 shrink-0" />
+                        )}
+                        <span className="flex-1">
+                          {field.type === 'initials'
+                            ? tSigner('clickToInitials')
+                            : tSigner('clickToSign')}
+                          {field.required ? ' *' : ''}
+                        </span>
+                        {isFilled ? (
+                          <Check className="h-4 w-4 shrink-0 text-green-400" />
+                        ) : null}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <Button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={!allRequiredFilled || acceptMutation.isPending}
+                  isLoading={acceptMutation.isPending}
+                  className="w-full"
+                >
+                  <PenTool className="h-4 w-4" />
+                  {acceptMutation.isPending
+                    ? tSigner('signing')
+                    : tSigner('signAction')}
+                </Button>
+              </>
+            )}
           </Card>
         </div>
       </div>
 
       <Dialog
-        open={isSigning}
-        onClose={() => setIsSigning(false)}
-        title={tSigner('signAction')}
+        open={activeFieldId !== null}
+        onClose={() => setActiveFieldId(null)}
+        title={
+          activeField?.type === 'initials'
+            ? tSigner('clickToInitials')
+            : tSigner('fillFieldTitle')
+        }
         footer={null}
       >
         <SignaturePad
-          onConfirm={(value) => {
-            setSignatureValue(value);
-            setIsSigning(false);
-          }}
-          onCancel={() => setIsSigning(false)}
+          onConfirm={handleSignatureConfirm}
+          onCancel={() => setActiveFieldId(null)}
         />
       </Dialog>
     </div>
