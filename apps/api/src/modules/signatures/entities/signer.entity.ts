@@ -55,6 +55,9 @@ export class Signer {
   @Column({ name: 'order', type: 'int', nullable: true })
   order!: number | null;
 
+  @Column({ name: 'reminder_count', type: 'int', default: 0 })
+  reminderCount!: number;
+
   @Column({ name: 'notified_at', type: 'timestamptz', nullable: true })
   notifiedAt!: Date | null;
 

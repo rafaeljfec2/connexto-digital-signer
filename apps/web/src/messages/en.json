@@ -136,6 +136,7 @@
       "upload": "Document",
       "signers": "Signers",
       "fields": "Signatures",
+      "settings": "Settings",
       "review": "Review"
     },
     "next": "Next",
@@ -210,6 +211,30 @@
       "signed": "Signed",
       "pending": "Pending"
     }
+  },
+  "settings": {
+    "title": "Settings",
+    "subtitle": "Set deadlines, reminders and document closure rules",
+    "deadlineLabel": "Signature deadline",
+    "deadlinePlaceholder": "Select a date",
+    "deadlineHelper": "{days} days remaining",
+    "deadlineExpired": "Date already expired",
+    "reminderLabel": "Send automatic reminders",
+    "reminderNone": "Do not send",
+    "reminder1Day": "Every 1 day",
+    "reminder2Days": "Every 2 days",
+    "reminder3Days": "Every 3 days",
+    "reminder7Days": "Every 7 days",
+    "reminderHelper": "Maximum of 3 reminders per recipient.",
+    "languageLabel": "Signing screen language",
+    "languagePtBr": "Portuguese",
+    "languageEn": "English",
+    "closureTitle": "Document closure",
+    "closureAutomatic": "Automatic",
+    "closureAutomaticDesc": "The document will be closed automatically when all signers have signed.",
+    "closureManual": "Manual",
+    "closureManualDesc": "The document will only be closed when you decide. Useful for documents with flexible deadlines.",
+    "closureNote": "Regardless of the selected mode, if the deadline is reached, the document will be finalized (with existing signatures) or cancelled (without signatures)."
   },
   "review": {
     "title": "Review and send",

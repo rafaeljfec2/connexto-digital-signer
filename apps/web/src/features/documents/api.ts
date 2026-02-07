@@ -13,11 +13,18 @@ export type DocumentSummary = {
   readonly createdAt: string;
 };
 
+export type ReminderInterval = 'none' | '1_day' | '2_days' | '3_days' | '7_days';
+export type SigningLanguage = 'pt-br' | 'en';
+export type ClosureMode = 'automatic' | 'manual';
+
 export type DocumentDetail = DocumentSummary & {
   readonly tenantId: string;
   readonly signingMode: 'parallel' | 'sequential';
   readonly originalFileKey: string | null;
   readonly expiresAt: string | null;
+  readonly reminderInterval: ReminderInterval;
+  readonly signingLanguage: SigningLanguage;
+  readonly closureMode: ClosureMode;
   readonly updatedAt: string;
 };
 
@@ -116,6 +123,10 @@ export type SendDocumentInput = {
 export type UpdateDocumentInput = {
   readonly title?: string;
   readonly signingMode?: 'parallel' | 'sequential';
+  readonly expiresAt?: string | null;
+  readonly reminderInterval?: ReminderInterval;
+  readonly signingLanguage?: SigningLanguage;
+  readonly closureMode?: ClosureMode;
 };
 
 export const getDocumentsStats = async (): Promise<DocumentsStats> => {

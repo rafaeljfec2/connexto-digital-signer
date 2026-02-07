@@ -69,7 +69,7 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
         <Button type="button" variant="ghost" onClick={onBack}>
           {tWizard('back')}
         </Button>
-        <Button type="button" variant="ghost" onClick={onRestart} className="text-xs">
+        <Button type="button" variant="ghost" onClick={onRestart}>
           {tWizard('restart')}
         </Button>
       </div>

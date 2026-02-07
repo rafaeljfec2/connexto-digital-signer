@@ -63,6 +63,15 @@ export class Document {
   @Column({ name: 'expires_at', type: 'timestamptz', nullable: true })
   expiresAt!: Date | null;
 
+  @Column({ name: 'reminder_interval', type: 'varchar', length: 20, default: 'none' })
+  reminderInterval!: string;
+
+  @Column({ name: 'signing_language', type: 'varchar', length: 10, default: 'pt-br' })
+  signingLanguage!: string;
+
+  @Column({ name: 'closure_mode', type: 'varchar', length: 20, default: 'automatic' })
+  closureMode!: string;
+
   @Column({ type: 'int', default: 1 })
   version!: number;
 

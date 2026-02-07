@@ -103,7 +103,7 @@ export class SignaturesService {
 
   async findByTokenWithDocument(accessToken: string): Promise<{
     signer: Signer;
-    document: { id: string; title: string; status: DocumentStatus };
+    document: { id: string; title: string; status: DocumentStatus; signingLanguage: string };
   }> {
     const signer = await this.findByToken(accessToken);
     const document = await this.documentsService.findOne(
@@ -116,6 +116,7 @@ export class SignaturesService {
         id: document.id,
         title: document.title,
         status: document.status,
+        signingLanguage: document.signingLanguage,
       },
     };
   }

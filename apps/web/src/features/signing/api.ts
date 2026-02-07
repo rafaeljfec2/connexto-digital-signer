@@ -18,6 +18,7 @@ export type SignerWithDocument = {
     readonly id: string;
     readonly title: string;
     readonly status: string;
+    readonly signingLanguage: string;
   };
 };
 

@@ -130,12 +130,13 @@
   },
   "wizard": {
     "title": "Preparar documento",
-    "progress": "Progresso",
+    "progress": "Progresso nova assinatura",
     "progressCounter": "{current} de {total}",
     "steps": {
       "upload": "Documento",
       "signers": "Signatarios",
       "fields": "Assinaturas",
+      "settings": "Configuracoes",
       "review": "Revisao"
     },
     "next": "Proximo",
@@ -210,6 +211,30 @@
       "signed": "Assinado",
       "pending": "Pendente"
     }
+  },
+  "settings": {
+    "title": "Configuracoes",
+    "subtitle": "Defina prazos, lembretes e regras de encerramento do documento",
+    "deadlineLabel": "Data limite para assinatura",
+    "deadlinePlaceholder": "Selecione uma data",
+    "deadlineHelper": "{days} dias restantes",
+    "deadlineExpired": "Data ja expirada",
+    "reminderLabel": "Enviar lembretes automaticamente",
+    "reminderNone": "Nao enviar",
+    "reminder1Day": "A cada 1 dia",
+    "reminder2Days": "A cada 2 dias",
+    "reminder3Days": "A cada 3 dias",
+    "reminder7Days": "A cada 7 dias",
+    "reminderHelper": "Maximo de 3 lembretes por destinatario.",
+    "languageLabel": "Idioma da tela de assinatura",
+    "languagePtBr": "Portugues",
+    "languageEn": "English",
+    "closureTitle": "Encerramento do documento",
+    "closureAutomatic": "Automatico",
+    "closureAutomaticDesc": "O documento sera encerrado automaticamente quando todos os signatarios assinarem.",
+    "closureManual": "Manual",
+    "closureManualDesc": "O documento so sera encerrado quando voce decidir. Util para documentos com prazo flexivel.",
+    "closureNote": "Independente do modo selecionado, se a data limite for atingida, o documento sera finalizado (com assinaturas existentes) ou cancelado (sem assinaturas)."
   },
   "review": {
     "title": "Revisao e envio",

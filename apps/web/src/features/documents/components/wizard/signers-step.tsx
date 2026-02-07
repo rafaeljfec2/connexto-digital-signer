@@ -213,7 +213,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
           <Button type="button" variant="ghost" onClick={onBack}>
             {tWizard('back')}
           </Button>
-          <Button type="button" variant="ghost" onClick={onRestart} className="text-xs">
+          <Button type="button" variant="ghost" onClick={onRestart}>
             {tWizard('restart')}
           </Button>
         </div>

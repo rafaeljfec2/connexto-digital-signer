@@ -2,19 +2,21 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { FileUp, Users, PenTool, CheckCircle } from 'lucide-react';
+import { FileUp, Users, PenTool, Settings, CheckCircle } from 'lucide-react';
 import { Stepper } from '@/shared/ui';
 import { UploadStep } from './upload-step';
 import { SignersStep } from './signers-step';
 import { FieldsStep } from './fields-step';
+import { SettingsStep } from './settings-step';
 import { ReviewStep } from './review-step';
 
-export type WizardStepId = 'upload' | 'signers' | 'fields' | 'review';
+export type WizardStepId = 'upload' | 'signers' | 'fields' | 'settings' | 'review';
 
 const STEP_ICONS: Record<WizardStepId, React.ReactNode> = {
   upload: <FileUp className="h-5 w-5" />,
   signers: <Users className="h-5 w-5" />,
   fields: <PenTool className="h-5 w-5" />,
+  settings: <Settings className="h-5 w-5" />,
   review: <CheckCircle className="h-5 w-5" />,
 };
 
@@ -40,7 +42,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
   }, [step, uploadComplete]);
 
   const stepOrder: WizardStepId[] = useMemo(
-    () => ['upload', 'signers', 'fields', 'review'],
+    () => ['upload', 'signers', 'fields', 'settings', 'review'],
     []
   );
 
@@ -81,7 +83,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
         <UploadStep
           documentId={documentId}
           hasFile={uploadComplete}
-          onRestart={() => setStep(uploadComplete ? 'signers' : 'upload')}
+          onRestart={() => setStep('upload')}
           onNext={() => {
             setUploadComplete(true);
             setStep('signers');
@@ -92,7 +94,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
         <SignersStep
           documentId={documentId}
           onBack={() => setStep('upload')}
-          onRestart={() => setStep(uploadComplete ? 'signers' : 'upload')}
+          onRestart={() => setStep('upload')}
           onNext={() => setStep('fields')}
         />
       ) : null}
@@ -100,15 +102,23 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
         <FieldsStep
           documentId={documentId}
           onBack={() => setStep('signers')}
-          onRestart={() => setStep(uploadComplete ? 'signers' : 'upload')}
+          onRestart={() => setStep('upload')}
+          onNext={() => setStep('settings')}
+        />
+      ) : null}
+      {step === 'settings' ? (
+        <SettingsStep
+          documentId={documentId}
+          onBack={() => setStep('fields')}
+          onRestart={() => setStep('upload')}
           onNext={() => setStep('review')}
         />
       ) : null}
       {step === 'review' ? (
         <ReviewStep
           documentId={documentId}
-          onBack={() => setStep('fields')}
-          onRestart={() => setStep(uploadComplete ? 'signers' : 'upload')}
+          onBack={() => setStep('settings')}
+          onRestart={() => setStep('upload')}
         />
       ) : null}
     </div>

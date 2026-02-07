@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Logger } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -232,6 +232,27 @@ export class DocumentsService {
       expiredAt: new Date(),
     };
     this.eventEmitter.emit(EVENT_DOCUMENT_EXPIRED, payload);
+    return saved;
+  }
+
+  async closeDocument(id: string, tenantId: string): Promise<Document> {
+    const document = await this.findOne(id, tenantId);
+
+    if (document.status !== DocumentStatus.PENDING_SIGNATURES) {
+      throw new BadRequestException(
+        'Only documents with pending signatures can be manually closed',
+      );
+    }
+
+    document.status = DocumentStatus.COMPLETED;
+    const saved = await this.documentRepository.save(document);
+
+    const payload: DocumentCompletedEvent = {
+      documentId: saved.id,
+      tenantId: saved.tenantId,
+      completedAt: new Date(),
+    };
+    this.eventEmitter.emit(EVENT_DOCUMENT_COMPLETED, payload);
     return saved;
   }
 

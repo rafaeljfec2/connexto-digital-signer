@@ -7,6 +7,7 @@ import { join } from 'node:path';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
+import { ScheduleModule } from '@nestjs/schedule';
 import { StorageModule } from './shared/storage/storage.module';
 import { PdfModule } from './shared/pdf/pdf.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
@@ -54,6 +55,7 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
       connectTimeoutMS: 5000,
     }),
     EventEmitterModule.forRoot(),
+    ScheduleModule.forRoot(),
     BullModule.forRoot({
       redis: {
         host: process.env['REDIS_HOST'] ?? 'localhost',

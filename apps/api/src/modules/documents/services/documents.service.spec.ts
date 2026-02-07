@@ -1,12 +1,20 @@
-import { NotFoundException } from '@nestjs/common';
-import type { Repository } from 'typeorm';
-import { EventEmitter2 } from '@nestjs/event-emitter';
-import { DocumentsService } from './documents.service';
-import { Document, DocumentStatus, SigningMode } from '../entities/document.entity';
-import { EVENT_DOCUMENT_COMPLETED, EVENT_DOCUMENT_CREATED, EVENT_DOCUMENT_EXPIRED } from '@connexto/events';
-import type { DocumentCompletedEvent, DocumentCreatedEvent, DocumentExpiredEvent } from '@connexto/events';
+import type {
+  DocumentCompletedEvent,
+  DocumentCreatedEvent,
+  DocumentExpiredEvent,
+} from '@connexto/events';
+import {
+  EVENT_DOCUMENT_COMPLETED,
+  EVENT_DOCUMENT_CREATED,
+  EVENT_DOCUMENT_EXPIRED,
+} from '@connexto/events';
 import { sha256 } from '@connexto/shared';
+import { NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import type { Repository } from 'typeorm';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
+import { Document, DocumentStatus, SigningMode } from '../entities/document.entity';
+import { DocumentsService } from './documents.service';
 
 const buildDocument = (overrides?: Partial<Document>): Document => ({
   id: 'doc-1',
@@ -22,6 +30,9 @@ const buildDocument = (overrides?: Partial<Document>): Document => ({
   version: 1,
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
   updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  reminderInterval: 'none',
+  signingLanguage: 'pt-br',
+  closureMode: 'automatic',
   ...overrides,
 });
 

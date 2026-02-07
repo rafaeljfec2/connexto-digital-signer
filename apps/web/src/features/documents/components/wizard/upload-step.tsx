@@ -121,7 +121,7 @@ export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: R
               </Button>
             ) : null}
             {onRestart ? (
-              <Button type="button" variant="ghost" onClick={onRestart} className="text-xs">
+              <Button type="button" variant="ghost" onClick={onRestart}>
                 {tWizard('restart')}
               </Button>
             ) : null}

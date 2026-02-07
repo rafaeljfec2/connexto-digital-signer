@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { FileText, PenTool, Fingerprint, Check } from 'lucide-react';
 import { useRouter } from '@/i18n/navigation';
 import { Avatar, Badge, Button, Card, Dialog } from '@/shared/ui';
@@ -22,10 +22,19 @@ export default function SignerDocumentPage() {
   const tCommon = useTranslations('common');
   const router = useRouter();
 
+  const currentLocale = useLocale();
+
   const signerQuery = useSignerData(token);
   const pdfQuery = useSignerPdf(token);
   const fieldsQuery = useSignerFields(token);
   const acceptMutation = useAcceptSignature(token);
+
+  useEffect(() => {
+    const signingLang = signerQuery.data?.document.signingLanguage;
+    if (signingLang && signingLang !== currentLocale) {
+      globalThis.location.href = `/${signingLang}/sign/${token}`;
+    }
+  }, [signerQuery.data?.document.signingLanguage, currentLocale, token]);
 
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);

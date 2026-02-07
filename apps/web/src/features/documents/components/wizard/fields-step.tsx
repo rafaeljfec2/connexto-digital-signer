@@ -83,7 +83,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStep
           <Button type="button" variant="ghost" onClick={onBack}>
             {tWizard('back')}
           </Button>
-          <Button type="button" variant="ghost" onClick={onRestart} className="text-xs">
+          <Button type="button" variant="ghost" onClick={onRestart}>
             {tWizard('restart')}
           </Button>
         </div>

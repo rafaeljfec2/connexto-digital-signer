@@ -113,4 +113,12 @@ export class DocumentsController {
   ) {
     return this.documentsService.update(id, tenantId, updateDocumentDto);
   }
+
+  @Post(':id/close')
+  close(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string
+  ) {
+    return this.documentsService.closeDocument(id, tenantId);
+  }
 }
