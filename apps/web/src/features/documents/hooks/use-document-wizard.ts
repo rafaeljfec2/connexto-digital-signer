@@ -9,9 +9,11 @@ import {
   previewEmail,
   removeSigner,
   sendDocument,
+  updateSigner,
   uploadDocumentFile,
   updateDocument,
   type CreateSignerInput,
+  type UpdateSignerInput,
   type SendDocumentInput,
   type SignatureFieldInput,
   type UploadDocumentFileInput,
@@ -42,6 +44,12 @@ export const useSigners = (documentId: string) =>
 export const useAddSigner = (documentId: string) =>
   useMutation({
     mutationFn: (input: CreateSignerInput) => addSigner(documentId, input),
+  });
+
+export const useUpdateSigner = (documentId: string) =>
+  useMutation({
+    mutationFn: ({ signerId, input }: { signerId: string; input: UpdateSignerInput }) =>
+      updateSigner(documentId, signerId, input),
   });
 
 export const useRemoveSigner = (documentId: string) =>

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Signer, SignerStatus } from '../entities/signer.entity';
 import { CreateSignerDto } from '../dto/create-signer.dto';
+import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { DocumentsService } from '../../documents/services/documents.service';
 import { DocumentStatus, SigningMode } from '../../documents/entities/document.entity';
 import {
@@ -51,6 +52,36 @@ export class SignaturesService {
     });
     const saved = await this.signerRepository.save(signer);
     return saved;
+  }
+
+  async updateSigner(
+    tenantId: string,
+    documentId: string,
+    signerId: string,
+    dto: UpdateSignerDto
+  ): Promise<Signer> {
+    const signer = await this.signerRepository.findOne({
+      where: { id: signerId, documentId, tenantId },
+    });
+    if (signer === null) {
+      throw new NotFoundException('Signer not found');
+    }
+    Object.assign(signer, dto);
+    return this.signerRepository.save(signer);
+  }
+
+  async removeSigner(
+    tenantId: string,
+    documentId: string,
+    signerId: string
+  ): Promise<void> {
+    const signer = await this.signerRepository.findOne({
+      where: { id: signerId, documentId, tenantId },
+    });
+    if (signer === null) {
+      throw new NotFoundException('Signer not found');
+    }
+    await this.signerRepository.remove(signer);
   }
 
   async findByDocument(documentId: string, tenantId: string): Promise<Signer[]> {

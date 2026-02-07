@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Post,
+  Patch,
   Body,
   Param,
   Req,
@@ -19,6 +20,7 @@ import { TenantId, Public } from '@connexto/shared';
 import { SignaturesService } from '../services/signatures.service';
 import { SignatureFieldsService } from '../services/signature-fields.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
+import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { AcceptSignatureDto } from '../dto/accept-signature.dto';
 import { CreateSignatureFieldDto } from '../dto/create-signature-field.dto';
 import { UpdateSignatureFieldDto } from '../dto/update-signature-field.dto';
@@ -61,6 +63,25 @@ export class SignaturesController {
     @TenantId() tenantId: string
   ) {
     return this.signaturesService.findByDocument(documentId, tenantId);
+  }
+
+  @Patch(':signerId')
+  updateSigner(
+    @Param('documentId') documentId: string,
+    @Param('signerId', ParseUUIDPipe) signerId: string,
+    @TenantId() tenantId: string,
+    @Body() dto: UpdateSignerDto
+  ) {
+    return this.signaturesService.updateSigner(tenantId, documentId, signerId, dto);
+  }
+
+  @Delete(':signerId')
+  removeSigner(
+    @Param('documentId') documentId: string,
+    @Param('signerId', ParseUUIDPipe) signerId: string,
+    @TenantId() tenantId: string
+  ) {
+    return this.signaturesService.removeSigner(tenantId, documentId, signerId);
   }
 }
 

@@ -188,6 +188,17 @@ export const addSigner = async (
   return response.data;
 };
 
+export type UpdateSignerInput = Partial<CreateSignerInput>;
+
+export const updateSigner = async (
+  documentId: string,
+  signerId: string,
+  input: UpdateSignerInput
+): Promise<Signer> => {
+  const response = await apiClient.patch<Signer>(`/documents/${documentId}/signers/${signerId}`, input);
+  return response.data;
+};
+
 export const removeSigner = async (documentId: string, signerId: string): Promise<void> => {
   await apiClient.delete(`/documents/${documentId}/signers/${signerId}`);
 };

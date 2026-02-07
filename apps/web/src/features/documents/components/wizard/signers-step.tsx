@@ -2,13 +2,15 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus } from 'lucide-react';
+import { Pencil, Plus } from 'lucide-react';
+import type { Signer } from '@/features/documents/api';
 import {
   useAddSigner,
   useDocument,
   useRemoveSigner,
   useSigners,
   useUpdateDocument,
+  useUpdateSigner,
 } from '@/features/documents/hooks/use-document-wizard';
 import { Avatar, Badge, Button, Card, Dialog, Input, Select } from '@/shared/ui';
 
@@ -25,10 +27,12 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
   const documentQuery = useDocument(documentId);
   const signersQuery = useSigners(documentId);
   const addSignerMutation = useAddSigner(documentId);
+  const updateSignerMutation = useUpdateSigner(documentId);
   const removeSignerMutation = useRemoveSigner(documentId);
   const updateDocument = useUpdateDocument(documentId);
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [editingSigner, setEditingSigner] = useState<Signer | null>(null);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [cpf, setCpf] = useState('');
@@ -43,6 +47,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
   }, []);
 
   const signingMode = documentQuery.data?.signingMode ?? 'parallel';
+  const isEditing = editingSigner !== null;
 
   const resetForm = () => {
     setName('');
@@ -52,11 +57,30 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
     setRequestCpf(false);
     setAuthMethod('email');
     setOrder('');
+    setEditingSigner(null);
   };
 
-  const handleAdd = async () => {
+  const openAddModal = () => {
+    resetForm();
+    setModalOpen(true);
+  };
+
+  const openEditModal = (signer: Signer) => {
+    setEditingSigner(signer);
+    setName(signer.name);
+    setEmail(signer.email);
+    setCpf(signer.cpf ?? '');
+    setBirthDate(signer.birthDate ?? '');
+    setRequestCpf(signer.requestCpf);
+    setAuthMethod(signer.authMethod);
+    setOrder(signer.order ? String(signer.order) : '');
+    setModalOpen(true);
+  };
+
+  const handleSubmit = async () => {
     if (!name.trim() || !email.trim()) return;
-    await addSignerMutation.mutateAsync({
+
+    const payload = {
       name: name.trim(),
       email: email.trim(),
       cpf: cpf.trim() || undefined,
@@ -64,7 +88,17 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
       requestCpf,
       authMethod,
       order: signingMode === 'sequential' && order ? Number(order) : undefined,
-    });
+    };
+
+    if (isEditing) {
+      await updateSignerMutation.mutateAsync({
+        signerId: editingSigner.id,
+        input: payload,
+      });
+    } else {
+      await addSignerMutation.mutateAsync(payload);
+    }
+
     resetForm();
     setModalOpen(false);
     await signersQuery.refetch();
@@ -111,7 +145,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
               type="button"
               variant="secondary"
               className="gap-2 text-sm"
-              onClick={() => setModalOpen(true)}
+              onClick={openAddModal}
             >
               <Plus className="h-4 w-4" />
               {tSigners('add')}
@@ -137,6 +171,15 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
                       {tSigners('orderLabel')} {signer.order}
                     </Badge>
                   ) : null}
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    className="gap-1 text-xs"
+                    onClick={() => openEditModal(signer)}
+                  >
+                    <Pencil className="h-3 w-3" />
+                    {tSigners('edit')}
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
@@ -174,7 +217,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
       <Dialog
         open={modalOpen}
         onClose={handleCloseModal}
-        title={tSigners('add')}
+        title={isEditing ? tSigners('editTitle') : tSigners('add')}
         footer={
           <>
             <Button type="button" variant="ghost" onClick={handleCloseModal}>
@@ -182,11 +225,11 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
             </Button>
             <Button
               type="button"
-              onClick={handleAdd}
-              isLoading={addSignerMutation.isPending}
+              onClick={handleSubmit}
+              isLoading={isEditing ? updateSignerMutation.isPending : addSignerMutation.isPending}
               disabled={!name.trim() || !email.trim()}
             >
-              {tSigners('confirm')}
+              {isEditing ? tSigners('save') : tSigners('confirm')}
             </Button>
           </>
         }
