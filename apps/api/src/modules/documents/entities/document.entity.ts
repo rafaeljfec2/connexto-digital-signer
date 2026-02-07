@@ -33,14 +33,14 @@ export class Document {
   @Column({ type: 'varchar', length: 500 })
   title!: string;
 
-  @Column({ name: 'original_file_key', type: 'varchar', length: 512 })
-  originalFileKey!: string;
+  @Column({ name: 'original_file_key', type: 'varchar', length: 512, nullable: true })
+  originalFileKey!: string | null;
 
   @Column({ name: 'final_file_key', type: 'varchar', length: 512, nullable: true })
   finalFileKey!: string | null;
 
-  @Column({ name: 'original_hash', type: 'varchar', length: 64 })
-  originalHash!: string;
+  @Column({ name: 'original_hash', type: 'varchar', length: 64, nullable: true })
+  originalHash!: string | null;
 
   @Column({ name: 'final_hash', type: 'varchar', length: 64, nullable: true })
   finalHash!: string | null;

@@ -87,6 +87,39 @@ describe('DocumentsService', () => {
       expect(result).toEqual(saved);
       nowSpy.mockRestore();
     });
+
+    test('should create draft without file when no file provided', async () => {
+      const created = buildDocument({
+        title: 'Draft',
+        originalFileKey: null,
+        originalHash: null,
+        status: DocumentStatus.DRAFT,
+      });
+      const saved = buildDocument({
+        id: 'doc-3',
+        title: 'Draft',
+        originalFileKey: null,
+        originalHash: null,
+        status: DocumentStatus.DRAFT,
+      });
+      (documentRepository.create as jest.Mock).mockReturnValue(created);
+      (documentRepository.save as jest.Mock).mockResolvedValue(saved);
+
+      const result = await service.create('tenant-1', { title: 'Draft' });
+
+      expect(storage.put).not.toHaveBeenCalled();
+      expect(documentRepository.save).toHaveBeenCalledWith(created);
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        EVENT_DOCUMENT_CREATED,
+        expect.objectContaining({
+          documentId: 'doc-3',
+          tenantId: 'tenant-1',
+          title: 'Draft',
+        }) as DocumentCreatedEvent
+      );
+      expect(result.originalFileKey).toBeNull();
+      expect(result.originalHash).toBeNull();
+    });
   });
 
   describe('updateOriginalFile', () => {
@@ -218,6 +251,11 @@ describe('DocumentsService', () => {
 
       await expect(service.getOriginalFile(document)).resolves.toEqual(buffer);
       expect(storage.get).toHaveBeenCalledWith('origin.pdf');
+    });
+
+    test('should throw NotFoundException when originalFileKey is null', async () => {
+      const document = buildDocument({ originalFileKey: null });
+      await expect(service.getOriginalFile(document)).rejects.toThrow(NotFoundException);
     });
   });
 

@@ -16,6 +16,7 @@ export type DocumentSummary = {
 export type DocumentDetail = DocumentSummary & {
   readonly tenantId: string;
   readonly signingMode: 'parallel' | 'sequential';
+  readonly originalFileKey: string | null;
   readonly expiresAt: string | null;
   readonly updatedAt: string;
 };
@@ -96,6 +97,10 @@ export type UploadDocumentFileInput = {
   readonly file: File;
 };
 
+export type CreateDraftInput = {
+  readonly title: string;
+};
+
 export type SendDocumentInput = {
   readonly message?: string;
 };
@@ -116,6 +121,13 @@ export const listDocuments = async (
   const response = await apiClient.get<DocumentsListResponse>('/documents', {
     params,
   });
+  return response.data;
+};
+
+export const createDraftDocument = async (
+  input: CreateDraftInput
+): Promise<DocumentSummary> => {
+  const response = await apiClient.post<DocumentSummary>('/documents', input);
   return response.data;
 };
 

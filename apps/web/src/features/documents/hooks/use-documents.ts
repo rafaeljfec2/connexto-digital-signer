@@ -1,8 +1,10 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import {
+  createDraftDocument,
   getDocumentsStats,
   listDocuments,
   uploadDocument,
+  type CreateDraftInput,
   type ListDocumentsParams,
   type UploadDocumentInput,
 } from '../api';
@@ -23,4 +25,9 @@ export const useDocumentsList = (params: ListDocumentsParams) =>
 export const useUploadDocument = () =>
   useMutation({
     mutationFn: (input: UploadDocumentInput) => uploadDocument(input),
+  });
+
+export const useCreateDraft = () =>
+  useMutation({
+    mutationFn: (input: CreateDraftInput) => createDraftDocument(input),
   });

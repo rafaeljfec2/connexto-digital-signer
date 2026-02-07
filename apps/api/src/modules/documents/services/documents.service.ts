@@ -33,18 +33,24 @@ export class DocumentsService {
   async create(
     tenantId: string,
     createDocumentDto: CreateDocumentDto,
-    file: Buffer
+    file?: Buffer
   ): Promise<Document> {
-    const hash = sha256(file);
-    const key = `tenants/${tenantId}/documents/${Date.now()}-${hash.slice(0, 16)}.pdf`;
-    try {
-      await this.storage.put(key, file);
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      const stack = error instanceof Error ? error.stack : undefined;
-      this.logger.error(`Failed to upload file: ${message}`, stack);
-      throw error;
+    let key: string | null = null;
+    let hash: string | null = null;
+
+    if (file) {
+      hash = sha256(file);
+      key = `tenants/${tenantId}/documents/${Date.now()}-${hash.slice(0, 16)}.pdf`;
+      try {
+        await this.storage.put(key, file);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        const stack = error instanceof Error ? error.stack : undefined;
+        this.logger.error(`Failed to upload file: ${message}`, stack);
+        throw error;
+      }
     }
+
     const document = this.documentRepository.create({
       ...createDocumentDto,
       tenantId,
@@ -230,6 +236,9 @@ export class DocumentsService {
   }
 
   async getOriginalFile(document: Document): Promise<Buffer> {
+    if (document.originalFileKey === null) {
+      throw new NotFoundException('Document has no file uploaded yet');
+    }
     return this.storage.get(document.originalFileKey);
   }
 

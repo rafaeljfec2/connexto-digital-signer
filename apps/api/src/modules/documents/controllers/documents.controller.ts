@@ -33,20 +33,23 @@ export class DocumentsController {
   async create(
     @TenantId() tenantId: string,
     @Body() createDocumentDto: CreateDocumentDto,
-    @UploadedFile() file: Express.Multer.File
+    @UploadedFile() file?: Express.Multer.File
   ) {
-    if (file === undefined || !Buffer.isBuffer(file.buffer)) {
-      throw new BadRequestException('File is required');
+    if (file) {
+      if (!Buffer.isBuffer(file.buffer)) {
+        throw new BadRequestException('Invalid file');
+      }
+      if (file.mimetype !== 'application/pdf') {
+        throw new BadRequestException('Only PDF files are allowed');
+      }
+      const maxSizeMb = Number.parseInt(process.env['MAX_UPLOAD_SIZE_MB'] ?? '10', 10);
+      const maxBytes = maxSizeMb * 1024 * 1024;
+      if (file.size > maxBytes) {
+        throw new BadRequestException(`File size exceeds ${maxSizeMb}MB`);
+      }
+      return this.documentsService.create(tenantId, createDocumentDto, file.buffer);
     }
-    if (file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('Only PDF files are allowed');
-    }
-    const maxSizeMb = Number.parseInt(process.env['MAX_UPLOAD_SIZE_MB'] ?? '10', 10);
-    const maxBytes = maxSizeMb * 1024 * 1024;
-    if (file.size > maxBytes) {
-      throw new BadRequestException(`File size exceeds ${maxSizeMb}MB`);
-    }
-    return this.documentsService.create(tenantId, createDocumentDto, file.buffer);
+    return this.documentsService.create(tenantId, createDocumentDto);
   }
 
   @Get('stats')

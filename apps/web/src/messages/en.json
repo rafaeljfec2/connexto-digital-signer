@@ -114,6 +114,7 @@
       "dropzoneLabel": "Drag and drop your PDF here",
       "dropzoneHelper": "PDF only, up to 10MB",
       "fileLoaded": "PDF loaded",
+      "defaultTitle": "New document",
       "removeFile": "Remove",
       "submit": "Continue",
       "submitting": "Uploading",

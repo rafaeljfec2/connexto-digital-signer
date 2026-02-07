@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
+import { useQueryClient } from '@tanstack/react-query';
 import {
   useDocument,
   useUpdateDocument,
@@ -19,38 +20,39 @@ export type UploadStepProps = {
 
 export function UploadStep({ documentId, hasFile, onNext }: Readonly<UploadStepProps>) {
   const tDocuments = useTranslations('documents');
+  const queryClient = useQueryClient();
   const documentQuery = useDocument(documentId);
   const updateDocumentMutation = useUpdateDocument(documentId);
   const uploadMutation = useUploadDocumentFile(documentId);
   const [title, setTitle] = useState('');
+  const [titleInitialized, setTitleInitialized] = useState(false);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const maxSizeMb = 10;
   const maxSizeBytes = useMemo(() => maxSizeMb * 1024 * 1024, [maxSizeMb]);
-  const isTitleLocked = Boolean(documentQuery.data?.title?.trim());
-  const displayTitle = isTitleLocked ? (documentQuery.data?.title ?? '') : title;
   const isSubmitting = uploadMutation.isPending || updateDocumentMutation.isPending;
 
   useEffect(() => {
-    if (documentQuery.data?.title && !isTitleLocked) {
+    if (documentQuery.data?.title && !titleInitialized) {
       setTitle(documentQuery.data.title);
+      setTitleInitialized(true);
     }
-  }, [documentQuery.data?.title, isTitleLocked]);
+  }, [documentQuery.data?.title, titleInitialized]);
 
   const validate = (): boolean => {
-    if (!isTitleLocked && !title.trim()) {
+    if (!title.trim()) {
       setError(tDocuments('upload.errors.titleRequired'));
       return false;
     }
-    if (!file) {
+    if (!hasFile && !file) {
       setError(tDocuments('upload.errors.fileRequired'));
       return false;
     }
-    if (file.type !== 'application/pdf') {
+    if (file && file.type !== 'application/pdf') {
       setError(tDocuments('upload.errors.onlyPdf'));
       return false;
     }
-    if (file.size > maxSizeBytes) {
+    if (file && file.size > maxSizeBytes) {
       setError(tDocuments('upload.errors.tooLarge', { max: maxSizeMb }));
       return false;
     }
@@ -60,17 +62,19 @@ export function UploadStep({ documentId, hasFile, onNext }: Readonly<UploadStepP
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    if (hasFile) {
-      onNext();
-      return;
-    }
     if (!validate()) return;
-    if (!file) return;
+
     try {
-      if (!isTitleLocked && title.trim()) {
+      const titleChanged = title.trim() !== (documentQuery.data?.title ?? '');
+      if (titleChanged) {
         await updateDocumentMutation.mutateAsync({ title: title.trim() });
       }
-      await uploadMutation.mutateAsync({ file });
+
+      if (!hasFile && file) {
+        await uploadMutation.mutateAsync({ file });
+        await queryClient.invalidateQueries({ queryKey: ['documents', 'file', documentId] });
+      }
+
       toast.success(tDocuments('upload.success'));
       onNext();
     } catch {
@@ -86,11 +90,9 @@ export function UploadStep({ documentId, hasFile, onNext }: Readonly<UploadStepP
             {tDocuments('upload.titleLabel')}
           </label>
           <Input
-            value={displayTitle}
+            value={title}
             onChange={(event) => setTitle(event.target.value)}
             placeholder={tDocuments('upload.titlePlaceholder')}
-            readOnly={isTitleLocked}
-            disabled={isTitleLocked}
           />
         </div>
         {hasFile ? (
