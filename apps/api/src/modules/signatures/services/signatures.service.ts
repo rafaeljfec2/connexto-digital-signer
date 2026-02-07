@@ -130,6 +130,15 @@ export class SignaturesService {
     return this.documentsService.getOriginalFile(document);
   }
 
+  async getSignerSignedPdf(accessToken: string): Promise<Buffer | null> {
+    const signer = await this.findByToken(accessToken);
+    const document = await this.documentsService.findOne(
+      signer.documentId,
+      signer.tenantId
+    );
+    return this.documentsService.getFinalFile(document);
+  }
+
   async getSignerFields(accessToken: string) {
     const signer = await this.findByToken(accessToken);
     return this.fieldsService.findBySigner(

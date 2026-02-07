@@ -307,7 +307,7 @@
     },
     "validateStep": {
       "title": "Verificação de identidade",
-      "instruction": "Enviamos um código de 6 dígitos para {email}",
+      "instruction": "Clique em enviar para receber um código de 6 dígitos no email {email}",
       "sendCode": "Enviar código",
       "resendCode": "Reenviar código",
       "resendIn": "Reenviar em {seconds}s",
@@ -352,9 +352,18 @@
     "completed": "Este documento ja foi finalizado."
   },
   "success": {
-    "title": "Documento assinado com sucesso",
-    "subtitle": "Você concluiu sua assinatura eletrônica. Uma copia assinada foi enviada para seu email e está disponível no histórico do documento.",
+    "title": "Documento assinado com sucesso!",
+    "greeting": "Parabéns, {name}!",
+    "subtitle": "Sua assinatura eletrônica foi registrada com sucesso. Uma cópia será enviada para seu email quando todos os signatários concluírem.",
+    "downloads": "Downloads",
+    "downloadOriginal": "Documento original",
+    "downloadOriginalDesc": "PDF sem assinaturas",
+    "downloadSigned": "Documento assinado",
+    "downloadSignedDesc": "PDF com todas as assinaturas",
+    "downloadSignedUnavailable": "Disponível quando todos assinarem",
+    "downloading": "Baixando...",
     "cta": "Voltar para Início",
-    "badge": "ICP-Brasil"
+    "badge": "ICP-Brasil",
+    "securityNote": "Assinatura eletrônica com validade jurídica"
   }
 }

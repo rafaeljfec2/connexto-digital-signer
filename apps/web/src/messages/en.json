@@ -352,9 +352,18 @@
     "completed": "This document has already been finalized."
   },
   "success": {
-    "title": "Document signed successfully",
-    "subtitle": "You completed your electronic signature. A signed copy was sent to your email and is available in the document history.",
+    "title": "Document signed successfully!",
+    "greeting": "Congratulations, {name}!",
+    "subtitle": "Your electronic signature has been successfully recorded. A copy will be sent to your email when all signers have completed.",
+    "downloads": "Downloads",
+    "downloadOriginal": "Original document",
+    "downloadOriginalDesc": "PDF without signatures",
+    "downloadSigned": "Signed document",
+    "downloadSignedDesc": "PDF with all signatures",
+    "downloadSignedUnavailable": "Available when all signers complete",
+    "downloading": "Downloading...",
     "cta": "Back to Dashboard",
-    "badge": "ICP-Brasil"
+    "badge": "ICP-Brasil",
+    "securityNote": "Electronic signature with legal validity"
   }
 }

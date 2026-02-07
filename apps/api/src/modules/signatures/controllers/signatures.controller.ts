@@ -172,6 +172,27 @@ export class SignController {
 
   @Public()
   @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Get(':token/signed-pdf')
+  async getSignerSignedPdf(
+    @Param('token') token: string,
+    @Res() res: Response
+  ) {
+    const buffer = await this.signaturesService.getSignerSignedPdf(token);
+    if (buffer === null) {
+      res.status(404).json({ message: 'Signed document is not available yet' });
+      return;
+    }
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Length': buffer.length,
+      'Content-Disposition': 'attachment; filename="signed-document.pdf"',
+      'Cache-Control': 'private, max-age=300',
+    });
+    res.end(buffer);
+  }
+
+  @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Get(':token/fields')
   getSignerFields(@Param('token') token: string) {
     return this.signaturesService.getSignerFields(token);

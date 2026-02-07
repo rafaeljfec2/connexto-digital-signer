@@ -23,6 +23,13 @@ import { SignatureModal } from './components/signature-modal';
 import { ValidateStep } from './components/validate-step';
 import { ViewStep } from './components/view-step';
 
+function maskEmail(email: string): string {
+  const [local, domain] = email.split('@');
+  if (!local || !domain) return email;
+  if (local.length <= 3) return `${local[0]}***@${domain}`;
+  return `${local.slice(0, 3)}***@${domain}`;
+}
+
 export default function SignerDocumentPage() {
   const params = useParams<{ token: string }>();
   const token = params.token;
@@ -116,7 +123,7 @@ export default function SignerDocumentPage() {
       fields: fieldPayload,
     });
 
-    router.push('/success');
+    router.push(`/success?token=${token}`);
   };
 
   const verifyErrorMessage = useMemo(() => {
@@ -278,7 +285,6 @@ export default function SignerDocumentPage() {
 
         {currentStep === 'validate' ? (
           <ValidateStep
-            signerEmail={signer.email}
             onSendCode={() => sendCodeMutation.mutateAsync()}
             onVerifyCode={(code) => verifyCodeMutation.mutateAsync(code)}
             onNext={() => setCurrentStep('review')}
@@ -288,10 +294,10 @@ export default function SignerDocumentPage() {
             verifyError={verifyErrorMessage}
             labels={{
               title: t('validateStep.title'),
-              instruction: t('validateStep.instruction'),
+              instruction: t('validateStep.instruction', { email: maskEmail(signer.email) }),
               sendCode: t('validateStep.sendCode'),
               resendCode: t('validateStep.resendCode'),
-              resendIn: t('validateStep.resendIn'),
+              resendInFormat: (seconds: number) => t('validateStep.resendIn', { seconds }),
               placeholder: t('validateStep.placeholder'),
               verify: t('validateStep.verify'),
               invalidCode: t('validateStep.invalidCode'),

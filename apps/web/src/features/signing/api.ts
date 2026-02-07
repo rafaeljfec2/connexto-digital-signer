@@ -73,6 +73,17 @@ export const acceptSignature = async (
   await publicClient.post(`/sign/${token}/accept`, input);
 };
 
+export const getSignerSignedPdf = async (token: string): Promise<Blob | null> => {
+  try {
+    const response = await publicClient.get(`/sign/${token}/signed-pdf`, {
+      responseType: 'blob',
+    });
+    return response.data as Blob;
+  } catch {
+    return null;
+  }
+};
+
 export const sendVerificationCode = async (
   token: string
 ): Promise<{ readonly sent: boolean }> => {

@@ -5,7 +5,6 @@ import { ArrowLeft, ArrowRight, ShieldCheck, RefreshCw } from 'lucide-react';
 import { Button, Card } from '@/shared/ui';
 
 type ValidateStepProps = Readonly<{
-  signerEmail: string;
   onSendCode: () => Promise<unknown>;
   onVerifyCode: (code: string) => Promise<unknown>;
   onNext: () => void;
@@ -18,7 +17,7 @@ type ValidateStepProps = Readonly<{
     instruction: string;
     sendCode: string;
     resendCode: string;
-    resendIn: string;
+    resendInFormat: (seconds: number) => string;
     placeholder: string;
     verify: string;
     invalidCode: string;
@@ -30,15 +29,7 @@ type ValidateStepProps = Readonly<{
 const RESEND_COOLDOWN_SECONDS = 60;
 const OTP_LENGTH = 6;
 
-function maskEmail(email: string): string {
-  const [local, domain] = email.split('@');
-  if (!local || !domain) return email;
-  if (local.length <= 3) return `${local[0]}***@${domain}`;
-  return `${local.slice(0, 3)}***@${domain}`;
-}
-
 export function ValidateStep({
-  signerEmail,
   onSendCode,
   onVerifyCode,
   onNext,
@@ -137,8 +128,6 @@ export function ValidateStep({
     onNext();
   }, [fullCode, isCodeComplete, onVerifyCode, onNext]);
 
-  const maskedEmail = maskEmail(signerEmail);
-
   return (
     <div className="flex flex-1 flex-col">
       <div className="mx-auto flex w-full max-w-lg flex-1 items-center overflow-auto">
@@ -150,7 +139,7 @@ export function ValidateStep({
             <h2 className="text-lg font-bold">{labels.title}</h2>
             {codeSent ? (
               <p className="text-sm text-neutral-100/60">
-                {labels.instruction.replace('{email}', maskedEmail)}
+                {labels.instruction}
               </p>
             ) : null}
           </div>
@@ -201,14 +190,14 @@ export function ValidateStep({
                 className="text-sm font-medium text-accent-400 transition-colors hover:text-accent-300 disabled:text-neutral-100/30 disabled:hover:text-neutral-100/30"
               >
                 {countdown > 0
-                  ? labels.resendIn.replace('{seconds}', String(countdown))
+                  ? labels.resendInFormat(countdown)
                   : labels.resendCode}
               </button>
             </div>
           ) : (
             <div className="flex flex-col items-center gap-4">
               <p className="text-center text-sm text-neutral-100/60">
-                {labels.instruction.replace('{email}', maskedEmail)}
+                {labels.instruction}
               </p>
               <Button
                 variant="primary"
