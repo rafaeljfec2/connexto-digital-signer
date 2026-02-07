@@ -187,30 +187,58 @@ export const SignerPdfViewer = ({
 
   const [scale, setScale] = useState<number | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const prevWidthRef = useRef(0);
 
   const pdfReady = isReady && !isLoading && !!pdfDocument;
 
+  const computeDefaultScale = useCallback(
+    (containerWidth: number) => {
+      if (!pdfDocument) return;
+      pdfDocument.getPage(1).then((page) => {
+        const viewport = page.getViewport({ scale: 1 });
+        if (containerWidth <= 0) {
+          setScale(1);
+          return;
+        }
+        const isMobile = containerWidth < MOBILE_BREAKPOINT;
+        if (isMobile) {
+          setScale(DEFAULT_MOBILE_SCALE);
+        } else {
+          const fitScale = clampScale(containerWidth / viewport.width);
+          setScale(Math.min(fitScale, DEFAULT_DESKTOP_SCALE));
+        }
+      });
+    },
+    [pdfDocument]
+  );
+
   useEffect(() => {
-    if (!pdfReady || scale !== null || !pdfDocument) return;
+    if (!pdfReady || scale !== null) return;
     const container = scrollRef.current;
     if (!container) return;
+    prevWidthRef.current = container.clientWidth;
+    computeDefaultScale(container.clientWidth);
+  }, [pdfReady, scale, computeDefaultScale]);
 
-    pdfDocument.getPage(1).then((page) => {
-      const viewport = page.getViewport({ scale: 1 });
-      const containerWidth = container.clientWidth;
-      if (containerWidth <= 0) {
-        setScale(1);
-        return;
-      }
-      const isMobile = containerWidth < MOBILE_BREAKPOINT;
-      if (isMobile) {
-        setScale(DEFAULT_MOBILE_SCALE);
-      } else {
-        const fitScale = clampScale(containerWidth / viewport.width);
-        setScale(Math.min(fitScale, DEFAULT_DESKTOP_SCALE));
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container || !pdfReady) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+      const newWidth = entry.contentRect.width;
+      const wasMobile = prevWidthRef.current < MOBILE_BREAKPOINT;
+      const isMobile = newWidth < MOBILE_BREAKPOINT;
+      prevWidthRef.current = newWidth;
+      if (wasMobile !== isMobile) {
+        computeDefaultScale(newWidth);
       }
     });
-  }, [pdfReady, pdfDocument, scale]);
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [pdfReady, computeDefaultScale]);
 
   const handleFitToWidth = useCallback(() => {
     const container = scrollRef.current;
