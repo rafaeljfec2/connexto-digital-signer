@@ -1,15 +1,17 @@
 "use client";
 
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
 import { useDocumentsList } from '@/features/documents/hooks/use-documents';
 import { Pagination, Input } from '@/shared/ui';
-import type { DocumentStatus } from '@/features/documents/api';
+import type { DocumentStatus, DocumentSummary } from '@/features/documents/api';
+import { useRouter } from '@/i18n/navigation';
 
 export default function DocumentsPage() {
   const tDocuments = useTranslations('documents');
   const locale = useLocale();
+  const router = useRouter();
   const [status, setStatus] = useState<DocumentStatus | 'all'>('all');
   const [page, setPage] = useState(1);
   const limit = 10;
@@ -31,6 +33,13 @@ export default function DocumentsPage() {
       expired: tDocuments('status.expired'),
     }),
     [tDocuments]
+  );
+
+  const handleDocumentClick = useCallback(
+    (doc: DocumentSummary) => {
+      router.push(`/documents/${doc.id}`);
+    },
+    [router]
   );
 
   return (
@@ -71,10 +80,16 @@ export default function DocumentsPage() {
           title: tDocuments('table.title'),
           status: tDocuments('table.status'),
           created: tDocuments('table.created'),
+          actions: tDocuments('table.actions'),
         }}
         emptyTitle={tDocuments('empty.title')}
         emptyDescription={tDocuments('empty.description')}
         formatDate={formatDate}
+        actionLabels={{
+          continue: tDocuments('actions.continue'),
+          view: tDocuments('actions.view'),
+        }}
+        onDocumentClick={handleDocumentClick}
       />
       <Pagination
         page={query.data?.meta.page ?? page}

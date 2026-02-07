@@ -64,7 +64,12 @@
     "table": {
       "title": "Titulo",
       "status": "Status",
-      "created": "Criado em"
+      "created": "Criado em",
+      "actions": "Acoes"
+    },
+    "actions": {
+      "continue": "Continuar",
+      "view": "Visualizar"
     },
     "status": {
       "draft": "Rascunho",

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 import { useDocumentsList, useDocumentsStats } from '@/features/documents/hooks/use-documents';
@@ -8,6 +8,7 @@ import { KpiCards } from '@/features/documents/components/kpi-cards';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
 import { useRouter } from '@/i18n/navigation';
 import { Button } from '@/shared/ui';
+import type { DocumentSummary } from '@/features/documents/api';
 
 export default function DashboardPage() {
   const tDashboard = useTranslations('dashboard');
@@ -30,6 +31,13 @@ export default function DashboardPage() {
     completed: tDocuments('status.completed'),
     expired: tDocuments('status.expired'),
   };
+
+  const handleDocumentClick = useCallback(
+    (doc: DocumentSummary) => {
+      router.push(`/documents/${doc.id}`);
+    },
+    [router]
+  );
 
   return (
     <div className="space-y-6">
@@ -62,10 +70,16 @@ export default function DashboardPage() {
           title: tDocuments('table.title'),
           status: tDocuments('table.status'),
           created: tDocuments('table.created'),
+          actions: tDocuments('table.actions'),
         }}
         emptyTitle={tDashboard('empty.title')}
         emptyDescription={tDashboard('empty.description')}
         formatDate={formatDate}
+        actionLabels={{
+          continue: tDocuments('actions.continue'),
+          view: tDocuments('actions.view'),
+        }}
+        onDocumentClick={handleDocumentClick}
       />
     </div>
   );
