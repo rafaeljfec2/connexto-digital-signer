@@ -32,32 +32,30 @@ export function SignStepper({ currentStep, labels }: SignStepperProps) {
         const isActive = idx === activeIdx;
         const Icon = step.icon;
 
+        let circleClass = 'border-white/20 bg-white/5 text-white/40';
+        let labelClass = 'text-white/40';
+        if (isCompleted) {
+          circleClass = 'border-success bg-success/20 text-success';
+          labelClass = 'text-success';
+        } else if (isActive) {
+          circleClass = 'border-accent-400 bg-accent-400/20 text-accent-400';
+          labelClass = 'text-accent-400';
+        }
+
         return (
           <div key={step.id} className="flex items-center">
-            <div className="flex flex-col items-center gap-1.5">
+            <div className="flex flex-col items-center gap-0.5">
               <div
-                className={`flex h-9 w-9 items-center justify-center rounded-full border-2 transition-all md:h-10 md:w-10 ${
-                  isCompleted
-                    ? 'border-success bg-success/20 text-success'
-                    : isActive
-                      ? 'border-accent-400 bg-accent-400/20 text-accent-400'
-                      : 'border-white/20 bg-white/5 text-white/40'
-                }`}
+                className={`flex h-7 w-7 items-center justify-center rounded-full border-2 transition-all md:h-8 md:w-8 ${circleClass}`}
               >
                 {isCompleted ? (
-                  <Check className="h-4 w-4" />
+                  <Check className="h-3 w-3 md:h-3.5 md:w-3.5" />
                 ) : (
-                  <Icon className="h-4 w-4" />
+                  <Icon className="h-3 w-3 md:h-3.5 md:w-3.5" />
                 )}
               </div>
               <span
-                className={`text-[10px] font-semibold tracking-wide md:text-xs ${
-                  isCompleted
-                    ? 'text-success'
-                    : isActive
-                      ? 'text-accent-400'
-                      : 'text-white/40'
-                }`}
+                className={`text-[9px] font-semibold tracking-wide md:text-[10px] ${labelClass}`}
               >
                 {labels[step.id]}
               </span>
@@ -65,7 +63,7 @@ export function SignStepper({ currentStep, labels }: SignStepperProps) {
 
             {idx < STEPS.length - 1 ? (
               <div
-                className={`mx-2 h-0.5 w-8 rounded-full md:mx-3 md:w-12 ${
+                className={`mx-1.5 h-0.5 w-6 rounded-full md:mx-2 md:w-10 ${
                   idx < activeIdx ? 'bg-success' : 'bg-white/10'
                 }`}
               />

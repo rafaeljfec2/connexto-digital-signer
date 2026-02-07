@@ -163,36 +163,36 @@ export default function SignerDocumentPage() {
   }
 
   return (
-    <div className="flex min-h-[100dvh] flex-col bg-gradient-main text-white">
-      <header className="border-b border-white/10 px-3 py-2.5 md:px-6 md:py-3">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-3">
-          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white/10">
-            <FileText className="h-4 w-4" />
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-gradient-main text-white">
+      <header className="shrink-0 border-b border-white/10 px-3 py-1.5 md:px-6 md:py-2">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-2">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10">
+            <FileText className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[9px] font-semibold uppercase tracking-[0.15em] text-neutral-100/50">
+            <div className="text-[8px] font-semibold uppercase tracking-[0.15em] text-neutral-100/50">
               {tCommon('appName')}
             </div>
-            <div className="truncate text-xs font-semibold md:text-sm">
+            <div className="truncate text-[11px] font-semibold md:text-xs">
               {doc.title}
             </div>
           </div>
           <div className="hidden items-center gap-2 sm:flex">
             <Avatar name={signer.name} size="sm" />
             <div className="min-w-0">
-              <p className="truncate text-xs font-medium">{signer.name}</p>
-              <p className="truncate text-[10px] text-neutral-100/50">
+              <p className="truncate text-[11px] font-medium">{signer.name}</p>
+              <p className="truncate text-[9px] text-neutral-100/50">
                 {signer.email}
               </p>
             </div>
           </div>
-          <Badge variant="info" className="shrink-0">
+          <Badge variant="info" className="shrink-0 text-[10px]">
             {t('status.pending')}
           </Badge>
         </div>
       </header>
 
-      <div className="border-b border-white/5 px-4 py-2 md:px-6 md:py-3">
+      <div className="shrink-0 border-b border-white/5 px-4 py-1.5 md:px-6 md:py-2">
         <div className="mx-auto max-w-6xl">
           <SignStepper
             currentStep={currentStep}
@@ -205,7 +205,7 @@ export default function SignerDocumentPage() {
         </div>
       </div>
 
-      <main className="mx-auto flex w-full max-w-6xl flex-1 flex-col px-3 py-2 pb-20 md:px-6 md:pb-4">
+      <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 py-1.5 pb-16 md:px-6 md:pb-2">
         {currentStep === 'view' ? (
           <ViewStep
             fileUrl={fileUrl}

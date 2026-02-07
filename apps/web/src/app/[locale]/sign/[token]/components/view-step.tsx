@@ -19,15 +19,14 @@ type ViewStepProps = Readonly<{
 
 export function ViewStep({ fileUrl, fields, labels, onNext }: ViewStepProps) {
   return (
-    <div className="flex flex-1 flex-col">
-      <p className="mb-2 text-center text-[11px] text-neutral-100/50 md:text-xs">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <p className="mb-1 text-center text-[10px] text-neutral-100/50 md:text-xs">
         {labels.instruction}
       </p>
 
       <Card
         variant="glass"
         className="flex min-h-0 flex-1 flex-col overflow-hidden p-0"
-        style={{ maxHeight: 'calc(100dvh - 220px)' }}
       >
         {fileUrl ? (
           <SignerPdfViewer

@@ -58,16 +58,15 @@ export function FillFieldsStep({
   const progressText = labels.progressFormat(filledCount, requiredFields.length);
 
   return (
-    <div className="flex flex-1 flex-col">
-      <p className="mb-3 text-center text-xs text-neutral-100/60 md:text-sm">
+    <div className="flex min-h-0 flex-1 flex-col">
+      <p className="mb-1 text-center text-[10px] text-neutral-100/60 md:text-xs">
         {labels.instruction}
       </p>
 
-      <div className="flex flex-1 flex-col gap-4 lg:flex-row">
+      <div className="flex min-h-0 flex-1 flex-col gap-3 lg:flex-row">
         <Card
           variant="glass"
           className="flex min-h-0 flex-1 flex-col overflow-hidden p-0"
-          style={{ maxHeight: 'calc(100dvh - 260px)' }}
         >
           {fileUrl ? (
             <SignerPdfViewer
