@@ -21,6 +21,67 @@ export interface EmbedFieldData {
   readonly value: string | null;
 }
 
+interface EvidenceLabels {
+  readonly title: string;
+  readonly subtitle: string;
+  readonly document: string;
+  readonly generated: string;
+  readonly signers: string;
+  readonly signedAt: string;
+  readonly ipAddress: string;
+  readonly userAgent: string;
+  readonly signed: string;
+  readonly footer1: string;
+  readonly footer2: string;
+}
+
+const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
+  en: {
+    title: 'SIGNATURE EVIDENCE',
+    subtitle: 'Digital signature certificate',
+    document: 'DOCUMENT',
+    generated: 'Generated',
+    signers: 'SIGNERS',
+    signedAt: 'Signed at',
+    ipAddress: 'IP Address',
+    userAgent: 'User-Agent',
+    signed: 'Signed',
+    footer1: 'This document was digitally signed using Connexto Digital Signer.',
+    footer2: 'All signature evidence is cryptographically secured and can be independently verified.',
+  },
+  'pt-br': {
+    title: 'EVIDENCIA DE ASSINATURA',
+    subtitle: 'Certificado de assinatura digital',
+    document: 'DOCUMENTO',
+    generated: 'Gerado em',
+    signers: 'SIGNATARIOS',
+    signedAt: 'Assinado em',
+    ipAddress: 'Endereco IP',
+    userAgent: 'Navegador',
+    signed: 'Assinado',
+    footer1: 'Este documento foi assinado digitalmente usando o Connexto Digital Signer.',
+    footer2: 'Todas as evidencias de assinatura sao criptograficamente protegidas e podem ser verificadas de forma independente.',
+  },
+};
+
+function getEvidenceLabels(locale: string): EvidenceLabels {
+  return EVIDENCE_LABELS[locale] ?? EVIDENCE_LABELS['en'];
+}
+
+function formatEvidenceDate(isoDate: string, locale: string): string {
+  try {
+    const date = new Date(isoDate);
+    const lang = locale === 'pt-br' ? 'pt-BR' : 'en-US';
+    return new Intl.DateTimeFormat(lang, {
+      dateStyle: 'long',
+      timeStyle: 'medium',
+      timeZone: 'UTC',
+    }).format(date);
+  } catch {
+    return isoDate;
+  }
+}
+
 @Injectable()
 export class PdfService {
   private readonly logger = new Logger(PdfService.name);
@@ -144,8 +205,10 @@ export class PdfService {
   async appendEvidencePage(
     originalPdfBuffer: Buffer,
     signers: SignerEvidence[],
-    documentTitle: string
+    documentTitle: string,
+    locale = 'en',
   ): Promise<Buffer> {
+    const labels = getEvidenceLabels(locale);
     const pdfDoc = await PDFDocument.load(originalPdfBuffer, {
       ignoreEncryption: true,
     });
@@ -196,7 +259,7 @@ export class PdfService {
       borderWidth: 0,
     });
 
-    currentPage.drawText('SIGNATURE EVIDENCE', {
+    currentPage.drawText(labels.title, {
       x: MARGIN + 20,
       y: y - 28,
       size: 18,
@@ -204,7 +267,7 @@ export class PdfService {
       color: colors.white,
     });
 
-    currentPage.drawText('Digital signature certificate', {
+    currentPage.drawText(labels.subtitle, {
       x: MARGIN + 20,
       y: y - 48,
       size: 9,
@@ -233,7 +296,7 @@ export class PdfService {
       color: colors.headerBg,
     });
 
-    currentPage.drawText('DOCUMENT', {
+    currentPage.drawText(labels.document, {
       x: MARGIN + 12,
       y: y - 14,
       size: 7,
@@ -253,8 +316,8 @@ export class PdfService {
       color: colors.primary,
     });
 
-    const generatedAt = new Date().toISOString().replace('T', ' ').replace('Z', ' UTC');
-    currentPage.drawText(`Generated: ${generatedAt}`, {
+    const generatedAt = formatEvidenceDate(new Date().toISOString(), locale);
+    currentPage.drawText(`${labels.generated}: ${generatedAt}`, {
       x: MARGIN + 12,
       y: y - 43,
       size: 8,
@@ -264,7 +327,7 @@ export class PdfService {
 
     y -= 70;
 
-    currentPage.drawText(`SIGNERS (${signers.length})`, {
+    currentPage.drawText(`${labels.signers} (${signers.length})`, {
       x: MARGIN,
       y,
       size: 8,
@@ -289,6 +352,8 @@ export class PdfService {
         fonts: { bold: fontBold, regular: fontRegular },
         colors,
         drawLine: drawHorizontalLine,
+        labels,
+        locale,
       });
     }
 
@@ -297,27 +362,21 @@ export class PdfService {
     drawHorizontalLine(y);
     y -= 18;
 
-    currentPage.drawText(
-      'This document was digitally signed using Connexto Digital Signer.',
-      {
-        x: MARGIN,
-        y,
-        size: 7.5,
-        font: fontRegular,
-        color: colors.muted,
-      },
-    );
+    currentPage.drawText(labels.footer1, {
+      x: MARGIN,
+      y,
+      size: 7.5,
+      font: fontRegular,
+      color: colors.muted,
+    });
     y -= 12;
-    currentPage.drawText(
-      'All signature evidence is cryptographically secured and can be independently verified.',
-      {
-        x: MARGIN,
-        y,
-        size: 7.5,
-        font: fontRegular,
-        color: colors.muted,
-      },
-    );
+    currentPage.drawText(labels.footer2, {
+      x: MARGIN,
+      y,
+      size: 7.5,
+      font: fontRegular,
+      color: colors.muted,
+    });
 
     const finalPdfBytes = await pdfDoc.save();
     return Buffer.from(finalPdfBytes);
@@ -336,9 +395,11 @@ export class PdfService {
       fonts: { bold: Awaited<ReturnType<PDFDocument['embedFont']>>; regular: Awaited<ReturnType<PDFDocument['embedFont']>> };
       colors: Record<string, ReturnType<typeof rgb>>;
       drawLine: (yPos: number) => void;
+      labels: EvidenceLabels;
+      locale: string;
     },
   ): Promise<number> {
-    const { signer, index, margin, contentWidth, cardHeight, fonts, colors } = ctx;
+    const { signer, index, margin, contentWidth, cardHeight, fonts, colors, labels, locale } = ctx;
     let { y } = ctx;
 
     page.drawRectangle({
@@ -365,7 +426,7 @@ export class PdfService {
         SIG_BOX_W, SIG_BOX_H,
       );
     } else {
-      page.drawText('● Signed', {
+      page.drawText(labels.signed, {
         x: margin + contentWidth - 60, y: y - 16, size: 8,
         font: fonts.bold,
         color: colors['accent'] ?? rgb(0.13, 0.55, 0.13),
@@ -397,13 +458,17 @@ export class PdfService {
     let detailY = y - 48;
     ctx.drawLine(detailY + 6);
 
+    const formattedSignedAt = signer.signedAt
+      ? formatEvidenceDate(signer.signedAt, locale)
+      : '';
+
     detailY = this.drawDetailRow(page, fonts, {
-      label: 'Signed at', value: signer.signedAt, x: margin + 14, y: detailY,
+      label: labels.signedAt, value: formattedSignedAt, x: margin + 14, y: detailY,
     });
 
     if (signer.ipAddress) {
       detailY = this.drawDetailRow(page, fonts, {
-        label: 'IP Address', value: signer.ipAddress, x: margin + 14, y: detailY,
+        label: labels.ipAddress, value: signer.ipAddress, x: margin + 14, y: detailY,
       });
     }
 
@@ -413,7 +478,7 @@ export class PdfService {
         ? `${signer.userAgent.slice(0, maxLen - 3)}...`
         : signer.userAgent;
       this.drawDetailRow(page, fonts, {
-        label: 'User-Agent', value: ua, x: margin + 14, y: detailY,
+        label: labels.userAgent, value: ua, x: margin + 14, y: detailY,
       });
     }
 

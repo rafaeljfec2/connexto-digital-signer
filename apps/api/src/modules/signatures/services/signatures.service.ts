@@ -372,7 +372,8 @@ export class SignaturesService {
     const finalBuffer = await this.pdfService.appendEvidencePage(
       withSignatures,
       evidence,
-      document.title
+      document.title,
+      document.signingLanguage ?? 'en',
     );
     await this.documentsService.setFinalPdf(documentId, tenantId, finalBuffer);
   }

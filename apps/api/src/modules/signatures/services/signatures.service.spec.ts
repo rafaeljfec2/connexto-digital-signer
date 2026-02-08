@@ -310,6 +310,7 @@ describe('SignaturesService', () => {
             signedAt: signerA.signedAt?.toISOString() ?? '',
             ipAddress: signerA.ipAddress,
             userAgent: signerA.userAgent,
+            signatureData: signerA.signatureData,
           },
           {
             name: signerB.name,
@@ -317,9 +318,11 @@ describe('SignaturesService', () => {
             signedAt: signerB.signedAt?.toISOString() ?? '',
             ipAddress: signerB.ipAddress,
             userAgent: signerB.userAgent,
+            signatureData: signerB.signatureData,
           },
         ],
-        document.title
+        document.title,
+        document.signingLanguage ?? 'en',
       );
       expect(documentsService.setFinalPdf).toHaveBeenCalledWith('doc-1', 'tenant-1', finalized);
     });
