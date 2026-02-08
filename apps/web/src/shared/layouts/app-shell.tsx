@@ -177,7 +177,7 @@ export function AppShell({
               <Menu className="h-5 w-5" />
             </Button>
 
-            <div className="relative hidden flex-1 sm:block sm:max-w-md">
+            <div className="relative hidden sm:block sm:max-w-md sm:flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-100/30" />
               <input
                 type="text"
@@ -188,7 +188,7 @@ export function AppShell({
               />
             </div>
 
-            <div className="flex-1 sm:hidden" />
+            <div className="flex-1" />
 
             <div className="flex items-center gap-1.5">
               <div ref={notifRef} className="relative">
