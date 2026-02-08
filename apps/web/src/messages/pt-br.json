@@ -85,7 +85,13 @@
     },
     "actions": {
       "continue": "Continuar",
-      "view": "Visualizar"
+      "view": "Visualizar",
+      "delete": "Excluir",
+      "deleteTitle": "Excluir rascunho",
+      "deleteConfirm": "Tem certeza que deseja excluir este rascunho? Esta acao nao pode ser desfeita.",
+      "deleteSuccess": "Rascunho excluido com sucesso",
+      "deleting": "Excluindo...",
+      "cancel": "Cancelar"
     },
     "status": {
       "draft": "Rascunho",

@@ -9,6 +9,7 @@ export * from './pagination';
 export * from './dropzone';
 export * from './stepper';
 export * from './dialog';
+export * from './confirm-dialog';
 export * from './select';
 export * from './tooltip';
 export * from './sidebar';

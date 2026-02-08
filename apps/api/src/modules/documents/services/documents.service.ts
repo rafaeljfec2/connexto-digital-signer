@@ -256,6 +256,25 @@ export class DocumentsService {
     return saved;
   }
 
+  async deleteDraft(id: string, tenantId: string): Promise<void> {
+    const document = await this.findOne(id, tenantId);
+
+    if (document.status !== DocumentStatus.DRAFT) {
+      throw new BadRequestException('Only draft documents can be deleted');
+    }
+
+    if (document.originalFileKey) {
+      try {
+        await this.storage.delete(document.originalFileKey);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Failed to delete file from storage: ${message}`);
+      }
+    }
+
+    await this.documentRepository.remove(document);
+  }
+
   async getOriginalFile(document: Document): Promise<Buffer> {
     if (document.originalFileKey === null) {
       throw new NotFoundException('Document has no file uploaded yet');

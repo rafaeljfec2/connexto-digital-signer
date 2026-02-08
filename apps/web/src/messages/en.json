@@ -85,7 +85,13 @@
     },
     "actions": {
       "continue": "Continue",
-      "view": "View"
+      "view": "View",
+      "delete": "Delete",
+      "deleteTitle": "Delete draft",
+      "deleteConfirm": "Are you sure you want to delete this draft? This action cannot be undone.",
+      "deleteSuccess": "Draft deleted successfully",
+      "deleting": "Deleting...",
+      "cancel": "Cancel"
     },
     "status": {
       "draft": "Draft",

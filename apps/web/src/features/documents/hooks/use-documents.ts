@@ -1,6 +1,7 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   createDraftDocument,
+  deleteDocument,
   getDocumentsStats,
   listDocuments,
   uploadDocument,
@@ -31,3 +32,13 @@ export const useCreateDraft = () =>
   useMutation({
     mutationFn: (input: CreateDraftInput) => createDraftDocument(input),
   });
+
+export const useDeleteDocument = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (documentId: string) => deleteDocument(documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['documents'] });
+    },
+  });
+};

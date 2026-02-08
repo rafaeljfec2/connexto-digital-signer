@@ -3,11 +3,11 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useAuth } from '@/features/auth/hooks/use-auth';
-import { useDocumentsList, useDocumentsStats } from '@/features/documents/hooks/use-documents';
+import { useDocumentsList, useDocumentsStats, useDeleteDocument } from '@/features/documents/hooks/use-documents';
 import { KpiCards } from '@/features/documents/components/kpi-cards';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
 import { useRouter } from '@/i18n/navigation';
-import { Button } from '@/shared/ui';
+import { Button, ConfirmDialog } from '@/shared/ui';
 import type { DocumentSummary } from '@/features/documents/api';
 
 export default function DashboardPage() {
@@ -17,11 +17,16 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<DocumentSummary | null>(null);
+
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
   const statsQuery = useDocumentsStats();
   const recentQuery = useDocumentsList({ page: 1, limit: 5 });
+  const deleteMutation = useDeleteDocument();
+
   const formatDate = (value: string) =>
     new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value));
 
@@ -42,6 +47,13 @@ export default function DashboardPage() {
     },
     [router]
   );
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget.id, {
+      onSuccess: () => setDeleteTarget(null),
+    });
+  }, [deleteTarget, deleteMutation]);
 
   return (
     <div className="space-y-6">
@@ -85,8 +97,21 @@ export default function DashboardPage() {
             view: tDocuments('actions.view'),
           }}
           onDocumentClick={handleDocumentClick}
+          onDeleteDocument={setDeleteTarget}
+          deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
         />
       </div>
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={tDocuments('actions.deleteTitle')}
+        description={tDocuments('actions.deleteConfirm')}
+        confirmLabel={tDocuments('actions.delete')}
+        cancelLabel={tDocuments('actions.cancel')}
+        isLoading={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </div>
   );
 }

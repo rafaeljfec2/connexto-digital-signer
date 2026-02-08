@@ -4,11 +4,18 @@ import { useCallback, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
 import { EmptyState } from '@/features/documents/components/empty-state';
-import { useDocumentsList } from '@/features/documents/hooks/use-documents';
-import { Badge, Button, Card, Pagination, Select, Skeleton } from '@/shared/ui';
+import { useDeleteDocument, useDocumentsList } from '@/features/documents/hooks/use-documents';
+import { Badge, Button, Card, ConfirmDialog, Pagination, Select, Skeleton } from '@/shared/ui';
 import type { DocumentStatus, DocumentSummary } from '@/features/documents/api';
 import { useRouter } from '@/i18n/navigation';
-import { LayoutGrid, List } from 'lucide-react';
+import { Calendar, FileText, LayoutGrid, List, Trash2 } from 'lucide-react';
+
+const GRID_ICON_CLASS: Record<string, string> = {
+  completed: 'bg-success/15 text-success',
+  pending_signatures: 'bg-info/15 text-info',
+  expired: 'bg-error/15 text-error',
+  draft: 'bg-white/10 text-neutral-100/50',
+};
 
 export default function DocumentsPage() {
   const tDocuments = useTranslations('documents');
@@ -17,6 +24,7 @@ export default function DocumentsPage() {
   const [status, setStatus] = useState<DocumentStatus | 'all'>('all');
   const [page, setPage] = useState(1);
   const [view, setView] = useState<'list' | 'grid'>('list');
+  const [deleteTarget, setDeleteTarget] = useState<DocumentSummary | null>(null);
   const limit = 10;
 
   const query = useDocumentsList({
@@ -38,6 +46,8 @@ export default function DocumentsPage() {
     [tDocuments]
   );
 
+  const deleteMutation = useDeleteDocument();
+
   const handleDocumentClick = useCallback(
     (doc: DocumentSummary) => {
       if (doc.status === 'completed') {
@@ -48,6 +58,14 @@ export default function DocumentsPage() {
     },
     [router]
   );
+
+  const handleConfirmDelete = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteMutation.mutate(deleteTarget.id, {
+      onSuccess: () => setDeleteTarget(null),
+    });
+  }, [deleteTarget, deleteMutation]);
+
   const skeletonCards = useMemo(() => ['card-1', 'card-2', 'card-3', 'card-4', 'card-5', 'card-6'], []);
 
   return (
@@ -113,42 +131,77 @@ export default function DocumentsPage() {
               view: tDocuments('actions.view'),
             }}
             onDocumentClick={handleDocumentClick}
+            onDeleteDocument={setDeleteTarget}
+            deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
           />
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {query.isLoading
             ? skeletonCards.map((card) => (
-                <Card key={card} variant="glass" className="p-4">
-                  <Skeleton className="h-5 w-3/5" />
-                  <Skeleton className="mt-3 h-4 w-1/2" />
-                  <Skeleton className="mt-6 h-8 w-24" />
+                <Card key={card} variant="glass" className="space-y-3 p-5">
+                  <div className="flex items-center gap-3">
+                    <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+                    <div className="flex-1 space-y-1.5">
+                      <Skeleton className="h-4 w-3/5" />
+                      <Skeleton className="h-3 w-1/3" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-8 w-24" />
                 </Card>
               ))
             : (query.data?.data ?? []).map((doc) => (
                 <Card
                   key={doc.id}
                   variant="glass"
-                  className="cursor-pointer space-y-4 p-4"
+                  className="group cursor-pointer space-y-3 p-5 transition-all hover:border-white/15 hover:bg-white/[0.06]"
                   onClick={() => handleDocumentClick(doc)}
                 >
-                  <div className="space-y-1">
-                    <p className="text-sm font-semibold text-white">{doc.title}</p>
-                    <p className="text-xs text-neutral-100/70">{formatDate(doc.createdAt)}</p>
+                  <div className="flex items-start gap-3">
+                    <div
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${GRID_ICON_CLASS[doc.status] ?? GRID_ICON_CLASS.draft}`}
+                    >
+                      <FileText className="h-5 w-5" />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-semibold text-white">{doc.title}</p>
+                      <p className="mt-0.5 flex items-center gap-1 text-[11px] text-neutral-100/40">
+                        <Calendar className="h-3 w-3" />
+                        {formatDate(doc.createdAt)}
+                      </p>
+                    </div>
                   </div>
-                  <Badge variant={doc.status === 'draft' ? 'default' : statusLabelsToVariant(doc.status)}>
-                    {statusLabels[doc.status]}
-                  </Badge>
-                  <Button
-                    type="button"
-                    variant={doc.status === 'draft' ? 'primary' : 'ghost'}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      handleDocumentClick(doc);
-                    }}
-                  >
-                    {doc.status === 'draft' ? tDocuments('actions.continue') : tDocuments('actions.view')}
-                  </Button>
+                  <div className="flex items-center justify-between">
+                    <Badge variant={statusLabelsToVariant(doc.status)}>
+                      {statusLabels[doc.status]}
+                    </Badge>
+                    <div className="flex items-center gap-1">
+                      {doc.status === 'draft' ? (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          className="h-8 w-8 p-0 text-neutral-100/30 hover:text-error"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setDeleteTarget(doc);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                      <Button
+                        type="button"
+                        variant={doc.status === 'draft' ? 'primary' : 'ghost'}
+                        className="h-8 px-3 text-xs"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          handleDocumentClick(doc);
+                        }}
+                      >
+                        {doc.status === 'draft' ? tDocuments('actions.continue') : tDocuments('actions.view')}
+                      </Button>
+                    </div>
+                  </div>
                 </Card>
               ))}
           {!query.isLoading && (query.data?.data ?? []).length === 0 ? (
@@ -168,6 +221,17 @@ export default function DocumentsPage() {
         previousLabel={tDocuments('pagination.previous')}
         nextLabel={tDocuments('pagination.next')}
         pageLabel={tDocuments('pagination.page')}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={tDocuments('actions.deleteTitle')}
+        description={tDocuments('actions.deleteConfirm')}
+        confirmLabel={tDocuments('actions.delete')}
+        cancelLabel={tDocuments('actions.cancel')}
+        isLoading={deleteMutation.isPending}
+        onConfirm={handleConfirmDelete}
+        onCancel={() => setDeleteTarget(null)}
       />
     </div>
   );

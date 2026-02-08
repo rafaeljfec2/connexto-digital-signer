@@ -179,6 +179,10 @@ export const listDocuments = async (
   return response.data;
 };
 
+export const deleteDocument = async (documentId: string): Promise<void> => {
+  await apiClient.delete(`/documents/${documentId}`);
+};
+
 export const createDraftDocument = async (
   input: CreateDraftInput
 ): Promise<DocumentSummary> => {

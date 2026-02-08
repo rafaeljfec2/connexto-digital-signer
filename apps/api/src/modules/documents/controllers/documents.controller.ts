@@ -1,7 +1,10 @@
 import {
   BadRequestException,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
   Post,
   Body,
   Patch,
@@ -143,5 +146,14 @@ export class DocumentsController {
     @TenantId() tenantId: string
   ) {
     return this.documentsService.closeDocument(id, tenantId);
+  }
+
+  @Delete(':id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  async remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string
+  ) {
+    await this.documentsService.deleteDraft(id, tenantId);
   }
 }
