@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { Logger, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Document } from '../documents/entities/document.entity';
@@ -27,6 +27,18 @@ import { NotificationEventsHandler } from './events/notification.events-handler'
     ReminderSchedulerService,
     EmailProcessor,
     NotificationEventsHandler,
+    {
+      provide: 'NotificationEventsLogger',
+      useValue: new Logger(NotificationEventsHandler.name),
+    },
+    {
+      provide: 'ReminderSchedulerLogger',
+      useValue: new Logger(ReminderSchedulerService.name),
+    },
+    {
+      provide: 'EmailProcessorLogger',
+      useValue: new Logger(EmailProcessor.name),
+    },
   ],
   exports: [NotificationsService],
 })

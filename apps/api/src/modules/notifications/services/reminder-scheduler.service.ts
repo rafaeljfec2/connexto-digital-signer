@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
@@ -17,14 +17,13 @@ const MAX_REMINDERS = 3;
 
 @Injectable()
 export class ReminderSchedulerService {
-  private readonly logger = new Logger(ReminderSchedulerService.name);
-
   constructor(
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
     @InjectRepository(Signer)
     private readonly signerRepository: Repository<Signer>,
     private readonly notificationsService: NotificationsService,
+    @Inject('ReminderSchedulerLogger') private readonly logger: Logger,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)

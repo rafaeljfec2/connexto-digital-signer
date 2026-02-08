@@ -1,4 +1,4 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { OnEvent } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -20,14 +20,13 @@ const WEB_URL = process.env['WEB_BASE_URL'] ?? 'http://localhost:3001';
 
 @Injectable()
 export class NotificationEventsHandler {
-  private readonly logger = new Logger(NotificationEventsHandler.name);
-
   constructor(
     private readonly notificationsService: NotificationsService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
+    @Inject('NotificationEventsLogger') private readonly logger: Logger,
   ) {}
 
   @OnEvent(EVENT_SIGNER_ADDED)

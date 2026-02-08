@@ -1,13 +1,14 @@
-import { Processor, Process } from '@nestjs/bull';
-import { Logger } from '@nestjs/common';
+import { Process, Processor } from '@nestjs/bull';
+import { Inject, Logger } from '@nestjs/common';
 import { Job } from 'bull';
 import type { Transporter } from 'nodemailer';
 import type { SendEmailJobPayload } from '../services/notifications.service';
 
 @Processor('notifications')
 export class EmailProcessor {
-  private readonly logger = new Logger(EmailProcessor.name);
   private transporter: Transporter | null = null;
+
+  constructor(@Inject('EmailProcessorLogger') private readonly logger: Logger) {}
 
   @Process('email')
   async handleEmail(job: Job<SendEmailJobPayload>): Promise<void> {
@@ -29,7 +30,7 @@ export class EmailProcessor {
 
     this.transporter = createTransport({
       host: process.env['SMTP_HOST'],
-      port: parseInt(process.env['SMTP_PORT'] ?? '587', 10),
+      port: Number.parseInt(process.env['SMTP_PORT'] ?? '587', 10),
       secure: process.env['SMTP_SECURE'] === 'true',
       auth:
         process.env['SMTP_USER'] && process.env['SMTP_PASS']
@@ -47,7 +48,7 @@ export class EmailProcessor {
     to: string,
     subject: string,
     text: string,
-    html?: string,
+    html?: string
   ): Promise<void> {
     const transporter = await this.getTransporter();
     const from = process.env['SMTP_FROM'] ?? 'noreply@localhost';

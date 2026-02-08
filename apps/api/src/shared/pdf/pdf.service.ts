@@ -125,7 +125,7 @@ function truncateText(text: string, maxLength: number): string {
 
 @Injectable()
 export class PdfService {
-  private readonly logger = new Logger(PdfService.name);
+  constructor(private readonly logger: Logger) {}
 
   async embedSignatures(
     pdfBuffer: Buffer,

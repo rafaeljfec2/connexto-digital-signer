@@ -1,3 +1,4 @@
+import { Logger } from '@nestjs/common';
 import { PdfService } from './pdf.service';
 
 const buildSigner = (overrides?: Partial<{
@@ -21,7 +22,7 @@ describe('PdfService', () => {
   let service: PdfService;
 
   beforeEach(() => {
-    service = new PdfService();
+    service = new PdfService(new Logger());
   });
 
   test('should append evidence page and return buffer', async () => {

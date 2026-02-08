@@ -21,13 +21,12 @@ import { S3StorageService } from '../../../shared/storage/s3-storage.service';
 
 @Injectable()
 export class DocumentsService {
-  private readonly logger = new Logger(DocumentsService.name);
-
   constructor(
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
     private readonly eventEmitter: EventEmitter2,
-    private readonly storage: S3StorageService
+    private readonly storage: S3StorageService,
+    private readonly logger: Logger
   ) {}
 
   async create(

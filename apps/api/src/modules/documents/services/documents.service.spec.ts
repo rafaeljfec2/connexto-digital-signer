@@ -9,7 +9,7 @@ import {
   EVENT_DOCUMENT_EXPIRED,
 } from '@connexto/events';
 import { sha256 } from '@connexto/shared';
-import { NotFoundException } from '@nestjs/common';
+import { Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { Repository } from 'typeorm';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
@@ -55,7 +55,7 @@ describe('DocumentsService', () => {
       delete: jest.fn(),
       getSignedUrl: jest.fn(),
     } as unknown as jest.Mocked<S3StorageService>;
-    service = new DocumentsService(documentRepository, eventEmitter, storage);
+    service = new DocumentsService(documentRepository, eventEmitter, storage, new Logger());
   });
 
   describe('create', () => {
