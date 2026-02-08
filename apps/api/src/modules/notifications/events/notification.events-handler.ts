@@ -58,7 +58,7 @@ export class NotificationEventsHandler {
       if (!owner) return;
 
       const locale = document.signingLanguage ?? 'pt-br';
-      const documentUrl = `${WEB_URL}/${locale}/documents/${document.id}`;
+      const documentUrl = `${WEB_URL}/${locale}/documents/${document.id}/summary`;
 
       await this.notificationsService.sendDocumentCompleted({
         ownerEmail: owner.email,

@@ -22,7 +22,7 @@ export const emailMessages = {
     subject: 'Documento concluido: {documentTitle}',
     greeting: 'Ola {ownerName},',
     body: 'Todos os signatarios assinaram o documento <strong>{documentTitle}</strong>.',
-    cta: 'Ver documento',
+    cta: 'Ver resumo do documento',
     footer: 'O documento assinado esta disponivel na sua conta.',
     textBody:
       'Todos os signatarios assinaram o documento: {documentTitle}.\nAcesse: {documentUrl}',
