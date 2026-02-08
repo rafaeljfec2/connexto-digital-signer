@@ -64,61 +64,61 @@ function SuccessActions({
   return (
     <>
       <div className="space-y-3">
-        <p className="text-xs font-semibold uppercase tracking-wider text-neutral-100/40">
+        <p className="text-xs font-normal uppercase tracking-wider text-foreground-subtle">
           {labels.downloads}
         </p>
         <button
           type="button"
           onClick={onDownloadOriginal}
           disabled={downloadingOriginal}
-          className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5 text-left transition-all hover:border-white/20 hover:bg-white/10 disabled:opacity-50"
+          className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
         >
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-400/20">
             <FileText className="h-5 w-5 text-accent-400" />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold">{labels.downloadOriginal}</p>
-            <p className="text-xs text-neutral-100/50">{labels.downloadOriginalDesc}</p>
+            <p className="text-sm font-medium">{labels.downloadOriginal}</p>
+            <p className="text-xs text-foreground-subtle">{labels.downloadOriginalDesc}</p>
           </div>
           {downloadingOriginal ? (
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-neutral-100/50" />
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-subtle" />
           ) : (
-            <Download className="h-4 w-4 shrink-0 text-neutral-100/40" />
+            <Download className="h-4 w-4 shrink-0 text-foreground-subtle" />
           )}
         </button>
         <button
           type="button"
           onClick={onDownloadSigned}
           disabled={downloadingSigned || signedAvailable === false}
-          className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5 text-left transition-all hover:border-white/20 hover:bg-white/10 disabled:opacity-50"
+          className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
         >
           <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-            signedAvailable ? 'bg-success/20' : 'bg-white/10'
+            signedAvailable ? 'bg-success/20' : 'bg-th-hover'
           }`}>
             <FileBadge className={`h-5 w-5 ${
-              signedAvailable ? 'text-success' : 'text-neutral-100/40'
+              signedAvailable ? 'text-success' : 'text-foreground-subtle'
             }`} />
           </div>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold">{labels.downloadSigned}</p>
-            <p className="text-xs text-neutral-100/50">
+            <p className="text-sm font-medium">{labels.downloadSigned}</p>
+            <p className="text-xs text-foreground-subtle">
               {signedAvailable === false
                 ? labels.downloadSignedUnavailable
                 : labels.downloadSignedDesc}
             </p>
           </div>
           {downloadingSigned ? (
-            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-neutral-100/50" />
+            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-subtle" />
           ) : (
             <Download className={`h-4 w-4 shrink-0 ${
-              signedAvailable ? 'text-neutral-100/40' : 'text-neutral-100/20'
+              signedAvailable ? 'text-foreground-subtle' : 'text-foreground-subtle/50'
             }`} />
           )}
         </button>
       </div>
       <Link
         href={`/sign/${token}/summary`}
-        className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium transition-all hover:border-white/20 hover:bg-white/10"
+        className="flex w-full items-center justify-center gap-2 rounded-xl border border-th-border bg-th-hover px-4 py-3 text-sm font-normal transition-all hover:border-th-card-border hover:bg-th-active"
       >
         <FileSearch className="h-4 w-4" />
         {labels.viewSummary}
@@ -188,7 +188,7 @@ export default function SuccessPage() {
   }, [token, signerInfo]);
 
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-main px-4 py-8 text-white">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main px-4 py-8 text-foreground">
       <div className="mx-auto flex w-full max-w-md flex-col items-center gap-5">
         <Card variant="glass" className="w-full space-y-6 p-6 md:p-8">
           <div className="flex flex-col items-center gap-3 text-center">
@@ -200,8 +200,8 @@ export default function SuccessPage() {
               <p className="text-base font-medium text-success">{greeting}</p>
             ) : null}
 
-            <h1 className="text-xl font-bold md:text-2xl">{t('title')}</h1>
-            <p className="text-sm leading-relaxed text-neutral-100/60">{t('subtitle')}</p>
+            <h1 className="text-xl font-medium md:text-2xl">{t('title')}</h1>
+            <p className="text-sm leading-relaxed text-foreground-muted">{t('subtitle')}</p>
           </div>
 
           {token ? (
@@ -231,7 +231,7 @@ export default function SuccessPage() {
             </Button>
           </div>
 
-          <div className="flex items-center justify-center gap-2 text-xs text-neutral-100/40">
+          <div className="flex items-center justify-center gap-2 text-xs text-foreground-subtle">
             <ShieldCheck className="h-4 w-4 text-success/60" />
             <span>{t('securityNote')}</span>
             <span className="mx-1">·</span>

@@ -45,7 +45,7 @@ export function ConfirmDialog({
             <AlertTriangle className={`h-6 w-6 ${iconColor}`} />
           </div>
           <div className="space-y-1.5">
-            <h3 className="text-base font-semibold">{title}</h3>
+            <h3 className="text-base font-medium">{title}</h3>
             <p className="text-sm leading-relaxed text-foreground-muted">{description}</p>
           </div>
         </div>

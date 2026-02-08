@@ -128,19 +128,19 @@ export function SignatureModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-      <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-white/15 bg-brand-900 shadow-2xl">
-        <div className="flex items-center justify-between border-b border-white/10 px-4 py-3 md:px-5">
-          <h2 className="text-sm font-semibold text-white md:text-base">
+      <div className="flex w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-th-card-border bg-th-dialog shadow-2xl">
+        <div className="flex items-center justify-between border-b border-th-border px-4 py-3 md:px-5">
+          <h2 className="text-sm font-medium text-foreground md:text-base">
             {labels.title}
           </h2>
-          <div className="flex rounded-lg border border-white/10 bg-white/5 p-0.5">
+          <div className="flex rounded-lg border border-th-border bg-th-hover p-0.5">
             <button
               type="button"
               onClick={() => setMode('draw')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-normal transition ${
                 mode === 'draw'
                   ? 'bg-accent-400 text-white shadow-sm'
-                  : 'text-white/50 hover:text-white/80'
+                  : 'text-foreground-subtle hover:text-foreground'
               }`}
             >
               <PenTool className="h-3.5 w-3.5" />
@@ -149,10 +149,10 @@ export function SignatureModal({
             <button
               type="button"
               onClick={() => setMode('type')}
-              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-medium transition ${
+              className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-normal transition ${
                 mode === 'type'
                   ? 'bg-accent-400 text-white shadow-sm'
-                  : 'text-white/50 hover:text-white/80'
+                  : 'text-foreground-subtle hover:text-foreground'
               }`}
             >
               <Type className="h-3.5 w-3.5" />
@@ -162,7 +162,7 @@ export function SignatureModal({
         </div>
 
         <div className="px-4 py-4 md:px-5 md:py-5">
-          <p className="mb-3 text-center text-[11px] text-white/40 md:text-xs">
+          <p className="mb-3 text-center text-[11px] text-foreground-subtle md:text-xs">
             {mode === 'draw' ? labels.drawHint : labels.typeHint}
           </p>
 
@@ -170,7 +170,7 @@ export function SignatureModal({
             <div className="space-y-2">
               <div
                 ref={containerRef}
-                className="relative h-40 w-full overflow-hidden rounded-xl border-2 border-dashed border-white/20 bg-white md:h-48"
+                className="relative h-40 w-full overflow-hidden rounded-xl border-2 border-dashed border-th-border bg-white md:h-48"
               >
                 <canvas
                   ref={canvasRef}
@@ -187,7 +187,7 @@ export function SignatureModal({
                   type="button"
                   onClick={clearCanvas}
                   disabled={!hasDrawn}
-                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] text-white/40 transition hover:text-white/70 disabled:opacity-30"
+                  className="flex items-center gap-1 rounded-md px-2 py-1 text-[10px] text-foreground-subtle transition hover:text-foreground disabled:opacity-30"
                 >
                   <Eraser className="h-3 w-3" />
                   {labels.clear}
@@ -204,8 +204,8 @@ export function SignatureModal({
                 autoFocus
               />
               {typedValue.trim().length > 0 ? (
-                <div className="flex items-center justify-center rounded-xl border border-white/10 bg-white/5 py-5">
-                  <span className="font-signature text-2xl italic text-white md:text-3xl">
+                <div className="flex items-center justify-center rounded-xl border border-th-border bg-th-hover py-5">
+                  <span className="font-signature text-2xl italic text-foreground md:text-3xl">
                     {typedValue}
                   </span>
                 </div>
@@ -214,7 +214,7 @@ export function SignatureModal({
           )}
         </div>
 
-        <div className="flex items-center justify-end gap-2 border-t border-white/10 px-4 py-3 md:px-5">
+        <div className="flex items-center justify-end gap-2 border-t border-th-border px-4 py-3 md:px-5">
           <Button
             type="button"
             variant="ghost"

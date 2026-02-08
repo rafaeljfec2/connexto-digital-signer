@@ -40,7 +40,7 @@ export function Avatar({
         {src ? (
           <img src={src} alt={name} className="h-full w-full rounded-full object-cover" />
         ) : (
-          <span className="font-semibold tracking-wide">{getInitials(name)}</span>
+          <span className="font-medium tracking-wide">{getInitials(name)}</span>
         )}
       </div>
       {statusColor ? (

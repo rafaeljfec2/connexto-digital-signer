@@ -44,8 +44,8 @@ export function SignStepper({ currentStep, showValidation, labels }: SignStepper
         const isActive = idx === activeIdx;
         const Icon = step.icon;
 
-        let circleClass = 'border-white/20 bg-white/5 text-white/40';
-        let labelClass = 'text-white/40';
+        let circleClass = 'border-th-border bg-th-hover text-foreground-subtle';
+        let labelClass = 'text-foreground-subtle';
         if (isCompleted) {
           circleClass = 'border-success bg-success/20 text-success';
           labelClass = 'text-success';
@@ -67,7 +67,7 @@ export function SignStepper({ currentStep, showValidation, labels }: SignStepper
                 )}
               </div>
               <span
-                className={`text-[9px] font-semibold tracking-wide md:text-[10px] ${labelClass}`}
+                className={`text-[9px] font-normal tracking-wide md:text-[10px] ${labelClass}`}
               >
                 {labels[step.id]}
               </span>
@@ -76,7 +76,7 @@ export function SignStepper({ currentStep, showValidation, labels }: SignStepper
             {idx < steps.length - 1 ? (
               <div
                 className={`mx-1.5 h-0.5 w-6 rounded-full md:mx-2 md:w-10 ${
-                  idx < activeIdx ? 'bg-success' : 'bg-white/10'
+                  idx < activeIdx ? 'bg-success' : 'bg-th-border'
                 }`}
               />
             ) : null}

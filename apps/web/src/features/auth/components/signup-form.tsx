@@ -75,14 +75,14 @@ export function SignUpForm() {
     <div className="space-y-6">
       <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-100" htmlFor="name">
+          <label className="text-sm font-normal text-foreground-muted" htmlFor="name">
             {tAuth('companyNameLabel')}
           </label>
           <Input id="name" placeholder={tAuth('companyNamePlaceholder')} {...register('name')} />
           {isSubmitted && errors.name ? <p className="text-xs text-error">{tAuth('companyNameRequired')}</p> : null}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-100" htmlFor="slug">
+          <label className="text-sm font-normal text-foreground-muted" htmlFor="slug">
             {tAuth('companySlugLabel')}
           </label>
           <Input
@@ -98,12 +98,12 @@ export function SignUpForm() {
             ref={slugField.ref}
           />
           {slugValue ? (
-            <p className="text-xs text-neutral-100/70">{tAuth('companySlugHelper')}</p>
+            <p className="text-xs text-foreground-muted">{tAuth('companySlugHelper')}</p>
           ) : null}
           {isSubmitted && errors.slug ? <p className="text-xs text-error">{tAuth('slugRequired')}</p> : null}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-100" htmlFor="ownerName">
+          <label className="text-sm font-normal text-foreground-muted" htmlFor="ownerName">
             {tAuth('ownerNameLabel')}
           </label>
           <Input
@@ -116,7 +116,7 @@ export function SignUpForm() {
           ) : null}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-100" htmlFor="ownerEmail">
+          <label className="text-sm font-normal text-foreground-muted" htmlFor="ownerEmail">
             {tAuth('ownerEmailLabel')}
           </label>
           <Input
@@ -130,7 +130,7 @@ export function SignUpForm() {
           ) : null}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-100" htmlFor="ownerPassword">
+          <label className="text-sm font-normal text-foreground-muted" htmlFor="ownerPassword">
             {tAuth('ownerPasswordLabel')}
           </label>
           <Input
@@ -142,11 +142,11 @@ export function SignUpForm() {
           {isSubmitted && errors.ownerPassword ? (
             <p className="text-xs text-error">{tAuth('ownerPasswordRequired')}</p>
           ) : (
-            <p className="text-xs text-neutral-100/70">{tAuth('ownerPasswordHelper')}</p>
+            <p className="text-xs text-foreground-muted">{tAuth('ownerPasswordHelper')}</p>
           )}
         </div>
         <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-100" htmlFor="ownerPasswordConfirm">
+          <label className="text-sm font-normal text-foreground-muted" htmlFor="ownerPasswordConfirm">
             {tAuth('ownerPasswordConfirmLabel')}
           </label>
           <Input
@@ -165,9 +165,9 @@ export function SignUpForm() {
       </form>
 
       {result && (
-        <div className="rounded-xl border border-white/20 bg-white/10 p-4 text-sm text-white">
-          <div className="font-semibold">{tCommon('accountCreatedTitle')}</div>
-          <p className="mt-2 text-sm text-neutral-100/70">
+        <div className="rounded-xl border border-th-border bg-th-hover p-4 text-sm text-foreground">
+          <div className="font-medium">{tCommon('accountCreatedTitle')}</div>
+          <p className="mt-2 text-sm text-foreground-muted">
             {tCommon('accountCreatedSubtitle')}
           </p>
         </div>

@@ -78,7 +78,7 @@ export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Rea
                 }`}
               >
                 {step.icon ?? (
-                  <span className="text-sm font-bold">{index + 1}</span>
+                  <span className="text-sm font-medium">{index + 1}</span>
                 )}
               </div>
               <span className={`text-center text-xs leading-tight ${labelClass}`}>

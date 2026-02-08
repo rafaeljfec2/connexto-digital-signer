@@ -188,7 +188,7 @@ export function DocumentAuditView({
               <FileText className="h-5 w-5 text-th-icon-fg" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold text-foreground md:text-xl">{doc.title}</h1>
+              <h1 className="truncate text-lg font-medium text-foreground md:text-xl">{doc.title}</h1>
               <p className="text-xs text-foreground-muted">{labels.title}</p>
             </div>
           </div>
@@ -199,7 +199,7 @@ export function DocumentAuditView({
       </Card>
 
       <Card variant="glass" className="space-y-4 p-5 md:p-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-foreground-muted">
           {labels.documentDetails}
         </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -243,7 +243,7 @@ export function DocumentAuditView({
       </Card>
 
       <Card variant="glass" className="space-y-4 p-5 md:p-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-foreground-muted">
           {labels.hashes}
         </h2>
         <div className="space-y-3">
@@ -254,7 +254,7 @@ export function DocumentAuditView({
 
       {timeline.length > 0 ? (
         <Card variant="glass" className="space-y-4 p-5 md:p-6">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
+          <h2 className="text-sm font-medium uppercase tracking-wider text-foreground-muted">
             {labels.timeline}
           </h2>
           <div className="relative space-y-0">
@@ -293,7 +293,7 @@ export function DocumentAuditView({
       ) : null}
 
       <Card variant="glass" className="space-y-4 p-5 md:p-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-foreground-muted">
           {labels.signers}
         </h2>
         <div className="space-y-3">
@@ -306,7 +306,7 @@ export function DocumentAuditView({
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-bold">{signer.name}</p>
+                    <p className="truncate text-sm font-medium">{signer.name}</p>
                     <p className="truncate text-xs text-foreground-muted">{signer.email}</p>
                   </div>
                   <Badge
@@ -380,7 +380,7 @@ export function DocumentAuditView({
       </Card>
 
       <Card variant="glass" className="space-y-4 p-5 md:p-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-foreground-muted">
           {labels.downloads}
         </h2>
         <div className="space-y-3">
@@ -394,7 +394,7 @@ export function DocumentAuditView({
               <FileText className="h-5 w-5 text-accent-400" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">{labels.downloadOriginal}</p>
+              <p className="text-sm font-medium">{labels.downloadOriginal}</p>
               <p className="text-xs text-foreground-muted">{labels.downloadOriginalDesc}</p>
             </div>
             {downloadingOriginal ? (
@@ -420,7 +420,7 @@ export function DocumentAuditView({
               />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-semibold">{labels.downloadSigned}</p>
+              <p className="text-sm font-medium">{labels.downloadSigned}</p>
               <p className="text-xs text-foreground-muted">
                 {isCompleted ? labels.downloadSignedDesc : labels.downloadSignedUnavailable}
               </p>

@@ -71,7 +71,7 @@ export default function DocumentsPage() {
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold text-foreground">{tDocuments('title')}</h1>
+        <h1 className="text-2xl font-medium text-foreground">{tDocuments('title')}</h1>
         <p className="text-sm text-foreground-muted">{tDocuments('subtitle')}</p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -164,7 +164,7 @@ export default function DocumentsPage() {
                       <FileText className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-foreground">{doc.title}</p>
+                      <p className="truncate text-sm font-medium text-foreground">{doc.title}</p>
                       <p className="mt-0.5 flex items-center gap-1 text-[11px] text-foreground-subtle">
                         <Calendar className="h-3 w-3" />
                         {formatDate(doc.createdAt)}

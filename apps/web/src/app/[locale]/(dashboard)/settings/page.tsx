@@ -10,8 +10,8 @@ export default function SettingsPage() {
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold text-white">{tCommon('settingsTitle')}</h1>
-        <p className="text-sm text-neutral-100/70">{tCommon('settingsSubtitle')}</p>
+        <h1 className="text-2xl font-medium text-foreground">{tCommon('settingsTitle')}</h1>
+        <p className="text-sm text-foreground-muted">{tCommon('settingsSubtitle')}</p>
       </div>
       <Card variant="glass" className="p-6">
         <EmptyState

@@ -36,7 +36,7 @@ export function LoginForm() {
   return (
     <form className="space-y-4" onSubmit={handleSubmit(onSubmit)}>
       <div className="space-y-2">
-        <label className="text-sm font-medium text-neutral-100" htmlFor="email">
+        <label className="text-sm font-normal text-foreground-muted" htmlFor="email">
           {tAuth('emailLabel')}
         </label>
         <Input
@@ -48,7 +48,7 @@ export function LoginForm() {
         {errors.email && <p className="text-xs text-error">{tAuth('emailInvalid')}</p>}
       </div>
       <div className="space-y-2">
-        <label className="text-sm font-medium text-neutral-100" htmlFor="password">
+        <label className="text-sm font-normal text-foreground-muted" htmlFor="password">
           {tAuth('passwordLabel')}
         </label>
         <Input

@@ -31,7 +31,7 @@ export function TableRow({ className = '', ...props }: Readonly<TableRowProps>) 
 }
 
 export function TableHead({ className = '', ...props }: Readonly<TableHeadProps>) {
-  const base = 'px-3 py-2 text-xs font-semibold uppercase tracking-wide text-muted';
+  const base = 'px-3 py-2 text-xs font-medium uppercase tracking-wide text-muted';
   return <th className={`${base} ${className}`} {...props} />;
 }
 

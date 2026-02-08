@@ -34,7 +34,7 @@ export function FieldListPanel({
 }: FieldListPanelProps) {
   return (
     <div className="space-y-2">
-      <p className="text-xs text-neutral-100/50">{labels.fieldsProgress}</p>
+      <p className="text-xs text-foreground-subtle">{labels.fieldsProgress}</p>
       <div className="space-y-2">
         {fields.map((field, idx) => {
           const value = fieldValues[field.id] ?? field.value ?? '';
@@ -49,12 +49,12 @@ export function FieldListPanel({
               className={`flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left text-sm transition active:scale-[0.98] ${
                 isFilled
                   ? 'border-success/30 bg-success/10 text-success'
-                  : 'border-white/15 bg-white/5 text-neutral-100/80 hover:bg-white/10'
+                  : 'border-th-border bg-th-hover text-foreground-muted hover:bg-th-active'
               }`}
             >
               <div
                 className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${
-                  isFilled ? 'bg-success/20' : 'bg-white/10'
+                  isFilled ? 'bg-success/20' : 'bg-th-hover'
                 }`}
               >
                 {isFilled ? (
@@ -67,7 +67,7 @@ export function FieldListPanel({
                 <p className="text-sm font-medium">
                   {fieldTypeLabels[field.type] ?? field.type}
                 </p>
-                <p className="text-[10px] text-neutral-100/40">
+                <p className="text-[10px] text-foreground-subtle">
                   {isFilled
                     ? labels.filled
                     : field.required

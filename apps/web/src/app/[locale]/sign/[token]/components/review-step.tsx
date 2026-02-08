@@ -88,10 +88,10 @@ export function ReviewStep({
               <FileText className="h-4 w-4" />
             </div>
             <div className="flex-1">
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-100/40">
+              <p className="text-[10px] font-normal uppercase tracking-widest text-foreground-subtle">
                 {labels.documentTitle}
               </p>
-              <p className="text-sm font-semibold">
+              <p className="text-sm font-medium">
                 {signerData.document.title}
               </p>
             </div>
@@ -111,13 +111,13 @@ export function ReviewStep({
           <div className="flex items-center gap-3">
             <Avatar name={signerData.signer.name} size="md" />
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-100/40">
+              <p className="text-[10px] font-normal uppercase tracking-widest text-foreground-subtle">
                 {labels.signerInfo}
               </p>
-              <p className="text-sm font-semibold">
+              <p className="text-sm font-medium">
                 {signerData.signer.name}
               </p>
-              <p className="text-xs text-neutral-100/60">
+              <p className="text-xs text-foreground-muted">
                 {signerData.signer.email}
               </p>
             </div>
@@ -126,8 +126,8 @@ export function ReviewStep({
 
         <Card variant="glass" className="space-y-3 p-4 md:p-6">
           <div className="flex items-center gap-2">
-            <User className="h-4 w-4 text-neutral-100/50" />
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-100/40">
+            <User className="h-4 w-4 text-foreground-subtle" />
+            <p className="text-[10px] font-normal uppercase tracking-widest text-foreground-subtle">
               {labels.filledFields}
             </p>
             <Badge variant="success" className="ml-auto">
@@ -148,7 +148,7 @@ export function ReviewStep({
                     <p className="text-xs font-medium text-success">
                       {fieldTypeLabels[field.type] ?? field.type}
                     </p>
-                    <p className="text-[10px] text-neutral-100/40">
+                    <p className="text-[10px] text-foreground-subtle">
                       {labels.fieldPreviewFormat(
                         fieldTypeLabels[field.type] ?? field.type,
                         field.page
@@ -176,8 +176,8 @@ export function ReviewStep({
         {standaloneSignature ? (
           <Card variant="glass" className="space-y-3 p-4 md:p-6">
             <div className="flex items-center gap-2">
-              <PenTool className="h-4 w-4 text-neutral-100/50" />
-              <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-100/40">
+              <PenTool className="h-4 w-4 text-foreground-subtle" />
+              <p className="text-[10px] font-normal uppercase tracking-widest text-foreground-subtle">
                 {labels.yourSignature}
               </p>
             </div>
@@ -211,9 +211,9 @@ export function ReviewStep({
                 type="checkbox"
                 checked={consentAccepted}
                 onChange={(e) => setConsentAccepted(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-white/30 bg-white/10 accent-accent-400"
+                className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-th-input-border bg-th-input accent-accent-400"
               />
-              <span className="text-xs leading-relaxed text-neutral-100/80 md:text-sm">
+              <span className="text-xs leading-relaxed text-foreground-muted md:text-sm">
                 {labels.consentLabel}
               </span>
             </label>
@@ -226,7 +226,7 @@ export function ReviewStep({
         </Card>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between border-t border-white/10 bg-brand-900/95 px-4 py-3 backdrop-blur-sm">
+      <div className="fixed bottom-0 left-0 right-0 z-30 flex items-center justify-between border-t border-th-border bg-th-card/95 px-4 py-3 backdrop-blur-sm">
         <Button
           type="button"
           variant="ghost"

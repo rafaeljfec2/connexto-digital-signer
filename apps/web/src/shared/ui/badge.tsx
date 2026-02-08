@@ -20,7 +20,7 @@ export function Badge({
   ...props
 }: Readonly<BadgeProps>) {
   const base =
-    'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-wide';
+    'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide';
   return (
     <span className={`${base} ${variantStyles[variant]} ${className}`} {...props} />
   );

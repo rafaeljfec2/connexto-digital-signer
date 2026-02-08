@@ -19,8 +19,8 @@ export default function DocumentSummaryPage() {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          <p className="text-sm text-neutral-100/70">{t('loading')}</p>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-foreground-subtle border-t-foreground" />
+          <p className="text-sm text-foreground-muted">{t('loading')}</p>
         </div>
       </div>
     );
@@ -33,8 +33,8 @@ export default function DocumentSummaryPage() {
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/20">
             <AlertTriangle className="h-6 w-6 text-error" />
           </div>
-          <p className="text-lg font-semibold">{t('error')}</p>
-          <p className="text-sm text-neutral-100/60">{t('errorSubtitle')}</p>
+          <p className="text-lg font-medium">{t('error')}</p>
+          <p className="text-sm text-foreground-muted">{t('errorSubtitle')}</p>
         </Card>
       </div>
     );

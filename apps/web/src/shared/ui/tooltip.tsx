@@ -22,7 +22,7 @@ export function Tooltip({
     <span className="relative inline-flex group">
       {children}
       <span
-        className={`pointer-events-none absolute z-20 whitespace-nowrap rounded-md bg-th-dialog border border-th-border px-2 py-1 text-[11px] font-semibold text-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 ${positionClass[position]}`}
+        className={`pointer-events-none absolute z-20 whitespace-nowrap rounded-md bg-th-dialog border border-th-border px-2 py-1 text-[11px] font-medium text-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 ${positionClass[position]}`}
       >
         {content}
       </span>

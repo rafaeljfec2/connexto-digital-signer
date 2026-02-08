@@ -26,7 +26,7 @@ export function Dialog({
         onClick={onClose}
       />
       <div className="relative z-10 w-full max-w-lg rounded-2xl border border-th-card-border bg-th-dialog p-6 text-foreground shadow-2xl backdrop-blur-xl">
-        {title ? <h3 className="text-lg font-semibold">{title}</h3> : null}
+        {title ? <h3 className="text-lg font-medium">{title}</h3> : null}
         <div className="mt-3 text-sm text-foreground-muted">{children}</div>
         {footer ? <div className="mt-5 flex justify-end gap-2">{footer}</div> : null}
       </div>

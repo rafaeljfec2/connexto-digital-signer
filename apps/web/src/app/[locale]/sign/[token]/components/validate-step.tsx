@@ -136,9 +136,9 @@ export function ValidateStep({
             <div className="flex h-14 w-14 items-center justify-center rounded-full bg-accent-400/20">
               <ShieldCheck className="h-7 w-7 text-accent-400" />
             </div>
-            <h2 className="text-lg font-bold">{labels.title}</h2>
+            <h2 className="text-lg font-medium">{labels.title}</h2>
             {codeSent ? (
-              <p className="text-sm text-neutral-100/60">
+              <p className="text-sm text-foreground-muted">
                 {labels.instruction}
               </p>
             ) : null}
@@ -158,7 +158,7 @@ export function ValidateStep({
                     onChange={(e) => handleInputChange(idx, e.target.value)}
                     onKeyDown={(e) => handleKeyDown(idx, e)}
                     onPaste={handlePaste}
-                    className="h-12 w-10 rounded-lg border-2 border-white/20 bg-white/5 text-center text-xl font-bold text-white outline-none transition-all focus:border-accent-400 focus:ring-1 focus:ring-accent-400/50 md:h-14 md:w-12 md:text-2xl"
+                    className="h-12 w-10 rounded-lg border-2 border-th-input-border bg-th-input text-center text-xl font-medium text-foreground outline-none transition-all focus:border-accent-400 focus:ring-1 focus:ring-accent-400/50 md:h-14 md:w-12 md:text-2xl"
                     placeholder="0"
                     autoComplete="one-time-code"
                   />
@@ -187,7 +187,7 @@ export function ValidateStep({
                 type="button"
                 onClick={handleSendCode}
                 disabled={countdown > 0 || isSending}
-                className="text-sm font-medium text-accent-400 transition-colors hover:text-accent-300 disabled:text-neutral-100/30 disabled:hover:text-neutral-100/30"
+                className="text-sm font-normal text-accent-400 transition-colors hover:text-accent-300 disabled:text-foreground-subtle disabled:hover:text-foreground-subtle"
               >
                 {countdown > 0
                   ? labels.resendInFormat(countdown)
@@ -196,7 +196,7 @@ export function ValidateStep({
             </div>
           ) : (
             <div className="flex flex-col items-center gap-4">
-              <p className="text-center text-sm text-neutral-100/60">
+              <p className="text-center text-sm text-foreground-muted">
                 {labels.instruction}
               </p>
               <Button
@@ -215,7 +215,7 @@ export function ValidateStep({
         </Card>
       </div>
 
-      <div className="fixed inset-x-0 bottom-0 border-t border-white/10 bg-gradient-main/95 px-4 py-3 backdrop-blur-sm">
+      <div className="fixed inset-x-0 bottom-0 border-t border-th-border bg-th-card/95 px-4 py-3 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl justify-between">
           <Button variant="outline" onClick={onBack}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />

@@ -181,10 +181,10 @@ export default function SignerDocumentPage() {
 
   if (signerQuery.isLoading || pdfQuery.isLoading || fieldsQuery.isLoading) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-main text-white">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main text-foreground">
         <div className="text-center">
-          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-          <p className="text-sm text-neutral-100/70">{t('loading')}</p>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-foreground-subtle border-t-foreground" />
+          <p className="text-sm text-foreground-muted">{t('loading')}</p>
         </div>
       </div>
     );
@@ -192,13 +192,13 @@ export default function SignerDocumentPage() {
 
   if (signerQuery.isError || !signerData) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-main px-4 text-white">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main px-4 text-foreground">
         <Card variant="glass" className="max-w-sm space-y-4 p-8 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/20">
             <AlertTriangle className="h-6 w-6 text-error" />
           </div>
-          <p className="text-lg font-semibold">{t('error')}</p>
-          <p className="text-sm text-neutral-100/60">{t('errorSubtitle')}</p>
+          <p className="text-lg font-medium">{t('error')}</p>
+          <p className="text-sm text-foreground-muted">{t('errorSubtitle')}</p>
         </Card>
       </div>
     );
@@ -208,16 +208,16 @@ export default function SignerDocumentPage() {
 
   if (alreadySigned) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-gradient-main px-4 text-white">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main px-4 text-foreground">
         <Card variant="glass" className="max-w-sm space-y-4 p-8 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/20">
             <Check className="h-6 w-6 text-success" />
           </div>
-          <p className="text-lg font-semibold">{t('alreadySigned')}</p>
-          <p className="text-sm text-neutral-100/60">{t('alreadySignedSubtitle')}</p>
+          <p className="text-lg font-medium">{t('alreadySigned')}</p>
+          <p className="text-sm text-foreground-muted">{t('alreadySignedSubtitle')}</p>
           <div className="flex items-center justify-center gap-2 pt-2">
             <ShieldCheck className="h-4 w-4 text-success/60" />
-            <span className="text-xs text-neutral-100/40">ICP-Brasil</span>
+            <span className="text-xs text-foreground-subtle">ICP-Brasil</span>
           </div>
         </Card>
       </div>
@@ -225,23 +225,23 @@ export default function SignerDocumentPage() {
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-gradient-main text-white">
-      <header className="shrink-0 border-b border-white/10 px-3 py-1.5 md:px-6 md:py-2">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[var(--th-page-bg)] dark:bg-gradient-main text-foreground">
+      <header className="shrink-0 border-b border-th-border px-3 py-1.5 md:px-6 md:py-2">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-white/10">
+          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-th-hover">
             <FileText className="h-3.5 w-3.5" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[8px] font-semibold uppercase tracking-[0.15em] text-neutral-100/50">
+            <div className="text-[8px] font-normal uppercase tracking-[0.15em] text-foreground-subtle">
               {tCommon('appName')}
             </div>
-            <div className="truncate text-[11px] font-semibold md:text-xs">{doc.title}</div>
+            <div className="truncate text-[11px] font-medium md:text-xs">{doc.title}</div>
           </div>
           <div className="hidden items-center gap-2 sm:flex">
             <Avatar name={signer.name} size="sm" />
             <div className="min-w-0">
-              <p className="truncate text-[11px] font-medium">{signer.name}</p>
-              <p className="truncate text-[9px] text-neutral-100/50">{signer.email}</p>
+              <p className="truncate text-[11px] font-normal">{signer.name}</p>
+              <p className="truncate text-[9px] text-foreground-subtle">{signer.email}</p>
             </div>
           </div>
           <Badge variant="info" className="shrink-0 text-[10px]">
@@ -250,7 +250,7 @@ export default function SignerDocumentPage() {
         </div>
       </header>
 
-      <div className="shrink-0 border-b border-white/5 px-4 py-1.5 md:px-6 md:py-2">
+      <div className="shrink-0 border-b border-th-border px-4 py-1.5 md:px-6 md:py-2">
         <div className="mx-auto max-w-6xl">
           <SignStepper
             currentStep={currentStep}

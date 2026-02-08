@@ -55,7 +55,7 @@ export function UploadForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-5">
       <div className="space-y-2">
-        <label className="text-sm font-medium text-neutral-100">
+        <label className="text-sm font-normal text-foreground-muted">
           {tDocuments('upload.titleLabel')}
         </label>
         <Input

@@ -264,24 +264,24 @@ export const SignerPdfViewer = ({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="flex shrink-0 items-center justify-between border-b border-white/10 bg-white/5 px-2 py-1">
+      <div className="flex shrink-0 items-center justify-between border-b border-th-border bg-th-hover px-2 py-1">
         <div className="flex items-center gap-1">
           <button
             type="button"
             onClick={() => setScale((s) => clampScale((s ?? 1) - 0.15))}
             disabled={!showPages}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-white/70 transition hover:bg-white/10 hover:text-white disabled:opacity-30"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-foreground-muted transition hover:bg-th-active hover:text-foreground disabled:opacity-30"
           >
             <ZoomOut className="h-4 w-4" />
           </button>
-          <span className="min-w-[2.5rem] text-center text-[11px] font-medium text-white/60">
+          <span className="min-w-[2.5rem] text-center text-[11px] font-normal text-foreground-muted">
             {Math.round(displayScale * 100)} %
           </span>
           <button
             type="button"
             onClick={() => setScale((s) => clampScale((s ?? 1) + 0.15))}
             disabled={!showPages}
-            className="flex h-7 w-7 items-center justify-center rounded-md text-white/70 transition hover:bg-white/10 hover:text-white disabled:opacity-30"
+            className="flex h-7 w-7 items-center justify-center rounded-md text-foreground-muted transition hover:bg-th-active hover:text-foreground disabled:opacity-30"
           >
             <ZoomIn className="h-4 w-4" />
           </button>
@@ -289,13 +289,13 @@ export const SignerPdfViewer = ({
             type="button"
             onClick={handleFitToWidth}
             disabled={!showPages}
-            className="flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-medium text-white/70 transition hover:bg-white/10 hover:text-white disabled:opacity-30"
+            className="flex h-7 items-center gap-1 rounded-md px-2 text-[11px] font-normal text-foreground-muted transition hover:bg-th-active hover:text-foreground disabled:opacity-30"
           >
             <Maximize2 className="h-3.5 w-3.5" />
             Ajustar
           </button>
         </div>
-        <span className="text-[11px] font-medium text-white/50">
+        <span className="text-[11px] font-normal text-foreground-subtle">
           {showPages ? `${pageCount} pg` : ''}
         </span>
       </div>
@@ -322,7 +322,7 @@ export const SignerPdfViewer = ({
           </div>
         ) : (
           <div className="flex h-64 items-center justify-center">
-            <div className="h-6 w-6 animate-spin rounded-full border-2 border-white/20 border-t-white" />
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-foreground-subtle border-t-foreground" />
           </div>
         )}
       </div>

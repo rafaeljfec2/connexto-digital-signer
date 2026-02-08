@@ -20,7 +20,7 @@ type ViewStepProps = Readonly<{
 export function ViewStep({ fileUrl, fields, labels, onNext }: ViewStepProps) {
   return (
     <div className="flex min-h-0 flex-1 flex-col pb-16">
-      <p className="mb-1 text-center text-[10px] text-neutral-100/50 md:text-xs">
+      <p className="mb-1 text-center text-[10px] text-foreground-subtle md:text-xs">
         {labels.instruction}
       </p>
 
@@ -43,7 +43,7 @@ export function ViewStep({ fileUrl, fields, labels, onNext }: ViewStepProps) {
         ) : null}
       </Card>
 
-      <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-end border-t border-white/10 bg-brand-900/95 px-4 py-3 backdrop-blur-sm">
+      <div className="fixed bottom-0 left-0 right-0 z-30 flex justify-end border-t border-th-border bg-th-card/95 px-4 py-3 backdrop-blur-sm">
         <Button
           type="button"
           onClick={onNext}
