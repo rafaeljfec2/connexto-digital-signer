@@ -1,8 +1,16 @@
+import { sha256 } from '@connexto/shared';
 import { Injectable, Logger } from '@nestjs/common';
 import { PDFDocument, PDFPage, rgb, StandardFonts } from 'pdf-lib';
-import { sha256 } from '@connexto/shared';
 
 type PdfFont = Awaited<ReturnType<PDFDocument['embedFont']>>;
+
+interface ImageRect {
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly padding?: number;
+}
 
 export interface SignerEvidence {
   readonly name: string;
@@ -83,7 +91,8 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     userAgent: 'User-Agent',
     signed: 'Signed',
     footer1: 'This document was digitally signed using Connexto Digital Signer.',
-    footer2: 'All signature evidence is cryptographically secured and can be independently verified.',
+    footer2:
+      'All signature evidence is cryptographically secured and can be independently verified.',
   },
   'pt-br': {
     title: 'EVIDENCIA DE ASSINATURA',
@@ -96,7 +105,8 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     userAgent: 'Navegador',
     signed: 'Assinado',
     footer1: 'Este documento foi assinado digitalmente usando o Connexto Digital Signer.',
-    footer2: 'Todas as evidencias de assinatura sao criptograficamente protegidas e podem ser verificadas de forma independente.',
+    footer2:
+      'Todas as evidencias de assinatura sao criptograficamente protegidas e podem ser verificadas de forma independente.',
   },
 };
 
@@ -127,10 +137,7 @@ function truncateText(text: string, maxLength: number): string {
 export class PdfService {
   constructor(private readonly logger: Logger) {}
 
-  async embedSignatures(
-    pdfBuffer: Buffer,
-    fields: EmbedFieldData[]
-  ): Promise<Buffer> {
+  async embedSignatures(pdfBuffer: Buffer, fields: EmbedFieldData[]): Promise<Buffer> {
     const pdfDoc = await PDFDocument.load(pdfBuffer, {
       ignoreEncryption: true,
     });
@@ -144,9 +151,7 @@ export class PdfService {
     for (const field of fieldsWithValues) {
       const pageIndex = field.page - 1;
       if (pageIndex < 0 || pageIndex >= pages.length) {
-        this.logger.warn(
-          `Skipping field on page ${field.page}: page does not exist`
-        );
+        this.logger.warn(`Skipping field on page ${field.page}: page does not exist`);
         continue;
       }
 
@@ -161,7 +166,12 @@ export class PdfService {
       const value = field.value as string;
 
       if (value.startsWith('data:image/')) {
-        await this.embedDataUrlImage(pdfDoc, page, value, fieldX, fieldY, fieldW, fieldH);
+        await this.embedDataUrlImage(pdfDoc, page, value, {
+          x: fieldX,
+          y: fieldY,
+          width: fieldW,
+          height: fieldH,
+        });
       } else {
         this.embedTextField(page, cursiveFont, value, fieldX, fieldY, fieldW, fieldH);
       }
@@ -175,7 +185,7 @@ export class PdfService {
     originalPdfBuffer: Buffer,
     signers: SignerEvidence[],
     documentTitle: string,
-    locale = 'en',
+    locale = 'en'
   ): Promise<Buffer> {
     const pdfDoc = await PDFDocument.load(originalPdfBuffer, {
       ignoreEncryption: true,
@@ -224,11 +234,7 @@ export class PdfService {
     pdfDoc: PDFDocument,
     page: PDFPage,
     dataUrl: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-    padding = 0,
+    rect: ImageRect
   ): Promise<void> {
     try {
       const base64Data = dataUrl.split(',')[1];
@@ -239,11 +245,12 @@ export class PdfService {
         ? await pdfDoc.embedPng(imageBytes)
         : await pdfDoc.embedJpg(imageBytes);
 
-      const innerW = width - padding * 2;
-      const innerH = height - padding * 2;
+      const padding = rect.padding ?? 0;
+      const innerW = rect.width - padding * 2;
+      const innerH = rect.height - padding * 2;
       const dims = image.scaleToFit(innerW, innerH);
-      const centeredX = x + padding + (innerW - dims.width) / 2;
-      const centeredY = y + padding + (innerH - dims.height) / 2;
+      const centeredX = rect.x + padding + (innerW - dims.width) / 2;
+      const centeredY = rect.y + padding + (innerH - dims.height) / 2;
 
       page.drawImage(image, {
         x: centeredX,
@@ -389,7 +396,7 @@ export class PdfService {
 
   private async drawSignersSection(
     ctx: EvidencePageContext,
-    signers: SignerEvidence[],
+    signers: SignerEvidence[]
   ): Promise<void> {
     const { currentPage, colors, labels, fonts, margin } = ctx;
 
@@ -442,19 +449,25 @@ export class PdfService {
     ctx: EvidencePageContext,
     signer: SignerEvidence,
     index: number,
-    cardHeight: number,
+    cardHeight: number
   ): Promise<void> {
     const { currentPage, pdfDoc, fonts, colors, labels, locale, margin, contentWidth } = ctx;
 
     currentPage.drawRectangle({
-      x: margin, y: ctx.y - cardHeight, width: contentWidth, height: cardHeight,
+      x: margin,
+      y: ctx.y - cardHeight,
+      width: contentWidth,
+      height: cardHeight,
       color: colors.cardBg,
       borderColor: colors.border,
       borderWidth: 0.5,
     });
 
     currentPage.drawRectangle({
-      x: margin, y: ctx.y - cardHeight, width: 3, height: cardHeight,
+      x: margin,
+      y: ctx.y - cardHeight,
+      width: 3,
+      height: cardHeight,
       color: colors.accent,
       borderWidth: 0,
     });
@@ -473,32 +486,43 @@ export class PdfService {
         color: colors.white,
       });
 
-      await this.embedDataUrlImage(
-        pdfDoc, currentPage, signer.signatureData,
-        sigBoxX, sigBoxY, SIG_BOX_W, SIG_BOX_H, 4,
-      );
+      await this.embedDataUrlImage(pdfDoc, currentPage, signer.signatureData, {
+        x: sigBoxX,
+        y: sigBoxY,
+        width: SIG_BOX_W,
+        height: SIG_BOX_H,
+        padding: 4,
+      });
     } else {
       currentPage.drawText(labels.signed, {
-        x: margin + contentWidth - 60, y: ctx.y - 16, size: 8,
+        x: margin + contentWidth - 60,
+        y: ctx.y - 16,
+        size: 8,
         font: fonts.bold,
         color: colors.accent,
       });
     }
 
     currentPage.drawText(`${index + 1}.`, {
-      x: margin + 14, y: ctx.y - 16, size: 10,
+      x: margin + 14,
+      y: ctx.y - 16,
+      size: 10,
       font: fonts.bold,
       color: colors.primary,
     });
 
     currentPage.drawText(truncateText(signer.name, MAX_NAME_LENGTH), {
-      x: margin + 30, y: ctx.y - 16, size: 10,
+      x: margin + 30,
+      y: ctx.y - 16,
+      size: 10,
       font: fonts.bold,
       color: colors.primary,
     });
 
     currentPage.drawText(signer.email, {
-      x: margin + 30, y: ctx.y - 30, size: 9,
+      x: margin + 30,
+      y: ctx.y - 30,
+      size: 9,
       font: fonts.regular,
       color: colors.secondary,
     });
@@ -506,17 +530,21 @@ export class PdfService {
     let detailY = ctx.y - 48;
     this.drawHorizontalLine(ctx, detailY + 6);
 
-    const formattedSignedAt = signer.signedAt
-      ? formatEvidenceDate(signer.signedAt, locale)
-      : '';
+    const formattedSignedAt = signer.signedAt ? formatEvidenceDate(signer.signedAt, locale) : '';
 
     detailY = this.drawDetailRow(currentPage, fonts, colors, {
-      label: labels.signedAt, value: formattedSignedAt, x: margin + 14, y: detailY,
+      label: labels.signedAt,
+      value: formattedSignedAt,
+      x: margin + 14,
+      y: detailY,
     });
 
     if (signer.ipAddress) {
       detailY = this.drawDetailRow(currentPage, fonts, colors, {
-        label: labels.ipAddress, value: signer.ipAddress, x: margin + 14, y: detailY,
+        label: labels.ipAddress,
+        value: signer.ipAddress,
+        x: margin + 14,
+        y: detailY,
       });
     }
 
@@ -547,7 +575,12 @@ export class PdfService {
     page: PDFPage,
     fonts: { readonly bold: PdfFont; readonly regular: PdfFont },
     colors: EvidenceColors,
-    options: { readonly label: string; readonly value: string; readonly x: number; readonly y: number },
+    options: {
+      readonly label: string;
+      readonly value: string;
+      readonly x: number;
+      readonly y: number;
+    }
   ): number {
     page.drawText(`${options.label}:`, {
       x: options.x,
