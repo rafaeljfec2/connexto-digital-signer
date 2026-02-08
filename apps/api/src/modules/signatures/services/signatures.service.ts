@@ -4,6 +4,7 @@ import { BadRequestException, Injectable, NotFoundException } from '@nestjs/comm
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'node:crypto';
+import type { FindOptionsWhere } from 'typeorm';
 import { Repository } from 'typeorm';
 import { PdfService } from '../../../shared/pdf/pdf.service';
 import { DocumentStatus, SigningMode } from '../../documents/entities/document.entity';
@@ -12,48 +13,15 @@ import { NotificationsService } from '../../notifications/services/notifications
 import { CreateSignerDto } from '../dto/create-signer.dto';
 import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { Signer, SignerStatus } from '../entities/signer.entity';
+import type {
+  AuditTimelineEvent,
+  DocumentAuditSummary,
+  SigningContext,
+} from '../interfaces/audit.interface';
 import { SignatureFieldsService } from './signature-fields.service';
 
-export interface SigningContext {
-  ipAddress: string;
-  userAgent: string;
-}
-
-export interface AuditTimelineEvent {
-  type: 'sent' | 'signed' | 'completed' | 'verified';
-  actorName: string;
-  actorEmail: string;
-  timestamp: Date;
-}
-
-export interface AuditSignerInfo {
-  id: string;
-  name: string;
-  email: string;
-  status: string;
-  authMethod: string;
-  notifiedAt: Date | null;
-  signedAt: Date | null;
-  ipAddress: string | null;
-  userAgent: string | null;
-  verifiedAt: Date | null;
-}
-
-export interface DocumentAuditSummary {
-  document: {
-    id: string;
-    title: string;
-    status: string;
-    signingMode: string;
-    createdAt: Date;
-    expiresAt: Date | null;
-    completedAt: Date | null;
-    originalHash: string | null;
-    finalHash: string | null;
-  };
-  signers: AuditSignerInfo[];
-  timeline: AuditTimelineEvent[];
-}
+export type { AuditTimelineEvent, DocumentAuditSummary, SigningContext } from '../interfaces/audit.interface';
+export type { AuditSignerInfo } from '../interfaces/audit.interface';
 
 @Injectable()
 export class SignaturesService {
@@ -80,8 +48,7 @@ export class SignaturesService {
       documentId,
       accessToken,
     });
-    const saved = await this.signerRepository.save(signer);
-    return saved;
+    return this.signerRepository.save(signer);
   }
 
   async updateSigner(
@@ -90,23 +57,13 @@ export class SignaturesService {
     signerId: string,
     dto: UpdateSignerDto
   ): Promise<Signer> {
-    const signer = await this.signerRepository.findOne({
-      where: { id: signerId, documentId, tenantId },
-    });
-    if (signer === null) {
-      throw new NotFoundException('Signer not found');
-    }
+    const signer = await this.findSignerOrFail({ id: signerId, documentId, tenantId });
     Object.assign(signer, dto);
     return this.signerRepository.save(signer);
   }
 
   async removeSigner(tenantId: string, documentId: string, signerId: string): Promise<void> {
-    const signer = await this.signerRepository.findOne({
-      where: { id: signerId, documentId, tenantId },
-    });
-    if (signer === null) {
-      throw new NotFoundException('Signer not found');
-    }
+    const signer = await this.findSignerOrFail({ id: signerId, documentId, tenantId });
     await this.signerRepository.remove(signer);
   }
 
@@ -118,13 +75,7 @@ export class SignaturesService {
   }
 
   async findByToken(accessToken: string): Promise<Signer> {
-    const signer = await this.signerRepository.findOne({
-      where: { accessToken },
-    });
-    if (signer === null) {
-      throw new NotFoundException('Signer or document not found');
-    }
-    return signer;
+    return this.findSignerOrFail({ accessToken }, 'Signer or document not found');
   }
 
   async findByTokenWithDocument(accessToken: string): Promise<{
@@ -174,12 +125,8 @@ export class SignaturesService {
       throw new BadRequestException('Verification required');
     }
     const document = await this.documentsService.findOne(signer.documentId, signer.tenantId);
-    if (document.status === DocumentStatus.COMPLETED) {
-      throw new BadRequestException('Document is already completed');
-    }
-    if (document.expiresAt !== null && new Date() > document.expiresAt) {
-      throw new BadRequestException('Document has expired');
-    }
+    this.validateDocumentIsActionable(document);
+
     await Promise.all(
       dto.fields.map((field) =>
         this.fieldsService.updateValue(
@@ -190,12 +137,14 @@ export class SignaturesService {
         )
       )
     );
+
     signer.status = SignerStatus.SIGNED;
     signer.signedAt = new Date();
     signer.ipAddress = context.ipAddress;
     signer.userAgent = context.userAgent;
     signer.signatureData = dto.signatureData ?? null;
     const saved = await this.signerRepository.save(signer);
+
     const payload: SignatureCompletedEvent = {
       documentId: signer.documentId,
       tenantId: signer.tenantId,
@@ -203,12 +152,14 @@ export class SignaturesService {
       signedAt: saved.signedAt ?? new Date(),
     };
     this.eventEmitter.emit(EVENT_SIGNATURE_COMPLETED, payload);
+
     const allSigned = await this.areAllSignersSigned(signer.documentId, signer.tenantId);
     if (allSigned) {
       await this.finalizeDocument(signer.documentId, signer.tenantId);
     } else if (document.signingMode === SigningMode.SEQUENTIAL) {
       await this.notifyNextSigner(document.id, document.tenantId, document.title);
     }
+
     return saved;
   }
 
@@ -218,31 +169,23 @@ export class SignaturesService {
     message?: string
   ): Promise<{ notified: string[] }> {
     const document = await this.documentsService.findOne(documentId, tenantId);
-    if (document.status === DocumentStatus.COMPLETED) {
-      throw new BadRequestException('Document is already completed');
-    }
-    if (document.expiresAt !== null && new Date() > document.expiresAt) {
-      throw new BadRequestException('Document has expired');
-    }
+    this.validateDocumentIsActionable(document);
+
     const signers = await this.findByDocument(documentId, tenantId);
     if (signers.length === 0) {
       throw new BadRequestException('At least one signer is required');
     }
+
     if (document.signingMode === SigningMode.SEQUENTIAL) {
-      const orders = signers.map((signer) => signer.order).filter((order) => order !== null);
-      if (orders.length !== signers.length) {
-        throw new BadRequestException('All signers must have an order in sequential mode');
-      }
-      const uniqueOrders = new Set(orders);
-      if (uniqueOrders.size !== orders.length) {
-        throw new BadRequestException('Signer order must be unique');
-      }
+      this.validateSequentialOrders(signers);
     }
+
     const toNotify =
       document.signingMode === SigningMode.SEQUENTIAL ? this.pickFirstSigner(signers) : signers;
     const now = new Date();
     const notified = await this.notifySigners(document, toNotify, now, message);
     await this.documentsService.setStatus(documentId, tenantId, DocumentStatus.PENDING_SIGNATURES);
+
     const sentPayload: DocumentSentEvent = {
       documentId,
       tenantId,
@@ -250,6 +193,7 @@ export class SignaturesService {
       sentAt: now,
     };
     this.eventEmitter.emit(EVENT_DOCUMENT_SENT, sentPayload);
+
     return { notified: notified.map((signer) => signer.id) };
   }
 
@@ -279,6 +223,88 @@ export class SignaturesService {
       locale,
       message,
     });
+  }
+
+  async getDocumentAuditSummary(
+    documentId: string,
+    tenantId: string
+  ): Promise<DocumentAuditSummary> {
+    const document = await this.documentsService.findOne(documentId, tenantId);
+    const signers = await this.findByDocument(documentId, tenantId);
+    const timeline = this.buildAuditTimeline(signers, document);
+    const completedAt = document.status === DocumentStatus.COMPLETED ? document.updatedAt : null;
+
+    return {
+      document: {
+        id: document.id,
+        title: document.title,
+        status: document.status,
+        signingMode: document.signingMode,
+        createdAt: document.createdAt,
+        expiresAt: document.expiresAt,
+        completedAt,
+        originalHash: document.originalHash,
+        finalHash: document.finalHash,
+      },
+      signers: signers.map((s) => ({
+        id: s.id,
+        name: s.name,
+        email: s.email,
+        status: s.status,
+        authMethod: s.authMethod,
+        notifiedAt: s.notifiedAt,
+        signedAt: s.signedAt,
+        ipAddress: s.ipAddress,
+        userAgent: s.userAgent,
+        verifiedAt: s.verifiedAt,
+      })),
+      timeline,
+    };
+  }
+
+  async getDocumentAuditSummaryByToken(accessToken: string): Promise<DocumentAuditSummary> {
+    const signer = await this.findByToken(accessToken);
+    return this.getDocumentAuditSummary(signer.documentId, signer.tenantId);
+  }
+
+  async areAllSignersSigned(documentId: string, tenantId: string): Promise<boolean> {
+    const signers = await this.findByDocument(documentId, tenantId);
+    if (signers.length === 0) return false;
+    return signers.every((s) => s.status === SignerStatus.SIGNED);
+  }
+
+  private async findSignerOrFail(
+    where: FindOptionsWhere<Signer>,
+    message = 'Signer not found',
+  ): Promise<Signer> {
+    const signer = await this.signerRepository.findOne({ where });
+    if (signer === null) {
+      throw new NotFoundException(message);
+    }
+    return signer;
+  }
+
+  private validateDocumentIsActionable(document: {
+    status: DocumentStatus;
+    expiresAt: Date | null;
+  }): void {
+    if (document.status === DocumentStatus.COMPLETED) {
+      throw new BadRequestException('Document is already completed');
+    }
+    if (document.expiresAt !== null && new Date() > document.expiresAt) {
+      throw new BadRequestException('Document has expired');
+    }
+  }
+
+  private validateSequentialOrders(signers: Signer[]): void {
+    const orders = signers.map((signer) => signer.order).filter((order) => order !== null);
+    if (orders.length !== signers.length) {
+      throw new BadRequestException('All signers must have an order in sequential mode');
+    }
+    const uniqueOrders = new Set(orders);
+    if (uniqueOrders.size !== orders.length) {
+      throw new BadRequestException('Signer order must be unique');
+    }
   }
 
   private pickFirstSigner(signers: Signer[]): Signer[] {
@@ -311,8 +337,8 @@ export class SignaturesService {
     }));
     const saved = await this.signerRepository.save(updated);
     await Promise.all(
-      saved.map(async (signer) => {
-        await this.notificationsService.sendSignatureInvite({
+      saved.map((signer) =>
+        this.notificationsService.sendSignatureInvite({
           tenantId: document.tenantId,
           signerEmail: signer.email,
           signerName: signer.name,
@@ -320,8 +346,8 @@ export class SignaturesService {
           signUrl: this.buildSignUrl(signer.accessToken, document.signingLanguage ?? 'en'),
           locale: document.signingLanguage ?? 'en',
           message,
-        });
-      })
+        })
+      )
     );
     return saved;
   }
@@ -378,13 +404,10 @@ export class SignaturesService {
     await this.documentsService.setFinalPdf(documentId, tenantId, finalBuffer);
   }
 
-  async getDocumentAuditSummary(
-    documentId: string,
-    tenantId: string
-  ): Promise<DocumentAuditSummary> {
-    const document = await this.documentsService.findOne(documentId, tenantId);
-    const signers = await this.findByDocument(documentId, tenantId);
-
+  private buildAuditTimeline(
+    signers: Signer[],
+    document: { status: DocumentStatus; title: string; updatedAt: Date },
+  ): AuditTimelineEvent[] {
     const timeline: AuditTimelineEvent[] = [];
 
     for (const signer of signers) {
@@ -424,45 +447,6 @@ export class SignaturesService {
     }
 
     timeline.sort((a, b) => a.timestamp.getTime() - b.timestamp.getTime());
-
-    const completedAt = document.status === DocumentStatus.COMPLETED ? document.updatedAt : null;
-
-    return {
-      document: {
-        id: document.id,
-        title: document.title,
-        status: document.status,
-        signingMode: document.signingMode,
-        createdAt: document.createdAt,
-        expiresAt: document.expiresAt,
-        completedAt,
-        originalHash: document.originalHash,
-        finalHash: document.finalHash,
-      },
-      signers: signers.map((s) => ({
-        id: s.id,
-        name: s.name,
-        email: s.email,
-        status: s.status,
-        authMethod: s.authMethod,
-        notifiedAt: s.notifiedAt,
-        signedAt: s.signedAt,
-        ipAddress: s.ipAddress,
-        userAgent: s.userAgent,
-        verifiedAt: s.verifiedAt,
-      })),
-      timeline,
-    };
-  }
-
-  async getDocumentAuditSummaryByToken(accessToken: string): Promise<DocumentAuditSummary> {
-    const signer = await this.findByToken(accessToken);
-    return this.getDocumentAuditSummary(signer.documentId, signer.tenantId);
-  }
-
-  async areAllSignersSigned(documentId: string, tenantId: string): Promise<boolean> {
-    const signers = await this.findByDocument(documentId, tenantId);
-    if (signers.length === 0) return false;
-    return signers.every((s) => s.status === SignerStatus.SIGNED);
+    return timeline;
   }
 }

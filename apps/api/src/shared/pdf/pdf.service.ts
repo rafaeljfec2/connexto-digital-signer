@@ -2,13 +2,15 @@ import { Injectable, Logger } from '@nestjs/common';
 import { PDFDocument, PDFPage, rgb, StandardFonts } from 'pdf-lib';
 import { sha256 } from '@connexto/shared';
 
+type PdfFont = Awaited<ReturnType<PDFDocument['embedFont']>>;
+
 export interface SignerEvidence {
-  name: string;
-  email: string;
-  signedAt: string;
-  ipAddress: string | null;
-  userAgent: string | null;
-  signatureData: string | null;
+  readonly name: string;
+  readonly email: string;
+  readonly signedAt: string;
+  readonly ipAddress: string | null;
+  readonly userAgent: string | null;
+  readonly signatureData: string | null;
 }
 
 export interface EmbedFieldData {
@@ -34,6 +36,40 @@ interface EvidenceLabels {
   readonly footer1: string;
   readonly footer2: string;
 }
+
+interface EvidenceColors {
+  readonly primary: ReturnType<typeof rgb>;
+  readonly secondary: ReturnType<typeof rgb>;
+  readonly muted: ReturnType<typeof rgb>;
+  readonly accent: ReturnType<typeof rgb>;
+  readonly border: ReturnType<typeof rgb>;
+  readonly headerBg: ReturnType<typeof rgb>;
+  readonly cardBg: ReturnType<typeof rgb>;
+  readonly white: ReturnType<typeof rgb>;
+}
+
+interface EvidencePageContext {
+  readonly pdfDoc: PDFDocument;
+  readonly fonts: { readonly bold: PdfFont; readonly regular: PdfFont };
+  readonly colors: EvidenceColors;
+  readonly labels: EvidenceLabels;
+  readonly locale: string;
+  readonly margin: number;
+  readonly contentWidth: number;
+  readonly pageWidth: number;
+  readonly pageHeight: number;
+  currentPage: PDFPage;
+  y: number;
+}
+
+const PAGE_WIDTH = 595;
+const PAGE_HEIGHT = 842;
+const MARGIN = 50;
+const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
+const SIG_BOX_W = 120;
+const SIG_BOX_H = 50;
+const MAX_TITLE_LENGTH = 60;
+const MAX_NAME_LENGTH = 40;
 
 const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
   en: {
@@ -82,6 +118,11 @@ function formatEvidenceDate(isoDate: string, locale: string): string {
   }
 }
 
+function truncateText(text: string, maxLength: number): string {
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 3)}...`;
+}
+
 @Injectable()
 export class PdfService {
   private readonly logger = new Logger(PdfService.name);
@@ -120,7 +161,7 @@ export class PdfService {
       const value = field.value as string;
 
       if (value.startsWith('data:image/')) {
-        await this.embedImageField(pdfDoc, page, value, fieldX, fieldY, fieldW, fieldH);
+        await this.embedDataUrlImage(pdfDoc, page, value, fieldX, fieldY, fieldW, fieldH);
       } else {
         this.embedTextField(page, cursiveFont, value, fieldX, fieldY, fieldW, fieldH);
       }
@@ -130,48 +171,95 @@ export class PdfService {
     return Buffer.from(result);
   }
 
-  private async embedImageField(
+  async appendEvidencePage(
+    originalPdfBuffer: Buffer,
+    signers: SignerEvidence[],
+    documentTitle: string,
+    locale = 'en',
+  ): Promise<Buffer> {
+    const pdfDoc = await PDFDocument.load(originalPdfBuffer, {
+      ignoreEncryption: true,
+    });
+
+    const ctx: EvidencePageContext = {
+      pdfDoc,
+      fonts: {
+        bold: await pdfDoc.embedFont(StandardFonts.HelveticaBold),
+        regular: await pdfDoc.embedFont(StandardFonts.Helvetica),
+      },
+      colors: {
+        primary: rgb(0.055, 0.227, 0.431),
+        secondary: rgb(0.3, 0.3, 0.4),
+        muted: rgb(0.45, 0.45, 0.55),
+        accent: rgb(0.133, 0.545, 0.133),
+        border: rgb(0.82, 0.84, 0.87),
+        headerBg: rgb(0.945, 0.953, 0.965),
+        cardBg: rgb(0.973, 0.976, 0.984),
+        white: rgb(1, 1, 1),
+      },
+      labels: getEvidenceLabels(locale),
+      locale,
+      margin: MARGIN,
+      contentWidth: CONTENT_WIDTH,
+      pageWidth: PAGE_WIDTH,
+      pageHeight: PAGE_HEIGHT,
+      currentPage: pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]),
+      y: PAGE_HEIGHT - MARGIN,
+    };
+
+    this.drawEvidenceHeader(ctx);
+    this.drawDocumentSection(ctx, documentTitle);
+    await this.drawSignersSection(ctx, signers);
+    this.drawEvidenceFooter(ctx);
+
+    const finalPdfBytes = await pdfDoc.save();
+    return Buffer.from(finalPdfBytes);
+  }
+
+  computeHash(buffer: Buffer): string {
+    return sha256(buffer);
+  }
+
+  private async embedDataUrlImage(
     pdfDoc: PDFDocument,
     page: PDFPage,
     dataUrl: string,
     x: number,
     y: number,
     width: number,
-    height: number
+    height: number,
+    padding = 0,
   ): Promise<void> {
     try {
       const base64Data = dataUrl.split(',')[1];
       if (!base64Data) return;
 
       const imageBytes = Buffer.from(base64Data, 'base64');
+      const image = dataUrl.includes('image/png')
+        ? await pdfDoc.embedPng(imageBytes)
+        : await pdfDoc.embedJpg(imageBytes);
 
-      let image;
-      if (dataUrl.includes('image/png')) {
-        image = await pdfDoc.embedPng(imageBytes);
-      } else {
-        image = await pdfDoc.embedJpg(imageBytes);
-      }
-
-      const imageDims = image.scaleToFit(width, height);
-
-      const centeredX = x + (width - imageDims.width) / 2;
-      const centeredY = y + (height - imageDims.height) / 2;
+      const innerW = width - padding * 2;
+      const innerH = height - padding * 2;
+      const dims = image.scaleToFit(innerW, innerH);
+      const centeredX = x + padding + (innerW - dims.width) / 2;
+      const centeredY = y + padding + (innerH - dims.height) / 2;
 
       page.drawImage(image, {
         x: centeredX,
         y: centeredY,
-        width: imageDims.width,
-        height: imageDims.height,
+        width: dims.width,
+        height: dims.height,
       });
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to embed image signature: ${message}`);
+      this.logger.error(`Failed to embed image: ${message}`);
     }
   }
 
   private embedTextField(
     page: PDFPage,
-    font: Awaited<ReturnType<PDFDocument['embedFont']>>,
+    font: PdfFont,
     text: string,
     x: number,
     y: number,
@@ -202,94 +290,69 @@ export class PdfService {
     });
   }
 
-  async appendEvidencePage(
-    originalPdfBuffer: Buffer,
-    signers: SignerEvidence[],
-    documentTitle: string,
-    locale = 'en',
-  ): Promise<Buffer> {
-    const labels = getEvidenceLabels(locale);
-    const pdfDoc = await PDFDocument.load(originalPdfBuffer, {
-      ignoreEncryption: true,
+  private ensureSpace(ctx: EvidencePageContext, needed: number): void {
+    if (ctx.y - needed < ctx.margin) {
+      ctx.currentPage = ctx.pdfDoc.addPage([ctx.pageWidth, ctx.pageHeight]);
+      ctx.y = ctx.pageHeight - ctx.margin;
+    }
+  }
+
+  private drawHorizontalLine(ctx: EvidencePageContext, yPos: number): void {
+    ctx.currentPage.drawLine({
+      start: { x: ctx.margin, y: yPos },
+      end: { x: ctx.margin + ctx.contentWidth, y: yPos },
+      thickness: 0.5,
+      color: ctx.colors.border,
     });
-    const fontRegular = await pdfDoc.embedFont(StandardFonts.Helvetica);
-    const fontBold = await pdfDoc.embedFont(StandardFonts.HelveticaBold);
+  }
 
-    const PAGE_WIDTH = 595;
-    const PAGE_HEIGHT = 842;
-    const MARGIN = 50;
-    const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
-
-    const colors = {
-      primary: rgb(0.055, 0.227, 0.431),
-      secondary: rgb(0.3, 0.3, 0.4),
-      muted: rgb(0.45, 0.45, 0.55),
-      accent: rgb(0.133, 0.545, 0.133),
-      border: rgb(0.82, 0.84, 0.87),
-      headerBg: rgb(0.945, 0.953, 0.965),
-      cardBg: rgb(0.973, 0.976, 0.984),
-      white: rgb(1, 1, 1),
-    };
-
-    let currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-    let y = PAGE_HEIGHT - MARGIN;
-
-    const ensureSpace = (needed: number): void => {
-      if (y - needed < MARGIN) {
-        currentPage = pdfDoc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
-        y = PAGE_HEIGHT - MARGIN;
-      }
-    };
-
-    const drawHorizontalLine = (yPos: number, width = CONTENT_WIDTH): void => {
-      currentPage.drawLine({
-        start: { x: MARGIN, y: yPos },
-        end: { x: MARGIN + width, y: yPos },
-        thickness: 0.5,
-        color: colors.border,
-      });
-    };
+  private drawEvidenceHeader(ctx: EvidencePageContext): void {
+    const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
 
     currentPage.drawRectangle({
-      x: MARGIN,
-      y: y - 60,
-      width: CONTENT_WIDTH,
+      x: margin,
+      y: ctx.y - 60,
+      width: contentWidth,
       height: 70,
       color: colors.primary,
       borderWidth: 0,
     });
 
     currentPage.drawText(labels.title, {
-      x: MARGIN + 20,
-      y: y - 28,
+      x: margin + 20,
+      y: ctx.y - 28,
       size: 18,
-      font: fontBold,
+      font: fonts.bold,
       color: colors.white,
     });
 
     currentPage.drawText(labels.subtitle, {
-      x: MARGIN + 20,
-      y: y - 48,
+      x: margin + 20,
+      y: ctx.y - 48,
       size: 9,
-      font: fontRegular,
+      font: fonts.regular,
       color: rgb(0.7, 0.8, 0.95),
     });
 
-    y -= 85;
+    ctx.y -= 85;
+  }
+
+  private drawDocumentSection(ctx: EvidencePageContext, documentTitle: string): void {
+    const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
 
     currentPage.drawRectangle({
-      x: MARGIN,
-      y: y - 50,
-      width: CONTENT_WIDTH,
+      x: margin,
+      y: ctx.y - 50,
+      width: contentWidth,
       height: 55,
       color: colors.headerBg,
       borderWidth: 0,
     });
 
     currentPage.drawRectangle({
-      x: MARGIN,
-      y: y - 50,
-      width: CONTENT_WIDTH,
+      x: margin,
+      y: ctx.y - 50,
+      width: contentWidth,
       height: 55,
       borderColor: colors.border,
       borderWidth: 0.5,
@@ -297,197 +360,181 @@ export class PdfService {
     });
 
     currentPage.drawText(labels.document, {
-      x: MARGIN + 12,
-      y: y - 14,
+      x: margin + 12,
+      y: ctx.y - 14,
       size: 7,
-      font: fontBold,
+      font: fonts.bold,
       color: colors.muted,
     });
 
-    const titleText = documentTitle.length > 60
-      ? `${documentTitle.slice(0, 57)}...`
-      : documentTitle;
-
-    currentPage.drawText(titleText, {
-      x: MARGIN + 12,
-      y: y - 28,
+    currentPage.drawText(truncateText(documentTitle, MAX_TITLE_LENGTH), {
+      x: margin + 12,
+      y: ctx.y - 28,
       size: 11,
-      font: fontBold,
+      font: fonts.bold,
       color: colors.primary,
     });
 
-    const generatedAt = formatEvidenceDate(new Date().toISOString(), locale);
+    const generatedAt = formatEvidenceDate(new Date().toISOString(), ctx.locale);
     currentPage.drawText(`${labels.generated}: ${generatedAt}`, {
-      x: MARGIN + 12,
-      y: y - 43,
+      x: margin + 12,
+      y: ctx.y - 43,
       size: 8,
-      font: fontRegular,
+      font: fonts.regular,
       color: colors.muted,
     });
 
-    y -= 70;
+    ctx.y -= 70;
+  }
+
+  private async drawSignersSection(
+    ctx: EvidencePageContext,
+    signers: SignerEvidence[],
+  ): Promise<void> {
+    const { currentPage, colors, labels, fonts, margin } = ctx;
 
     currentPage.drawText(`${labels.signers} (${signers.length})`, {
-      x: MARGIN,
-      y,
+      x: margin,
+      y: ctx.y,
       size: 8,
-      font: fontBold,
+      font: fonts.bold,
       color: colors.muted,
     });
 
-    y -= 15;
+    ctx.y -= 15;
 
     for (let i = 0; i < signers.length; i++) {
       const signer = signers[i];
       const cardHeight = this.calculateSignerCardHeight(signer);
-      ensureSpace(cardHeight + 15);
-
-      y = await this.drawSignerCard(pdfDoc, currentPage, {
-        signer,
-        index: i,
-        y,
-        margin: MARGIN,
-        contentWidth: CONTENT_WIDTH,
-        cardHeight,
-        fonts: { bold: fontBold, regular: fontRegular },
-        colors,
-        drawLine: drawHorizontalLine,
-        labels,
-        locale,
-      });
+      this.ensureSpace(ctx, cardHeight + 15);
+      await this.drawSignerCard(ctx, signer, i, cardHeight);
     }
+  }
 
-    ensureSpace(40);
-    y -= 10;
-    drawHorizontalLine(y);
-    y -= 18;
+  private drawEvidenceFooter(ctx: EvidencePageContext): void {
+    const { labels, fonts, colors, margin } = ctx;
 
-    currentPage.drawText(labels.footer1, {
-      x: MARGIN,
-      y,
+    this.ensureSpace(ctx, 40);
+    ctx.y -= 10;
+    this.drawHorizontalLine(ctx, ctx.y);
+    ctx.y -= 18;
+
+    ctx.currentPage.drawText(labels.footer1, {
+      x: margin,
+      y: ctx.y,
       size: 7.5,
-      font: fontRegular,
-      color: colors.muted,
-    });
-    y -= 12;
-    currentPage.drawText(labels.footer2, {
-      x: MARGIN,
-      y,
-      size: 7.5,
-      font: fontRegular,
+      font: fonts.regular,
       color: colors.muted,
     });
 
-    const finalPdfBytes = await pdfDoc.save();
-    return Buffer.from(finalPdfBytes);
+    ctx.y -= 12;
+
+    ctx.currentPage.drawText(labels.footer2, {
+      x: margin,
+      y: ctx.y,
+      size: 7.5,
+      font: fonts.regular,
+      color: colors.muted,
+    });
   }
 
   private async drawSignerCard(
-    pdfDoc: PDFDocument,
-    page: PDFPage,
-    ctx: {
-      signer: SignerEvidence;
-      index: number;
-      y: number;
-      margin: number;
-      contentWidth: number;
-      cardHeight: number;
-      fonts: { bold: Awaited<ReturnType<PDFDocument['embedFont']>>; regular: Awaited<ReturnType<PDFDocument['embedFont']>> };
-      colors: Record<string, ReturnType<typeof rgb>>;
-      drawLine: (yPos: number) => void;
-      labels: EvidenceLabels;
-      locale: string;
-    },
-  ): Promise<number> {
-    const { signer, index, margin, contentWidth, cardHeight, fonts, colors, labels, locale } = ctx;
-    let { y } = ctx;
+    ctx: EvidencePageContext,
+    signer: SignerEvidence,
+    index: number,
+    cardHeight: number,
+  ): Promise<void> {
+    const { currentPage, pdfDoc, fonts, colors, labels, locale, margin, contentWidth } = ctx;
 
-    page.drawRectangle({
-      x: margin, y: y - cardHeight, width: contentWidth, height: cardHeight,
-      color: colors['cardBg'] ?? rgb(0.97, 0.98, 0.98),
-      borderColor: colors['border'] ?? rgb(0.82, 0.84, 0.87),
+    currentPage.drawRectangle({
+      x: margin, y: ctx.y - cardHeight, width: contentWidth, height: cardHeight,
+      color: colors.cardBg,
+      borderColor: colors.border,
       borderWidth: 0.5,
     });
 
-    page.drawRectangle({
-      x: margin, y: y - cardHeight, width: 3, height: cardHeight,
-      color: colors['accent'] ?? rgb(0.13, 0.55, 0.13),
+    currentPage.drawRectangle({
+      x: margin, y: ctx.y - cardHeight, width: 3, height: cardHeight,
+      color: colors.accent,
       borderWidth: 0,
     });
 
-    const SIG_BOX_W = 120;
-    const SIG_BOX_H = 50;
-
     if (signer.signatureData) {
-      await this.embedSignatureInEvidence(
-        pdfDoc, page, signer.signatureData,
-        margin + contentWidth - SIG_BOX_W - 12,
-        y - cardHeight + 8,
-        SIG_BOX_W, SIG_BOX_H,
+      const sigBoxX = margin + contentWidth - SIG_BOX_W - 12;
+      const sigBoxY = ctx.y - cardHeight + 8;
+
+      currentPage.drawRectangle({
+        x: sigBoxX,
+        y: sigBoxY,
+        width: SIG_BOX_W,
+        height: SIG_BOX_H,
+        borderColor: colors.border,
+        borderWidth: 0.5,
+        color: colors.white,
+      });
+
+      await this.embedDataUrlImage(
+        pdfDoc, currentPage, signer.signatureData,
+        sigBoxX, sigBoxY, SIG_BOX_W, SIG_BOX_H, 4,
       );
     } else {
-      page.drawText(labels.signed, {
-        x: margin + contentWidth - 60, y: y - 16, size: 8,
+      currentPage.drawText(labels.signed, {
+        x: margin + contentWidth - 60, y: ctx.y - 16, size: 8,
         font: fonts.bold,
-        color: colors['accent'] ?? rgb(0.13, 0.55, 0.13),
+        color: colors.accent,
       });
     }
 
-    page.drawText(`${index + 1}.`, {
-      x: margin + 14, y: y - 16, size: 10,
+    currentPage.drawText(`${index + 1}.`, {
+      x: margin + 14, y: ctx.y - 16, size: 10,
       font: fonts.bold,
-      color: colors['primary'] ?? rgb(0.055, 0.227, 0.431),
+      color: colors.primary,
     });
 
-    const nameText = signer.name.length > 40
-      ? `${signer.name.slice(0, 37)}...`
-      : signer.name;
-
-    page.drawText(nameText, {
-      x: margin + 30, y: y - 16, size: 10,
+    currentPage.drawText(truncateText(signer.name, MAX_NAME_LENGTH), {
+      x: margin + 30, y: ctx.y - 16, size: 10,
       font: fonts.bold,
-      color: colors['primary'] ?? rgb(0.055, 0.227, 0.431),
+      color: colors.primary,
     });
 
-    page.drawText(signer.email, {
-      x: margin + 30, y: y - 30, size: 9,
+    currentPage.drawText(signer.email, {
+      x: margin + 30, y: ctx.y - 30, size: 9,
       font: fonts.regular,
-      color: colors['secondary'] ?? rgb(0.3, 0.3, 0.4),
+      color: colors.secondary,
     });
 
-    let detailY = y - 48;
-    ctx.drawLine(detailY + 6);
+    let detailY = ctx.y - 48;
+    this.drawHorizontalLine(ctx, detailY + 6);
 
     const formattedSignedAt = signer.signedAt
       ? formatEvidenceDate(signer.signedAt, locale)
       : '';
 
-    detailY = this.drawDetailRow(page, fonts, {
+    detailY = this.drawDetailRow(currentPage, fonts, colors, {
       label: labels.signedAt, value: formattedSignedAt, x: margin + 14, y: detailY,
     });
 
     if (signer.ipAddress) {
-      detailY = this.drawDetailRow(page, fonts, {
+      detailY = this.drawDetailRow(currentPage, fonts, colors, {
         label: labels.ipAddress, value: signer.ipAddress, x: margin + 14, y: detailY,
       });
     }
 
     if (signer.userAgent) {
       const maxLen = signer.signatureData ? 60 : 90;
-      const ua = signer.userAgent.length > maxLen
-        ? `${signer.userAgent.slice(0, maxLen - 3)}...`
-        : signer.userAgent;
-      this.drawDetailRow(page, fonts, {
-        label: labels.userAgent, value: ua, x: margin + 14, y: detailY,
+      this.drawDetailRow(currentPage, fonts, colors, {
+        label: labels.userAgent,
+        value: truncateText(signer.userAgent, maxLen),
+        x: margin + 14,
+        y: detailY,
       });
     }
 
-    return y - cardHeight - 10;
+    ctx.y = ctx.y - cardHeight - 10;
   }
 
   private calculateSignerCardHeight(signer: SignerEvidence): number {
-    let height = 55;
-    height += 16;
+    let height = 71;
     if (signer.ipAddress) height += 14;
     if (signer.userAgent) height += 14;
     if (signer.signatureData) {
@@ -496,71 +543,18 @@ export class PdfService {
     return height;
   }
 
-  private async embedSignatureInEvidence(
-    pdfDoc: PDFDocument,
-    page: PDFPage,
-    dataUrl: string,
-    x: number,
-    y: number,
-    width: number,
-    height: number,
-  ): Promise<void> {
-    try {
-      const base64Data = dataUrl.split(',')[1];
-      if (!base64Data) return;
-
-      const imageBytes = Buffer.from(base64Data, 'base64');
-      const image = dataUrl.includes('image/png')
-        ? await pdfDoc.embedPng(imageBytes)
-        : await pdfDoc.embedJpg(imageBytes);
-
-      const borderColor = rgb(0.82, 0.84, 0.87);
-      page.drawRectangle({
-        x,
-        y,
-        width,
-        height,
-        borderColor,
-        borderWidth: 0.5,
-        color: rgb(1, 1, 1),
-      });
-
-      const padding = 4;
-      const innerW = width - padding * 2;
-      const innerH = height - padding * 2;
-      const dims = image.scaleToFit(innerW, innerH);
-      const centeredX = x + padding + (innerW - dims.width) / 2;
-      const centeredY = y + padding + (innerH - dims.height) / 2;
-
-      page.drawImage(image, {
-        x: centeredX,
-        y: centeredY,
-        width: dims.width,
-        height: dims.height,
-      });
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to embed signature in evidence: ${message}`);
-    }
-  }
-
   private drawDetailRow(
     page: PDFPage,
-    fonts: {
-      bold: Awaited<ReturnType<PDFDocument['embedFont']>>;
-      regular: Awaited<ReturnType<PDFDocument['embedFont']>>;
-    },
-    options: { label: string; value: string; x: number; y: number },
+    fonts: { readonly bold: PdfFont; readonly regular: PdfFont },
+    colors: EvidenceColors,
+    options: { readonly label: string; readonly value: string; readonly x: number; readonly y: number },
   ): number {
-    const mutedColor = rgb(0.45, 0.45, 0.55);
-    const secondaryColor = rgb(0.3, 0.3, 0.4);
-
     page.drawText(`${options.label}:`, {
       x: options.x,
       y: options.y,
       size: 8,
       font: fonts.bold,
-      color: mutedColor,
+      color: colors.muted,
     });
 
     const labelWidth = fonts.bold.widthOfTextAtSize(`${options.label}: `, 8);
@@ -570,13 +564,9 @@ export class PdfService {
       y: options.y,
       size: 8,
       font: fonts.regular,
-      color: secondaryColor,
+      color: colors.secondary,
     });
 
     return options.y - 14;
-  }
-
-  computeHash(buffer: Buffer): string {
-    return sha256(buffer);
   }
 }

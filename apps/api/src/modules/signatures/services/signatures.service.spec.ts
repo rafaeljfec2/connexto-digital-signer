@@ -154,7 +154,7 @@ describe('SignaturesService', () => {
     });
 
     test('should reject completed document', async () => {
-      const signer = buildSigner();
+      const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
       const document = buildDocument({ status: DocumentStatus.COMPLETED });
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
       documentsService.findOne.mockResolvedValue(document);
@@ -168,7 +168,7 @@ describe('SignaturesService', () => {
     });
 
     test('should reject expired document', async () => {
-      const signer = buildSigner();
+      const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
       const document = buildDocument({ expiresAt: new Date('2020-01-01T00:00:00.000Z') });
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
       documentsService.findOne.mockResolvedValue(document);
@@ -182,10 +182,11 @@ describe('SignaturesService', () => {
     });
 
     test('should sign and emit event, without finalizing when not all signed', async () => {
-      const signer = buildSigner();
+      const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
       const saved = buildSigner({
         status: SignerStatus.SIGNED,
         signedAt: new Date('2026-01-02T00:00:00.000Z'),
+        verifiedAt: new Date('2026-01-01T12:00:00.000Z'),
       });
       const document = buildDocument();
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
@@ -215,10 +216,11 @@ describe('SignaturesService', () => {
     });
 
     test('should notify next signer when sequential and not all signed', async () => {
-      const signer = buildSigner();
+      const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
       const saved = buildSigner({
         status: SignerStatus.SIGNED,
         signedAt: new Date('2026-01-02T00:00:00.000Z'),
+        verifiedAt: new Date('2026-01-01T12:00:00.000Z'),
       });
       const document = buildDocument({ signingMode: SigningMode.SEQUENTIAL });
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
@@ -241,8 +243,8 @@ describe('SignaturesService', () => {
     });
 
     test('should finalize document when all signers signed', async () => {
-      const signer = buildSigner();
-      const saved = buildSigner({ status: SignerStatus.SIGNED });
+      const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
+      const saved = buildSigner({ status: SignerStatus.SIGNED, verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
       const document = buildDocument();
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
       documentsService.findOne.mockResolvedValue(document);
