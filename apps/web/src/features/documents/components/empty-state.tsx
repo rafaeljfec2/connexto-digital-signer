@@ -15,7 +15,7 @@ export function EmptyState({ title, description, action, icon }: Readonly<EmptyS
         {icon ?? <Inbox className="h-7 w-7 text-foreground-subtle" />}
       </div>
       <div className="space-y-1">
-        <h3 className="text-sm font-semibold text-foreground">{title}</h3>
+        <h3 className="text-sm font-medium text-foreground">{title}</h3>
         {description ? (
           <p className="max-w-xs text-xs leading-relaxed text-foreground-subtle">{description}</p>
         ) : null}

@@ -86,13 +86,13 @@ export function DocumentsTable({
     <div className="space-y-2">
       <div className="hidden items-center gap-3 px-4 py-1 sm:flex">
         <div className="w-9 shrink-0" />
-        <p className="min-w-0 flex-1 text-[10px] font-semibold uppercase tracking-widest text-foreground-subtle">
+        <p className="min-w-0 flex-1 text-[10px] font-medium uppercase tracking-widest text-foreground-subtle">
           {headers.title}
         </p>
-        <p className="w-24 text-center text-[10px] font-semibold uppercase tracking-widest text-foreground-subtle">
+        <p className="w-24 text-center text-[10px] font-medium uppercase tracking-widest text-foreground-subtle">
           {headers.status}
         </p>
-        <p className="hidden w-32 text-center text-[10px] font-semibold uppercase tracking-widest text-foreground-subtle md:block">
+        <p className="hidden w-32 text-center text-[10px] font-medium uppercase tracking-widest text-foreground-subtle md:block">
           {headers.created}
         </p>
         <div className="w-28" />
@@ -118,7 +118,7 @@ export function DocumentsTable({
                 </div>
 
                 <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium text-foreground">
+                  <p className="truncate text-sm font-normal text-foreground">
                     {doc.title}
                   </p>
                   <div className="flex items-center gap-2 sm:hidden">

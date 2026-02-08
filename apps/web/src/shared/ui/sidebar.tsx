@@ -49,7 +49,7 @@ export function Sidebar({
             <PenTool className="h-4.5 w-4.5 text-white" />
           </div>
           <div>
-            <span className="text-base font-bold tracking-tight text-foreground">
+            <span className="text-base font-medium tracking-tight text-foreground">
               {title}
             </span>
             <span className="ml-1 text-[10px] font-medium uppercase tracking-widest text-accent-400">
@@ -63,7 +63,7 @@ export function Sidebar({
         <div className="px-4 pb-1 pt-4">
           <Link
             href={ctaHref}
-            className="btn-primary-themed flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold transition-all"
+            className="btn-primary-themed flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-normal transition-all"
           >
             <Plus className="h-4 w-4" />
             {ctaLabel}
@@ -74,7 +74,7 @@ export function Sidebar({
       <nav className="mt-2 flex-1 space-y-4 overflow-y-auto px-3 py-2">
         {groups.map((group) => (
           <div key={group.label}>
-            <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-foreground-subtle">
+            <p className="mb-1.5 px-3 text-[10px] font-normal uppercase tracking-[0.15em] text-foreground-subtle">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -88,7 +88,7 @@ export function Sidebar({
                   <Link
                     key={item.id}
                     href={item.href}
-                    className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
+                    className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-normal transition-all ${
                       isActive
                         ? 'bg-th-active text-th-active-text shadow-sm'
                         : 'text-foreground-muted hover:bg-th-hover hover:text-foreground'

@@ -57,13 +57,13 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
   return (
     <Card variant="glass" className="w-full p-6 md:p-8">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-white">{tSettings('title')}</h2>
-        <p className="mt-1 text-sm text-white/60">{tSettings('subtitle')}</p>
+        <h2 className="text-xl font-medium text-foreground">{tSettings('title')}</h2>
+        <p className="mt-1 text-sm text-foreground-muted">{tSettings('subtitle')}</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-3">
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-white/80">
+          <label className="mb-1.5 block text-sm font-normal text-foreground-muted">
             {tSettings('deadlineLabel')}
           </label>
           <Input
@@ -73,7 +73,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
             min={new Date().toISOString().split('T')[0]}
           />
           {deadline ? (
-            <p className={`mt-1 text-xs ${daysRemaining !== null && daysRemaining < 0 ? 'text-red-400' : 'text-white/50'}`}>
+            <p className={`mt-1 text-xs ${daysRemaining !== null && daysRemaining < 0 ? 'text-red-400' : 'text-foreground-subtle'}`}>
               {daysRemaining !== null && daysRemaining < 0
                 ? tSettings('deadlineExpired')
                 : tSettings('deadlineHelper', { days: daysRemaining ?? 0 })}
@@ -82,7 +82,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-white/80">
+          <label className="mb-1.5 block text-sm font-normal text-foreground-muted">
             {tSettings('reminderLabel')}
           </label>
           <Select
@@ -95,11 +95,11 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
             <option value="3_days">{tSettings('reminder3Days')}</option>
             <option value="7_days">{tSettings('reminder7Days')}</option>
           </Select>
-          <p className="mt-1 text-xs text-white/50">{tSettings('reminderHelper')}</p>
+          <p className="mt-1 text-xs text-foreground-subtle">{tSettings('reminderHelper')}</p>
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-medium text-white/80">
+          <label className="mb-1.5 block text-sm font-normal text-foreground-muted">
             {tSettings('languageLabel')}
           </label>
           <Select
@@ -112,10 +112,10 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
         </div>
       </div>
 
-      <hr className="my-6 border-white/10" />
+      <hr className="my-6 border-th-border" />
 
       <div>
-        <h3 className="mb-4 text-base font-semibold text-white">{tSettings('closureTitle')}</h3>
+        <h3 className="mb-4 text-base font-medium text-foreground">{tSettings('closureTitle')}</h3>
 
         <div className="flex flex-col gap-3">
           <label
@@ -123,7 +123,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
             className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
               closureMode === 'automatic'
                 ? 'border-accent/50 bg-accent/10'
-                : 'border-white/10 bg-white/5 hover:border-white/20'
+                : 'border-th-border bg-th-hover hover:border-th-card-border'
             }`}
           >
             <input
@@ -135,10 +135,10 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
               className="mt-1 accent-accent"
             />
             <div>
-              <span className="block text-sm font-medium text-white">
+              <span className="block text-sm font-normal text-foreground">
                 {tSettings('closureAutomatic')}
               </span>
-              <span className="mt-0.5 block text-xs text-white/50">
+              <span className="mt-0.5 block text-xs text-foreground-subtle">
                 {tSettings('closureAutomaticDesc')}
               </span>
             </div>
@@ -149,7 +149,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
             className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
               closureMode === 'manual'
                 ? 'border-accent/50 bg-accent/10'
-                : 'border-white/10 bg-white/5 hover:border-white/20'
+                : 'border-th-border bg-th-hover hover:border-th-card-border'
             }`}
           >
             <input
@@ -161,10 +161,10 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
               className="mt-1 accent-accent"
             />
             <div>
-              <span className="block text-sm font-medium text-white">
+              <span className="block text-sm font-normal text-foreground">
                 {tSettings('closureManual')}
               </span>
-              <span className="mt-0.5 block text-xs text-white/50">
+              <span className="mt-0.5 block text-xs text-foreground-subtle">
                 {tSettings('closureManualDesc')}
               </span>
             </div>
@@ -173,7 +173,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
 
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
           <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent-400" />
-          <p className="text-xs text-white/60">{tSettings('closureNote')}</p>
+          <p className="text-xs text-foreground-muted">{tSettings('closureNote')}</p>
         </div>
       </div>
 

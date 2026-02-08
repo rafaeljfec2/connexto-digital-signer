@@ -85,7 +85,7 @@ export function ActivityFeed({
     <Card variant="glass" className="p-5">
       <div className="flex items-center gap-2">
         <Activity className="h-4 w-4 text-accent-400" />
-        <h3 className="text-sm font-semibold text-foreground">{labels.title}</h3>
+        <h3 className="text-sm font-medium text-foreground">{labels.title}</h3>
       </div>
 
       {isLoading ? (

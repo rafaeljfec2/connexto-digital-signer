@@ -177,15 +177,15 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
   );
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex bg-brand-900">
+    <div className="fixed inset-0 z-[9999] flex bg-[var(--th-page-bg)] dark:bg-brand-900">
       <div
-        className={`absolute inset-y-0 left-0 z-10 flex w-64 flex-col border-r border-white/10 bg-brand-800 transition-transform duration-200 xl:relative xl:translate-x-0 ${
+        className={`absolute inset-y-0 left-0 z-10 flex w-64 flex-col border-r border-th-border bg-th-sidebar transition-transform duration-200 xl:relative xl:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'
         }`}
       >
         <div className="flex-1 space-y-6 overflow-y-auto p-4">
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-white/80">
+            <label className="text-xs font-normal uppercase tracking-wide text-foreground-muted">
               {tFields('signersLabel')}
             </label>
             <Select
@@ -201,7 +201,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
           </div>
 
           <div className="space-y-2">
-            <label className="text-xs font-semibold uppercase tracking-wide text-white/80">
+            <label className="text-xs font-normal uppercase tracking-wide text-foreground-muted">
               {tFields('positionLabel')}
             </label>
             <div className="flex flex-col gap-2">
@@ -210,10 +210,10 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
                   key={type}
                   type="button"
                   onClick={() => setActiveFieldType(type)}
-                  className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-medium transition ${
+                  className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-normal transition ${
                     activeFieldType === type
                       ? 'border-accent-400/50 bg-accent-600/20 text-accent-400'
-                      : 'border-white/20 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white'
+                      : 'border-th-border bg-th-hover text-foreground-muted hover:bg-th-active hover:text-foreground'
                   }`}
                 >
                   {icon}
@@ -223,12 +223,12 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
             </div>
           </div>
 
-          <p className="text-xs text-white/50">
+          <p className="text-xs text-foreground-subtle">
             {tFields('clickToAdd')}
           </p>
         </div>
 
-        <div className="flex flex-col gap-2 border-t border-white/10 p-4">
+        <div className="flex flex-col gap-2 border-t border-th-border p-4">
           <Button type="button" onClick={handleSave} isLoading={batchUpdate.isPending}>
             {tFields('saveAndContinue')}
           </Button>
@@ -248,7 +248,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
       ) : null}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex shrink-0 items-center gap-2 border-b border-white/10 px-3 py-2 xl:hidden">
+        <div className="flex shrink-0 items-center gap-2 border-b border-th-border px-3 py-2 xl:hidden">
           <Button
             type="button"
             variant="ghost"
@@ -257,7 +257,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
           >
             <PenTool className="h-4 w-4" />
           </Button>
-          <span className="text-xs text-white/70">
+          <span className="text-xs text-foreground-muted">
             {tFields('title')}
           </span>
         </div>

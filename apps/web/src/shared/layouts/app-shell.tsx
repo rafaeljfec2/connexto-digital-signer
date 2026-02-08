@@ -128,7 +128,7 @@ export function AppShell({
     <div className="flex items-center gap-3">
       <Avatar name={initials} size="sm" statusColor="#14B8A6" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-semibold text-foreground">{displayName}</p>
+        <p className="truncate text-xs font-medium text-foreground">{displayName}</p>
         <p className="truncate text-[10px] text-foreground-subtle">{tenantLabel}</p>
       </div>
     </div>
@@ -206,7 +206,7 @@ export function AppShell({
                 {notifOpen ? (
                   <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-th-card-border bg-th-dialog shadow-2xl">
                     <div className="flex items-center justify-between border-b border-th-border px-4 py-3">
-                      <p className="text-sm font-semibold text-foreground">
+                      <p className="text-sm font-medium text-foreground">
                         {notificationsLabel}
                       </p>
                       <button
@@ -231,7 +231,7 @@ export function AppShell({
 
               <div className="hidden items-center gap-2.5 sm:flex">
                 <div className="text-right">
-                  <p className="text-xs font-semibold text-foreground">{displayName}</p>
+                  <p className="text-xs font-medium text-foreground">{displayName}</p>
                   <p className="text-[10px] text-foreground-subtle">{tenantLabel}</p>
                 </div>
               </div>
@@ -247,7 +247,7 @@ export function AppShell({
                 {profileOpen ? (
                   <div className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-th-card-border bg-th-dialog shadow-2xl">
                     <div className="border-b border-th-border px-4 py-3">
-                      <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
+                      <p className="truncate text-sm font-medium text-foreground">{displayName}</p>
                       <p className="truncate text-xs text-foreground-subtle">{user?.email}</p>
                     </div>
                     <div className="py-1">

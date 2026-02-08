@@ -23,7 +23,7 @@ export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Rea
       {progressLabel ? (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-foreground">{progressLabel}</span>
+            <span className="font-medium text-foreground">{progressLabel}</span>
             {counterLabel ? (
               <span className="text-foreground-muted">{counterLabel}</span>
             ) : null}
@@ -53,11 +53,11 @@ export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Rea
 
           let labelClass: string;
           if (isActive) {
-            labelClass = 'text-foreground font-semibold';
+            labelClass = 'text-foreground font-medium';
           } else if (isCompleted) {
-            labelClass = 'text-success/80 font-medium';
+            labelClass = 'text-success/80 font-normal';
           } else {
-            labelClass = 'text-foreground-subtle font-medium';
+            labelClass = 'text-foreground-subtle font-normal';
           }
 
           const isClickable = isCompleted && !!onStepClick;

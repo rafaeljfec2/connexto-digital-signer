@@ -73,7 +73,7 @@ export function KpiCards({ items, isLoading = false, onCardClick }: Readonly<Kpi
                 {isLoading ? (
                   <Skeleton className="mt-2 h-8 w-16" />
                 ) : (
-                  <p className={`mt-2 text-2xl font-bold ${item.value > 0 ? config.valuePulse : 'text-foreground-subtle'}`}>
+                  <p className={`mt-2 text-2xl font-semibold ${item.value > 0 ? config.valuePulse : 'text-foreground-subtle'}`}>
                     {item.value}
                   </p>
                 )}

@@ -32,10 +32,10 @@ export function UploadDropzone({
         helperText={helperText}
       />
       {file ? (
-        <div className="flex items-center justify-between rounded-lg border border-white/20 bg-white/10 px-4 py-3 text-sm text-white">
+        <div className="flex items-center justify-between rounded-lg border border-th-border bg-th-hover px-4 py-3 text-sm text-foreground">
           <div className="space-y-1">
-            <p className="font-medium">{file.name}</p>
-            <p className="text-neutral-100/70">
+            <p className="font-normal">{file.name}</p>
+            <p className="text-foreground-muted">
               {formatSize(file.size)} • PDF • {maxSizeMb}MB max
             </p>
           </div>

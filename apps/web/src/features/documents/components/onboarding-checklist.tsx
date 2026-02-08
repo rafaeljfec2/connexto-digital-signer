@@ -66,7 +66,7 @@ export function OnboardingChecklist({
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-accent-400" />
-          <h3 className="text-sm font-semibold text-foreground">{labels.title}</h3>
+          <h3 className="text-sm font-medium text-foreground">{labels.title}</h3>
         </div>
         <button
           type="button"
@@ -80,7 +80,7 @@ export function OnboardingChecklist({
       <div className="mt-3">
         <div className="flex items-center justify-between">
           <p className="text-[11px] text-foreground-subtle">{progressLabel}</p>
-          <p className="text-[11px] font-semibold text-accent-400">{Math.round(progressPct)}%</p>
+          <p className="text-[11px] font-medium text-accent-400">{Math.round(progressPct)}%</p>
         </div>
         <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-th-hover">
           <div

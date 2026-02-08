@@ -95,14 +95,14 @@ export const PdfViewer = ({
     <div className={`flex flex-col ${fillContainer ? 'h-full overflow-hidden' : ''}`}>
       <div className={`flex shrink-0 flex-wrap items-center justify-between gap-2 px-3 py-2 ${
         fillContainer
-          ? 'border-b border-white/10 bg-brand-800 text-white'
-          : 'border-b border-border bg-surface'
+          ? 'border-b border-th-border bg-th-header text-foreground'
+          : 'border-b border-th-border bg-th-card'
       }`}>
         <div className="flex items-center gap-1">
           <Button type="button" variant="ghost" onClick={handleZoomOut} className="h-8 w-8 p-0 text-lg">
             −
           </Button>
-          <span className={`min-w-[3rem] text-center text-xs ${fillContainer ? 'text-neutral-100/70' : 'text-muted'}`}>
+          <span className="min-w-[3rem] text-center text-xs text-foreground-muted">
             {Math.round(scale * 100)}%
           </span>
           <Button type="button" variant="ghost" onClick={handleZoomIn} className="h-8 w-8 p-0 text-lg">
@@ -123,7 +123,7 @@ export const PdfViewer = ({
           >
             ‹
           </Button>
-          <span className={`min-w-[4rem] text-center text-xs ${fillContainer ? 'text-neutral-100/70' : 'text-muted'}`}>
+          <span className="min-w-[4rem] text-center text-xs text-foreground-muted">
             {currentPage} / {pageCount}
           </span>
           <Button
@@ -138,8 +138,8 @@ export const PdfViewer = ({
         </div>
       </div>
 
-      <div className={`flex gap-3 bg-white/5 p-3 ${fillContainer ? 'min-h-0 flex-1 overflow-hidden' : ''}`}>
-        <div className="hidden w-24 flex-col gap-2 overflow-y-auto rounded-xl border border-white/10 bg-white/10 p-2 md:flex">
+      <div className={`flex gap-3 bg-th-hover p-3 ${fillContainer ? 'min-h-0 flex-1 overflow-hidden' : ''}`}>
+        <div className="hidden w-24 flex-col gap-2 overflow-y-auto rounded-xl border border-th-border bg-th-card p-2 md:flex">
           {Array.from({ length: pageCount }).map((_, index) => {
             const pageNumber = index + 1;
             return (
@@ -220,7 +220,7 @@ const PdfThumbnail = ({ pdfDocument, pageNumber, isActive, onSelect }: PdfThumbn
       type="button"
       onClick={onSelect}
       className={`rounded-lg border p-1 transition ${
-        isActive ? 'border-accent-400 bg-white/30' : 'border-white/20 bg-white/10'
+        isActive ? 'border-accent-400 bg-th-active' : 'border-th-border bg-th-hover'
       }`}
     >
       <canvas ref={canvasRef} className="block h-auto w-full rounded-md" />

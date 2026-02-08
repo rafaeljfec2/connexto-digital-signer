@@ -55,8 +55,8 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
   return (
     <Card variant="glass" className="w-full p-6 md:p-8">
       <div className="mb-6">
-        <h2 className="text-xl font-semibold text-white">{tReview('title')}</h2>
-        <p className="mt-1 text-sm text-white/60">{tReview('subtitle')}</p>
+        <h2 className="text-xl font-medium text-foreground">{tReview('title')}</h2>
+        <p className="mt-1 text-sm text-foreground-muted">{tReview('subtitle')}</p>
       </div>
 
       <div className="space-y-4">
@@ -78,16 +78,16 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
               ) : (
                 <AlertCircle className="h-5 w-5 text-warning" />
               )}
-              <span className="text-sm font-medium text-white">{item.label}</span>
+              <span className="text-sm font-normal text-foreground">{item.label}</span>
             </div>
-            <span className={`text-xs font-semibold uppercase tracking-wide ${item.ok ? 'text-success' : 'text-warning'}`}>
+            <span className={`text-xs font-normal uppercase tracking-wide ${item.ok ? 'text-success' : 'text-warning'}`}>
               {item.ok ? tReview('status.ok') : tReview('status.pending')}
             </span>
           </div>
         ))}
       </div>
 
-      <hr className="my-6 border-white/10" />
+      <hr className="my-6 border-th-border" />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-end">
         <Button type="button" variant="ghost" onClick={() => {}}>
@@ -139,19 +139,19 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
       >
         <div className="space-y-4">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">
+            <p className="text-xs font-normal uppercase tracking-wide text-foreground-subtle">
               {tReview('previewSubject')}
             </p>
-            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2">
+            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-th-border bg-th-hover px-3 py-2">
               <Mail className="h-4 w-4 shrink-0 text-accent-400" />
-              <p className="text-sm text-white">{previewMutation.data?.subject}</p>
+              <p className="text-sm text-foreground">{previewMutation.data?.subject}</p>
             </div>
           </div>
           <div>
-            <p className="text-xs font-semibold uppercase tracking-wide text-white/50">
+            <p className="text-xs font-normal uppercase tracking-wide text-foreground-subtle">
               {tReview('previewBody')}
             </p>
-            <pre className="mt-1.5 whitespace-pre-wrap rounded-lg border border-white/10 bg-white/5 p-3 text-sm leading-relaxed text-white/80">
+            <pre className="mt-1.5 whitespace-pre-wrap rounded-lg border border-th-border bg-th-hover p-3 text-sm leading-relaxed text-foreground-muted">
               {previewMutation.data?.body}
             </pre>
           </div>

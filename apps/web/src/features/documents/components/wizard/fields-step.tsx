@@ -52,10 +52,10 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStep
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-white">
+          <h2 className="text-xl font-medium text-foreground">
             {tFields('decisionTitle')}
           </h2>
-          <p className="text-sm text-neutral-100/60">
+          <p className="text-sm text-foreground-muted">
             {tFields('decisionDescription')}
           </p>
         </div>

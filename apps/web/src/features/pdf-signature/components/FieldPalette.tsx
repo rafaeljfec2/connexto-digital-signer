@@ -53,7 +53,7 @@ export const FieldPalette = ({
       ) : null}
     </div>
     <div className="space-y-2">
-      <p className="text-xs font-semibold uppercase tracking-wide text-muted">{paletteTitle}</p>
+      <p className="text-xs font-normal uppercase tracking-wide text-muted">{paletteTitle}</p>
       <div className="flex flex-col gap-2">
         {fieldTypes.map((type) => (
           <PaletteItem key={type} id={`palette-${type}`} label={getFieldLabel(type)} />

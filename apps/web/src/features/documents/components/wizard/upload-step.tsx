@@ -96,7 +96,7 @@ export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: R
     <form onSubmit={handleSubmit} className="space-y-5">
       <Card variant="glass" className="space-y-5 p-6">
         <div className="space-y-2">
-          <label className="text-sm font-medium text-neutral-100">
+          <label className="text-sm font-normal text-foreground-muted">
             {tDocuments('upload.titleLabel')}
           </label>
           <Input
@@ -106,10 +106,10 @@ export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: R
           />
         </div>
         {hasFile && !replacing ? (
-          <div className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 p-4">
+          <div className="flex items-center justify-between rounded-xl border border-th-border bg-th-hover p-4">
             <div className="flex items-center gap-3">
               <FileCheck className="h-5 w-5 text-success" />
-              <span className="text-sm text-neutral-100/80">
+              <span className="text-sm text-foreground-muted">
                 {tDocuments('upload.fileLoaded')}
               </span>
             </div>

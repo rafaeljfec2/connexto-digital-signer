@@ -43,7 +43,7 @@ export function TipsBanner({ labels, onLearnMore }: Readonly<TipsBannerProps>) {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-600/15">
               <Lightbulb className="h-4 w-4 text-accent-400" />
             </div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-accent-400/70">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-accent-400/70">
               Dica
             </p>
           </div>
@@ -64,7 +64,7 @@ export function TipsBanner({ labels, onLearnMore }: Readonly<TipsBannerProps>) {
           <button
             type="button"
             onClick={onLearnMore}
-            className="mt-3 flex items-center gap-1.5 text-xs font-semibold text-accent-400 transition-colors hover:text-accent-200"
+            className="mt-3 flex items-center gap-1.5 text-xs font-medium text-accent-400 transition-colors hover:text-accent-200"
           >
             {labels.learnMore}
             <ArrowRight className="h-3 w-3" />

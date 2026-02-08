@@ -130,8 +130,8 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
   if (!isMounted) {
     return (
       <div className="space-y-4">
-        <div className="h-4 w-40 rounded bg-white/10" />
-        <div className="h-24 rounded-lg border border-white/10 bg-white/10" />
+        <div className="h-4 w-40 rounded bg-th-hover" />
+        <div className="h-24 rounded-lg border border-th-border bg-th-hover" />
       </div>
     );
   }
@@ -142,13 +142,13 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
     <div className="space-y-4">
       <Card variant="glass" className="space-y-6 p-8">
         <div className="space-y-2">
-          <h2 className="text-lg font-semibold text-white">{tSigners('title')}</h2>
-          <p className="text-sm text-neutral-100/70">{tSigners('subtitle')}</p>
+          <h2 className="text-lg font-medium text-foreground">{tSigners('title')}</h2>
+          <p className="text-sm text-foreground-muted">{tSigners('subtitle')}</p>
         </div>
 
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-semibold text-white">{tSigners('listTitle')}</h3>
+            <h3 className="text-sm font-medium text-foreground">{tSigners('listTitle')}</h3>
             <Button
               type="button"
               variant="secondary"
@@ -164,13 +164,13 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
             {signers.map((signer) => (
               <div
                 key={signer.id}
-                className="flex items-center justify-between rounded-xl border border-white/20 bg-white/10 px-4 py-3 text-sm text-white"
+                className="flex items-center justify-between rounded-xl border border-th-border bg-th-hover px-4 py-3 text-sm text-foreground"
               >
                 <div className="flex items-center gap-3">
                   <Avatar name={signer.name} size="sm" statusColor="#14B8A6" />
                   <div>
-                    <p className="font-medium">{signer.name}</p>
-                    <p className="text-neutral-100/70">{signer.email}</p>
+                    <p className="font-normal">{signer.name}</p>
+                    <p className="text-foreground-muted">{signer.email}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -200,7 +200,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
               </div>
             ))}
             {signers.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-white/20 p-6 text-center text-sm text-neutral-100/70">
+              <div className="rounded-lg border border-dashed border-th-border p-6 text-center text-sm text-foreground-muted">
                 {tSigners('empty')}
               </div>
             ) : null}
@@ -244,7 +244,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
       >
         <div className="space-y-4">
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-100">
+            <label className="text-sm font-normal text-foreground-muted">
               {tSigners('mode')}
             </label>
             <Select
@@ -258,7 +258,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
             </Select>
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-100">
+            <label className="text-sm font-normal text-foreground-muted">
               {tSigners('nameLabel')}
             </label>
             <Input
@@ -268,7 +268,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-100">
+            <label className="text-sm font-normal text-foreground-muted">
               {tSigners('emailLabel')}
             </label>
             <Input
@@ -279,7 +279,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-100">
+            <label className="text-sm font-normal text-foreground-muted">
               {tSigners('cpfLabel')}
             </label>
             <Input
@@ -289,7 +289,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-100">
+            <label className="text-sm font-normal text-foreground-muted">
               {tSigners('birthDateLabel')}
             </label>
             <Input
@@ -299,17 +299,17 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
               type="date"
             />
           </div>
-          <label className="flex items-center gap-2 text-sm text-neutral-100">
+          <label className="flex items-center gap-2 text-sm text-foreground">
             <input
               type="checkbox"
               checked={requestCpf}
               onChange={(event) => setRequestCpf(event.target.checked)}
-              className="h-4 w-4 rounded border-white/20 bg-white/10 text-accent-400 focus:ring-accent-400"
+              className="h-4 w-4 rounded border-th-input-border bg-th-input text-accent-400 focus:ring-accent-400"
             />
             {tSigners('requestCpfLabel')}
           </label>
           <div className="space-y-2">
-            <label className="text-sm font-medium text-neutral-100">
+            <label className="text-sm font-normal text-foreground-muted">
               {tSigners('authMethodLabel')}
             </label>
             <Select
@@ -322,7 +322,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
           </div>
           {signingMode === 'sequential' ? (
             <div className="space-y-2">
-              <label className="text-sm font-medium text-neutral-100">
+              <label className="text-sm font-normal text-foreground-muted">
                 {tSigners('orderLabel')}
               </label>
               <Input
