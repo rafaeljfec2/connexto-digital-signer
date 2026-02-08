@@ -8,13 +8,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: [
-    'bg-gradient-cta text-white',
-    'shadow-[0_1px_3px_rgba(31,94,168,0.3),0_4px_12px_rgba(31,94,168,0.15)]',
-    'hover:shadow-[0_2px_6px_rgba(31,94,168,0.35),0_8px_20px_rgba(31,94,168,0.2)]',
-    'dark:shadow-[0_4px_14px_rgba(11,31,59,0.25)]',
-    'dark:hover:shadow-[0_6px_20px_rgba(11,31,59,0.4)]',
-  ].join(' '),
+  primary: 'btn-primary-themed',
   secondary: [
     'bg-white text-foreground border border-th-card-border',
     'hover:bg-th-hover',
