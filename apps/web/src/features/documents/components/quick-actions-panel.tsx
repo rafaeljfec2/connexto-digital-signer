@@ -31,7 +31,7 @@ export function QuickActionsPanel({
         <button
           type="button"
           onClick={onSendDocument}
-          className="btn-cta-inline flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-cta px-4 py-3 text-sm font-semibold text-white transition-all hover:brightness-110"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-cta px-4 py-3 text-sm font-semibold text-white shadow-[0_1px_3px_rgba(31,94,168,0.3),0_4px_12px_rgba(31,94,168,0.15)] transition-all hover:shadow-[0_2px_6px_rgba(31,94,168,0.35),0_8px_20px_rgba(31,94,168,0.2)] hover:brightness-110 dark:shadow-[0_4px_14px_rgba(11,31,59,0.25)] dark:hover:shadow-[0_6px_20px_rgba(11,31,59,0.4)]"
         >
           <Send className="h-4 w-4" />
           {labels.sendDocument}
