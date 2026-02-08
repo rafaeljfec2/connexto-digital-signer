@@ -11,12 +11,22 @@
     "accountCreatedTitle": "Account created",
     "accountCreatedSubtitle": "You are now signed in.",
     "help": "Help",
+    "searchPlaceholder": "Search documents...",
+    "notifications": "Notifications",
+    "noNotifications": "No new notifications today.",
+    "myAccount": "My account",
+    "plan": "Plan",
     "nav": {
       "home": "Home",
       "documents": "Documents",
       "signers": "Signers",
       "settings": "Settings"
     },
+    "navGroups": {
+      "main": "Main",
+      "management": "Management"
+    },
+    "newDocument": "New document",
     "signersTitle": "Signers",
     "signersSubtitle": "Manage signers and track status",
     "signersEmptyTitle": "No signers found",
@@ -61,6 +71,14 @@
     "title": "Dashboard",
     "welcome": "Welcome",
     "underConstruction": "Dashboard under construction",
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "heroSubtitle": "You have {pending} documents pending signature",
+    "heroSubtitleNone": "All documents are up to date!",
+    "sendDocument": "Send document",
     "kpi": {
       "pending": "Pending",
       "completed": "Completed",
@@ -68,10 +86,48 @@
       "draft": "Drafts"
     },
     "recentTitle": "Recent documents",
+    "viewAll": "View all",
     "newDocument": "New document",
     "empty": {
       "title": "No documents yet",
       "description": "Create your first document to start the signing flow."
+    },
+    "quickActions": {
+      "title": "Send documents",
+      "sendDocument": "Send document",
+      "viewAll": "View all documents",
+      "signTitle": "Sign documents",
+      "signDescription": "Access the signing area"
+    },
+    "onboarding": {
+      "title": "Getting started",
+      "progress": "{completed} of {total} completed",
+      "dismiss": "Dismiss",
+      "createAccount": "Create your account",
+      "sendFirstDocument": "Send your first document",
+      "addSigners": "Add signers",
+      "completeFirstSignature": "Complete first signature"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "empty": "No recent activity",
+      "sentForSignature": "{title} sent for signature",
+      "documentCompleted": "{title} was completed",
+      "documentExpired": "{title} expired"
+    },
+    "help": {
+      "title": "Need help?",
+      "faq": "Frequently asked questions",
+      "support": "Contact support",
+      "docs": "Documentation"
+    },
+    "tips": {
+      "dismiss": "Dismiss",
+      "learnMore": "Learn more",
+      "tip1": "Send documents to multiple signers at once",
+      "tip2": "Set up automatic reminders for your signatures",
+      "tip3": "Use positioned fields for a guided signing experience",
+      "tip4": "Track all document statuses in real time"
     }
   },
   "documents": {

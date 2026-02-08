@@ -11,12 +11,22 @@
     "accountCreatedTitle": "Conta criada",
     "accountCreatedSubtitle": "Voce ja esta logado.",
     "help": "Ajuda",
+    "searchPlaceholder": "Buscar documentos...",
+    "notifications": "Notificacoes",
+    "noNotifications": "Sem novidades por aqui hoje.",
+    "myAccount": "Minha conta",
+    "plan": "Plano",
     "nav": {
       "home": "Inicio",
       "documents": "Documentos",
       "signers": "Signatarios",
       "settings": "Configurações"
     },
+    "navGroups": {
+      "main": "Principal",
+      "management": "Gerenciamento"
+    },
+    "newDocument": "Novo documento",
     "signersTitle": "Signatarios",
     "signersSubtitle": "Gerencie signatarios e acompanhe status",
     "signersEmptyTitle": "Nenhum signatario encontrado",
@@ -61,6 +71,14 @@
     "title": "Dashboard",
     "welcome": "Bem-vindo",
     "underConstruction": "Dashboard em construção",
+    "greeting": {
+      "morning": "Bom dia",
+      "afternoon": "Boa tarde",
+      "evening": "Boa noite"
+    },
+    "heroSubtitle": "Voce tem {pending} documentos pendentes de assinatura",
+    "heroSubtitleNone": "Todos os documentos estao em dia!",
+    "sendDocument": "Enviar documento",
     "kpi": {
       "pending": "Pendentes",
       "completed": "Concluidos",
@@ -68,10 +86,48 @@
       "draft": "Rascunhos"
     },
     "recentTitle": "Documentos recentes",
+    "viewAll": "Ver todos",
     "newDocument": "Novo documento",
     "empty": {
       "title": "Nenhum documento ainda",
       "description": "Crie seu primeiro documento para iniciar o fluxo de assinatura."
+    },
+    "quickActions": {
+      "title": "Enviar documentos",
+      "sendDocument": "Enviar documento",
+      "viewAll": "Ver todos os documentos",
+      "signTitle": "Assinar documentos",
+      "signDescription": "Acesse a area de assinatura"
+    },
+    "onboarding": {
+      "title": "Primeiros passos",
+      "progress": "{completed} de {total} concluidos",
+      "dismiss": "Dispensar",
+      "createAccount": "Criar sua conta",
+      "sendFirstDocument": "Enviar primeiro documento",
+      "addSigners": "Adicionar signatarios",
+      "completeFirstSignature": "Completar primeira assinatura"
+    },
+    "activity": {
+      "title": "Atividade recente",
+      "empty": "Nenhuma atividade recente",
+      "sentForSignature": "{title} enviado para assinatura",
+      "documentCompleted": "{title} foi concluido",
+      "documentExpired": "{title} expirou"
+    },
+    "help": {
+      "title": "Precisa de ajuda?",
+      "faq": "Perguntas frequentes",
+      "support": "Contato com suporte",
+      "docs": "Documentacao"
+    },
+    "tips": {
+      "dismiss": "Dispensar",
+      "learnMore": "Saiba mais",
+      "tip1": "Envie documentos para multiplos signatarios de uma vez",
+      "tip2": "Configure lembretes automaticos para suas assinaturas",
+      "tip3": "Use campos posicionados para uma experiencia de assinatura guiada",
+      "tip4": "Acompanhe o status de todos os documentos em tempo real"
     }
   },
   "documents": {

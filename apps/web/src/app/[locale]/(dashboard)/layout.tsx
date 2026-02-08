@@ -13,11 +13,21 @@ export default async function DashboardLayout({
       tenantLabel={tCommon('tenantLabel')}
       helpLabel={tCommon('help')}
       signOutLabel={tCommon('signOut')}
+      searchPlaceholder={tCommon('searchPlaceholder')}
+      notificationsLabel={tCommon('notifications')}
+      noNotificationsLabel={tCommon('noNotifications')}
+      myAccountLabel={tCommon('myAccount')}
+      ctaLabel={tCommon('newDocument')}
+      ctaHref="/documents/new"
+      navGroupLabels={{
+        main: tCommon('navGroups.main'),
+        management: tCommon('navGroups.management'),
+      }}
       navItems={[
-        { id: 'home', label: tCommon('nav.home'), href: '/', iconKey: 'home' },
-        { id: 'documents', label: tCommon('nav.documents'), href: '/documents', iconKey: 'documents' },
-        { id: 'signers', label: tCommon('nav.signers'), href: '/signers', iconKey: 'signers' },
-        { id: 'settings', label: tCommon('nav.settings'), href: '/settings', iconKey: 'settings' },
+        { id: 'home', label: tCommon('nav.home'), href: '/', iconKey: 'home', group: 'main' },
+        { id: 'documents', label: tCommon('nav.documents'), href: '/documents', iconKey: 'documents', group: 'main' },
+        { id: 'signers', label: tCommon('nav.signers'), href: '/signers', iconKey: 'signers', group: 'management' },
+        { id: 'settings', label: tCommon('nav.settings'), href: '/settings', iconKey: 'settings', group: 'management' },
       ]}
     >
       {children}

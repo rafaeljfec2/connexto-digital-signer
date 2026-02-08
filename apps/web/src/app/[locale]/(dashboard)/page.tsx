@@ -1,14 +1,54 @@
 'use client';
 
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { Send, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/use-auth';
-import { useDocumentsList, useDocumentsStats, useDeleteDocument } from '@/features/documents/hooks/use-documents';
+import {
+  useDocumentsList,
+  useDocumentsStats,
+  useDeleteDocument,
+} from '@/features/documents/hooks/use-documents';
 import { KpiCards } from '@/features/documents/components/kpi-cards';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
+import { QuickActionsPanel } from '@/features/documents/components/quick-actions-panel';
+import { OnboardingChecklist } from '@/features/documents/components/onboarding-checklist';
+import { ActivityFeed } from '@/features/documents/components/activity-feed';
+import { HelpSection } from '@/features/documents/components/help-section';
+import { TipsBanner } from '@/features/documents/components/tips-banner';
 import { useRouter } from '@/i18n/navigation';
 import { Button, ConfirmDialog } from '@/shared/ui';
 import type { DocumentSummary } from '@/features/documents/api';
+
+function getGreetingKey(): 'morning' | 'afternoon' | 'evening' {
+  const hour = new Date().getHours();
+  if (hour < 12) return 'morning';
+  if (hour < 18) return 'afternoon';
+  return 'evening';
+}
+
+function formatRelativeDate(dateStr: string, locale: string): string {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMin = Math.floor(diffMs / 60000);
+  const diffHours = Math.floor(diffMs / 3600000);
+  const diffDays = Math.floor(diffMs / 86400000);
+
+  if (locale.startsWith('pt')) {
+    if (diffMin < 1) return 'agora mesmo';
+    if (diffMin < 60) return `ha ${String(diffMin)} min`;
+    if (diffHours < 24) return `ha ${String(diffHours)}h`;
+    if (diffDays === 1) return 'ontem';
+    return `ha ${String(diffDays)} dias`;
+  }
+
+  if (diffMin < 1) return 'just now';
+  if (diffMin < 60) return `${String(diffMin)}m ago`;
+  if (diffHours < 24) return `${String(diffHours)}h ago`;
+  if (diffDays === 1) return 'yesterday';
+  return `${String(diffDays)}d ago`;
+}
 
 export default function DashboardPage() {
   const tDashboard = useTranslations('dashboard');
@@ -27,15 +67,21 @@ export default function DashboardPage() {
   const recentQuery = useDocumentsList({ page: 1, limit: 5 });
   const deleteMutation = useDeleteDocument();
 
-  const formatDate = (value: string) =>
-    new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value));
+  const formatDate = useCallback(
+    (value: string) =>
+      new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value)),
+    [locale],
+  );
 
-  const statusLabels = {
-    draft: tDocuments('status.draft'),
-    pending_signatures: tDocuments('status.pending'),
-    completed: tDocuments('status.completed'),
-    expired: tDocuments('status.expired'),
-  };
+  const statusLabels = useMemo(
+    () => ({
+      draft: tDocuments('status.draft'),
+      pending_signatures: tDocuments('status.pending'),
+      completed: tDocuments('status.completed'),
+      expired: tDocuments('status.expired'),
+    }),
+    [tDocuments],
+  );
 
   const handleDocumentClick = useCallback(
     (doc: DocumentSummary) => {
@@ -45,7 +91,7 @@ export default function DashboardPage() {
         router.push(`/documents/${doc.id}`);
       }
     },
-    [router]
+    [router],
   );
 
   const handleConfirmDelete = useCallback(() => {
@@ -55,51 +101,162 @@ export default function DashboardPage() {
     });
   }, [deleteTarget, deleteMutation]);
 
+  const handleKpiClick = useCallback(
+    (variant: string) => {
+      const statusMap: Record<string, string> = {
+        pending: 'pending_signatures',
+        completed: 'completed',
+        expired: 'expired',
+        draft: 'draft',
+      };
+      const status = statusMap[variant];
+      if (status) {
+        router.push(`/documents?status=${status}`);
+      }
+    },
+    [router],
+  );
+
+  const pendingCount = statsQuery.data?.pending ?? 0;
+  const greeting = isMounted ? tDashboard(`greeting.${getGreetingKey()}`) : tDashboard('welcome');
+  const userName = isMounted ? user?.name : undefined;
+
+  const heroSubtitle = pendingCount > 0
+    ? tDashboard('heroSubtitle', { pending: pendingCount })
+    : tDashboard('heroSubtitleNone');
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-semibold text-white">{tDashboard('title')}</h1>
-      <p className="text-sm text-neutral-100/70">
-        {isMounted && user
-          ? `${tDashboard('welcome')}, ${user.name}`
-          : tDashboard('welcome')}
-      </p>
-      <KpiCards
-        items={[
-          { label: tDashboard('kpi.pending'), value: statsQuery.data?.pending ?? 0 },
-          { label: tDashboard('kpi.completed'), value: statsQuery.data?.completed ?? 0 },
-          { label: tDashboard('kpi.expired'), value: statsQuery.data?.expired ?? 0 },
-          { label: tDashboard('kpi.draft'), value: statsQuery.data?.draft ?? 0 },
-        ]}
-        isLoading={statsQuery.isLoading}
-      />
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-lg font-semibold text-white">{tDashboard('recentTitle')}</h2>
-        <Button type="button" onClick={() => router.push('/documents/new')}>
-          {tDashboard('newDocument')}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-1">
+          <h1 className="text-xl font-bold text-white sm:text-2xl">
+            {greeting}
+            {userName ? `, ${userName}` : ''}
+          </h1>
+          <p className="text-sm text-neutral-100/50">{heroSubtitle}</p>
+        </div>
+        <Button
+          type="button"
+          className="shrink-0 gap-2"
+          onClick={() => router.push('/documents/new')}
+        >
+          <Send className="h-4 w-4" />
+          {tDashboard('sendDocument')}
         </Button>
       </div>
-      <div className="glass-card rounded-2xl p-4">
-        <DocumentsTable
-          documents={recentQuery.data?.data ?? []}
-          isLoading={recentQuery.isLoading}
-          statusLabels={statusLabels}
-          headers={{
-            title: tDocuments('table.title'),
-            status: tDocuments('table.status'),
-            created: tDocuments('table.created'),
-            actions: tDocuments('table.actions'),
-          }}
-          emptyTitle={tDashboard('empty.title')}
-          emptyDescription={tDashboard('empty.description')}
-          formatDate={formatDate}
-          actionLabels={{
-            continue: tDocuments('actions.continue'),
-            view: tDocuments('actions.view'),
-          }}
-          onDocumentClick={handleDocumentClick}
-          onDeleteDocument={setDeleteTarget}
-          deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
-        />
+
+      <KpiCards
+        items={[
+          { label: tDashboard('kpi.pending'), value: statsQuery.data?.pending ?? 0, variant: 'pending' },
+          { label: tDashboard('kpi.completed'), value: statsQuery.data?.completed ?? 0, variant: 'completed' },
+          { label: tDashboard('kpi.expired'), value: statsQuery.data?.expired ?? 0, variant: 'expired' },
+          { label: tDashboard('kpi.draft'), value: statsQuery.data?.draft ?? 0, variant: 'draft' },
+        ]}
+        isLoading={statsQuery.isLoading}
+        onCardClick={handleKpiClick}
+      />
+
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        <div className="space-y-5 lg:col-span-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-base font-semibold text-white">{tDashboard('recentTitle')}</h2>
+            <button
+              type="button"
+              onClick={() => router.push('/documents')}
+              className="flex items-center gap-1 text-xs font-medium text-accent-400 transition-colors hover:text-accent-200"
+            >
+              {tDashboard('viewAll')}
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </div>
+
+          <DocumentsTable
+            documents={recentQuery.data?.data ?? []}
+            isLoading={recentQuery.isLoading}
+            statusLabels={statusLabels}
+            headers={{
+              title: tDocuments('table.title'),
+              status: tDocuments('table.status'),
+              created: tDocuments('table.created'),
+              actions: tDocuments('table.actions'),
+            }}
+            emptyTitle={tDashboard('empty.title')}
+            emptyDescription={tDashboard('empty.description')}
+            formatDate={formatDate}
+            actionLabels={{
+              continue: tDocuments('actions.continue'),
+              view: tDocuments('actions.view'),
+            }}
+            onDocumentClick={handleDocumentClick}
+            onDeleteDocument={setDeleteTarget}
+            deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
+          />
+
+          <TipsBanner
+            labels={{
+              dismiss: tDashboard('tips.dismiss'),
+              learnMore: tDashboard('tips.learnMore'),
+              tip1: tDashboard('tips.tip1'),
+              tip2: tDashboard('tips.tip2'),
+              tip3: tDashboard('tips.tip3'),
+              tip4: tDashboard('tips.tip4'),
+            }}
+            onLearnMore={() => router.push('/documents/new')}
+          />
+        </div>
+
+        <div className="space-y-4">
+          <QuickActionsPanel
+            labels={{
+              title: tDashboard('quickActions.title'),
+              sendDocument: tDashboard('quickActions.sendDocument'),
+              viewAll: tDashboard('quickActions.viewAll'),
+              signTitle: tDashboard('quickActions.signTitle'),
+              signDescription: tDashboard('quickActions.signDescription'),
+            }}
+            onSendDocument={() => router.push('/documents/new')}
+            onViewAll={() => router.push('/documents')}
+          />
+
+          <OnboardingChecklist
+            labels={{
+              title: tDashboard('onboarding.title'),
+              progress: tDashboard('onboarding.progress'),
+              dismiss: tDashboard('onboarding.dismiss'),
+              createAccount: tDashboard('onboarding.createAccount'),
+              sendFirstDocument: tDashboard('onboarding.sendFirstDocument'),
+              addSigners: tDashboard('onboarding.addSigners'),
+              completeFirstSignature: tDashboard('onboarding.completeFirstSignature'),
+            }}
+            stats={{
+              draft: statsQuery.data?.draft ?? 0,
+              pending: statsQuery.data?.pending ?? 0,
+              completed: statsQuery.data?.completed ?? 0,
+            }}
+          />
+
+          <ActivityFeed
+            labels={{
+              title: tDashboard('activity.title'),
+              empty: tDashboard('activity.empty'),
+              sentForSignature: tDashboard('activity.sentForSignature'),
+              documentCompleted: tDashboard('activity.documentCompleted'),
+              documentExpired: tDashboard('activity.documentExpired'),
+            }}
+            documents={recentQuery.data?.data ?? []}
+            isLoading={recentQuery.isLoading}
+            formatRelativeDate={(d) => formatRelativeDate(d, locale)}
+          />
+
+          <HelpSection
+            labels={{
+              title: tDashboard('help.title'),
+              faq: tDashboard('help.faq'),
+              support: tDashboard('help.support'),
+              docs: tDashboard('help.docs'),
+            }}
+          />
+        </div>
       </div>
 
       <ConfirmDialog
