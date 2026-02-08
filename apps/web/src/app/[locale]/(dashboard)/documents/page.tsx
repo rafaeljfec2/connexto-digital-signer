@@ -177,17 +177,16 @@ export default function DocumentsPage() {
                     </Badge>
                     <div className="flex items-center gap-1">
                       {doc.status === 'draft' ? (
-                        <Button
+                        <button
                           type="button"
-                          variant="ghost"
-                          className="h-8 w-8 p-0 text-neutral-100/30 hover:text-error"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-100/40 transition-colors hover:bg-error/15 hover:text-error"
                           onClick={(event) => {
                             event.stopPropagation();
                             setDeleteTarget(doc);
                           }}
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </button>
                       ) : null}
                       <Button
                         type="button"
