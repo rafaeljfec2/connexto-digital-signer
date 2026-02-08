@@ -85,7 +85,7 @@ export function ActivityFeed({
     <Card variant="glass" className="p-5">
       <div className="flex items-center gap-2">
         <Activity className="h-4 w-4 text-accent-400" />
-        <h3 className="text-sm font-semibold text-white">{labels.title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{labels.title}</h3>
       </div>
 
       {isLoading ? (
@@ -104,14 +104,14 @@ export function ActivityFeed({
 
       {!isLoading && activities.length === 0 ? (
         <div className="mt-4 flex flex-col items-center gap-2 py-4 text-center">
-          <Activity className="h-8 w-8 text-neutral-100/15" />
-          <p className="text-xs text-neutral-100/40">{labels.empty}</p>
+          <Activity className="h-8 w-8 text-foreground-subtle" />
+          <p className="text-xs text-foreground-subtle">{labels.empty}</p>
         </div>
       ) : null}
 
       {!isLoading && activities.length > 0 ? (
         <div className="relative mt-4 space-y-0">
-          <div className="absolute left-[7px] top-2 h-[calc(100%-16px)] w-px bg-white/8" />
+          <div className="absolute left-[7px] top-2 h-[calc(100%-16px)] w-px bg-th-border" />
           {activities.map((item) => {
             const config = ACTIVITY_CONFIG[item.type];
             const Icon = config.icon;
@@ -121,8 +121,8 @@ export function ActivityFeed({
                   <Icon className="h-2 w-2 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">
-                  <p className="text-xs leading-tight text-neutral-100/70">{item.message}</p>
-                  <p className="mt-0.5 text-[10px] text-neutral-100/30">
+                  <p className="text-xs leading-tight text-foreground-muted">{item.message}</p>
+                  <p className="mt-0.5 text-[10px] text-foreground-subtle">
                     {formatRelativeDate(item.date)}
                   </p>
                 </div>

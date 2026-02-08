@@ -129,11 +129,11 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div className="space-y-1">
-          <h1 className="text-xl font-bold text-white sm:text-2xl">
+          <h1 className="text-xl font-bold text-foreground sm:text-2xl">
             {greeting}
             {userName ? `, ${userName}` : ''}
           </h1>
-          <p className="text-sm text-neutral-100/50">{heroSubtitle}</p>
+          <p className="text-sm text-foreground-muted">{heroSubtitle}</p>
         </div>
         <Button
           type="button"
@@ -159,7 +159,7 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
           <div className="flex items-center justify-between">
-            <h2 className="text-base font-semibold text-white">{tDashboard('recentTitle')}</h2>
+            <h2 className="text-base font-semibold text-foreground">{tDashboard('recentTitle')}</h2>
             <button
               type="button"
               onClick={() => router.push('/documents')}

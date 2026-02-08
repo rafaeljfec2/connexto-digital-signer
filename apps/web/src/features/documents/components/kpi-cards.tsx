@@ -32,9 +32,9 @@ const VARIANT_CONFIG: Record<KpiVariant, {
   },
   draft: {
     icon: FileEdit,
-    iconBg: 'bg-white/10',
-    iconColor: 'text-neutral-100/50',
-    valuePulse: 'text-white',
+    iconBg: 'bg-th-icon-bg',
+    iconColor: 'text-th-icon-fg',
+    valuePulse: 'text-foreground',
   },
 };
 
@@ -62,18 +62,18 @@ export function KpiCards({ items, isLoading = false, onCardClick }: Readonly<Kpi
           <Card
             key={item.variant}
             variant="glass"
-            className={`group p-4 transition-all ${onCardClick ? 'cursor-pointer hover:border-white/20 hover:bg-white/[0.06]' : ''}`}
+            className={`group p-4 transition-all ${onCardClick ? 'cursor-pointer hover:border-th-card-border hover:bg-th-hover' : ''}`}
             onClick={onCardClick ? () => onCardClick(item.variant) : undefined}
           >
             <div className="flex items-start justify-between">
               <div className="min-w-0 flex-1">
-                <p className="truncate text-[11px] font-medium uppercase tracking-wide text-neutral-100/50">
+                <p className="truncate text-[11px] font-medium uppercase tracking-wide text-foreground-muted">
                   {item.label}
                 </p>
                 {isLoading ? (
                   <Skeleton className="mt-2 h-8 w-16" />
                 ) : (
-                  <p className={`mt-2 text-2xl font-bold ${item.value > 0 ? config.valuePulse : 'text-white/40'}`}>
+                  <p className={`mt-2 text-2xl font-bold ${item.value > 0 ? config.valuePulse : 'text-foreground-subtle'}`}>
                     {item.value}
                   </p>
                 )}

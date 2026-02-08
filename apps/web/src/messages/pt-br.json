@@ -35,7 +35,9 @@
     "settingsSubtitle": "Preferencias e ajustes da conta",
     "settingsEmptyTitle": "Configurações em breve",
     "settingsEmptyDescription": "Novas opcoes estarao disponiveis nesta area.",
-    "signOut": "Sair"
+    "signOut": "Sair",
+    "themeLight": "Tema claro",
+    "themeDark": "Tema escuro"
   },
   "auth": {
     "emailLabel": "Email",

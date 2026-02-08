@@ -108,22 +108,22 @@ function CopyableHash({
 
   return (
     <div className="space-y-1">
-      <p className="text-xs font-medium text-neutral-100/50">{label}</p>
+      <p className="text-xs font-medium text-foreground-muted">{label}</p>
       {hash ? (
         <button
           type="button"
           onClick={handleCopy}
-          className="group flex w-full items-center gap-2 rounded-lg bg-white/5 px-3 py-2 text-left transition-colors hover:bg-white/10"
+          className="group flex w-full items-center gap-2 rounded-lg bg-th-hover px-3 py-2 text-left transition-colors hover:bg-th-active"
         >
-          <code className="min-w-0 flex-1 truncate text-xs text-neutral-100/70">{hash}</code>
+          <code className="min-w-0 flex-1 truncate text-xs text-foreground-muted">{hash}</code>
           {copied ? (
             <Check className="h-3.5 w-3.5 shrink-0 text-success" />
           ) : (
-            <Copy className="h-3.5 w-3.5 shrink-0 text-neutral-100/30 transition-colors group-hover:text-neutral-100/60" />
+            <Copy className="h-3.5 w-3.5 shrink-0 text-foreground-subtle transition-colors group-hover:text-foreground-muted" />
           )}
         </button>
       ) : (
-        <p className="px-3 py-2 text-xs text-neutral-100/30">{labels.hashUnavailable}</p>
+        <p className="px-3 py-2 text-xs text-foreground-subtle">{labels.hashUnavailable}</p>
       )}
     </div>
   );
@@ -184,12 +184,12 @@ export function DocumentAuditView({
       <Card variant="glass" className="space-y-3 p-5 md:p-6">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-white/10">
-              <FileText className="h-5 w-5" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-th-icon-bg">
+              <FileText className="h-5 w-5 text-th-icon-fg" />
             </div>
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold md:text-xl">{doc.title}</h1>
-              <p className="text-xs text-neutral-100/50">{labels.title}</p>
+              <h1 className="truncate text-lg font-bold text-foreground md:text-xl">{doc.title}</h1>
+              <p className="text-xs text-foreground-muted">{labels.title}</p>
             </div>
           </div>
           <Badge variant={statusBadgeVariant} className="w-fit shrink-0 text-xs">
@@ -199,14 +199,14 @@ export function DocumentAuditView({
       </Card>
 
       <Card variant="glass" className="space-y-4 p-5 md:p-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-100/50">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
           {labels.documentDetails}
         </h2>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div className="flex items-center gap-2.5">
-            <Globe className="h-4 w-4 shrink-0 text-neutral-100/40" />
+            <Globe className="h-4 w-4 shrink-0 text-foreground-subtle" />
             <div>
-              <p className="text-xs text-neutral-100/50">{labels.signingMode}</p>
+              <p className="text-xs text-foreground-muted">{labels.signingMode}</p>
               <p className="text-sm font-medium">
                 {doc.signingMode === 'parallel'
                   ? labels.signingModeParallel
@@ -215,16 +215,16 @@ export function DocumentAuditView({
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <CalendarDays className="h-4 w-4 shrink-0 text-neutral-100/40" />
+            <CalendarDays className="h-4 w-4 shrink-0 text-foreground-subtle" />
             <div>
-              <p className="text-xs text-neutral-100/50">{labels.createdAt}</p>
+              <p className="text-xs text-foreground-muted">{labels.createdAt}</p>
               <p className="text-sm font-medium">{formatDate(doc.createdAt)}</p>
             </div>
           </div>
           <div className="flex items-center gap-2.5">
-            <Clock className="h-4 w-4 shrink-0 text-neutral-100/40" />
+            <Clock className="h-4 w-4 shrink-0 text-foreground-subtle" />
             <div>
-              <p className="text-xs text-neutral-100/50">{labels.expiresAt}</p>
+              <p className="text-xs text-foreground-muted">{labels.expiresAt}</p>
               <p className="text-sm font-medium">
                 {doc.expiresAt ? formatDate(doc.expiresAt) : labels.noExpiry}
               </p>
@@ -234,7 +234,7 @@ export function DocumentAuditView({
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="h-4 w-4 shrink-0 text-success" />
               <div>
-                <p className="text-xs text-neutral-100/50">{labels.completedAt}</p>
+                <p className="text-xs text-foreground-muted">{labels.completedAt}</p>
                 <p className="text-sm font-medium text-success">{formatDate(doc.completedAt)}</p>
               </div>
             </div>
@@ -243,7 +243,7 @@ export function DocumentAuditView({
       </Card>
 
       <Card variant="glass" className="space-y-4 p-5 md:p-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-100/50">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
           {labels.hashes}
         </h2>
         <div className="space-y-3">
@@ -254,13 +254,13 @@ export function DocumentAuditView({
 
       {timeline.length > 0 ? (
         <Card variant="glass" className="space-y-4 p-5 md:p-6">
-          <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-100/50">
+          <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
             {labels.timeline}
           </h2>
           <div className="relative space-y-0">
             {timeline.map((event, idx) => {
               const Icon = TIMELINE_ICONS[event.type] ?? Clock;
-              const colorClass = TIMELINE_COLORS[event.type] ?? 'bg-white/10 text-white/40';
+              const colorClass = TIMELINE_COLORS[event.type] ?? 'bg-th-hover text-foreground-subtle';
               const isLast = idx === timeline.length - 1;
 
               let eventText = '';
@@ -279,11 +279,11 @@ export function DocumentAuditView({
                     >
                       <Icon className="h-4 w-4" />
                     </div>
-                    {isLast ? null : <div className="h-full w-px bg-white/10" />}
+                    {isLast ? null : <div className="h-full w-px bg-th-border" />}
                   </div>
                   <div className="pb-5">
                     <p className="text-sm font-medium">{eventText}</p>
-                    <p className="text-xs text-neutral-100/40">{formatDate(event.timestamp)}</p>
+                    <p className="text-xs text-foreground-subtle">{formatDate(event.timestamp)}</p>
                   </div>
                 </div>
               );
@@ -293,7 +293,7 @@ export function DocumentAuditView({
       ) : null}
 
       <Card variant="glass" className="space-y-4 p-5 md:p-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-100/50">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
           {labels.signers}
         </h2>
         <div className="space-y-3">
@@ -302,12 +302,12 @@ export function DocumentAuditView({
             return (
               <div
                 key={signer.id}
-                className="rounded-xl border border-white/10 bg-white/5 p-4 space-y-3"
+                className="rounded-xl border border-th-border bg-th-hover p-4 space-y-3"
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
                     <p className="truncate text-sm font-bold">{signer.name}</p>
-                    <p className="truncate text-xs text-neutral-100/50">{signer.email}</p>
+                    <p className="truncate text-xs text-foreground-muted">{signer.email}</p>
                   </div>
                   <Badge
                     variant={isSigned ? 'success' : 'warning'}
@@ -317,11 +317,11 @@ export function DocumentAuditView({
                   </Badge>
                 </div>
 
-                <div className="border-t border-white/10" />
+                <div className="border-t border-th-border" />
 
                 <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
                   {signer.notifiedAt ? (
-                    <div className="flex items-center gap-1.5 text-neutral-100/60">
+                    <div className="flex items-center gap-1.5 text-foreground-muted">
                       <Send className="h-3 w-3 shrink-0" />
                       <span>
                         {labels.signerCard.notifiedAt}: {formatDate(signer.notifiedAt)}
@@ -329,7 +329,7 @@ export function DocumentAuditView({
                     </div>
                   ) : null}
                   {signer.signedAt ? (
-                    <div className="flex items-center gap-1.5 text-neutral-100/60">
+                    <div className="flex items-center gap-1.5 text-foreground-muted">
                       <CheckCircle2 className="h-3 w-3 shrink-0 text-success" />
                       <span>
                         {labels.signerCard.signedAt}: {formatDate(signer.signedAt)}
@@ -337,14 +337,14 @@ export function DocumentAuditView({
                     </div>
                   ) : null}
                   {signer.verifiedAt ? (
-                    <div className="flex items-center gap-1.5 text-neutral-100/60">
+                    <div className="flex items-center gap-1.5 text-foreground-muted">
                       <UserCheck className="h-3 w-3 shrink-0" />
                       <span>
                         {labels.signerCard.verifiedAt}: {formatDate(signer.verifiedAt)}
                       </span>
                     </div>
                   ) : null}
-                  <div className="flex items-center gap-1.5 text-neutral-100/60">
+                  <div className="flex items-center gap-1.5 text-foreground-muted">
                     <Mail className="h-3 w-3 shrink-0" />
                     <span>
                       {labels.signerCard.authMethod}:{' '}
@@ -354,7 +354,7 @@ export function DocumentAuditView({
                     </span>
                   </div>
                   {signer.ipAddress ? (
-                    <div className="flex items-center gap-1.5 text-neutral-100/60">
+                    <div className="flex items-center gap-1.5 text-foreground-muted">
                       <Globe className="h-3 w-3 shrink-0" />
                       <span>
                         {labels.signerCard.ip}: {signer.ipAddress}
@@ -362,7 +362,7 @@ export function DocumentAuditView({
                     </div>
                   ) : null}
                   {signer.userAgent ? (
-                    <div className="col-span-full flex items-start gap-1.5 text-neutral-100/60">
+                    <div className="col-span-full flex items-start gap-1.5 text-foreground-muted">
                       <Monitor className="mt-0.5 h-3 w-3 shrink-0" />
                       <span className="break-all">
                         {labels.signerCard.userAgent}:{' '}
@@ -380,7 +380,7 @@ export function DocumentAuditView({
       </Card>
 
       <Card variant="glass" className="space-y-4 p-5 md:p-6">
-        <h2 className="text-sm font-bold uppercase tracking-wider text-neutral-100/50">
+        <h2 className="text-sm font-bold uppercase tracking-wider text-foreground-muted">
           {labels.downloads}
         </h2>
         <div className="space-y-3">
@@ -388,19 +388,19 @@ export function DocumentAuditView({
             type="button"
             onClick={handleDownloadOriginal}
             disabled={downloadingOriginal}
-            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5 text-left transition-all hover:border-white/20 hover:bg-white/10 disabled:opacity-50"
+            className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
           >
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-400/20">
               <FileText className="h-5 w-5 text-accent-400" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">{labels.downloadOriginal}</p>
-              <p className="text-xs text-neutral-100/50">{labels.downloadOriginalDesc}</p>
+              <p className="text-xs text-foreground-muted">{labels.downloadOriginalDesc}</p>
             </div>
             {downloadingOriginal ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-neutral-100/50" />
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
             ) : (
-              <Download className="h-4 w-4 shrink-0 text-neutral-100/40" />
+              <Download className="h-4 w-4 shrink-0 text-foreground-subtle" />
             )}
           </button>
 
@@ -408,29 +408,29 @@ export function DocumentAuditView({
             type="button"
             onClick={handleDownloadSigned}
             disabled={downloadingSigned || !isCompleted}
-            className="flex w-full items-center gap-3 rounded-xl border border-white/10 bg-white/5 p-3.5 text-left transition-all hover:border-white/20 hover:bg-white/10 disabled:opacity-50"
+            className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
           >
             <div
               className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                isCompleted ? 'bg-success/20' : 'bg-white/10'
+                isCompleted ? 'bg-success/20' : 'bg-th-icon-bg'
               }`}
             >
               <FileBadge
-                className={`h-5 w-5 ${isCompleted ? 'text-success' : 'text-neutral-100/40'}`}
+                className={`h-5 w-5 ${isCompleted ? 'text-success' : 'text-foreground-subtle'}`}
               />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-semibold">{labels.downloadSigned}</p>
-              <p className="text-xs text-neutral-100/50">
+              <p className="text-xs text-foreground-muted">
                 {isCompleted ? labels.downloadSignedDesc : labels.downloadSignedUnavailable}
               </p>
             </div>
             {downloadingSigned ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-neutral-100/50" />
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
             ) : (
               <Download
                 className={`h-4 w-4 shrink-0 ${
-                  isCompleted ? 'text-neutral-100/40' : 'text-neutral-100/20'
+                  isCompleted ? 'text-foreground-subtle' : 'text-foreground-subtle/50'
                 }`}
               />
             )}
@@ -438,7 +438,7 @@ export function DocumentAuditView({
         </div>
       </Card>
 
-      <div className="flex items-center justify-center gap-2 pb-4 text-xs text-neutral-100/40">
+      <div className="flex items-center justify-center gap-2 pb-4 text-xs text-foreground-subtle">
         <ShieldCheck className="h-4 w-4 text-success/60" />
         <span>ICP-Brasil</span>
       </div>

@@ -14,7 +14,7 @@ const GRID_ICON_CLASS: Record<string, string> = {
   completed: 'bg-success/15 text-success',
   pending_signatures: 'bg-info/15 text-info',
   expired: 'bg-error/15 text-error',
-  draft: 'bg-white/10 text-neutral-100/50',
+  draft: 'bg-th-icon-bg text-th-icon-fg',
 };
 
 export default function DocumentsPage() {
@@ -71,11 +71,11 @@ export default function DocumentsPage() {
   return (
     <div className="space-y-5">
       <div className="space-y-2">
-        <h1 className="text-2xl font-semibold text-white">{tDocuments('title')}</h1>
-        <p className="text-sm text-neutral-100/70">{tDocuments('subtitle')}</p>
+        <h1 className="text-2xl font-semibold text-foreground">{tDocuments('title')}</h1>
+        <p className="text-sm text-foreground-muted">{tDocuments('subtitle')}</p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-3 text-sm text-neutral-100/70">
+        <div className="flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
           <span>{tDocuments('filters.status')}</span>
           <Select
             className="min-w-[200px]"
@@ -91,7 +91,7 @@ export default function DocumentsPage() {
             <option value="completed">{tDocuments('status.completed')}</option>
             <option value="expired">{tDocuments('status.expired')}</option>
           </Select>
-          <div className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 p-1">
+          <div className="flex items-center gap-2 rounded-full border border-th-border bg-th-hover p-1">
             <Button
               type="button"
               variant={view === 'list' ? 'secondary' : 'ghost'}
@@ -154,7 +154,7 @@ export default function DocumentsPage() {
                 <Card
                   key={doc.id}
                   variant="glass"
-                  className="group cursor-pointer space-y-3 p-5 transition-all hover:border-white/15 hover:bg-white/[0.06]"
+                  className="group cursor-pointer space-y-3 p-5 transition-all hover:border-th-card-border hover:bg-th-hover"
                   onClick={() => handleDocumentClick(doc)}
                 >
                   <div className="flex items-start gap-3">
@@ -164,8 +164,8 @@ export default function DocumentsPage() {
                       <FileText className="h-5 w-5" />
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-semibold text-white">{doc.title}</p>
-                      <p className="mt-0.5 flex items-center gap-1 text-[11px] text-neutral-100/40">
+                      <p className="truncate text-sm font-semibold text-foreground">{doc.title}</p>
+                      <p className="mt-0.5 flex items-center gap-1 text-[11px] text-foreground-subtle">
                         <Calendar className="h-3 w-3" />
                         {formatDate(doc.createdAt)}
                       </p>
@@ -179,7 +179,7 @@ export default function DocumentsPage() {
                       {doc.status === 'draft' ? (
                         <button
                           type="button"
-                          className="flex h-8 w-8 items-center justify-center rounded-lg text-neutral-100/40 transition-colors hover:bg-error/15 hover:text-error"
+                          className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground-subtle transition-colors hover:bg-error/15 hover:text-error"
                           onClick={(event) => {
                             event.stopPropagation();
                             setDeleteTarget(doc);

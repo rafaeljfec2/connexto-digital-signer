@@ -23,12 +23,12 @@ export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Rea
       {progressLabel ? (
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="font-semibold text-white">{progressLabel}</span>
+            <span className="font-semibold text-foreground">{progressLabel}</span>
             {counterLabel ? (
-              <span className="text-neutral-100/70">{counterLabel}</span>
+              <span className="text-foreground-muted">{counterLabel}</span>
             ) : null}
           </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
+          <div className="h-2 w-full overflow-hidden rounded-full bg-th-hover">
             <div
               className="h-full rounded-full bg-accent-400 transition-all duration-500 ease-out"
               style={{ width: `${progressPercent}%` }}
@@ -48,16 +48,16 @@ export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Rea
           } else if (isActive) {
             circleClass = 'bg-accent-600/20 text-accent-400 border-accent-400/40';
           } else {
-            circleClass = 'bg-white/10 text-neutral-100/50 border-white/15';
+            circleClass = 'bg-th-hover text-foreground-subtle border-th-border';
           }
 
           let labelClass: string;
           if (isActive) {
-            labelClass = 'text-white font-semibold';
+            labelClass = 'text-foreground font-semibold';
           } else if (isCompleted) {
             labelClass = 'text-success/80 font-medium';
           } else {
-            labelClass = 'text-neutral-100/50 font-medium';
+            labelClass = 'text-foreground-subtle font-medium';
           }
 
           const isClickable = isCompleted && !!onStepClick;

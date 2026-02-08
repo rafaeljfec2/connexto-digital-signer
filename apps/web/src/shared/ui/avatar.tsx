@@ -35,7 +35,7 @@ export function Avatar({
   return (
     <div className={`relative inline-flex ${className}`} {...props}>
       <div
-        className={`flex items-center justify-center rounded-full border border-white/30 bg-white/20 text-white ${sizeClass[size]}`}
+        className={`flex items-center justify-center rounded-full border border-th-border bg-th-hover text-foreground ${sizeClass[size]}`}
       >
         {src ? (
           <img src={src} alt={name} className="h-full w-full rounded-full object-cover" />
@@ -45,7 +45,7 @@ export function Avatar({
       </div>
       {statusColor ? (
         <span
-          className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border border-white/70"
+          className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-th-card"
           style={{ backgroundColor: statusColor }}
         />
       ) : null}

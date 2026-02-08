@@ -35,18 +35,18 @@ export function ConfirmDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center px-4">
       <button
         type="button"
-        className="absolute inset-0 bg-brand-900/70 backdrop-blur-sm"
+        className="absolute inset-0 bg-th-overlay backdrop-blur-sm"
         onClick={onCancel}
         disabled={isLoading}
       />
-      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-white/20 bg-white/10 p-6 text-white shadow-2xl backdrop-blur-xl">
+      <div className="relative z-10 w-full max-w-sm rounded-2xl border border-th-card-border bg-th-dialog p-6 text-foreground shadow-2xl backdrop-blur-xl">
         <div className="flex flex-col items-center gap-4 text-center">
           <div className={`flex h-12 w-12 items-center justify-center rounded-full ${iconBg}`}>
             <AlertTriangle className={`h-6 w-6 ${iconColor}`} />
           </div>
           <div className="space-y-1.5">
             <h3 className="text-base font-semibold">{title}</h3>
-            <p className="text-sm leading-relaxed text-neutral-100/70">{description}</p>
+            <p className="text-sm leading-relaxed text-foreground-muted">{description}</p>
           </div>
         </div>
         <div className="mt-6 flex gap-3">

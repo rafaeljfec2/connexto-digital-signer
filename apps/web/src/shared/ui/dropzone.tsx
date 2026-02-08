@@ -33,8 +33,8 @@ export function Dropzone({
     <label
       className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-10 text-center text-sm transition ${
         isDragging
-          ? 'border-accent-400 bg-white/20'
-          : 'border-white/20 bg-white/10'
+          ? 'border-accent-400 bg-th-active'
+          : 'border-th-border bg-th-input'
       } ${disabled ? 'cursor-not-allowed opacity-50' : ''} ${className}`}
       onDragOver={(event) => {
         event.preventDefault();
@@ -55,8 +55,8 @@ export function Dropzone({
         disabled={disabled}
         onChange={(event) => handleFiles(event.target.files)}
       />
-      {label ? <span className="font-medium text-white">{label}</span> : null}
-      {helperText ? <span className="mt-2 text-neutral-100/70">{helperText}</span> : null}
+      {label ? <span className="font-medium text-foreground">{label}</span> : null}
+      {helperText ? <span className="mt-2 text-foreground-muted">{helperText}</span> : null}
     </label>
   );
 }

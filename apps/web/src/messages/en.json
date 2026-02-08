@@ -35,7 +35,9 @@
     "settingsSubtitle": "Account preferences and configuration",
     "settingsEmptyTitle": "Settings coming soon",
     "settingsEmptyDescription": "New options will be available in this area.",
-    "signOut": "Sign out"
+    "signOut": "Sign out",
+    "themeLight": "Light theme",
+    "themeDark": "Dark theme"
   },
   "auth": {
     "emailLabel": "Email",

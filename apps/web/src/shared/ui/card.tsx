@@ -8,9 +8,9 @@ export interface CardProps extends HTMLAttributes<HTMLDivElement> {
 
 const getVariantClass = (variant: CardVariant): string => {
   if (variant === 'glass') {
-    return 'glass-card border-white/10';
+    return 'glass-card';
   }
-  return 'rounded-xl bg-surface shadow-lg border border-border';
+  return 'rounded-xl bg-th-card border border-th-card-border shadow-th-card';
 };
 
 export function Card({

@@ -13,3 +13,4 @@ export * from './confirm-dialog';
 export * from './select';
 export * from './tooltip';
 export * from './sidebar';
+export * from './theme-toggle';

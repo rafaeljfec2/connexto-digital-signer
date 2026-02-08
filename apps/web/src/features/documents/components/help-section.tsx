@@ -23,7 +23,7 @@ export function HelpSection({ labels }: Readonly<HelpSectionProps>) {
     <Card variant="glass" className="p-5">
       <div className="flex items-center gap-2">
         <HelpCircle className="h-4 w-4 text-accent-400" />
-        <h3 className="text-sm font-semibold text-white">{labels.title}</h3>
+        <h3 className="text-sm font-semibold text-foreground">{labels.title}</h3>
       </div>
 
       <div className="mt-3 space-y-1">
@@ -33,13 +33,13 @@ export function HelpSection({ labels }: Readonly<HelpSectionProps>) {
             <button
               key={item.key}
               type="button"
-              className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-white/5"
+              className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-th-hover"
             >
-              <Icon className="h-4 w-4 shrink-0 text-neutral-100/40 transition-colors group-hover:text-accent-400" />
-              <span className="flex-1 text-sm text-neutral-100/60 transition-colors group-hover:text-white">
+              <Icon className="h-4 w-4 shrink-0 text-foreground-subtle transition-colors group-hover:text-accent-400" />
+              <span className="flex-1 text-sm text-foreground-muted transition-colors group-hover:text-foreground">
                 {labels[item.key]}
               </span>
-              <ExternalLink className="h-3.5 w-3.5 text-neutral-100/20 transition-colors group-hover:text-neutral-100/40" />
+              <ExternalLink className="h-3.5 w-3.5 text-foreground-subtle transition-colors group-hover:text-foreground-muted" />
             </button>
           );
         })}

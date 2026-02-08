@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: 'class',
   content: ['./src/**/*.{ts,tsx}'],
   theme: {
     extend: {
@@ -41,10 +42,32 @@ const config: Config = {
         success: 'var(--color-success)',
         warning: 'var(--color-warning)',
         error: 'var(--color-error)',
+        foreground: 'var(--th-fg)',
+        'foreground-muted': 'var(--th-fg-muted)',
+        'foreground-subtle': 'var(--th-fg-subtle)',
+        'th-page': 'var(--th-page-bg)',
+        'th-sidebar': 'var(--th-sidebar-bg)',
+        'th-header': 'var(--th-header-bg)',
+        'th-card': 'var(--th-card-bg)',
+        'th-card-border': 'var(--th-card-border)',
+        'th-border': 'var(--th-border)',
+        'th-hover': 'var(--th-hover-bg)',
+        'th-input': 'var(--th-input-bg)',
+        'th-input-border': 'var(--th-input-border)',
+        'th-overlay': 'var(--th-overlay)',
+        'th-dialog': 'var(--th-dialog-bg)',
+        'th-icon-bg': 'var(--th-icon-bg)',
+        'th-icon-fg': 'var(--th-icon-fg)',
+        'th-active': 'var(--th-active-bg)',
+        'th-active-text': 'var(--th-active-text)',
+        'th-header-border': 'var(--th-header-border)',
       },
       backgroundImage: {
         'gradient-main': 'var(--gradient-main)',
         'gradient-cta': 'var(--gradient-cta)',
+      },
+      boxShadow: {
+        'th-card': 'var(--th-card-shadow)',
       },
     },
   },

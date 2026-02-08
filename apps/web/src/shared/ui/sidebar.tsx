@@ -41,7 +41,7 @@ export function Sidebar({
 
   return (
     <aside
-      className={`glass-surface flex h-full flex-col border-r border-white/10 ${className}`}
+      className={`flex h-full flex-col border-r border-th-border bg-th-sidebar ${className}`}
     >
       <div className="px-5 pb-2 pt-6">
         <Link href="/" className="flex items-center gap-2.5">
@@ -49,7 +49,7 @@ export function Sidebar({
             <PenTool className="h-4.5 w-4.5 text-white" />
           </div>
           <div>
-            <span className="text-base font-bold tracking-tight text-white">
+            <span className="text-base font-bold tracking-tight text-foreground">
               {title}
             </span>
             <span className="ml-1 text-[10px] font-medium uppercase tracking-widest text-accent-400">
@@ -63,7 +63,7 @@ export function Sidebar({
         <div className="px-4 pb-1 pt-4">
           <Link
             href={ctaHref}
-            className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-cta px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-brand-900/25 transition-all hover:shadow-brand-900/40 hover:brightness-110"
+            className="btn-cta-inline flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-cta px-4 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110"
           >
             <Plus className="h-4 w-4" />
             {ctaLabel}
@@ -74,7 +74,7 @@ export function Sidebar({
       <nav className="mt-2 flex-1 space-y-4 overflow-y-auto px-3 py-2">
         {groups.map((group) => (
           <div key={group.label}>
-            <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-neutral-100/30">
+            <p className="mb-1.5 px-3 text-[10px] font-semibold uppercase tracking-[0.15em] text-foreground-subtle">
               {group.label}
             </p>
             <div className="space-y-0.5">
@@ -90,15 +90,15 @@ export function Sidebar({
                     href={item.href}
                     className={`group flex items-center gap-3 rounded-xl px-3 py-2 text-sm font-medium transition-all ${
                       isActive
-                        ? 'bg-white/12 text-white shadow-sm'
-                        : 'text-neutral-100/60 hover:bg-white/8 hover:text-white'
+                        ? 'bg-th-active text-th-active-text shadow-sm'
+                        : 'text-foreground-muted hover:bg-th-hover hover:text-foreground'
                     }`}
                   >
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
                         isActive
                           ? 'bg-accent-600/20 text-accent-400'
-                          : 'bg-white/8 text-neutral-100/50 group-hover:bg-white/12 group-hover:text-white'
+                          : 'bg-th-icon-bg text-th-icon-fg group-hover:bg-th-hover group-hover:text-foreground'
                       }`}
                     >
                       <Icon className="h-4 w-4" />
@@ -118,7 +118,7 @@ export function Sidebar({
       </nav>
 
       {footer ? (
-        <div className="border-t border-white/8 px-4 py-4">
+        <div className="border-t border-th-border px-4 py-4">
           {footer}
         </div>
       ) : null}

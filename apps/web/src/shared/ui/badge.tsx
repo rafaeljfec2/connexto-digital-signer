@@ -7,7 +7,7 @@ export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 };
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-white/15 text-white border border-white/20',
+  default: 'bg-[var(--th-badge-default-bg)] text-[var(--th-badge-default-text)] border border-[var(--th-badge-default-border)]',
   success: 'bg-success/15 text-success border border-success/20',
   warning: 'bg-warning/15 text-warning border border-warning/20',
   danger: 'bg-error/15 text-error border border-error/20',

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { Lightbulb, X, ArrowRight } from 'lucide-react';
 import { Card } from '@/shared/ui';
 
@@ -18,11 +18,11 @@ export type TipsBannerProps = {
 
 export function TipsBanner({ labels, onLearnMore }: Readonly<TipsBannerProps>) {
   const [dismissed, setDismissed] = useState(false);
+  const [tipIndex, setTipIndex] = useState(0);
 
-  const tipIndex = useMemo(
-    () => Math.floor(Math.random() * 4),
-    [],
-  );
+  useEffect(() => {
+    setTipIndex(Math.floor(Math.random() * 4));
+  }, []);
 
   if (dismissed) return null;
 
@@ -50,13 +50,13 @@ export function TipsBanner({ labels, onLearnMore }: Readonly<TipsBannerProps>) {
           <button
             type="button"
             onClick={() => setDismissed(true)}
-            className="text-neutral-100/30 transition-colors hover:text-white"
+            className="text-foreground-subtle transition-colors hover:text-foreground"
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
-        <p className="mt-3 text-sm leading-relaxed text-neutral-100/70">
+        <p className="mt-3 text-sm leading-relaxed text-foreground-muted">
           {currentTip}
         </p>
 

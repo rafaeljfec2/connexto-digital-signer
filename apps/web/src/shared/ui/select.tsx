@@ -118,19 +118,18 @@ export function Select({ value, onChange, className = '', children, disabled }: 
         disabled={disabled}
         onClick={() => setOpen((prev) => !prev)}
         onKeyDown={handleKeyDown}
-        className="flex w-full items-center justify-between rounded-lg border border-white/20 bg-white/10 px-3 py-2 text-left text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 disabled:opacity-50"
+        className="flex w-full items-center justify-between rounded-lg border border-th-input-border bg-th-input px-3 py-2 text-left text-sm text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/70 disabled:opacity-50"
       >
         <span className="truncate">{selectedOption?.label ?? '\u00A0'}</span>
         <ChevronDown
-          className={`ml-2 h-4 w-4 shrink-0 text-white/60 transition-transform ${open ? 'rotate-180' : ''}`}
+          className={`ml-2 h-4 w-4 shrink-0 text-foreground-muted transition-transform ${open ? 'rotate-180' : ''}`}
         />
       </button>
 
       {open ? (
         <div
           ref={listRef}
-          style={{ backgroundColor: '#0b1f3b' }}
-          className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-white/30 py-1 shadow-2xl"
+          className="absolute left-0 right-0 z-50 mt-1 max-h-60 overflow-auto rounded-lg border border-th-border bg-th-dialog py-1 shadow-2xl"
         >
           {options.map((option) => (
             <button
@@ -138,18 +137,11 @@ export function Select({ value, onChange, className = '', children, disabled }: 
               type="button"
               data-selected={option.value === value}
               onClick={() => handleSelect(option.value)}
-              style={option.value === value ? { backgroundColor: '#123a6f' } : undefined}
               className={`flex w-full items-center gap-2 px-3 py-2.5 text-left text-sm transition-colors ${
                 option.value === value
-                  ? 'text-accent-400'
-                  : 'text-white hover:text-white'
+                  ? 'bg-th-active text-th-active-text'
+                  : 'text-foreground hover:bg-th-hover'
               }`}
-              onMouseEnter={(e) => {
-                if (option.value !== value) e.currentTarget.style.backgroundColor = '#123a6f';
-              }}
-              onMouseLeave={(e) => {
-                if (option.value !== value) e.currentTarget.style.backgroundColor = 'transparent';
-              }}
             >
               {option.value === value ? (
                 <Check className="h-3.5 w-3.5 shrink-0" />

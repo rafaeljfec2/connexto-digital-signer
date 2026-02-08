@@ -66,12 +66,12 @@ export function OnboardingChecklist({
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-accent-400" />
-          <h3 className="text-sm font-semibold text-white">{labels.title}</h3>
+          <h3 className="text-sm font-semibold text-foreground">{labels.title}</h3>
         </div>
         <button
           type="button"
           onClick={handleDismiss}
-          className="text-neutral-100/30 transition-colors hover:text-white"
+          className="text-foreground-subtle transition-colors hover:text-foreground"
         >
           <X className="h-4 w-4" />
         </button>
@@ -79,10 +79,10 @@ export function OnboardingChecklist({
 
       <div className="mt-3">
         <div className="flex items-center justify-between">
-          <p className="text-[11px] text-neutral-100/40">{progressLabel}</p>
+          <p className="text-[11px] text-foreground-subtle">{progressLabel}</p>
           <p className="text-[11px] font-semibold text-accent-400">{Math.round(progressPct)}%</p>
         </div>
-        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/10">
+        <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-th-hover">
           <div
             className="h-full rounded-full bg-gradient-cta transition-all duration-500"
             style={{ width: `${progressPct}%` }}
@@ -96,13 +96,13 @@ export function OnboardingChecklist({
             {step.completed ? (
               <CheckCircle2 className="h-4.5 w-4.5 shrink-0 text-success" />
             ) : (
-              <Circle className="h-4.5 w-4.5 shrink-0 text-neutral-100/20" />
+              <Circle className="h-4.5 w-4.5 shrink-0 text-foreground-subtle" />
             )}
             <span
               className={`text-sm ${
                 step.completed
-                  ? 'text-neutral-100/40 line-through'
-                  : 'font-medium text-white'
+                  ? 'text-foreground-subtle line-through'
+                  : 'font-medium text-foreground'
               }`}
             >
               {step.label}

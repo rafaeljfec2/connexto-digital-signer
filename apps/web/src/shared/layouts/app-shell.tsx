@@ -15,7 +15,7 @@ import {
   X,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
-import { Avatar, Button, Sidebar } from '@/shared/ui';
+import { Avatar, Button, Sidebar, ThemeToggle } from '@/shared/ui';
 import type { SidebarGroup } from '@/shared/ui';
 import { useAuth } from '@/features/auth/hooks/use-auth';
 
@@ -128,14 +128,14 @@ export function AppShell({
     <div className="flex items-center gap-3">
       <Avatar name={initials} size="sm" statusColor="#14B8A6" />
       <div className="min-w-0 flex-1">
-        <p className="truncate text-xs font-semibold text-white">{displayName}</p>
-        <p className="truncate text-[10px] text-neutral-100/40">{tenantLabel}</p>
+        <p className="truncate text-xs font-semibold text-foreground">{displayName}</p>
+        <p className="truncate text-[10px] text-foreground-subtle">{tenantLabel}</p>
       </div>
     </div>
   ), [initials, displayName, tenantLabel]);
 
   return (
-    <div className="h-screen text-white">
+    <div className="h-screen text-foreground">
       <div className="flex h-full">
         <div className="hidden h-full w-64 shrink-0 lg:block">
           <Sidebar
@@ -149,7 +149,7 @@ export function AppShell({
 
         {sidebarOpen ? (
           <div className="fixed inset-0 z-40 flex lg:hidden">
-            <div className="h-full w-72 bg-brand-900/95 backdrop-blur-xl">
+            <div className="h-full w-72 bg-th-dialog backdrop-blur-xl">
               <Sidebar
                 groups={sidebarGroups}
                 title={appName}
@@ -167,7 +167,7 @@ export function AppShell({
         ) : null}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="z-30 flex shrink-0 items-center gap-3 border-b border-white/8 bg-white/[0.03] px-3 py-2.5 backdrop-blur-xl sm:px-5">
+          <header className="z-30 flex shrink-0 items-center gap-3 border-b border-th-header-border bg-th-header px-3 py-2.5 sm:px-5">
             <Button
               type="button"
               variant="ghost"
@@ -178,11 +178,11 @@ export function AppShell({
             </Button>
 
             <div className="relative hidden sm:block sm:max-w-md sm:flex-1">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-100/30" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
               <input
                 type="text"
                 placeholder={searchPlaceholder}
-                className="h-9 w-full rounded-xl border border-white/10 bg-white/5 pl-9 pr-4 text-sm text-white placeholder:text-neutral-100/30 focus:border-accent-400/40 focus:outline-none focus:ring-1 focus:ring-accent-400/20"
+                className="h-9 w-full rounded-xl border border-th-border bg-th-input pl-9 pr-4 text-sm text-foreground placeholder:text-foreground-subtle focus:border-accent-400/40 focus:outline-none focus:ring-1 focus:ring-accent-400/20"
                 onFocus={() => router.push('/documents')}
                 readOnly
               />
@@ -191,36 +191,35 @@ export function AppShell({
             <div className="flex-1" />
 
             <div className="flex items-center gap-1.5">
+              <ThemeToggle />
+
               <div ref={notifRef} className="relative">
                 <button
                   type="button"
                   onClick={() => setNotifOpen((prev) => !prev)}
-                  className="relative flex h-9 w-9 items-center justify-center rounded-xl text-neutral-100/50 transition-colors hover:bg-white/8 hover:text-white"
+                  className="relative flex h-9 w-9 items-center justify-center rounded-xl text-foreground-muted transition-colors hover:bg-th-hover hover:text-foreground"
                 >
                   <Bell className="h-4.5 w-4.5" />
                   <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent-400" />
                 </button>
 
                 {notifOpen ? (
-                  <div
-                    className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-white/10 shadow-2xl"
-                    style={{ backgroundColor: '#0b1f3b' }}
-                  >
-                    <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
-                      <p className="text-sm font-semibold text-white">
+                  <div className="absolute right-0 top-full z-50 mt-2 w-72 overflow-hidden rounded-2xl border border-th-card-border bg-th-dialog shadow-2xl">
+                    <div className="flex items-center justify-between border-b border-th-border px-4 py-3">
+                      <p className="text-sm font-semibold text-foreground">
                         {notificationsLabel}
                       </p>
                       <button
                         type="button"
                         onClick={() => setNotifOpen(false)}
-                        className="text-neutral-100/40 hover:text-white"
+                        className="text-foreground-subtle hover:text-foreground"
                       >
                         <X className="h-4 w-4" />
                       </button>
                     </div>
                     <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-                      <Bell className="h-8 w-8 text-neutral-100/20" />
-                      <p className="text-xs text-neutral-100/40">
+                      <Bell className="h-8 w-8 text-foreground-subtle" />
+                      <p className="text-xs text-foreground-subtle">
                         {noNotificationsLabel}
                       </p>
                     </div>
@@ -228,12 +227,12 @@ export function AppShell({
                 ) : null}
               </div>
 
-              <div className="hidden h-6 w-px bg-white/10 sm:block" />
+              <div className="hidden h-6 w-px bg-th-border sm:block" />
 
               <div className="hidden items-center gap-2.5 sm:flex">
                 <div className="text-right">
-                  <p className="text-xs font-semibold text-white">{displayName}</p>
-                  <p className="text-[10px] text-neutral-100/40">{tenantLabel}</p>
+                  <p className="text-xs font-semibold text-foreground">{displayName}</p>
+                  <p className="text-[10px] text-foreground-subtle">{tenantLabel}</p>
                 </div>
               </div>
 
@@ -246,13 +245,10 @@ export function AppShell({
                   <Avatar name={initials} size="md" statusColor="#14B8A6" />
                 </button>
                 {profileOpen ? (
-                  <div
-                    className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-white/10 shadow-2xl"
-                    style={{ backgroundColor: '#0b1f3b' }}
-                  >
-                    <div className="border-b border-white/8 px-4 py-3">
-                      <p className="truncate text-sm font-semibold text-white">{displayName}</p>
-                      <p className="truncate text-xs text-white/40">{user?.email}</p>
+                  <div className="absolute right-0 top-full z-50 mt-2 w-52 overflow-hidden rounded-2xl border border-th-card-border bg-th-dialog shadow-2xl">
+                    <div className="border-b border-th-border px-4 py-3">
+                      <p className="truncate text-sm font-semibold text-foreground">{displayName}</p>
+                      <p className="truncate text-xs text-foreground-subtle">{user?.email}</p>
                     </div>
                     <div className="py-1">
                       <button
@@ -261,17 +257,17 @@ export function AppShell({
                           setProfileOpen(false);
                           router.push('/settings');
                         }}
-                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-neutral-100/70 transition-colors hover:bg-white/5 hover:text-white"
+                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-foreground-muted transition-colors hover:bg-th-hover hover:text-foreground"
                       >
                         <User className="h-4 w-4" />
                         {myAccountLabel}
                       </button>
                     </div>
-                    <div className="border-t border-white/8">
+                    <div className="border-t border-th-border">
                       <button
                         type="button"
                         onClick={handleSignOut}
-                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 transition-colors hover:bg-white/5"
+                        className="flex w-full items-center gap-2.5 px-4 py-2.5 text-sm text-red-400 transition-colors hover:bg-th-hover"
                       >
                         <LogOut className="h-4 w-4" />
                         {signOutLabel}
