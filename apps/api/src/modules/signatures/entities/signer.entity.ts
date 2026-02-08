@@ -82,6 +82,9 @@ export class Signer {
   @Column({ name: 'verified_at', type: 'timestamptz', nullable: true })
   verifiedAt!: Date | null;
 
+  @Column({ name: 'signature_data', type: 'text', nullable: true })
+  signatureData!: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 

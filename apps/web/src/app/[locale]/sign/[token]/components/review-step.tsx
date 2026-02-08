@@ -21,6 +21,8 @@ type ReviewStepProps = Readonly<{
   signerData: SignerWithDocument;
   fields: ReadonlyArray<SignerField>;
   fieldValues: Readonly<Record<string, string>>;
+  standaloneSignature: string | null;
+  onRequestSignature: () => void;
   onBack: () => void;
   onSubmit: () => void;
   onViewDocument: () => void;
@@ -37,6 +39,8 @@ type ReviewStepProps = Readonly<{
     signAction: string;
     signing: string;
     back: string;
+    changeSignature: string;
+    yourSignature: string;
   }>;
   fieldTypeLabels: Readonly<Record<string, string>>;
 }>;
@@ -53,6 +57,8 @@ export function ReviewStep({
   signerData,
   fields,
   fieldValues,
+  standaloneSignature,
+  onRequestSignature,
   onBack,
   onSubmit,
   onViewDocument,
@@ -66,7 +72,12 @@ export function ReviewStep({
     (f) => (fieldValues[f.id] ?? f.value ?? '').length > 0
   );
 
-  const canSubmit = consentAccepted && !isSubmitting;
+  const hasSignatureField = filledFields.some(
+    (f) => f.type === 'signature' || f.type === 'initials'
+  );
+  const hasSignature = hasSignatureField || standaloneSignature !== null;
+
+  const canSubmit = consentAccepted && hasSignature && !isSubmitting;
 
   return (
     <div className="flex flex-1 flex-col">
@@ -161,6 +172,36 @@ export function ReviewStep({
             })}
           </div>
         </Card>
+
+        {standaloneSignature ? (
+          <Card variant="glass" className="space-y-3 p-4 md:p-6">
+            <div className="flex items-center gap-2">
+              <PenTool className="h-4 w-4 text-neutral-100/50" />
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-100/40">
+                {labels.yourSignature}
+              </p>
+            </div>
+            <div className="flex flex-col items-center gap-3">
+              <div className="flex h-20 w-full max-w-xs items-center justify-center overflow-hidden rounded-xl border border-success/20 bg-white p-2">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={standaloneSignature}
+                  alt=""
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={onRequestSignature}
+                className="text-xs text-accent-400"
+              >
+                <PenTool className="mr-1 h-3.5 w-3.5" />
+                {labels.changeSignature}
+              </Button>
+            </div>
+          </Card>
+        ) : null}
 
         <Card variant="glass" className="space-y-3 p-4 md:p-6">
           <div className="flex items-start gap-3">

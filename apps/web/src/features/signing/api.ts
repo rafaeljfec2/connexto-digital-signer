@@ -41,6 +41,7 @@ export type AcceptSignatureInput = {
     readonly fieldId: string;
     readonly value: string;
   }>;
+  readonly signatureData?: string;
 };
 
 export const getSignerByToken = async (

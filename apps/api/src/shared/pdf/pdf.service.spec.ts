@@ -6,12 +6,14 @@ const buildSigner = (overrides?: Partial<{
   signedAt: string;
   ipAddress: string | null;
   userAgent: string | null;
+  signatureData: string | null;
 }>) => ({
   name: 'Jane Doe',
   email: 'jane@acme.com',
   signedAt: '2026-01-02T00:00:00.000Z',
   ipAddress: '127.0.0.1',
   userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',
+  signatureData: null,
   ...overrides,
 });
 

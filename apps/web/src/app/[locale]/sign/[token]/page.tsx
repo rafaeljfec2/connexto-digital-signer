@@ -49,6 +49,8 @@ export default function SignerDocumentPage() {
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
+  const [standaloneSignature, setStandaloneSignature] = useState<string | null>(null);
+  const [showStandaloneSignature, setShowStandaloneSignature] = useState(false);
 
   useEffect(() => {
     const signingLang = signerQuery.data?.document.signingLanguage;
@@ -61,6 +63,7 @@ export default function SignerDocumentPage() {
   const fields = useMemo(() => fieldsQuery.data ?? [], [fieldsQuery.data]);
   const alreadySigned = signerData?.signer.status === 'signed';
   const requiresValidation = signerData?.signer.authMethod === 'email';
+  const hasFields = fields.length > 0;
 
   const fileUrl = useMemo(() => {
     if (!pdfQuery.data) return '';
@@ -83,11 +86,21 @@ export default function SignerDocumentPage() {
 
   const handleSignatureConfirm = useCallback(
     (value: string) => {
+      if (showStandaloneSignature) {
+        setStandaloneSignature(value);
+        setShowStandaloneSignature(false);
+        return;
+      }
       if (!activeFieldId) return;
       setFieldValues((prev) => ({ ...prev, [activeFieldId]: value }));
       setActiveFieldId(null);
     },
-    [activeFieldId]
+    [activeFieldId, showStandaloneSignature]
+  );
+
+  const hasSignatureField = useMemo(
+    () => fields.some((f) => f.type === 'signature' || f.type === 'initials'),
+    [fields]
   );
 
   const handleFillNext = useCallback(() => {
@@ -118,9 +131,15 @@ export default function SignerDocumentPage() {
         value: fieldValues[f.id],
       }));
 
+    const signaturePayload = standaloneSignature
+      ?? fields
+        .filter((f) => f.type === 'signature' && (fieldValues[f.id] ?? '').startsWith('data:image/'))
+        .map((f) => fieldValues[f.id])[0];
+
     await acceptMutation.mutateAsync({
       consent: t('consent.label'),
       fields: fieldPayload,
+      signatureData: signaturePayload,
     });
 
     router.push(`/success?token=${token}`);
@@ -265,11 +284,14 @@ export default function SignerDocumentPage() {
           <FillFieldsStep
             fields={fields}
             fieldValues={fieldValues}
+            standaloneSignature={standaloneSignature}
+            requireStandaloneSignature={!hasSignatureField}
             onFieldClick={handleFieldClick}
+            onRequestSignature={() => setShowStandaloneSignature(true)}
             onNext={handleFillNext}
             onBack={() => setCurrentStep('view')}
             labels={{
-              instruction: t('fillStep.instruction'),
+              instruction: hasFields ? t('fillStep.instruction') : t('fillStep.signatureOnly'),
               progressFormat: (filled: number, total: number) =>
                 t('fieldsProgress', { filled, total }),
               required: t('fillStep.required'),
@@ -278,6 +300,10 @@ export default function SignerDocumentPage() {
               tapToFill: t('fillStep.tapToFill'),
               next: t('fillStep.next'),
               back: t('back'),
+              drawSignature: t('drawSignature'),
+              changeSignature: t('changeSignature'),
+              signatureRequired: t('signatureRequired'),
+              yourSignature: t('yourSignature'),
             }}
             fieldTypeLabels={fieldTypeLabels}
           />
@@ -312,6 +338,8 @@ export default function SignerDocumentPage() {
             signerData={signerData}
             fields={fields}
             fieldValues={fieldValues}
+            standaloneSignature={standaloneSignature}
+            onRequestSignature={() => setShowStandaloneSignature(true)}
             onBack={handleReviewBack}
             onSubmit={handleSubmit}
             onViewDocument={() => setShowPdfPreview(true)}
@@ -329,6 +357,8 @@ export default function SignerDocumentPage() {
               signAction: t('signAction'),
               signing: t('signing'),
               back: t('back'),
+              changeSignature: t('changeSignature'),
+              yourSignature: t('yourSignature'),
             }}
             fieldTypeLabels={fieldTypeLabels}
           />
@@ -336,10 +366,13 @@ export default function SignerDocumentPage() {
       </main>
 
       <SignatureModal
-        open={activeFieldId !== null}
+        open={activeFieldId !== null || showStandaloneSignature}
         labels={signaturePadLabels}
         onConfirm={handleSignatureConfirm}
-        onClose={() => setActiveFieldId(null)}
+        onClose={() => {
+          setActiveFieldId(null);
+          setShowStandaloneSignature(false);
+        }}
       />
 
       <PdfPreviewModal

@@ -271,6 +271,10 @@
     "signing": "Submitting signature...",
     "signatureStatus": "Signature status",
     "signatureLabel": "Signature",
+    "drawSignature": "Draw signature",
+    "changeSignature": "Change signature",
+    "signatureRequired": "Signature required to continue",
+    "yourSignature": "Your signature",
     "clickToSign": "Sign",
     "clickToInitials": "Initial",
     "signed": "Signed",
@@ -298,6 +302,7 @@
     },
     "fillStep": {
       "instruction": "Click on the fields below to fill in your signature.",
+      "signatureOnly": "Draw your signature to proceed.",
       "fieldLabel": "Field {index}",
       "required": "Required",
       "optional": "Optional",

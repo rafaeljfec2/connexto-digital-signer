@@ -41,7 +41,7 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
     return { signersOk, fieldsOk };
   }, [signersQuery.data, fieldsQuery.data]);
 
-  const allReady = checklist.signersOk && checklist.fieldsOk;
+  const allReady = checklist.signersOk;
 
   const handlePreview = async () => {
     await previewMutation.mutateAsync({});

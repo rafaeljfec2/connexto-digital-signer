@@ -317,6 +317,8 @@ export function DocumentAuditView({
                   </Badge>
                 </div>
 
+                <div className="border-t border-white/10" />
+
                 <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
                   {signer.notifiedAt ? (
                     <div className="flex items-center gap-1.5 text-neutral-100/60">

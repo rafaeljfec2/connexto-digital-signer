@@ -271,6 +271,10 @@
     "signing": "Enviando assinatura...",
     "signatureStatus": "Status da assinatura",
     "signatureLabel": "Assinatura",
+    "drawSignature": "Desenhar assinatura",
+    "changeSignature": "Alterar assinatura",
+    "signatureRequired": "Assinatura obrigatória para continuar",
+    "yourSignature": "Sua assinatura",
     "clickToSign": "Assinar",
     "clickToInitials": "Rubricar",
     "signed": "Assinado",
@@ -298,6 +302,7 @@
     },
     "fillStep": {
       "instruction": "Clique nos campos abaixo para preencher sua assinatura.",
+      "signatureOnly": "Desenhe sua assinatura para prosseguir.",
       "fieldLabel": "Campo {index}",
       "required": "Obrigatório",
       "optional": "Opcional",

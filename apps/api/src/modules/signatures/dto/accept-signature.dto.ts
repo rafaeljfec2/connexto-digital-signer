@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsArray, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class FieldValueDto {
@@ -22,4 +22,9 @@ export class AcceptSignatureDto {
   @Type(() => FieldValueDto)
   @ApiProperty({ type: [FieldValueDto] })
   readonly fields!: FieldValueDto[];
+
+  @IsOptional()
+  @IsString()
+  @ApiPropertyOptional({ example: 'data:image/png;base64,...' })
+  readonly signatureData?: string;
 }

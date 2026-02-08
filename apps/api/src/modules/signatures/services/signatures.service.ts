@@ -163,7 +163,7 @@ export class SignaturesService {
 
   async acceptSignature(
     accessToken: string,
-    dto: { consent: string; fields: { fieldId: string; value: string }[] },
+    dto: { consent: string; fields: { fieldId: string; value: string }[]; signatureData?: string },
     context: SigningContext
   ): Promise<Signer> {
     const signer = await this.findByToken(accessToken);
@@ -194,6 +194,7 @@ export class SignaturesService {
     signer.signedAt = new Date();
     signer.ipAddress = context.ipAddress;
     signer.userAgent = context.userAgent;
+    signer.signatureData = dto.signatureData ?? null;
     const saved = await this.signerRepository.save(signer);
     const payload: SignatureCompletedEvent = {
       documentId: signer.documentId,
@@ -226,10 +227,6 @@ export class SignaturesService {
     const signers = await this.findByDocument(documentId, tenantId);
     if (signers.length === 0) {
       throw new BadRequestException('At least one signer is required');
-    }
-    const fields = await this.fieldsService.findByDocument(tenantId, documentId);
-    if (fields.every((field) => field.required === false)) {
-      throw new BadRequestException('At least one required field is required');
     }
     if (document.signingMode === SigningMode.SEQUENTIAL) {
       const orders = signers.map((signer) => signer.order).filter((order) => order !== null);
@@ -370,6 +367,7 @@ export class SignaturesService {
       signedAt: s.signedAt?.toISOString() ?? '',
       ipAddress: s.ipAddress,
       userAgent: s.userAgent,
+      signatureData: s.signatureData,
     }));
     const finalBuffer = await this.pdfService.appendEvidencePage(
       withSignatures,

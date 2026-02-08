@@ -82,9 +82,9 @@ export function AppShell({
   );
 
   return (
-    <div className="min-h-screen text-white">
-      <div className="flex">
-        <div className="hidden h-screen w-64 lg:block">
+    <div className="h-screen text-white">
+      <div className="flex h-full">
+        <div className="hidden h-full w-64 shrink-0 lg:block">
           <Sidebar items={sidebarItems} title={appName} />
         </div>
         {sidebarOpen ? (
@@ -99,8 +99,8 @@ export function AppShell({
             />
           </div>
         ) : null}
-        <div className="flex min-h-screen flex-1 flex-col">
-          <header className="sticky top-0 z-30 flex items-center justify-between gap-4 border-b border-white/10 bg-white/5 px-4 py-4 backdrop-blur-xl sm:px-6">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <header className="z-30 flex shrink-0 items-center justify-between gap-4 border-b border-white/10 bg-white/5 px-4 py-4 backdrop-blur-xl sm:px-6">
             <div className="flex items-center gap-3">
               <Button
                 type="button"
@@ -156,7 +156,9 @@ export function AppShell({
               </div>
             </div>
           </header>
-          <main className="flex-1 px-4 py-8 sm:px-6 lg:px-10">{children}</main>
+          <main className="min-h-0 flex-1 overflow-auto px-4 py-8 sm:px-6 lg:px-10">
+            {children}
+          </main>
         </div>
       </div>
     </div>
