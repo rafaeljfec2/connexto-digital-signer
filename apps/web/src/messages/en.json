@@ -142,8 +142,13 @@
       "actions": "Actions"
     },
     "actions": {
+      "newDocument": "New document",
       "continue": "Continue",
       "view": "View",
+      "viewSummary": "View summary",
+      "downloadOriginal": "Download original PDF",
+      "downloadSigned": "Download signed PDF",
+      "downloading": "Downloading...",
       "delete": "Delete",
       "deleteTitle": "Delete draft",
       "deleteConfirm": "Are you sure you want to delete this draft? This action cannot be undone.",

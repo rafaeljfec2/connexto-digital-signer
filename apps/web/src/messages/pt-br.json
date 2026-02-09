@@ -142,8 +142,13 @@
       "actions": "Acoes"
     },
     "actions": {
+      "newDocument": "Novo documento",
       "continue": "Continuar",
       "view": "Visualizar",
+      "viewSummary": "Ver resumo",
+      "downloadOriginal": "Baixar PDF original",
+      "downloadSigned": "Baixar PDF assinado",
+      "downloading": "Baixando...",
       "delete": "Excluir",
       "deleteTitle": "Excluir rascunho",
       "deleteConfirm": "Tem certeza que deseja excluir este rascunho? Esta ação não pode ser desfeita.",
