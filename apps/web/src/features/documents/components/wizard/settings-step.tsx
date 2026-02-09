@@ -172,7 +172,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
         </div>
 
         <div className="mt-4 flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-accent-400" />
+          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <p className="text-xs text-foreground-muted">{tSettings('closureNote')}</p>
         </div>
       </div>

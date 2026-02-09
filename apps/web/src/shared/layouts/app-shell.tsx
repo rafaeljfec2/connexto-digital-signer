@@ -182,7 +182,7 @@ export function AppShell({
               <input
                 type="text"
                 placeholder={searchPlaceholder}
-                className="h-9 w-full rounded-xl border border-th-border bg-th-input pl-9 pr-4 text-sm text-foreground placeholder:text-foreground-subtle focus:border-accent-400/40 focus:outline-none focus:ring-1 focus:ring-accent-400/20"
+                className="h-9 w-full rounded-xl border border-th-border bg-th-input pl-9 pr-4 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
                 onFocus={() => router.push('/documents')}
                 readOnly
               />
@@ -200,7 +200,7 @@ export function AppShell({
                   className="relative flex h-9 w-9 items-center justify-center rounded-xl text-foreground-muted transition-colors hover:bg-th-hover hover:text-foreground"
                 >
                   <Bell className="h-4.5 w-4.5" />
-                  <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-accent-400" />
+                  <span className="absolute right-1.5 top-1.5 h-2 w-2 rounded-full bg-primary" />
                 </button>
 
                 {notifOpen ? (

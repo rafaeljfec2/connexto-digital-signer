@@ -22,7 +22,7 @@ export function HelpSection({ labels }: Readonly<HelpSectionProps>) {
   return (
     <Card variant="glass" className="p-5">
       <div className="flex items-center gap-2">
-        <HelpCircle className="h-4 w-4 text-accent-400" />
+        <HelpCircle className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-medium text-foreground">{labels.title}</h3>
       </div>
 
@@ -35,7 +35,7 @@ export function HelpSection({ labels }: Readonly<HelpSectionProps>) {
               type="button"
               className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-th-hover"
             >
-              <Icon className="h-4 w-4 shrink-0 text-foreground-subtle transition-colors group-hover:text-accent-400" />
+              <Icon className="h-4 w-4 shrink-0 text-foreground-subtle transition-colors group-hover:text-primary" />
               <span className="flex-1 text-sm text-foreground-muted transition-colors group-hover:text-foreground">
                 {labels[item.key]}
               </span>

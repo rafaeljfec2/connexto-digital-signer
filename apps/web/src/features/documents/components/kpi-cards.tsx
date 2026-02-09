@@ -14,9 +14,9 @@ const VARIANT_CONFIG: Record<KpiVariant, {
 }> = {
   pending: {
     icon: Clock,
-    iconBg: 'bg-accent-400/15',
-    iconColor: 'text-accent-400',
-    valuePulse: 'text-accent-400',
+    iconBg: 'bg-primary/15',
+    iconColor: 'text-primary',
+    valuePulse: 'text-primary',
   },
   completed: {
     icon: CheckCircle2,

@@ -122,7 +122,7 @@ function PageRenderer({
               onClick={() => onFieldClick(field.id)}
               className={`absolute flex min-h-[36px] min-w-[80px] items-center justify-center gap-1.5 rounded-md border-2 border-dashed px-2 py-1 text-xs font-medium transition ${
                 isFilled
-                  ? 'border-green-500 bg-green-50/90 text-green-700'
+                  ? 'border-primary bg-blue-50/90 text-primary'
                   : 'border-orange-400 bg-white/80 text-orange-600 hover:bg-orange-50'
               } ${disabled ? 'cursor-default opacity-60' : 'cursor-pointer active:scale-95'}`}
               style={{

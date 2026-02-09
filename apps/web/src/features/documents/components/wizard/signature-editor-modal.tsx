@@ -212,7 +212,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
                   onClick={() => setActiveFieldType(type)}
                   className={`flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-normal transition ${
                     activeFieldType === type
-                      ? 'border-accent-400/50 bg-accent-600/20 text-accent-400'
+                      ? 'border-primary/50 bg-primary/20 text-primary'
                       : 'border-th-border bg-th-hover text-foreground-muted hover:bg-th-active hover:text-foreground'
                   }`}
                 >

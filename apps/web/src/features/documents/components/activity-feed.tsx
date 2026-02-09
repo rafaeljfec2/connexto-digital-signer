@@ -22,7 +22,7 @@ const ACTIVITY_CONFIG: Record<
     readonly iconColor: string;
   }
 > = {
-  sent: { icon: Send, dotColor: 'bg-accent-400', iconColor: 'text-accent-400' },
+  sent: { icon: Send, dotColor: 'bg-primary', iconColor: 'text-primary' },
   completed: { icon: CheckCircle2, dotColor: 'bg-success', iconColor: 'text-success' },
   expired: { icon: AlertTriangle, dotColor: 'bg-error', iconColor: 'text-error' },
 };
@@ -87,7 +87,7 @@ export function ActivityFeed({
   return (
     <Card variant="glass" className="p-5">
       <div className="flex items-center gap-2">
-        <Activity className="h-4 w-4 text-accent-400" />
+        <Activity className="h-4 w-4 text-primary" />
         <h3 className="text-sm font-medium text-foreground">{labels.title}</h3>
       </div>
 

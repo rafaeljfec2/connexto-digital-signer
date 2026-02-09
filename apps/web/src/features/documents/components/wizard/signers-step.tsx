@@ -304,7 +304,7 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
               type="checkbox"
               checked={requestCpf}
               onChange={(event) => setRequestCpf(event.target.checked)}
-              className="h-4 w-4 rounded border-th-input-border bg-th-input text-accent-400 focus:ring-accent-400"
+              className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
             />
             {tSigners('requestCpfLabel')}
           </label>

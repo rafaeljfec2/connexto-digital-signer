@@ -176,7 +176,7 @@ export default function DashboardPage() {
             <button
               type="button"
               onClick={() => router.push('/documents')}
-              className="flex items-center gap-1 text-xs font-medium text-accent-400 transition-colors hover:text-accent-200"
+              className="flex items-center gap-1 text-xs font-medium text-primary transition-colors hover:text-accent-200"
             >
               {tDashboard('viewAll')}
               <ArrowRight className="h-3.5 w-3.5" />

@@ -45,14 +45,14 @@ export function Sidebar({
     >
       <div className="px-5 pb-2 pt-6">
         <Link href="/overview" className="flex items-center gap-2.5">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-cta shadow-lg shadow-accent-600/20">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-cta shadow-lg shadow-primary/20">
             <PenTool className="h-4.5 w-4.5 text-white" />
           </div>
           <div>
             <span className="text-base font-medium tracking-tight text-foreground">
               {title}
             </span>
-            <span className="ml-1 text-[10px] font-medium uppercase tracking-widest text-accent-400">
+            <span className="ml-1 text-[10px] font-medium uppercase tracking-widest text-primary">
               sign
             </span>
           </div>
@@ -97,7 +97,7 @@ export function Sidebar({
                     <span
                       className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
                         isActive
-                          ? 'bg-accent-600/20 text-accent-400'
+                          ? 'bg-primary/20 text-primary'
                           : 'bg-th-icon-bg text-th-icon-fg group-hover:bg-th-hover group-hover:text-foreground'
                       }`}
                     >

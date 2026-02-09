@@ -33,7 +33,7 @@ export function Dropzone({
     <label
       className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-4 py-10 text-center text-sm transition ${
         isDragging
-          ? 'border-accent-400 bg-th-active'
+          ? 'border-primary bg-th-active'
           : 'border-th-border bg-th-input'
       } ${disabled ? 'cursor-not-allowed opacity-50' : ''} ${className}`}
       onDragOver={(event) => {

@@ -51,7 +51,7 @@ export const SignatureField = ({
         }
       }}
       className={`absolute flex flex-col items-center justify-center rounded-md border-2 border-dashed bg-white/80 px-2 py-0.5 text-xs shadow-sm transition-shadow ${
-        isSelected ? 'ring-2 ring-accent-400/70 shadow-md' : 'hover:shadow-md'
+        isSelected ? 'ring-2 ring-primary/70 shadow-md' : 'hover:shadow-md'
       }`}
       style={{
         left: `${field.x * 100}%`,

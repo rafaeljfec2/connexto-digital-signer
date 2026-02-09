@@ -32,18 +32,18 @@ export function TipsBanner({ labels, onLearnMore }: Readonly<TipsBannerProps>) {
   return (
     <Card
       variant="glass"
-      className="relative overflow-hidden border-accent-600/20 p-5"
+      className="relative overflow-hidden border-primary/20 p-5"
     >
-      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-accent-600/10 blur-2xl" />
+      <div className="absolute -right-8 -top-8 h-32 w-32 rounded-full bg-primary/10 blur-2xl" />
       <div className="absolute -bottom-6 -left-6 h-24 w-24 rounded-full bg-brand-500/10 blur-2xl" />
 
       <div className="relative">
         <div className="flex items-start justify-between">
           <div className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent-600/15">
-              <Lightbulb className="h-4 w-4 text-accent-400" />
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
+              <Lightbulb className="h-4 w-4 text-primary" />
             </div>
-            <p className="text-[10px] font-medium uppercase tracking-widest text-accent-400/70">
+            <p className="text-[10px] font-medium uppercase tracking-widest text-primary/70">
               Dica
             </p>
           </div>
@@ -64,7 +64,7 @@ export function TipsBanner({ labels, onLearnMore }: Readonly<TipsBannerProps>) {
           <button
             type="button"
             onClick={onLearnMore}
-            className="mt-3 flex items-center gap-1.5 text-xs font-medium text-accent-400 transition-colors hover:text-accent-200"
+            className="mt-3 flex items-center gap-1.5 text-xs font-medium text-primary transition-colors hover:text-accent-200"
           >
             {labels.learnMore}
             <ArrowRight className="h-3 w-3" />

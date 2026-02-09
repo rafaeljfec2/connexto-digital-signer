@@ -143,7 +143,7 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
               {tReview('previewSubject')}
             </p>
             <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-th-border bg-th-hover px-3 py-2">
-              <Mail className="h-4 w-4 shrink-0 text-accent-400" />
+              <Mail className="h-4 w-4 shrink-0 text-primary" />
               <p className="text-sm text-foreground">{previewMutation.data?.subject}</p>
             </div>
           </div>

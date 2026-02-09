@@ -73,8 +73,8 @@ function SuccessActions({
           disabled={downloadingOriginal}
           className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
         >
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-400/20">
-            <FileText className="h-5 w-5 text-accent-400" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/20">
+            <FileText className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-medium">{labels.downloadOriginal}</p>

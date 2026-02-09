@@ -201,7 +201,7 @@ export class PdfService {
         primary: rgb(0.055, 0.227, 0.431),
         secondary: rgb(0.3, 0.3, 0.4),
         muted: rgb(0.45, 0.45, 0.55),
-        accent: rgb(0.133, 0.545, 0.133),
+        accent: rgb(0.008, 0.518, 0.780),
         border: rgb(0.82, 0.84, 0.87),
         headerBg: rgb(0.945, 0.953, 0.965),
         cardBg: rgb(0.973, 0.976, 0.984),

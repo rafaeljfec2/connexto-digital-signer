@@ -220,7 +220,7 @@ const PdfThumbnail = ({ pdfDocument, pageNumber, isActive, onSelect }: PdfThumbn
       type="button"
       onClick={onSelect}
       className={`rounded-lg border p-1 transition ${
-        isActive ? 'border-accent-400 bg-th-active' : 'border-th-border bg-th-hover'
+        isActive ? 'border-primary bg-th-active' : 'border-th-border bg-th-hover'
       }`}
     >
       <canvas ref={canvasRef} className="block h-auto w-full rounded-md" />

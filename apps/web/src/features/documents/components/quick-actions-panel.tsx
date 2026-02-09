@@ -24,7 +24,7 @@ export function QuickActionsPanel({
     <div className="space-y-3">
       <Card variant="glass" className="space-y-3 p-5">
         <div className="flex items-center gap-2">
-          <Send className="h-4 w-4 text-accent-400" />
+          <Send className="h-4 w-4 text-primary" />
           <h3 className="text-sm font-medium text-foreground">{labels.title}</h3>
         </div>
 
@@ -49,8 +49,8 @@ export function QuickActionsPanel({
 
       <Card variant="glass" className="p-5">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-600/15">
-            <PenTool className="h-5 w-5 text-accent-400" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+            <PenTool className="h-5 w-5 text-primary" />
           </div>
           <div className="min-w-0 flex-1">
             <h3 className="text-sm font-medium text-foreground">{labels.signTitle}</h3>

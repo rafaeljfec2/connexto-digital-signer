@@ -30,7 +30,7 @@ export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Rea
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-th-hover">
             <div
-              className="h-full rounded-full bg-accent-400 transition-all duration-500 ease-out"
+              className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
               style={{ width: `${progressPercent}%` }}
             />
           </div>
@@ -46,7 +46,7 @@ export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Rea
           if (isCompleted) {
             circleClass = 'bg-success/20 text-success border-success/30';
           } else if (isActive) {
-            circleClass = 'bg-accent-600/20 text-accent-400 border-accent-400/40';
+            circleClass = 'bg-primary/20 text-primary border-primary/40';
           } else {
             circleClass = 'bg-th-hover text-foreground-subtle border-th-border';
           }

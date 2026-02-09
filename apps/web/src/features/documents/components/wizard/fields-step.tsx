@@ -47,8 +47,8 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStep
   return (
     <div className="space-y-4">
       <Card variant="glass" className="space-y-6 p-8 text-center">
-        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-accent-400/30 bg-accent-600/10">
-          <PenTool className="h-7 w-7 text-accent-400" />
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
+          <PenTool className="h-7 w-7 text-primary" />
         </div>
 
         <div className="space-y-2">
@@ -62,7 +62,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStep
 
         <div className="mx-auto flex max-w-sm flex-col gap-3">
           {hasFields ? (
-            <div className="flex items-center justify-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 px-4 py-2 text-sm text-green-400">
+            <div className="flex items-center justify-center gap-2 rounded-lg border border-primary/20 bg-primary/10 px-4 py-2 text-sm text-primary">
               <CheckCircle className="h-4 w-4" />
               {tFields('fieldsCount', { count: fieldCount })}
             </div>
