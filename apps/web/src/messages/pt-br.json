@@ -19,7 +19,7 @@
     "nav": {
       "home": "Dashboard",
       "documents": "Documentos",
-      "signers": "Signatarios",
+      "signers": "Signatários",
       "settings": "Configurações"
     },
     "navGroups": {
@@ -27,10 +27,10 @@
       "management": "Gerenciamento"
     },
     "newDocument": "Novo documento",
-    "signersTitle": "Signatarios",
-    "signersSubtitle": "Gerencie signatarios e acompanhe status",
-    "signersEmptyTitle": "Nenhum signatario encontrado",
-    "signersEmptyDescription": "Adicione signatarios em um documento para visualizar aqui.",
+    "signersTitle": "Signatários",
+    "signersSubtitle": "Gerencie signatários e acompanhe status",
+    "signersEmptyTitle": "Nenhum signatário encontrado",
+    "signersEmptyDescription": "Adicione signatários em um documento para visualizar aqui.",
     "settingsTitle": "Configurações",
     "settingsSubtitle": "Preferencias e ajustes da conta",
     "settingsEmptyTitle": "Configurações em breve",
@@ -79,7 +79,7 @@
       "evening": "Boa noite"
     },
     "heroSubtitle": "Voce tem {pending} documentos pendentes de assinatura",
-    "heroSubtitleNone": "Todos os documentos estao em dia!",
+    "heroSubtitleNone": "Todos os documentos estão em dia!",
     "sendDocument": "Enviar documento",
     "kpi": {
       "pending": "Pendentes",
@@ -107,7 +107,7 @@
       "dismiss": "Dispensar",
       "createAccount": "Criar sua conta",
       "sendFirstDocument": "Enviar primeiro documento",
-      "addSigners": "Adicionar signatarios",
+      "addSigners": "Adicionar signatários",
       "completeFirstSignature": "Completar primeira assinatura"
     },
     "activity": {
@@ -126,8 +126,8 @@
     "tips": {
       "dismiss": "Dispensar",
       "learnMore": "Saiba mais",
-      "tip1": "Envie documentos para multiplos signatarios de uma vez",
-      "tip2": "Configure lembretes automaticos para suas assinaturas",
+      "tip1": "Envie documentos para múltiplos signatários de uma vez",
+      "tip2": "Configure lembretes automáticos para suas assinaturas",
       "tip3": "Use campos posicionados para uma experiencia de assinatura guiada",
       "tip4": "Acompanhe o status de todos os documentos em tempo real"
     }
@@ -146,7 +146,7 @@
       "view": "Visualizar",
       "delete": "Excluir",
       "deleteTitle": "Excluir rascunho",
-      "deleteConfirm": "Tem certeza que deseja excluir este rascunho? Esta acao nao pode ser desfeita.",
+      "deleteConfirm": "Tem certeza que deseja excluir este rascunho? Esta ação não pode ser desfeita.",
       "deleteSuccess": "Rascunho excluido com sucesso",
       "deleting": "Excluindo...",
       "cancel": "Cancelar"
@@ -188,7 +188,7 @@
       "errors": {
         "titleRequired": "Titulo obrigatorio",
         "fileRequired": "Arquivo obrigatorio",
-        "onlyPdf": "Apenas arquivos PDF sao permitidos",
+        "onlyPdf": "Apenas arquivos PDF são permitidos",
         "tooLarge": "Arquivo excede {max}MB",
         "failed": "Falha no envio"
       }
@@ -211,16 +211,16 @@
     "restart": "Reiniciar",
     "cancel": "Cancelar",
     "cancelConfirmTitle": "Cancelar assinatura",
-    "cancelConfirmDescription": "Tem certeza que deseja cancelar? O rascunho deste documento sera excluido permanentemente.",
+    "cancelConfirmDescription": "Tem certeza que deseja cancelar? O rascunho deste documento será excluido permanentemente.",
     "cancelConfirmButton": "Excluir rascunho",
     "cancelCancelButton": "Voltar",
-    "cancelSuccess": "Rascunho excluido com sucesso",
+    "cancelSuccess": "Rascunho excluído com sucesso",
     "cancelError": "Falha ao excluir o rascunho",
     "notFound": "Documento nao encontrado"
   },
   "signers": {
     "title": "Definir signatários",
-    "subtitle": "Adicione pessoas que vao assinar este documento",
+    "subtitle": "Adicione pessoas que vão assinar este documento",
     "mode": "Modo de assinatura",
     "modeParallel": "Paralelo",
     "modeSequential": "Sequencial",
@@ -232,7 +232,7 @@
     "cpfPlaceholder": "000.000.000-00",
     "birthDateLabel": "Data de nascimento",
     "birthDatePlaceholder": "DD/MM/AAAA",
-    "requestCpfLabel": "Solicitar CPF ao signatario",
+    "requestCpfLabel": "Solicitar CPF ao signatário",
     "authMethodLabel": "Autenticacao",
     "authMethodEmail": "Token via email",
     "authMethodNone": "Sem autenticacao",
@@ -245,7 +245,7 @@
     "remove": "Remover",
     "cancel": "Cancelar",
     "confirm": "Adicionar",
-    "listTitle": "Lista de signatarios",
+    "listTitle": "Lista de signatários",
     "empty": "Nenhum signatario ainda"
   },
   "fields": {
@@ -258,9 +258,9 @@
     "skipPositioning": "Prosseguir sem posicionar",
     "fieldsCount": "{count, plural, one {# campo posicionado} other {# campos posicionados}}",
     "saveAndContinue": "Salvar e continuar",
-    "signersLabel": "Signatarios",
+    "signersLabel": "Signatários",
     "positionLabel": "Posicionar",
-    "activeSigner": "Signatario ativo",
+    "activeSigner": "Signatário ativo",
     "paletteTitle": "Campos",
     "paletteColorHint": "Os campos usarao esta cor",
     "addFieldTitle": "Tipo de campo",
@@ -526,23 +526,23 @@
     "howItWorks": {
       "headline": "Tres passos. Assinatura concluida.",
       "step1Title": "Envie o documento",
-      "step1Description": "Faca upload do PDF, adicione signatarios e posicione os campos de assinatura.",
-      "step2Title": "Signatarios recebem e assinam",
-      "step2Description": "Cada signatario recebe um link seguro, visualiza o documento e assina com verificacao de identidade.",
+      "step1Description": "Faça upload do PDF, adicione signatários e posicione os campos de assinatura.",
+      "step2Title": "Signatários recebem e assinam",
+      "step2Description": "Cada signatário recebe um link seguro, visualiza o documento e assina com verificação de identidade.",
       "step3Title": "Documento concluido com rastro legal",
       "step3Description": "Receba o PDF assinado com trilha de auditoria, hashes de integridade e validade juridica."
     },
     "features": {
       "headline": "Tudo o que voce precisa para assinar com confianca",
       "positionedFieldsTitle": "Campos posicionados",
-      "positionedFieldsDescription": "Defina exatamente onde cada signatario deve assinar. Experiencia guiada que reduz erros.",
+      "positionedFieldsDescription": "Defina exatamente onde cada signatário deve assinar. Experiência guiada que reduz erros.",
       "identityTitle": "Verificacao de identidade",
       "identityDescription": "Autenticacao por token via email garante que quem assina e quem diz ser.",
       "auditTitle": "Trilha de auditoria completa",
       "auditDescription": "IP, navegador, horario, hash SHA-256. Tudo registrado para validade juridica.",
-      "multiSignerTitle": "Multiplos signatarios",
+      "multiSignerTitle": "Múltiplos signatários",
       "multiSignerDescription": "Assinatura paralela ou sequencial. Defina a ordem e acompanhe em tempo real.",
-      "remindersTitle": "Lembretes automaticos",
+      "remindersTitle": "Lembretes automáticos",
       "remindersDescription": "Configure lembretes para que nenhuma assinatura fique pendente.",
       "multiLangTitle": "Multi-idioma",
       "multiLangDescription": "Tela de assinatura em portugues ou ingles. Para equipes e clientes internacionais."
@@ -551,7 +551,7 @@
       "headline": "Por que Connexto?",
       "brazilTitle": "Feito para o Brasil",
       "brazilDescription": "Em conformidade com a MP 2.200-2/2001 e a Lei 14.063/2020. Interface em portugues, suporte a CPF e fluxos locais.",
-      "uxTitle": "UX que signatarios agradecem",
+      "uxTitle": "UX que signatários agradecem",
       "uxDescription": "Processo de assinatura guiado em 4 etapas. Sem cadastro, sem atrito.",
       "setupTitle": "Setup em minutos",
       "setupDescription": "Crie sua conta, envie um PDF e tenha seu primeiro documento assinado hoje."

@@ -1,19 +1,15 @@
 "use client";
 
 import { useState } from 'react';
-import dynamic from 'next/dynamic';
 import { useTranslations } from 'next-intl';
 import { PenTool, ArrowRight, CheckCircle, X } from 'lucide-react';
 import { useSignatureFields } from '@/features/documents/hooks/use-document-wizard';
 import { Button, Card } from '@/shared/ui';
+import { lazyLoad } from '@/shared/utils/lazy-load';
 
-const SignatureEditorModal = dynamic(
-  () => import('./signature-editor-modal').then((mod) => mod.SignatureEditorModal),
-  { ssr: false, loading: () => (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground-subtle border-t-foreground" />
-    </div>
-  )}
+const SignatureEditorModal = lazyLoad(
+  () => import('./signature-editor-modal'),
+  'SignatureEditorModal',
 );
 
 export type FieldsStepProps = Readonly<{

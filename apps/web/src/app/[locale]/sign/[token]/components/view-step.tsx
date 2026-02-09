@@ -1,17 +1,14 @@
 "use client";
 
-import dynamic from 'next/dynamic';
 import { ArrowRight } from 'lucide-react';
 import { Button, Card } from '@/shared/ui';
 import type { SignerField } from '@/features/signing/api';
+import { lazyLoad } from '@/shared/utils/lazy-load';
 
-const SignerPdfViewer = dynamic(
-  () => import('../signer-pdf-viewer').then((mod) => mod.SignerPdfViewer),
-  { ssr: false, loading: () => (
-    <div className="flex min-h-[40vh] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground-subtle border-t-foreground" />
-    </div>
-  )}
+const SignerPdfViewer = lazyLoad(
+  () => import('../signer-pdf-viewer'),
+  'SignerPdfViewer',
+  { minHeight: '40vh' },
 );
 
 type ViewStepProps = Readonly<{

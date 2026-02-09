@@ -1,20 +1,16 @@
 "use client";
 
-import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle } from 'lucide-react';
 import { Card } from '@/shared/ui';
 import { useSignerSummary } from '@/features/signing/hooks';
 import { getSignerPdf, getSignerSignedPdf } from '@/features/signing/api';
+import { lazyLoad } from '@/shared/utils/lazy-load';
 
-const DocumentAuditView = dynamic(
-  () => import('@/features/documents/components/document-audit-view').then((mod) => mod.DocumentAuditView),
-  { ssr: false, loading: () => (
-    <div className="flex min-h-[60vh] items-center justify-center">
-      <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground-subtle border-t-foreground" />
-    </div>
-  )}
+const DocumentAuditView = lazyLoad(
+  () => import('@/features/documents/components/document-audit-view'),
+  'DocumentAuditView',
 );
 
 export default function SignerSummaryPage() {

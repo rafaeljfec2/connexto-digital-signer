@@ -14,3 +14,4 @@ export * from './select';
 export * from './tooltip';
 export * from './sidebar';
 export * from './theme-toggle';
+export * from './lazy-spinner';

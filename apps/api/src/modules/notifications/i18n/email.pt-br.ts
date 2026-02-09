@@ -6,8 +6,7 @@ export const emailMessages = {
     bodyMessage: 'Mensagem do remetente:',
     cta: 'Assinar documento',
     footer: 'Este link e unico e nao deve ser compartilhado.',
-    textBody:
-      'Voce foi convidado a assinar o documento: {documentTitle}.\nAcesse: {signUrl}',
+    textBody: 'Voce foi convidado a assinar o documento: {documentTitle}.\nAcesse: {signUrl}',
   },
   'signature-reminder': {
     subject: 'Lembrete: assine o documento {documentTitle}',
@@ -21,11 +20,10 @@ export const emailMessages = {
   'document-completed': {
     subject: 'Documento concluido: {documentTitle}',
     greeting: 'Ola {ownerName},',
-    body: 'Todos os signatarios assinaram o documento <strong>{documentTitle}</strong>.',
+    body: 'Todos os signatários assinaram o documento <strong>{documentTitle}</strong>.',
     cta: 'Ver resumo do documento',
     footer: 'O documento assinado esta disponivel na sua conta.',
-    textBody:
-      'Todos os signatarios assinaram o documento: {documentTitle}.\nAcesse: {documentUrl}',
+    textBody: 'Todos os signatários assinaram o documento: {documentTitle}.\nAcesse: {documentUrl}',
   },
   welcome: {
     subject: 'Bem-vindo ao Connexto Digital Signer',

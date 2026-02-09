@@ -99,14 +99,14 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     subtitle: 'Certificado de assinatura digital',
     document: 'DOCUMENTO',
     generated: 'Gerado em',
-    signers: 'SIGNATARIOS',
+    signers: 'SIGNATÁRIOS',
     signedAt: 'Assinado em',
     ipAddress: 'Endereco IP',
     userAgent: 'Navegador',
     signed: 'Assinado',
     footer1: 'Este documento foi assinado digitalmente usando o Connexto Digital Signer.',
     footer2:
-      'Todas as evidencias de assinatura sao criptograficamente protegidas e podem ser verificadas de forma independente.',
+      'Todas as evidências de assinatura são criptograficamente protegidas e podem ser verificadas de forma independente.',
   },
 };
 
@@ -201,7 +201,7 @@ export class PdfService {
         primary: rgb(0.055, 0.227, 0.431),
         secondary: rgb(0.3, 0.3, 0.4),
         muted: rgb(0.45, 0.45, 0.55),
-        accent: rgb(0.008, 0.518, 0.780),
+        accent: rgb(0.008, 0.518, 0.78),
         border: rgb(0.82, 0.84, 0.87),
         headerBg: rgb(0.945, 0.953, 0.965),
         cardBg: rgb(0.973, 0.976, 0.984),
