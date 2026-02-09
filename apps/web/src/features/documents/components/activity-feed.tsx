@@ -1,8 +1,8 @@
 'use client';
 
-import { Activity, Send, CheckCircle2, AlertTriangle } from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
 import { Card, Skeleton } from '@/shared/ui';
+import type { LucideIcon } from 'lucide-react';
+import { Activity, AlertTriangle, CheckCircle2, Send } from 'lucide-react';
 import type { DocumentSummary } from '../api';
 
 type ActivityType = 'sent' | 'completed' | 'expired';
@@ -14,11 +14,14 @@ type ActivityItem = {
   readonly date: string;
 };
 
-const ACTIVITY_CONFIG: Record<ActivityType, {
-  readonly icon: LucideIcon;
-  readonly dotColor: string;
-  readonly iconColor: string;
-}> = {
+const ACTIVITY_CONFIG: Record<
+  ActivityType,
+  {
+    readonly icon: LucideIcon;
+    readonly dotColor: string;
+    readonly iconColor: string;
+  }
+> = {
   sent: { icon: Send, dotColor: 'bg-accent-400', iconColor: 'text-accent-400' },
   completed: { icon: CheckCircle2, dotColor: 'bg-success', iconColor: 'text-success' },
   expired: { icon: AlertTriangle, dotColor: 'bg-error', iconColor: 'text-error' },
@@ -28,9 +31,9 @@ export type ActivityFeedProps = {
   readonly labels: Readonly<{
     title: string;
     empty: string;
-    sentForSignature: string;
-    documentCompleted: string;
-    documentExpired: string;
+    sentForSignature: (title: string) => string;
+    documentCompleted: (title: string) => string;
+    documentExpired: (title: string) => string;
   }>;
   readonly documents: readonly DocumentSummary[];
   readonly isLoading?: boolean;
@@ -39,7 +42,7 @@ export type ActivityFeedProps = {
 
 function deriveActivities(
   documents: readonly DocumentSummary[],
-  labels: ActivityFeedProps['labels'],
+  labels: ActivityFeedProps['labels']
 ): ActivityItem[] {
   const activities: ActivityItem[] = [];
 
@@ -48,7 +51,7 @@ function deriveActivities(
       activities.push({
         id: `${doc.id}-sent`,
         type: 'sent',
-        message: labels.sentForSignature.replace('{title}', doc.title),
+        message: labels.sentForSignature(doc.title),
         date: doc.createdAt,
       });
     }
@@ -56,7 +59,7 @@ function deriveActivities(
       activities.push({
         id: `${doc.id}-completed`,
         type: 'completed',
-        message: labels.documentCompleted.replace('{title}', doc.title),
+        message: labels.documentCompleted(doc.title),
         date: doc.createdAt,
       });
     }
@@ -64,7 +67,7 @@ function deriveActivities(
       activities.push({
         id: `${doc.id}-expired`,
         type: 'expired',
-        message: labels.documentExpired.replace('{title}', doc.title),
+        message: labels.documentExpired(doc.title),
         date: doc.createdAt,
       });
     }
@@ -117,7 +120,9 @@ export function ActivityFeed({
             const Icon = config.icon;
             return (
               <div key={item.id} className="relative flex items-start gap-3 py-2">
-                <div className={`relative z-10 mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full ${config.dotColor}`}>
+                <div
+                  className={`relative z-10 mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full ${config.dotColor}`}
+                >
                   <Icon className="h-2 w-2 text-white" />
                 </div>
                 <div className="min-w-0 flex-1">

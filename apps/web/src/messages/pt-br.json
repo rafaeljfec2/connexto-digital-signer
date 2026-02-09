@@ -488,5 +488,98 @@
     "loading": "Carregando resumo...",
     "error": "Erro ao carregar resumo",
     "errorSubtitle": "Não foi possível carregar os dados do documento."
+  },
+  "landing": {
+    "header": {
+      "product": "Produto",
+      "features": "Funcionalidades",
+      "howItWorks": "Como funciona",
+      "signIn": "Entrar",
+      "startFree": "Comece gratis"
+    },
+    "hero": {
+      "badge": "Conforme MP 2.200-2 e Lei 14.063/2020",
+      "headline": "Envie, assine e rastreie documentos com validade juridica.",
+      "subheadline": "Assinatura eletronica profissional para empresas que precisam de seguranca, agilidade e conformidade legal. Sem burocracia.",
+      "ctaPrimary": "Comece gratis",
+      "ctaSecondary": "Ver como funciona"
+    },
+    "trustBar": {
+      "legalValidity": "Conforme MP 2.200-2 e Lei 14.063",
+      "sha256": "Integridade SHA-256",
+      "identityVerification": "Verificacao de identidade",
+      "auditTrail": "Trilha de auditoria completa"
+    },
+    "pain": {
+      "headline": "Seu processo de assinatura ainda depende de email, impressora ou WhatsApp?",
+      "bullet1": "Documentos enviados por email sem rastreamento e sem garantia legal.",
+      "bullet2": "Processo manual que atrasa fechamentos e gera retrabalho.",
+      "bullet3": "Sem visibilidade de quem assinou, quando, e se o documento foi alterado."
+    },
+    "howItWorks": {
+      "headline": "Tres passos. Assinatura concluida.",
+      "step1Title": "Envie o documento",
+      "step1Description": "Faca upload do PDF, adicione signatarios e posicione os campos de assinatura.",
+      "step2Title": "Signatarios recebem e assinam",
+      "step2Description": "Cada signatario recebe um link seguro, visualiza o documento e assina com verificacao de identidade.",
+      "step3Title": "Documento concluido com rastro legal",
+      "step3Description": "Receba o PDF assinado com trilha de auditoria, hashes de integridade e validade juridica."
+    },
+    "features": {
+      "headline": "Tudo o que voce precisa para assinar com confianca",
+      "positionedFieldsTitle": "Campos posicionados",
+      "positionedFieldsDescription": "Defina exatamente onde cada signatario deve assinar. Experiencia guiada que reduz erros.",
+      "identityTitle": "Verificacao de identidade",
+      "identityDescription": "Autenticacao por token via email garante que quem assina e quem diz ser.",
+      "auditTitle": "Trilha de auditoria completa",
+      "auditDescription": "IP, navegador, horario, hash SHA-256. Tudo registrado para validade juridica.",
+      "multiSignerTitle": "Multiplos signatarios",
+      "multiSignerDescription": "Assinatura paralela ou sequencial. Defina a ordem e acompanhe em tempo real.",
+      "remindersTitle": "Lembretes automaticos",
+      "remindersDescription": "Configure lembretes para que nenhuma assinatura fique pendente.",
+      "multiLangTitle": "Multi-idioma",
+      "multiLangDescription": "Tela de assinatura em portugues ou ingles. Para equipes e clientes internacionais."
+    },
+    "differentials": {
+      "headline": "Por que Connexto?",
+      "brazilTitle": "Feito para o Brasil",
+      "brazilDescription": "Em conformidade com a MP 2.200-2/2001 e a Lei 14.063/2020. Interface em portugues, suporte a CPF e fluxos locais.",
+      "uxTitle": "UX que signatarios agradecem",
+      "uxDescription": "Processo de assinatura guiado em 4 etapas. Sem cadastro, sem atrito.",
+      "setupTitle": "Setup em minutos",
+      "setupDescription": "Crie sua conta, envie um PDF e tenha seu primeiro documento assinado hoje."
+    },
+    "socialProof": {
+      "headline": "Empresas que confiam no Connexto",
+      "metric1Value": "500+",
+      "metric1Label": "documentos assinados",
+      "metric2Value": "50+",
+      "metric2Label": "empresas ativas",
+      "metric3Value": "99.9%",
+      "metric3Label": "uptime",
+      "testimonialQuote": "O Connexto simplificou nosso processo de assinatura de contratos. O que levava dias agora leva minutos, com rastreabilidade juridica completa.",
+      "testimonialName": "Ana Silva",
+      "testimonialRole": "Diretora Juridica",
+      "testimonialCompany": "TechCorp Brasil"
+    },
+    "finalCta": {
+      "headline": "Pronto para profissionalizar suas assinaturas?",
+      "subheadline": "Crie sua conta em 2 minutos. Sem cartao de credito.",
+      "cta": "Comece gratis agora"
+    },
+    "footer": {
+      "product": "Produto",
+      "features": "Funcionalidades",
+      "pricing": "Precos",
+      "docs": "Documentacao",
+      "company": "Empresa",
+      "about": "Sobre",
+      "contact": "Contato",
+      "legal": "Legal",
+      "privacy": "Politica de Privacidade",
+      "terms": "Termos de Uso",
+      "copyright": "Connexto. Todos os direitos reservados.",
+      "badge": "Conforme MP 2.200-2/2001 e Lei 14.063/2020"
+    }
   }
 }

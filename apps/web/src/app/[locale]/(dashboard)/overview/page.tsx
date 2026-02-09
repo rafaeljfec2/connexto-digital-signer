@@ -1,24 +1,24 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useLocale, useTranslations } from 'next-intl';
-import { Send, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/features/auth/hooks/use-auth';
+import type { DocumentSummary } from '@/features/documents/api';
+import { ActivityFeed } from '@/features/documents/components/activity-feed';
+import { DocumentsTable } from '@/features/documents/components/documents-table';
+import { HelpSection } from '@/features/documents/components/help-section';
+import { KpiCards } from '@/features/documents/components/kpi-cards';
+import { OnboardingChecklist } from '@/features/documents/components/onboarding-checklist';
+import { QuickActionsPanel } from '@/features/documents/components/quick-actions-panel';
+import { TipsBanner } from '@/features/documents/components/tips-banner';
 import {
+  useDeleteDocument,
   useDocumentsList,
   useDocumentsStats,
-  useDeleteDocument,
 } from '@/features/documents/hooks/use-documents';
-import { KpiCards } from '@/features/documents/components/kpi-cards';
-import { DocumentsTable } from '@/features/documents/components/documents-table';
-import { QuickActionsPanel } from '@/features/documents/components/quick-actions-panel';
-import { OnboardingChecklist } from '@/features/documents/components/onboarding-checklist';
-import { ActivityFeed } from '@/features/documents/components/activity-feed';
-import { HelpSection } from '@/features/documents/components/help-section';
-import { TipsBanner } from '@/features/documents/components/tips-banner';
 import { useRouter } from '@/i18n/navigation';
 import { Button, ConfirmDialog } from '@/shared/ui';
-import type { DocumentSummary } from '@/features/documents/api';
+import { ArrowRight, Send } from 'lucide-react';
+import { useLocale, useTranslations } from 'next-intl';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 function getGreetingKey(): 'morning' | 'afternoon' | 'evening' {
   const hour = new Date().getHours();
@@ -70,7 +70,7 @@ export default function DashboardPage() {
   const formatDate = useCallback(
     (value: string) =>
       new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value)),
-    [locale],
+    [locale]
   );
 
   const statusLabels = useMemo(
@@ -80,7 +80,7 @@ export default function DashboardPage() {
       completed: tDocuments('status.completed'),
       expired: tDocuments('status.expired'),
     }),
-    [tDocuments],
+    [tDocuments]
   );
 
   const handleDocumentClick = useCallback(
@@ -91,7 +91,7 @@ export default function DashboardPage() {
         router.push(`/documents/${doc.id}`);
       }
     },
-    [router],
+    [router]
   );
 
   const handleConfirmDelete = useCallback(() => {
@@ -114,16 +114,17 @@ export default function DashboardPage() {
         router.push(`/documents?status=${status}`);
       }
     },
-    [router],
+    [router]
   );
 
   const pendingCount = statsQuery.data?.pending ?? 0;
   const greeting = isMounted ? tDashboard(`greeting.${getGreetingKey()}`) : tDashboard('welcome');
   const userName = isMounted ? user?.name : undefined;
 
-  const heroSubtitle = pendingCount > 0
-    ? tDashboard('heroSubtitle', { pending: pendingCount })
-    : tDashboard('heroSubtitleNone');
+  const heroSubtitle =
+    pendingCount > 0
+      ? tDashboard('heroSubtitle', { pending: pendingCount })
+      : tDashboard('heroSubtitleNone');
 
   return (
     <div className="space-y-6">
@@ -147,9 +148,21 @@ export default function DashboardPage() {
 
       <KpiCards
         items={[
-          { label: tDashboard('kpi.pending'), value: statsQuery.data?.pending ?? 0, variant: 'pending' },
-          { label: tDashboard('kpi.completed'), value: statsQuery.data?.completed ?? 0, variant: 'completed' },
-          { label: tDashboard('kpi.expired'), value: statsQuery.data?.expired ?? 0, variant: 'expired' },
+          {
+            label: tDashboard('kpi.pending'),
+            value: statsQuery.data?.pending ?? 0,
+            variant: 'pending',
+          },
+          {
+            label: tDashboard('kpi.completed'),
+            value: statsQuery.data?.completed ?? 0,
+            variant: 'completed',
+          },
+          {
+            label: tDashboard('kpi.expired'),
+            value: statsQuery.data?.expired ?? 0,
+            variant: 'expired',
+          },
           { label: tDashboard('kpi.draft'), value: statsQuery.data?.draft ?? 0, variant: 'draft' },
         ]}
         isLoading={statsQuery.isLoading}
@@ -239,9 +252,11 @@ export default function DashboardPage() {
             labels={{
               title: tDashboard('activity.title'),
               empty: tDashboard('activity.empty'),
-              sentForSignature: tDashboard('activity.sentForSignature'),
-              documentCompleted: tDashboard('activity.documentCompleted'),
-              documentExpired: tDashboard('activity.documentExpired'),
+              sentForSignature: (title: string) =>
+                tDashboard('activity.sentForSignature', { title }),
+              documentCompleted: (title: string) =>
+                tDashboard('activity.documentCompleted', { title }),
+              documentExpired: (title: string) => tDashboard('activity.documentExpired', { title }),
             }}
             documents={recentQuery.data?.data ?? []}
             isLoading={recentQuery.isLoading}

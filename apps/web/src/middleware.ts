@@ -23,20 +23,22 @@ export function middleware(request: NextRequest) {
   const isAuthPage =
     pathWithoutLocale === '/login' || pathWithoutLocale === '/signup';
 
+  const isLandingPage = pathWithoutLocale === '/';
+
   const isOpenPage =
     pathWithoutLocale.startsWith('/sign/') || pathWithoutLocale === '/success';
 
   const token = request.cookies.get('auth_token')?.value;
 
-  if (!token && !isAuthPage && !isOpenPage) {
+  if (!token && !isAuthPage && !isOpenPage && !isLandingPage) {
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}/login`;
     return NextResponse.redirect(url);
   }
 
-  if (token && isAuthPage) {
+  if (token && (isAuthPage || isLandingPage)) {
     const url = request.nextUrl.clone();
-    url.pathname = `/${locale}`;
+    url.pathname = `/${locale}/overview`;
     return NextResponse.redirect(url);
   }
 

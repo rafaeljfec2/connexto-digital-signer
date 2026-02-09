@@ -488,5 +488,98 @@
     "loading": "Loading summary...",
     "error": "Error loading summary",
     "errorSubtitle": "Could not load document data."
+  },
+  "landing": {
+    "header": {
+      "product": "Product",
+      "features": "Features",
+      "howItWorks": "How it works",
+      "signIn": "Sign in",
+      "startFree": "Start for free"
+    },
+    "hero": {
+      "badge": "Compliant with MP 2.200-2 & Law 14.063/2020",
+      "headline": "Send, sign, and track documents with legal validity.",
+      "subheadline": "Professional electronic signatures for businesses that need security, speed, and legal compliance. No red tape.",
+      "ctaPrimary": "Start for free",
+      "ctaSecondary": "See how it works"
+    },
+    "trustBar": {
+      "legalValidity": "Compliant with MP 2.200-2 & Law 14.063",
+      "sha256": "SHA-256 integrity",
+      "identityVerification": "Identity verification",
+      "auditTrail": "Complete audit trail"
+    },
+    "pain": {
+      "headline": "Is your signing process still dependent on email, printers, or WhatsApp?",
+      "bullet1": "Documents sent by email with no tracking and no legal guarantee.",
+      "bullet2": "Manual processes that delay closings and create rework.",
+      "bullet3": "No visibility into who signed, when, or if the document was altered."
+    },
+    "howItWorks": {
+      "headline": "Three steps. Signature done.",
+      "step1Title": "Upload the document",
+      "step1Description": "Upload your PDF, add signers, and position signature fields.",
+      "step2Title": "Signers receive and sign",
+      "step2Description": "Each signer receives a secure link, views the document, and signs with identity verification.",
+      "step3Title": "Document completed with legal trail",
+      "step3Description": "Receive the signed PDF with audit trail, integrity hashes, and legal validity."
+    },
+    "features": {
+      "headline": "Everything you need to sign with confidence",
+      "positionedFieldsTitle": "Positioned fields",
+      "positionedFieldsDescription": "Define exactly where each signer should sign. A guided experience that reduces errors.",
+      "identityTitle": "Identity verification",
+      "identityDescription": "Email token authentication ensures the person signing is who they claim to be.",
+      "auditTitle": "Complete audit trail",
+      "auditDescription": "IP, browser, timestamp, SHA-256 hash. Everything recorded for legal validity.",
+      "multiSignerTitle": "Multiple signers",
+      "multiSignerDescription": "Parallel or sequential signing. Set the order and track in real time.",
+      "remindersTitle": "Automatic reminders",
+      "remindersDescription": "Set up reminders so no signature stays pending.",
+      "multiLangTitle": "Multi-language",
+      "multiLangDescription": "Signing screen in Portuguese or English. For international teams and clients."
+    },
+    "differentials": {
+      "headline": "Why Connexto?",
+      "brazilTitle": "Built for Brazil",
+      "brazilDescription": "Compliant with MP 2.200-2/2001 and Law 14.063/2020. Portuguese interface, CPF support, and local workflows.",
+      "uxTitle": "UX that signers appreciate",
+      "uxDescription": "A guided 4-step signing process. No sign-up required, zero friction.",
+      "setupTitle": "Setup in minutes",
+      "setupDescription": "Create your account, upload a PDF, and have your first document signed today."
+    },
+    "socialProof": {
+      "headline": "Trusted by growing companies",
+      "metric1Value": "500+",
+      "metric1Label": "documents signed",
+      "metric2Value": "50+",
+      "metric2Label": "active companies",
+      "metric3Value": "99.9%",
+      "metric3Label": "uptime",
+      "testimonialQuote": "Connexto simplified our contract signing process. What used to take days now takes minutes, with full legal traceability.",
+      "testimonialName": "Ana Silva",
+      "testimonialRole": "Legal Director",
+      "testimonialCompany": "TechCorp Brasil"
+    },
+    "finalCta": {
+      "headline": "Ready to professionalize your signatures?",
+      "subheadline": "Create your account in 2 minutes. No credit card required.",
+      "cta": "Start for free now"
+    },
+    "footer": {
+      "product": "Product",
+      "features": "Features",
+      "pricing": "Pricing",
+      "docs": "Documentation",
+      "company": "Company",
+      "about": "About",
+      "contact": "Contact",
+      "legal": "Legal",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service",
+      "copyright": "Connexto. All rights reserved.",
+      "badge": "Compliant with MP 2.200-2/2001 & Law 14.063/2020"
+    }
   }
 }

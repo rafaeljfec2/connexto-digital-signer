@@ -44,7 +44,7 @@ export function Sidebar({
       className={`flex h-full flex-col border-r border-th-border bg-th-sidebar ${className}`}
     >
       <div className="px-5 pb-2 pt-6">
-        <Link href="/" className="flex items-center gap-2.5">
+        <Link href="/overview" className="flex items-center gap-2.5">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-cta shadow-lg shadow-accent-600/20">
             <PenTool className="h-4.5 w-4.5 text-white" />
           </div>
@@ -80,8 +80,8 @@ export function Sidebar({
             <div className="space-y-0.5">
               {group.items.map((item) => {
                 const isActive =
-                  item.href === '/'
-                    ? pathname === item.href || pathname.endsWith('/')
+                  item.href === '/overview'
+                    ? pathname === item.href || pathname.endsWith('/overview')
                     : pathname.startsWith(item.href);
                 const Icon = item.icon;
                 return (
