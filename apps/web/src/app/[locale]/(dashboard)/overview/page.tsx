@@ -15,8 +15,8 @@ import {
   useDocumentsStats,
 } from '@/features/documents/hooks/use-documents';
 import { useRouter } from '@/i18n/navigation';
-import { Button, ConfirmDialog } from '@/shared/ui';
-import { ArrowRight, Send } from 'lucide-react';
+import { ConfirmDialog } from '@/shared/ui';
+import { ArrowRight } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
@@ -128,22 +128,12 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-xl font-semibold text-foreground sm:text-2xl">
-            {greeting}
-            {userName ? `, ${userName}` : ''}
-          </h1>
-          <p className="text-sm text-foreground-muted">{heroSubtitle}</p>
-        </div>
-        <Button
-          type="button"
-          className="shrink-0 gap-2"
-          onClick={() => router.push('/documents/new')}
-        >
-          <Send className="h-4 w-4" />
-          {tDashboard('sendDocument')}
-        </Button>
+      <div className="space-y-1">
+        <h1 className="text-xl font-semibold text-foreground sm:text-2xl">
+          {greeting}
+          {userName ? `, ${userName}` : ''}
+        </h1>
+        <p className="text-sm text-foreground-muted">{heroSubtitle}</p>
       </div>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
