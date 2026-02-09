@@ -15,6 +15,7 @@ export type SignerWithDocument = {
     readonly documentId: string;
     readonly signedAt: string | null;
     readonly authMethod: string;
+    readonly requestEmail: boolean;
     readonly requestCpf: boolean;
     readonly requestPhone: boolean;
   };
@@ -48,6 +49,7 @@ export type AcceptSignatureInput = {
 };
 
 export type IdentifySignerInput = {
+  readonly email?: string;
   readonly cpf?: string;
   readonly phone?: string;
 };

@@ -23,6 +23,7 @@ const buildSigner = (overrides?: Partial<Signer>): Signer => ({
   cpf: null,
   birthDate: null,
   phone: null,
+  requestEmail: false,
   requestCpf: false,
   requestPhone: false,
   authMethod: 'email',

@@ -49,6 +49,9 @@ export class Signer {
   @Column({ type: 'varchar', length: 20, nullable: true })
   phone!: string | null;
 
+  @Column({ name: 'request_email', type: 'boolean', default: false })
+  requestEmail!: boolean;
+
   @Column({ name: 'request_cpf', type: 'boolean', default: false })
   requestCpf!: boolean;
 

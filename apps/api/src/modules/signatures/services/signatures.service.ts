@@ -102,6 +102,10 @@ export class SignaturesService {
   ): Promise<{ identified: true }> {
     const signer = await this.findByToken(accessToken);
 
+    if (signer.requestEmail) {
+      this.validateEmailField(dto.email, signer.email);
+    }
+
     if (signer.requestCpf) {
       this.validateIdentityField(dto.cpf, signer.cpf, 'CPF');
       signer.cpf = signer.cpf ?? (dto.cpf as string);
@@ -114,6 +118,18 @@ export class SignaturesService {
 
     await this.signerRepository.save(signer);
     return { identified: true };
+  }
+
+  private validateEmailField(
+    inputValue: string | undefined,
+    storedValue: string,
+  ): void {
+    if (!inputValue) {
+      throw new BadRequestException('Email is required for this signer');
+    }
+    if (inputValue.toLowerCase() !== storedValue.toLowerCase()) {
+      throw new BadRequestException('Email does not match');
+    }
   }
 
   private validateIdentityField(

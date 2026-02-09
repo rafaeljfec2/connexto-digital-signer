@@ -75,7 +75,7 @@ export default function SignerDocumentPage() {
   const fields = useMemo(() => fieldsQuery.data ?? [], [fieldsQuery.data]);
   const alreadySigned = signerData?.signer.status === 'signed';
   const requiresValidation = signerData?.signer.authMethod === 'email';
-  const requiresIdentify = (signerData?.signer.requestCpf ?? false) || (signerData?.signer.requestPhone ?? false);
+  const requiresIdentify = (signerData?.signer.requestEmail ?? false) || (signerData?.signer.requestCpf ?? false) || (signerData?.signer.requestPhone ?? false);
   const hasFields = fields.length > 0;
 
   const [currentStep, setCurrentStep] = useState<SignStep>('view');
@@ -294,6 +294,7 @@ export default function SignerDocumentPage() {
       <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 pt-6 pb-16 md:px-6 md:pt-8 md:pb-2">
         {currentStep === 'identify' && signerData ? (
           <IdentifyStep
+            requestEmail={signerData.signer.requestEmail}
             requestCpf={signerData.signer.requestCpf}
             requestPhone={signerData.signer.requestPhone}
             onIdentify={(input) => identifyMutation.mutateAsync(input)}
@@ -302,11 +303,14 @@ export default function SignerDocumentPage() {
             labels={{
               title: t('identifyStep.title'),
               instruction: t('identifyStep.instruction'),
+              emailLabel: t('identifyStep.emailLabel'),
+              emailPlaceholder: t('identifyStep.emailPlaceholder'),
               cpfLabel: t('identifyStep.cpfLabel'),
               cpfPlaceholder: t('identifyStep.cpfPlaceholder'),
               phoneLabel: t('identifyStep.phoneLabel'),
               phonePlaceholder: t('identifyStep.phonePlaceholder'),
               next: t('identifyStep.next'),
+              emailRequired: t('identifyStep.emailRequired'),
               cpfRequired: t('identifyStep.cpfRequired'),
               phoneRequired: t('identifyStep.phoneRequired'),
               error: t('identifyStep.error'),

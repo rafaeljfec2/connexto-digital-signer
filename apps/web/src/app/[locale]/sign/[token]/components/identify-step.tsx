@@ -15,26 +15,31 @@ function formatCpf(value: string): string {
 type IdentifyStepLabels = Readonly<{
   title: string;
   instruction: string;
+  emailLabel: string;
+  emailPlaceholder: string;
   cpfLabel: string;
   cpfPlaceholder: string;
   phoneLabel: string;
   phonePlaceholder: string;
   next: string;
+  emailRequired: string;
   cpfRequired: string;
   phoneRequired: string;
   error: string;
 }>;
 
 type IdentifyStepProps = Readonly<{
+  requestEmail: boolean;
   requestCpf: boolean;
   requestPhone: boolean;
-  onIdentify: (input: { cpf?: string; phone?: string }) => Promise<unknown>;
+  onIdentify: (input: { email?: string; cpf?: string; phone?: string }) => Promise<unknown>;
   onNext: () => void;
   isSubmitting: boolean;
   labels: IdentifyStepLabels;
 }>;
 
 export function IdentifyStep({
+  requestEmail,
   requestCpf,
   requestPhone,
   onIdentify,
@@ -42,13 +47,15 @@ export function IdentifyStep({
   isSubmitting,
   labels,
 }: IdentifyStepProps) {
+  const [emailValue, setEmailValue] = useState('');
   const [cpf, setCpf] = useState('');
   const [phone, setPhone] = useState('');
   const [error, setError] = useState<string | null>(null);
 
+  const isEmailValid = !requestEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
   const isCpfValid = !requestCpf || cpf.replaceAll(/\D/g, '').length === 11;
   const isPhoneValid = !requestPhone || phone.replaceAll(/\D/g, '').length >= 8;
-  const canSubmit = isCpfValid && isPhoneValid;
+  const canSubmit = isEmailValid && isCpfValid && isPhoneValid;
 
   const handleSubmit = useCallback(async () => {
     if (!canSubmit) return;
@@ -56,6 +63,7 @@ export function IdentifyStep({
 
     try {
       await onIdentify({
+        email: requestEmail ? emailValue : undefined,
         cpf: requestCpf ? cpf : undefined,
         phone: requestPhone ? phone : undefined,
       });
@@ -66,7 +74,7 @@ export function IdentifyStep({
       const axiosMessage = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
       setError(axiosMessage ?? message);
     }
-  }, [canSubmit, cpf, phone, requestCpf, requestPhone, onIdentify, onNext, labels.error]);
+  }, [canSubmit, emailValue, cpf, phone, requestEmail, requestCpf, requestPhone, onIdentify, onNext, labels.error]);
 
   return (
     <div className="flex flex-1 flex-col">
@@ -83,6 +91,25 @@ export function IdentifyStep({
           </div>
 
           <div className="space-y-4">
+            {requestEmail ? (
+              <div className="space-y-1.5">
+                <label className="text-sm font-normal text-foreground-muted">
+                  {labels.emailLabel}
+                </label>
+                <Input
+                  value={emailValue}
+                  onChange={(event) => setEmailValue(event.target.value)}
+                  placeholder={labels.emailPlaceholder}
+                  type="email"
+                  inputMode="email"
+                  autoComplete="email"
+                />
+                {emailValue.length > 0 && !isEmailValid ? (
+                  <p className="text-xs text-error">{labels.emailRequired}</p>
+                ) : null}
+              </div>
+            ) : null}
+
             {requestCpf ? (
               <div className="space-y-1.5">
                 <label className="text-sm font-normal text-foreground-muted">

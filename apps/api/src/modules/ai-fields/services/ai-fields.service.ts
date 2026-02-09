@@ -12,9 +12,30 @@ import {
 import type { SuggestFieldsResponse, SuggestedField } from '../dto/suggest-fields-response.dto';
 import { AI_MODELS } from '@connexto/ai';
 
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { PDFParse } = require('pdf-parse') as {
+  PDFParse: new (options: { data: Uint8Array }) => {
+    getText(): Promise<{ text: string; totalPages: number }>;
+  };
+};
+
 const CACHE_PREFIX = 'ai-fields';
 const MAX_PAGES_TO_ANALYZE = 20;
-const MAX_TEXT_PER_PAGE = 3000;
+const MAX_TEXT_PER_PAGE = 4000;
+
+const SIGNATURE_KEYWORDS = [
+  'assinatura', 'signature', 'sign here',
+  'nome:', 'name:', 'data:', 'date:',
+  'cpf:', 'rg:', 'testemunha', 'witness',
+  'contratante', 'contratado',
+];
+
+function isSignatureRelated(text: string): boolean {
+  const lower = text.toLowerCase();
+  if (SIGNATURE_KEYWORDS.some((kw) => lower.includes(kw))) return true;
+  return /_{3,}/.test(text) || /\.{5,}/.test(text);
+}
 
 @Injectable()
 export class AiFieldsService {
@@ -101,24 +122,68 @@ export class AiFieldsService {
     try {
       const pdfDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
       const pageCount = Math.min(pdfDoc.getPageCount(), MAX_PAGES_TO_ANALYZE);
-      const texts: string[] = [];
 
+      const parser = new PDFParse({ data: new Uint8Array(pdfBuffer) });
+      const parseResult = await parser.getText();
+      const fullText = parseResult.text ?? '';
+
+      const pageTexts = this.splitTextByPages(fullText, pageCount);
+
+      const result: string[] = [];
       for (let i = 0; i < pageCount; i++) {
-        const page = pdfDoc.getPage(i);
-        const { width, height } = page.getSize();
-        texts.push(
-          `[Page dimensions: ${String(Math.round(width))}x${String(Math.round(height))}pt]` +
-          `\n[Note: pdf-lib does not extract text. Signature areas are typically at the bottom ` +
-          `of the last pages. Look for common patterns based on document structure.]`,
-        );
+        const dims = pdfDoc.getPage(i).getSize();
+        const rawText = pageTexts[i] ?? '';
+        const header = `[Page dimensions: ${String(Math.round(dims.width))}x${String(Math.round(dims.height))}pt]\n`;
+
+        if (!rawText.trim()) {
+          result.push(`${header}[No text extracted]`);
+          continue;
+        }
+
+        const annotated = this.annotateSignatureLines(rawText);
+        result.push((header + annotated).slice(0, MAX_TEXT_PER_PAGE));
       }
 
-      return texts;
+      return result;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to process PDF: ${message}`);
       return [];
     }
+  }
+
+  private splitTextByPages(fullText: string, pageCount: number): string[] {
+    if (pageCount <= 1) return [fullText];
+
+    const parts = fullText.split(/\f/);
+    if (parts.length >= pageCount) return parts.slice(0, pageCount);
+
+    const lines = fullText.split('\n');
+    const linesPerPage = Math.ceil(lines.length / pageCount);
+    const pages: string[] = [];
+    for (let i = 0; i < pageCount; i++) {
+      const start = i * linesPerPage;
+      const end = Math.min(start + linesPerPage, lines.length);
+      pages.push(lines.slice(start, end).join('\n'));
+    }
+    return pages;
+  }
+
+  private annotateSignatureLines(text: string): string {
+    const lines = text.split('\n');
+    const totalLines = lines.length;
+    if (totalLines === 0) return text;
+
+    return lines
+      .map((line, index) => {
+        if (!line.trim()) return line;
+        if (isSignatureRelated(line)) {
+          const yApprox = (index / totalLines).toFixed(2);
+          return `[y=${yApprox}] ${line}`;
+        }
+        return line;
+      })
+      .join('\n');
   }
 
   private validateAndNormalize(

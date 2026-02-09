@@ -45,6 +45,11 @@ export class CreateSignerDto {
   @IsOptional()
   @IsBoolean()
   @ApiPropertyOptional({ example: false })
+  readonly requestEmail?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiPropertyOptional({ example: false })
   readonly requestCpf?: boolean;
 
   @IsOptional()

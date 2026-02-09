@@ -4,7 +4,7 @@ import { Button } from '@/shared/ui';
 
 import { usePdfDocument } from '../hooks/use-pdf-document';
 import { usePdfEngine } from '../hooks/use-pdf-engine';
-import { FieldPreview, SignatureFieldData, SignatureFieldType } from '../types';
+import { FieldPreview, PdfDocument, SignatureFieldData, SignatureFieldType } from '../types';
 import { PdfPage } from './PdfPage';
 import { SignatureField } from './SignatureField';
 

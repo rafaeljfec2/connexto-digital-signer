@@ -1,7 +1,13 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsEmail, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
 
 export class IdentifySignerDto {
+  @IsOptional()
+  @IsEmail()
+  @MaxLength(255)
+  @ApiPropertyOptional({ example: 'signer@example.com' })
+  readonly email?: string;
+
   @IsOptional()
   @IsString()
   @MaxLength(14)

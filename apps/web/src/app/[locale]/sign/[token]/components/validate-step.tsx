@@ -217,7 +217,7 @@ export function ValidateStep({
 
       <div className="fixed inset-x-0 bottom-0 border-t border-th-border bg-th-card/95 px-4 py-3 backdrop-blur-sm">
         <div className="mx-auto flex max-w-6xl justify-between">
-          <Button variant="outline" onClick={onBack}>
+          <Button variant="secondary" onClick={onBack}>
             <ArrowLeft className="mr-1.5 h-3.5 w-3.5" />
             {labels.back}
           </Button>

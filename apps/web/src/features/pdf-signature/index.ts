@@ -3,6 +3,6 @@ export * from './hooks/use-pdf-engine';
 export * from './hooks/use-pdf-document';
 export * from './hooks/use-pdf-fields';
 export * from './components/PdfViewer';
-export * from './components/PdfPage';
+export { PdfPage } from './components/PdfPage';
 export * from './components/SignatureField';
 export * from './components/SignaturePad';

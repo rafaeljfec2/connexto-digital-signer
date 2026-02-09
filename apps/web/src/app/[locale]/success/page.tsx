@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   CheckCircle2,
   Download,
@@ -128,6 +128,18 @@ function SuccessActions({
 }
 
 export default function SuccessPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main px-4 py-8 text-foreground">
+        <Loader2 className="h-8 w-8 animate-spin text-foreground-subtle" />
+      </div>
+    }>
+      <SuccessPageContent />
+    </Suspense>
+  );
+}
+
+function SuccessPageContent() {
   const t = useTranslations('success');
   const router = useRouter();
   const searchParams = useSearchParams();

@@ -47,6 +47,7 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
   const [phone, setPhone] = useState('');
   const [cpf, setCpf] = useState('');
   const [birthDate, setBirthDate] = useState('');
+  const [requestEmail, setRequestEmail] = useState(false);
   const [requestCpf, setRequestCpf] = useState(false);
   const [requestPhone, setRequestPhone] = useState(false);
   const [authMethod, setAuthMethod] = useState('email');
@@ -66,6 +67,7 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
     setPhone('');
     setCpf('');
     setBirthDate('');
+    setRequestEmail(false);
     setRequestCpf(false);
     setRequestPhone(false);
     setAuthMethod('email');
@@ -85,6 +87,7 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
     setPhone(signer.phone ?? '');
     setCpf(formatCpf(signer.cpf ?? ''));
     setBirthDate(signer.birthDate ?? '');
+    setRequestEmail(signer.requestEmail);
     setRequestCpf(signer.requestCpf);
     setRequestPhone(signer.requestPhone);
     setAuthMethod(signer.authMethod);
@@ -101,6 +104,7 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
       phone: phone.trim() || undefined,
       cpf: cpf.trim() || undefined,
       birthDate: birthDate.trim() || undefined,
+      requestEmail,
       requestCpf,
       requestPhone,
       authMethod,
@@ -255,166 +259,129 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
           </>
         }
       >
-        <div className="space-y-5">
-          <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground-subtle">
-              {tSigners('sectionPersonal')}
-            </p>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {tSigners('nameLabel')}
-                </label>
-                <Input
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  placeholder={tSigners('namePlaceholder')}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {tSigners('emailLabel')}
-                </label>
-                <Input
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  placeholder={tSigners('emailPlaceholder')}
-                  type="email"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {tSigners('phoneLabel')}
-                </label>
-                <Input
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder={tSigners('phonePlaceholder')}
-                  type="tel"
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {tSigners('birthDateLabel')}
-                </label>
-                <Input
-                  value={birthDate}
-                  onChange={(event) => setBirthDate(event.target.value)}
-                  placeholder={tSigners('birthDatePlaceholder')}
-                  type="date"
-                />
-              </div>
-            </div>
+        <div className="grid gap-3 md:grid-cols-2">
+          <div className="space-y-1.5">
+            <label className="text-sm font-normal text-foreground-muted">
+              {tSigners('nameLabel')}
+            </label>
+            <Input
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder={tSigners('namePlaceholder')}
+            />
           </div>
-
-          <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground-subtle">
-              {tSigners('sectionDocuments')}
-            </p>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {tSigners('cpfLabel')}
-                </label>
-                <Input
-                  value={cpf}
-                  onChange={(event) => setCpf(formatCpf(event.target.value))}
-                  placeholder={tSigners('cpfPlaceholder')}
-                />
-              </div>
-            </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-normal text-foreground-muted">
+              {tSigners('emailLabel')}
+            </label>
+            <Input
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              placeholder={tSigners('emailPlaceholder')}
+              type="email"
+            />
           </div>
-
-          <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground-subtle">
-              {tSigners('sectionRequest')}
-            </p>
-            <div className="space-y-2.5">
-              <label className="flex items-center gap-2.5 text-sm text-foreground">
-                <input
-                  type="checkbox"
-                  checked={authMethod === 'email'}
-                  onChange={(event) => setAuthMethod(event.target.checked ? 'email' : 'none')}
-                  className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
-                />
-                {tSigners('requestEmailLabel')}
+          <div className="space-y-1.5">
+            <label className="text-sm font-normal text-foreground-muted">
+              {tSigners('phoneLabel')}
+            </label>
+            <Input
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              placeholder={tSigners('phonePlaceholder')}
+              type="tel"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-normal text-foreground-muted">
+              {tSigners('birthDateLabel')}
+            </label>
+            <Input
+              value={birthDate}
+              onChange={(event) => setBirthDate(event.target.value)}
+              placeholder={tSigners('birthDatePlaceholder')}
+              type="date"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-normal text-foreground-muted">
+              {tSigners('cpfLabel')}
+            </label>
+            <Input
+              value={cpf}
+              onChange={(event) => setCpf(formatCpf(event.target.value))}
+              placeholder={tSigners('cpfPlaceholder')}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-normal text-foreground-muted">
+              {tSigners('authMethodLabel')}
+            </label>
+            <Select
+              value={authMethod}
+              onChange={(event) => setAuthMethod(event.target.value)}
+            >
+              <option value="email">{tSigners('authMethodEmail')}</option>
+              <option value="none">{tSigners('authMethodNone')}</option>
+            </Select>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 md:col-span-2">
+            <label className="flex items-center gap-2.5 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={requestEmail}
+                onChange={(event) => setRequestEmail(event.target.checked)}
+                className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
+              />
+              {tSigners('requestEmailLabel')}
+            </label>
+            <label className="flex items-center gap-2.5 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={requestCpf}
+                onChange={(event) => setRequestCpf(event.target.checked)}
+                className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
+              />
+              {tSigners('requestCpfLabel')}
+            </label>
+            <label className="flex items-center gap-2.5 text-sm text-foreground">
+              <input
+                type="checkbox"
+                checked={requestPhone}
+                onChange={(event) => setRequestPhone(event.target.checked)}
+                className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
+              />
+              {tSigners('requestPhoneLabel')}
+            </label>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-normal text-foreground-muted">
+              {tSigners('mode')}
+            </label>
+            <Select
+              value={signingMode}
+              onChange={(event) =>
+                handleModeChange(event.target.value as 'parallel' | 'sequential')
+              }
+            >
+              <option value="parallel">{tSigners('modeParallel')}</option>
+              <option value="sequential">{tSigners('modeSequential')}</option>
+            </Select>
+          </div>
+          {signingMode === 'sequential' ? (
+            <div className="space-y-1.5">
+              <label className="text-sm font-normal text-foreground-muted">
+                {tSigners('orderLabel')}
               </label>
-              <label className="flex items-center gap-2.5 text-sm text-foreground">
-                <input
-                  type="checkbox"
-                  checked={requestCpf}
-                  onChange={(event) => setRequestCpf(event.target.checked)}
-                  className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
-                />
-                {tSigners('requestCpfLabel')}
-              </label>
-              <label className="flex items-center gap-2.5 text-sm text-foreground">
-                <input
-                  type="checkbox"
-                  checked={requestPhone}
-                  onChange={(event) => setRequestPhone(event.target.checked)}
-                  className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
-                />
-                {tSigners('requestPhoneLabel')}
-              </label>
+              <Input
+                value={order}
+                onChange={(event) => setOrder(event.target.value)}
+                placeholder={tSigners('orderPlaceholder')}
+                type="number"
+                min={1}
+              />
             </div>
-          </div>
-
-          <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground-subtle">
-              {tSigners('sectionVerification')}
-            </p>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {tSigners('authMethodLabel')}
-                </label>
-                <Select
-                  value={authMethod}
-                  onChange={(event) => setAuthMethod(event.target.value)}
-                >
-                  <option value="email">{tSigners('authMethodEmail')}</option>
-                  <option value="none">{tSigners('authMethodNone')}</option>
-                </Select>
-              </div>
-            </div>
-          </div>
-
-          <div>
-            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground-subtle">
-              {tSigners('sectionConfig')}
-            </p>
-            <div className="grid gap-3 md:grid-cols-2">
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {tSigners('mode')}
-                </label>
-                <Select
-                  value={signingMode}
-                  onChange={(event) =>
-                    handleModeChange(event.target.value as 'parallel' | 'sequential')
-                  }
-                >
-                  <option value="parallel">{tSigners('modeParallel')}</option>
-                  <option value="sequential">{tSigners('modeSequential')}</option>
-                </Select>
-              </div>
-              {signingMode === 'sequential' ? (
-                <div className="space-y-1.5">
-                  <label className="text-sm font-normal text-foreground-muted">
-                    {tSigners('orderLabel')}
-                  </label>
-                  <Input
-                    value={order}
-                    onChange={(event) => setOrder(event.target.value)}
-                    placeholder={tSigners('orderPlaceholder')}
-                    type="number"
-                    min={1}
-                  />
-                </div>
-              ) : null}
-            </div>
-          </div>
+          ) : null}
         </div>
       </Dialog>
     </div>
