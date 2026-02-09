@@ -36,6 +36,14 @@ const SignatureModal = lazyLoad(
   { minHeight: '40vh' },
 );
 
+const FieldInputModal = lazyLoad(
+  () => import('./components/field-input-modal'),
+  'FieldInputModal',
+  { minHeight: '20vh' },
+);
+
+const TEXT_INPUT_FIELD_TYPES = new Set(['name', 'date', 'text']);
+
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
   if (!local || !domain) return email;
@@ -202,6 +210,29 @@ export default function SignerDocumentPage() {
     }),
     [t]
   );
+
+  const fieldInputLabels = useMemo(
+    () => ({
+      cancel: t('signaturePad.cancel'),
+      confirm: t('signaturePad.confirm'),
+      nameTitle: t('fieldInput.nameTitle'),
+      namePlaceholder: t('fieldInput.namePlaceholder'),
+      dateTitle: t('fieldInput.dateTitle'),
+      datePlaceholder: t('fieldInput.datePlaceholder'),
+      textTitle: t('fieldInput.textTitle'),
+      textPlaceholder: t('fieldInput.textPlaceholder'),
+    }),
+    [t]
+  );
+
+  const activeFieldType = useMemo(() => {
+    if (!activeFieldId) return null;
+    const field = fields.find((f) => f.id === activeFieldId);
+    return field?.type ?? null;
+  }, [activeFieldId, fields]);
+
+  const isTextInputField = activeFieldType !== null && TEXT_INPUT_FIELD_TYPES.has(activeFieldType);
+  const isSignatureInputField = activeFieldId !== null && !isTextInputField;
 
   if (signerQuery.isLoading || pdfQuery.isLoading || fieldsQuery.isLoading) {
     return (
@@ -418,13 +449,21 @@ export default function SignerDocumentPage() {
       </main>
 
       <SignatureModal
-        open={activeFieldId !== null || showStandaloneSignature}
+        open={isSignatureInputField || showStandaloneSignature}
         labels={signaturePadLabels}
         onConfirm={handleSignatureConfirm}
         onClose={() => {
           setActiveFieldId(null);
           setShowStandaloneSignature(false);
         }}
+      />
+
+      <FieldInputModal
+        open={isTextInputField}
+        fieldType={(activeFieldType as 'name' | 'date' | 'text') ?? 'text'}
+        labels={fieldInputLabels}
+        onConfirm={handleSignatureConfirm}
+        onClose={() => setActiveFieldId(null)}
       />
 
       <PdfPreviewModal

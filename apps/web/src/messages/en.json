@@ -451,6 +451,14 @@
       "drawHint": "Draw your signature in the area below",
       "typeHint": "Type your name as signature"
     },
+    "fieldInput": {
+      "nameTitle": "Enter your name",
+      "namePlaceholder": "Type your full name",
+      "dateTitle": "Enter the date",
+      "datePlaceholder": "MM/DD/YYYY",
+      "textTitle": "Fill in field",
+      "textPlaceholder": "Type the value"
+    },
     "fieldType": {
       "signature": "Signature",
       "initials": "Initials",

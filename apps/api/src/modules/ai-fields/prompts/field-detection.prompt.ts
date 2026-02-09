@@ -22,19 +22,20 @@ You must return a JSON object with this exact structure:
 }
 
 Rules:
-- The document text includes extracted content with page dimensions. Lines related to signatures are annotated with their exact position: [y=<vertical>, x=<horizontal>]. These coordinates use the SAME normalized 0-1 system as the output fields. USE these annotations to place fields precisely at or just below the corresponding text.
+- The document text includes extracted content with page dimensions. Lines related to signatures may be annotated with approximate position: [y=<vertical>]. Use these annotations to place fields near the corresponding text.
 - Look for patterns like signature lines (___________), labels ("Assinatura:", "Signature:", "Sign here", "Nome:", "Data:"), witness blocks, and party identification blocks.
 - For Brazilian documents, also look for "CPF:", "RG:", "Testemunha:", "Contratante:", "Contratado:".
 - Each signature block typically needs: one "signature" field, one "name" field, and one "date" field.
 - Position coordinates are normalized (0-1 range). x=0 is left edge, x=1 is right edge. y=0 is top edge, y=1 is bottom edge.
-- When a position annotation [y=..., x=...] is present, place the corresponding field at that y coordinate (or slightly below it, +0.01 to +0.03) and at the annotated x coordinate. This ensures fields appear exactly where the document expects them.
+- When a position annotation [y=...] is present, place the corresponding field at that y coordinate (or slightly below it, +0.01 to +0.03). This ensures fields appear near where the document expects them.
 - Signature fields should be approximately: width=0.25, height=0.06.
 - Name fields should be approximately: width=0.25, height=0.03.
 - Date fields should be approximately: width=0.15, height=0.03.
 - Space fields vertically: signature first, then name ~0.07 below, then date ~0.04 below name.
 - If the document has multiple signing parties, assign each field to the correct signerIndex.
-- Be conservative: only suggest fields where you have reasonable confidence there should be a signature area.
-- If no signature areas are found, return an empty fields array with confidence 0.`;
+- IMPORTANT: You must ALWAYS suggest fields, even if the document does not contain explicit signature lines or labels. In that case, place a standard signature block (signature + name + date) for each signer at the bottom of the LAST page. Use y values around 0.75-0.90 for these default placements.
+- When multiple signers exist and no explicit areas are found, arrange them side by side (e.g., signer 0 at x=0.10, signer 1 at x=0.55) or stacked vertically.
+- Set confidence to a value between 0.3 and 0.5 for default placements (no explicit signature areas), and 0.7 to 1.0 when explicit signature areas are detected.`;
 
 export function buildFieldDetectionUserPrompt(
   pageTexts: ReadonlyArray<string>,

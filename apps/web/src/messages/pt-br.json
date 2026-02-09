@@ -451,6 +451,14 @@
       "drawHint": "Desenhe sua assinatura no campo abaixo",
       "typeHint": "Digite seu nome como assinatura"
     },
+    "fieldInput": {
+      "nameTitle": "Informe seu nome",
+      "namePlaceholder": "Digite seu nome completo",
+      "dateTitle": "Informe a data",
+      "datePlaceholder": "DD/MM/AAAA",
+      "textTitle": "Preencher campo",
+      "textPlaceholder": "Digite o valor"
+    },
     "fieldType": {
       "signature": "Assinatura",
       "initials": "Rubrica",
