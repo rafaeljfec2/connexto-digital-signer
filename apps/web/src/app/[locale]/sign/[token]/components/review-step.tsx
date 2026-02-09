@@ -76,6 +76,7 @@ export function ReviewStep({
     (f) => f.type === 'signature' || f.type === 'initials'
   );
   const hasSignature = hasSignatureField || standaloneSignature !== null;
+  const totalFilledCount = filledFields.length + (standaloneSignature === null ? 0 : 1);
 
   const canSubmit = consentAccepted && hasSignature && !isSubmitting;
 
@@ -84,7 +85,7 @@ export function ReviewStep({
       <div className="mx-auto w-full max-w-2xl space-y-4 overflow-auto pb-24 md:pb-4">
         <Card variant="glass" className="space-y-3 p-4 md:p-6">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-accent-400/20 text-accent-400">
+            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary/20 text-primary">
               <FileText className="h-4 w-4" />
             </div>
             <div className="flex-1">
@@ -99,7 +100,7 @@ export function ReviewStep({
               type="button"
               variant="ghost"
               onClick={onViewDocument}
-              className="gap-1.5 text-xs text-accent-400 hover:text-accent-300"
+              className="gap-1.5 text-xs text-primary hover:text-primary/80"
             >
               <Eye className="h-3.5 w-3.5" />
               {labels.viewDocument}
@@ -131,7 +132,7 @@ export function ReviewStep({
               {labels.filledFields}
             </p>
             <Badge variant="success" className="ml-auto">
-              {filledFields.length}
+              {totalFilledCount}
             </Badge>
           </div>
           <div className="space-y-2">
@@ -194,7 +195,7 @@ export function ReviewStep({
                 type="button"
                 variant="ghost"
                 onClick={onRequestSignature}
-                className="text-xs text-accent-400"
+                className="text-xs text-primary"
               >
                 <PenTool className="mr-1 h-3.5 w-3.5" />
                 {labels.changeSignature}
@@ -205,13 +206,13 @@ export function ReviewStep({
 
         <Card variant="glass" className="space-y-3 p-4 md:p-6">
           <div className="flex items-start gap-3">
-            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-accent-400" />
+            <ShieldCheck className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
             <label className="flex cursor-pointer items-start gap-3">
               <input
                 type="checkbox"
                 checked={consentAccepted}
                 onChange={(e) => setConsentAccepted(e.target.checked)}
-                className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-th-input-border bg-th-input accent-accent-400"
+                className="mt-1 h-4 w-4 shrink-0 cursor-pointer rounded border-th-input-border bg-th-input accent-primary"
               />
               <span className="text-xs leading-relaxed text-foreground-muted md:text-sm">
                 {labels.consentLabel}

@@ -139,7 +139,7 @@ export function SignatureModal({
               onClick={() => setMode('draw')}
               className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-normal transition ${
                 mode === 'draw'
-                  ? 'bg-accent-400 text-white shadow-sm'
+                  ? 'bg-primary text-white shadow-sm'
                   : 'text-foreground-subtle hover:text-foreground'
               }`}
             >
@@ -151,7 +151,7 @@ export function SignatureModal({
               onClick={() => setMode('type')}
               className={`flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-normal transition ${
                 mode === 'type'
-                  ? 'bg-accent-400 text-white shadow-sm'
+                  ? 'bg-primary text-white shadow-sm'
                   : 'text-foreground-subtle hover:text-foreground'
               }`}
             >

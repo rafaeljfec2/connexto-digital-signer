@@ -11,7 +11,7 @@ const variantStyles: Record<BadgeVariant, string> = {
   success: 'bg-success/15 text-success border border-success/20',
   warning: 'bg-warning/15 text-warning border border-warning/20',
   danger: 'bg-error/15 text-error border border-error/20',
-  info: 'bg-accent-400/15 text-accent-400 border border-accent-400/20',
+  info: 'bg-primary/15 text-primary border border-primary/20',
 };
 
 export function Badge({

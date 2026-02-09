@@ -51,7 +51,7 @@ export function FillFieldsStep({
     [fields]
   );
 
-  const filledCount = useMemo(
+  const fieldFilledCount = useMemo(
     () =>
       requiredFields.filter(
         (f) => (fieldValues[f.id] ?? f.value ?? '').length > 0
@@ -60,7 +60,7 @@ export function FillFieldsStep({
   );
 
   const allFieldsFilled = hasFields
-    ? filledCount === requiredFields.length && requiredFields.length > 0
+    ? fieldFilledCount === requiredFields.length && requiredFields.length > 0
     : true;
 
   const signatureReady = requireStandaloneSignature
@@ -69,7 +69,9 @@ export function FillFieldsStep({
 
   const canProceed = allFieldsFilled && signatureReady;
 
-  const progressText = labels.progressFormat(filledCount, requiredFields.length);
+  const totalCount = requiredFields.length + (requireStandaloneSignature ? 1 : 0);
+  const filledCount = fieldFilledCount + (requireStandaloneSignature && standaloneSignature !== null ? 1 : 0);
+  const progressText = labels.progressFormat(filledCount, totalCount);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
@@ -119,7 +121,7 @@ export function FillFieldsStep({
                   type="button"
                   variant="ghost"
                   onClick={onRequestSignature}
-                  className="text-xs text-accent-400"
+                  className="text-xs text-primary"
                 >
                   <PenTool className="mr-1.5 h-3.5 w-3.5" />
                   {labels.changeSignature}
@@ -130,7 +132,7 @@ export function FillFieldsStep({
                 <button
                   type="button"
                   onClick={onRequestSignature}
-                  className="flex h-24 w-full items-center justify-center rounded-xl border-2 border-dashed border-th-border bg-th-hover transition-all hover:border-accent-400/40 hover:bg-th-active"
+                  className="flex h-24 w-full items-center justify-center rounded-xl border-2 border-dashed border-th-border bg-th-hover transition-all hover:border-primary/40 hover:bg-th-active"
                 >
                   <div className="flex flex-col items-center gap-1.5 text-foreground-subtle">
                     <PenTool className="h-6 w-6" />

@@ -21,6 +21,7 @@ export interface AuditSignerInfo {
   readonly ipAddress: string | null;
   readonly userAgent: string | null;
   readonly verifiedAt: Date | null;
+  readonly signatureData: string | null;
 }
 
 export interface DocumentAuditSummary {

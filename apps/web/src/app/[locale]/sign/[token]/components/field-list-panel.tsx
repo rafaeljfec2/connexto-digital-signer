@@ -68,20 +68,17 @@ export function FieldListPanel({
                   {fieldTypeLabels[field.type] ?? field.type}
                 </p>
                 <p className="text-[10px] text-foreground-subtle">
-                  {isFilled
-                    ? labels.filled
-                    : field.required
-                      ? labels.required
-                      : labels.optional}
+                  {isFilled && labels.filled}
+                  {!isFilled && (field.required ? labels.required : labels.optional)}
                   {' · '}
                   P.{field.page}
                 </p>
               </div>
-              {!isFilled ? (
-                <span className="text-[10px] font-medium text-accent-400">
+              {isFilled ? null : (
+                <span className="text-[10px] font-medium text-primary">
                   {labels.tapToFill}
                 </span>
-              ) : null}
+              )}
               {isFilled && value.startsWith('data:image/') ? (
                 <div className="flex h-8 w-12 items-center justify-center overflow-hidden rounded border border-success/20 bg-white">
                   {/* eslint-disable-next-line @next/next/no-img-element */}

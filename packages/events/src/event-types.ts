@@ -72,6 +72,24 @@ export interface TenantCreatedEvent {
   createdAt: Date;
 }
 
+export interface AiFieldsSuggestedEvent {
+  documentId: string;
+  tenantId: string;
+  fieldCount: number;
+  documentType: string;
+  confidence: number;
+  tokensUsed: number;
+  suggestedAt: Date;
+}
+
+export interface AiUsageLimitReachedEvent {
+  tenantId: string;
+  currentTokens: number;
+  limitTokens: number;
+  periodYear: number;
+  periodMonth: number;
+}
+
 export type DomainEvent =
   | { type: 'signature.completed'; payload: SignatureCompletedEvent }
   | { type: 'document.completed'; payload: DocumentCompletedEvent }
@@ -82,4 +100,6 @@ export type DomainEvent =
   | { type: 'user.login.success'; payload: UserLoginSuccessEvent }
   | { type: 'user.login.failed'; payload: UserLoginFailedEvent }
   | { type: 'user.logout'; payload: UserLogoutEvent }
-  | { type: 'tenant.created'; payload: TenantCreatedEvent };
+  | { type: 'tenant.created'; payload: TenantCreatedEvent }
+  | { type: 'ai.fields.suggested'; payload: AiFieldsSuggestedEvent }
+  | { type: 'ai.usage.limit_reached'; payload: AiUsageLimitReachedEvent };

@@ -226,25 +226,25 @@ export default function SignerDocumentPage() {
 
   return (
     <div className="flex h-[100dvh] flex-col overflow-hidden bg-[var(--th-page-bg)] dark:bg-gradient-main text-foreground">
-      <header className="shrink-0 border-b border-th-border px-3 py-1.5 md:px-6 md:py-2">
-        <div className="mx-auto flex w-full max-w-6xl items-center gap-2">
-          <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-th-hover">
-            <FileText className="h-3.5 w-3.5" />
+      <header className="shrink-0 border-b border-th-border px-3 py-2 md:px-6 md:py-3">
+        <div className="mx-auto flex w-full max-w-6xl items-center gap-3">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-th-hover">
+            <FileText className="h-4 w-4" />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[8px] font-normal uppercase tracking-[0.15em] text-foreground-subtle">
+            <div className="text-[10px] font-normal uppercase tracking-[0.15em] text-foreground-subtle">
               {tCommon('appName')}
             </div>
-            <div className="truncate text-[11px] font-medium md:text-xs">{doc.title}</div>
+            <div className="truncate text-xs font-medium md:text-sm">{doc.title}</div>
           </div>
           <div className="hidden items-center gap-2 sm:flex">
             <Avatar name={signer.name} size="sm" />
             <div className="min-w-0">
-              <p className="truncate text-[11px] font-normal">{signer.name}</p>
-              <p className="truncate text-[9px] text-foreground-subtle">{signer.email}</p>
+              <p className="truncate text-xs font-normal">{signer.name}</p>
+              <p className="truncate text-[10px] text-foreground-subtle">{signer.email}</p>
             </div>
           </div>
-          <Badge variant="info" className="shrink-0 text-[10px]">
+          <Badge variant="info" className="shrink-0 text-xs">
             {t('status.pending')}
           </Badge>
         </div>

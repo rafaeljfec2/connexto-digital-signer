@@ -137,7 +137,7 @@ const TIMELINE_ICONS: Record<string, typeof Send> = {
 };
 
 const TIMELINE_COLORS: Record<string, string> = {
-  sent: 'bg-accent-400/20 text-accent-400',
+  sent: 'bg-primary/20 text-primary',
   signed: 'bg-success/20 text-success',
   completed: 'bg-success/20 text-success',
   verified: 'bg-violet-400/20 text-violet-400',
@@ -297,16 +297,22 @@ export function DocumentAuditView({
           {labels.signers}
         </h2>
         <div className="space-y-3">
-          {signers.map((signer) => {
+          {signers.map((signer, idx) => {
             const isSigned = signer.status === 'signed';
             return (
               <div
                 key={signer.id}
-                className="rounded-xl border border-th-border bg-th-hover p-4 space-y-3"
+                className={`rounded-xl border bg-th-hover p-4 space-y-4 ${
+                  isSigned
+                    ? 'border-l-4 border-l-success border-y-th-border border-r-th-border'
+                    : 'border-th-border'
+                }`}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">{signer.name}</p>
+                    <p className="truncate text-sm font-medium">
+                      {idx + 1}. {signer.name}
+                    </p>
                     <p className="truncate text-xs text-foreground-muted">{signer.email}</p>
                   </div>
                   <Badge
@@ -319,57 +325,72 @@ export function DocumentAuditView({
 
                 <div className="border-t border-th-border" />
 
-                <div className="grid grid-cols-1 gap-2 text-xs sm:grid-cols-2">
-                  {signer.notifiedAt ? (
+                <div className="flex gap-4">
+                  <div className="grid flex-1 grid-cols-1 gap-2.5 text-xs sm:grid-cols-2">
+                    {signer.signedAt ? (
+                      <div className="flex items-center gap-1.5 text-foreground-muted">
+                        <CheckCircle2 className="h-3 w-3 shrink-0 text-success" />
+                        <span>
+                          {labels.signerCard.signedAt}: {formatDate(signer.signedAt)}
+                        </span>
+                      </div>
+                    ) : null}
+                    {signer.notifiedAt ? (
+                      <div className="flex items-center gap-1.5 text-foreground-muted">
+                        <Send className="h-3 w-3 shrink-0" />
+                        <span>
+                          {labels.signerCard.notifiedAt}: {formatDate(signer.notifiedAt)}
+                        </span>
+                      </div>
+                    ) : null}
+                    {signer.verifiedAt ? (
+                      <div className="flex items-center gap-1.5 text-foreground-muted">
+                        <UserCheck className="h-3 w-3 shrink-0" />
+                        <span>
+                          {labels.signerCard.verifiedAt}: {formatDate(signer.verifiedAt)}
+                        </span>
+                      </div>
+                    ) : null}
                     <div className="flex items-center gap-1.5 text-foreground-muted">
-                      <Send className="h-3 w-3 shrink-0" />
+                      <Mail className="h-3 w-3 shrink-0" />
                       <span>
-                        {labels.signerCard.notifiedAt}: {formatDate(signer.notifiedAt)}
+                        {labels.signerCard.authMethod}:{' '}
+                        {signer.authMethod === 'email'
+                          ? labels.signerCard.authMethodEmail
+                          : labels.signerCard.authMethodNone}
                       </span>
                     </div>
-                  ) : null}
-                  {signer.signedAt ? (
-                    <div className="flex items-center gap-1.5 text-foreground-muted">
-                      <CheckCircle2 className="h-3 w-3 shrink-0 text-success" />
-                      <span>
-                        {labels.signerCard.signedAt}: {formatDate(signer.signedAt)}
-                      </span>
-                    </div>
-                  ) : null}
-                  {signer.verifiedAt ? (
-                    <div className="flex items-center gap-1.5 text-foreground-muted">
-                      <UserCheck className="h-3 w-3 shrink-0" />
-                      <span>
-                        {labels.signerCard.verifiedAt}: {formatDate(signer.verifiedAt)}
-                      </span>
-                    </div>
-                  ) : null}
-                  <div className="flex items-center gap-1.5 text-foreground-muted">
-                    <Mail className="h-3 w-3 shrink-0" />
-                    <span>
-                      {labels.signerCard.authMethod}:{' '}
-                      {signer.authMethod === 'email'
-                        ? labels.signerCard.authMethodEmail
-                        : labels.signerCard.authMethodNone}
-                    </span>
+                    {signer.ipAddress ? (
+                      <div className="flex items-center gap-1.5 text-foreground-muted">
+                        <Globe className="h-3 w-3 shrink-0" />
+                        <span>
+                          {labels.signerCard.ip}: {signer.ipAddress}
+                        </span>
+                      </div>
+                    ) : null}
+                    {signer.userAgent ? (
+                      <div className="col-span-full flex items-start gap-1.5 text-foreground-muted">
+                        <Monitor className="mt-0.5 h-3 w-3 shrink-0" />
+                        <span className="break-all">
+                          {labels.signerCard.userAgent}:{' '}
+                          {signer.userAgent.length > 100
+                            ? `${signer.userAgent.slice(0, 100)}...`
+                            : signer.userAgent}
+                        </span>
+                      </div>
+                    ) : null}
                   </div>
-                  {signer.ipAddress ? (
-                    <div className="flex items-center gap-1.5 text-foreground-muted">
-                      <Globe className="h-3 w-3 shrink-0" />
-                      <span>
-                        {labels.signerCard.ip}: {signer.ipAddress}
-                      </span>
-                    </div>
-                  ) : null}
-                  {signer.userAgent ? (
-                    <div className="col-span-full flex items-start gap-1.5 text-foreground-muted">
-                      <Monitor className="mt-0.5 h-3 w-3 shrink-0" />
-                      <span className="break-all">
-                        {labels.signerCard.userAgent}:{' '}
-                        {signer.userAgent.length > 100
-                          ? `${signer.userAgent.slice(0, 100)}...`
-                          : signer.userAgent}
-                      </span>
+
+                  {signer.signatureData ? (
+                    <div className="flex shrink-0 items-start">
+                      <div className="flex h-20 w-28 items-center justify-center overflow-hidden rounded-lg border border-th-border bg-white p-2">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={signer.signatureData}
+                          alt=""
+                          className="h-full w-full object-contain"
+                        />
+                      </div>
                     </div>
                   ) : null}
                 </div>
@@ -390,8 +411,8 @@ export function DocumentAuditView({
             disabled={downloadingOriginal}
             className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
           >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-accent-400/20">
-              <FileText className="h-5 w-5 text-accent-400" />
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/20">
+              <FileText className="h-5 w-5 text-primary" />
             </div>
             <div className="min-w-0 flex-1">
               <p className="text-sm font-medium">{labels.downloadOriginal}</p>

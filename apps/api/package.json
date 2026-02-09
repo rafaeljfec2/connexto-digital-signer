@@ -14,6 +14,7 @@
   "dependencies": {
     "@aws-sdk/client-s3": "^3.700.0",
     "@aws-sdk/s3-request-presigner": "^3.700.0",
+    "@connexto/ai": "workspace:*",
     "@connexto/database": "workspace:*",
     "@connexto/events": "workspace:*",
     "@connexto/shared": "workspace:*",
@@ -39,6 +40,7 @@
     "cookie-parser": "^1.4.7",
     "nestjs-pino": "^4.4.0",
     "nodemailer": "^6.9.0",
+    "openai": "^6.18.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "pdf-lib": "^1.17.1",

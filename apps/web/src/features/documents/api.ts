@@ -147,6 +147,7 @@ export type AuditSignerInfo = Readonly<{
   ipAddress: string | null;
   userAgent: string | null;
   verifiedAt: string | null;
+  signatureData: string | null;
 }>;
 
 export type DocumentAuditSummary = Readonly<{

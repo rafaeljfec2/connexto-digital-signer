@@ -257,6 +257,7 @@ export class SignaturesService {
         ipAddress: s.ipAddress,
         userAgent: s.userAgent,
         verifiedAt: s.verifiedAt,
+        signatureData: s.signatureData,
       })),
       timeline,
     };

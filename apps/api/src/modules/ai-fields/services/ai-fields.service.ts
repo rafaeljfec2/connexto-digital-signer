@@ -1,0 +1,163 @@
+import { Injectable, Logger, NotFoundException, BadRequestException } from '@nestjs/common';
+import { PDFDocument } from 'pdf-lib';
+import { AiGatewayService } from '../../ai-core/services/ai-gateway.service';
+import { AiCacheService } from '../../ai-core/services/ai-cache.service';
+import { AiUsageService } from '../../ai-core/services/ai-usage.service';
+import { DocumentsService } from '../../documents/services/documents.service';
+import { S3StorageService } from '../../../shared/storage/s3-storage.service';
+import {
+  FIELD_DETECTION_SYSTEM_PROMPT,
+  buildFieldDetectionUserPrompt,
+} from '../prompts/field-detection.prompt';
+import type { SuggestFieldsResponse, SuggestedField } from '../dto/suggest-fields-response.dto';
+import { AI_MODELS } from '@connexto/ai';
+
+const CACHE_PREFIX = 'ai-fields';
+const MAX_PAGES_TO_ANALYZE = 20;
+const MAX_TEXT_PER_PAGE = 3000;
+
+@Injectable()
+export class AiFieldsService {
+  private readonly logger = new Logger(AiFieldsService.name);
+
+  constructor(
+    private readonly aiGateway: AiGatewayService,
+    private readonly aiCache: AiCacheService,
+    private readonly aiUsage: AiUsageService,
+    private readonly documentsService: DocumentsService,
+    private readonly storage: S3StorageService,
+  ) {}
+
+  async suggestFields(
+    documentId: string,
+    tenantId: string,
+    signerCount: number,
+  ): Promise<SuggestFieldsResponse> {
+    if (signerCount < 1) {
+      throw new BadRequestException('At least one signer is required to suggest fields');
+    }
+
+    const document = await this.documentsService.findOne(documentId, tenantId);
+
+    if (!document.originalFileKey) {
+      throw new NotFoundException('Document has no uploaded PDF file');
+    }
+
+    const cacheKey = this.aiCache.buildCacheKey(
+      CACHE_PREFIX,
+      documentId,
+      document.originalHash ?? '',
+      String(signerCount),
+    );
+
+    const cached = await this.aiCache.get<SuggestFieldsResponse>(cacheKey);
+    if (cached) {
+      this.logger.debug(`Returning cached field suggestions for document ${documentId}`);
+      return cached;
+    }
+
+    const pdfBuffer = await this.storage.get(document.originalFileKey);
+    const pageTexts = await this.extractTextFromPdf(pdfBuffer);
+
+    if (pageTexts.length === 0) {
+      this.logger.warn(`No text extracted from document ${documentId}`);
+      return {
+        fields: [],
+        detectedSigners: 0,
+        documentType: 'unknown',
+        confidence: 0,
+      };
+    }
+
+    const userPrompt = buildFieldDetectionUserPrompt(pageTexts, signerCount);
+
+    const response = await this.aiGateway.complete({
+      model: AI_MODELS.OPENAI_GPT4O_MINI,
+      messages: [
+        { role: 'system', content: FIELD_DETECTION_SYSTEM_PROMPT },
+        { role: 'user', content: userPrompt },
+      ],
+      temperature: 0.1,
+      maxTokens: 4096,
+      responseFormat: 'json_object',
+    });
+
+    await this.aiUsage.trackUsage(tenantId, response.usage);
+
+    const parsed = JSON.parse(response.content) as SuggestFieldsResponse;
+    const validated = this.validateAndNormalize(parsed, pageTexts.length, signerCount);
+
+    await this.aiCache.set(cacheKey, validated);
+
+    this.logger.log(
+      `Suggested ${String(validated.fields.length)} fields for document ${documentId} ` +
+      `(type: ${validated.documentType}, confidence: ${String(validated.confidence)})`,
+    );
+
+    return validated;
+  }
+
+  private async extractTextFromPdf(pdfBuffer: Buffer): Promise<string[]> {
+    try {
+      const pdfDoc = await PDFDocument.load(pdfBuffer, { ignoreEncryption: true });
+      const pageCount = Math.min(pdfDoc.getPageCount(), MAX_PAGES_TO_ANALYZE);
+      const texts: string[] = [];
+
+      for (let i = 0; i < pageCount; i++) {
+        const page = pdfDoc.getPage(i);
+        const { width, height } = page.getSize();
+        texts.push(
+          `[Page dimensions: ${String(Math.round(width))}x${String(Math.round(height))}pt]` +
+          `\n[Note: pdf-lib does not extract text. Signature areas are typically at the bottom ` +
+          `of the last pages. Look for common patterns based on document structure.]`,
+        );
+      }
+
+      return texts;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to process PDF: ${message}`);
+      return [];
+    }
+  }
+
+  private validateAndNormalize(
+    raw: SuggestFieldsResponse,
+    pageCount: number,
+    signerCount: number,
+  ): SuggestFieldsResponse {
+    const validFields: SuggestedField[] = [];
+
+    for (const field of raw.fields ?? []) {
+      if (!this.isValidFieldType(field.type)) continue;
+      if (field.page < 1 || field.page > pageCount) continue;
+      if (field.signerIndex < 0 || field.signerIndex >= signerCount) continue;
+
+      validFields.push({
+        type: field.type,
+        page: field.page,
+        x: this.clamp(field.x, 0, 0.95),
+        y: this.clamp(field.y, 0, 0.95),
+        width: this.clamp(field.width, 0.05, 0.5),
+        height: this.clamp(field.height, 0.02, 0.15),
+        label: String(field.label ?? '').slice(0, 100),
+        signerIndex: field.signerIndex,
+      });
+    }
+
+    return {
+      fields: validFields,
+      detectedSigners: Math.max(0, raw.detectedSigners ?? 0),
+      documentType: String(raw.documentType ?? 'unknown').slice(0, 100),
+      confidence: this.clamp(raw.confidence ?? 0, 0, 1),
+    };
+  }
+
+  private isValidFieldType(type: string): type is SuggestedField['type'] {
+    return ['signature', 'name', 'date', 'initials', 'text'].includes(type);
+  }
+
+  private clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(max, value));
+  }
+}

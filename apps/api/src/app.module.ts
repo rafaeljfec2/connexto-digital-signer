@@ -18,6 +18,8 @@ import { AuditModule } from './modules/audit/audit.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
 import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { BillingModule } from './modules/billing/billing.module';
+import { AiCoreModule } from './modules/ai-core/ai-core.module';
+import { AiFieldsModule } from './modules/ai-fields/ai-fields.module';
 import { CompositeAuthGuard } from './common/guards/composite-auth.guard';
 import { getLoggerConfig } from './common/config/logger.config';
 import { HealthModule } from './modules/health/health.module';
@@ -67,6 +69,7 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
     }),
     StorageModule,
     PdfModule,
+    AiCoreModule,
     TenantsModule,
     AuthModule,
     DocumentsModule,
@@ -75,6 +78,7 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
     NotificationsModule,
     WebhooksModule,
     BillingModule,
+    AiFieldsModule,
   ],
   providers: [
     {
