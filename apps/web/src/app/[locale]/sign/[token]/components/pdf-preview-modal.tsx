@@ -1,8 +1,17 @@
 "use client";
 
+import dynamic from 'next/dynamic';
 import { X } from 'lucide-react';
-import { SignerPdfViewer } from '../signer-pdf-viewer';
 import type { SignerField } from '@/features/signing/api';
+
+const SignerPdfViewer = dynamic(
+  () => import('../signer-pdf-viewer').then((mod) => mod.SignerPdfViewer),
+  { ssr: false, loading: () => (
+    <div className="flex min-h-[40vh] items-center justify-center">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-foreground-subtle border-t-foreground" />
+    </div>
+  )}
+);
 
 type PdfPreviewModalProps = Readonly<{
   open: boolean;

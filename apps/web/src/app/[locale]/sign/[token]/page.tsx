@@ -14,14 +14,23 @@ import { AlertTriangle, Check, FileText, ShieldCheck } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import dynamic from 'next/dynamic';
 import { FillFieldsStep } from './components/fill-fields-step';
-import { PdfPreviewModal } from './components/pdf-preview-modal';
 import { ReviewStep } from './components/review-step';
 import type { SignStep } from './components/sign-stepper';
 import { SignStepper } from './components/sign-stepper';
-import { SignatureModal } from './components/signature-modal';
 import { ValidateStep } from './components/validate-step';
 import { ViewStep } from './components/view-step';
+
+const PdfPreviewModal = dynamic(
+  () => import('./components/pdf-preview-modal').then((mod) => mod.PdfPreviewModal),
+  { ssr: false }
+);
+
+const SignatureModal = dynamic(
+  () => import('./components/signature-modal').then((mod) => mod.SignatureModal),
+  { ssr: false }
+);
 
 function maskEmail(email: string): string {
   const [local, domain] = email.split('@');
