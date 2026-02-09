@@ -36,19 +36,14 @@ export const SignatureField = ({
   });
 
   return (
-    <div
+    <button
+      type="button"
       ref={draggable.setNodeRef}
       {...draggable.listeners}
       {...draggable.attributes}
       onClick={(event) => {
         event.stopPropagation();
         onSelect?.(field.id);
-      }}
-      onKeyDown={(event) => {
-        if (event.key === 'Enter' || event.key === ' ') {
-          event.stopPropagation();
-          onSelect?.(field.id);
-        }
       }}
       className={`absolute flex flex-col items-center justify-center rounded-md border-2 border-dashed bg-white/80 px-2 py-0.5 text-xs shadow-sm transition-shadow ${
         isSelected ? 'ring-2 ring-primary/70 shadow-md' : 'hover:shadow-md'
@@ -89,6 +84,6 @@ export const SignatureField = ({
           <X className="h-2.5 w-2.5" />
         </button>
       ) : null}
-    </div>
+    </button>
   );
 };
