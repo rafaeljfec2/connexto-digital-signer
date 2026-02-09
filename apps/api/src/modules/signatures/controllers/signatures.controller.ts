@@ -31,13 +31,15 @@ import { SendDocumentDto } from '../dto/send-document.dto';
 import { throttleConfig } from '../../../common/config/throttle.config';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
-function getClientIp(req: RequestWithHeaders & { socket?: { remoteAddress?: string } }): string {
+function getClientIp(
+  req: RequestWithHeaders & { ip?: string; socket?: { remoteAddress?: string }; connection?: { remoteAddress?: string } }
+): string {
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string') {
     const first = forwarded.split(',')[0]?.trim();
-    return first ?? req.socket?.remoteAddress ?? '';
+    if (first) return first;
   }
-  return req.socket?.remoteAddress ?? '';
+  return req.ip ?? req.socket?.remoteAddress ?? req.connection?.remoteAddress ?? '';
 }
 
 @ApiTags('Signers')
@@ -204,7 +206,7 @@ export class SignController {
   accept(
     @Param('token') token: string,
     @Body() dto: AcceptSignatureDto,
-    @Req() req: RequestWithHeaders & { socket?: { remoteAddress?: string } }
+    @Req() req: RequestWithHeaders & { ip?: string; socket?: { remoteAddress?: string }; connection?: { remoteAddress?: string } }
   ) {
     return this.signaturesService.acceptSignature(
       token,

@@ -474,7 +474,7 @@ export class PdfService {
 
     if (signer.signatureData) {
       const sigBoxX = margin + contentWidth - SIG_BOX_W - 12;
-      const sigBoxY = ctx.y - cardHeight + 8;
+      const sigBoxY = ctx.y - 42 - SIG_BOX_H - 8;
 
       currentPage.drawRectangle({
         x: sigBoxX,
@@ -527,8 +527,8 @@ export class PdfService {
       color: colors.secondary,
     });
 
-    let detailY = ctx.y - 48;
-    this.drawHorizontalLine(ctx, detailY + 6);
+    this.drawHorizontalLine(ctx, ctx.y - 42);
+    let detailY = ctx.y - 58;
 
     const formattedSignedAt = signer.signedAt ? formatEvidenceDate(signer.signedAt, locale) : '';
 
@@ -562,11 +562,11 @@ export class PdfService {
   }
 
   private calculateSignerCardHeight(signer: SignerEvidence): number {
-    let height = 71;
+    let height = 82;
     if (signer.ipAddress) height += 14;
     if (signer.userAgent) height += 14;
     if (signer.signatureData) {
-      height = Math.max(height, 70);
+      height = Math.max(height, 82);
     }
     return height;
   }
