@@ -146,31 +146,30 @@ export default function DashboardPage() {
         </Button>
       </div>
 
-      <KpiCards
-        items={[
-          {
-            label: tDashboard('kpi.pending'),
-            value: statsQuery.data?.pending ?? 0,
-            variant: 'pending',
-          },
-          {
-            label: tDashboard('kpi.completed'),
-            value: statsQuery.data?.completed ?? 0,
-            variant: 'completed',
-          },
-          {
-            label: tDashboard('kpi.expired'),
-            value: statsQuery.data?.expired ?? 0,
-            variant: 'expired',
-          },
-          { label: tDashboard('kpi.draft'), value: statsQuery.data?.draft ?? 0, variant: 'draft' },
-        ]}
-        isLoading={statsQuery.isLoading}
-        onCardClick={handleKpiClick}
-      />
-
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
+          <KpiCards
+            items={[
+              {
+                label: tDashboard('kpi.pending'),
+                value: statsQuery.data?.pending ?? 0,
+                variant: 'pending',
+              },
+              {
+                label: tDashboard('kpi.completed'),
+                value: statsQuery.data?.completed ?? 0,
+                variant: 'completed',
+              },
+              {
+                label: tDashboard('kpi.expired'),
+                value: statsQuery.data?.expired ?? 0,
+                variant: 'expired',
+              },
+              { label: tDashboard('kpi.draft'), value: statsQuery.data?.draft ?? 0, variant: 'draft' },
+            ]}
+            isLoading={statsQuery.isLoading}
+            onCardClick={handleKpiClick}
+          />
           <div className="flex items-center justify-between">
             <h2 className="text-base font-medium text-foreground">{tDashboard('recentTitle')}</h2>
             <button
