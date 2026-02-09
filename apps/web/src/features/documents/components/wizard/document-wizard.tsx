@@ -23,9 +23,10 @@ const STEP_ICONS: Record<WizardStepId, React.ReactNode> = {
 export type DocumentWizardProps = {
   readonly documentId: string;
   readonly hasFile: boolean;
+  readonly onCancel: () => void;
 };
 
-export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardProps>) {
+export function DocumentWizard({ documentId, hasFile, onCancel }: Readonly<DocumentWizardProps>) {
   const tWizard = useTranslations('wizard');
   const [uploadComplete, setUploadComplete] = useState(hasFile);
   const [step, setStep] = useState<WizardStepId>(hasFile ? 'signers' : 'upload');
@@ -94,6 +95,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
           documentId={documentId}
           hasFile={uploadComplete}
           onRestart={() => setStep('upload')}
+          onCancel={onCancel}
           onNext={() => {
             setUploadComplete(true);
             setStep('signers');
@@ -105,6 +107,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
           documentId={documentId}
           onBack={() => setStep('upload')}
           onRestart={() => setStep('upload')}
+          onCancel={onCancel}
           onNext={() => setStep('fields')}
         />
       ) : null}
@@ -113,6 +116,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
           documentId={documentId}
           onBack={() => setStep('signers')}
           onRestart={() => setStep('upload')}
+          onCancel={onCancel}
           onNext={() => setStep('settings')}
         />
       ) : null}
@@ -121,6 +125,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
           documentId={documentId}
           onBack={() => setStep('fields')}
           onRestart={() => setStep('upload')}
+          onCancel={onCancel}
           onNext={() => setStep('review')}
         />
       ) : null}
@@ -129,6 +134,7 @@ export function DocumentWizard({ documentId, hasFile }: Readonly<DocumentWizardP
           documentId={documentId}
           onBack={() => setStep('settings')}
           onRestart={() => setStep('upload')}
+          onCancel={onCancel}
         />
       ) : null}
     </div>

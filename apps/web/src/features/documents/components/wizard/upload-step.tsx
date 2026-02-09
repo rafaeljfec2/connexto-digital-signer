@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useQueryClient } from '@tanstack/react-query';
-import { FileCheck, RefreshCw } from 'lucide-react';
+import { FileCheck, RefreshCw, X } from 'lucide-react';
 import {
   useDocument,
   useUpdateDocument,
@@ -18,10 +18,11 @@ export type UploadStepProps = {
   readonly hasFile: boolean;
   readonly onBack?: () => void;
   readonly onRestart?: () => void;
+  readonly onCancel?: () => void;
   readonly onNext: () => void;
 };
 
-export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: Readonly<UploadStepProps>) {
+export function UploadStep({ documentId, hasFile, onBack, onRestart, onCancel, onNext }: Readonly<UploadStepProps>) {
   const tDocuments = useTranslations('documents');
   const tWizard = useTranslations('wizard');
   const queryClient = useQueryClient();
@@ -147,6 +148,12 @@ export function UploadStep({ documentId, hasFile, onBack, onRestart, onNext }: R
             {onRestart ? (
               <Button type="button" variant="ghost" onClick={onRestart}>
                 {tWizard('restart')}
+              </Button>
+            ) : null}
+            {onCancel ? (
+              <Button type="button" variant="ghost" className="text-error hover:text-error/80" onClick={onCancel}>
+                <X className="mr-1 h-4 w-4" />
+                {tWizard('cancel')}
               </Button>
             ) : null}
           </div>

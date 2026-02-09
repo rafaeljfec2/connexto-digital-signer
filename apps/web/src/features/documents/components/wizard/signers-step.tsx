@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Pencil, Plus } from 'lucide-react';
+import { Pencil, Plus, X } from 'lucide-react';
 import type { Signer } from '@/features/documents/api';
 import {
   useAddSigner,
@@ -26,10 +26,11 @@ export type SignersStepProps = {
   readonly documentId: string;
   readonly onBack: () => void;
   readonly onRestart: () => void;
+  readonly onCancel: () => void;
   readonly onNext: () => void;
 };
 
-export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<SignersStepProps>) {
+export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }: Readonly<SignersStepProps>) {
   const tSigners = useTranslations('signers');
   const tWizard = useTranslations('wizard');
   const documentQuery = useDocument(documentId);
@@ -214,6 +215,10 @@ export function SignersStep({ documentId, onBack, onRestart, onNext }: Readonly<
             </Button>
             <Button type="button" variant="ghost" onClick={onRestart}>
               {tWizard('restart')}
+            </Button>
+            <Button type="button" variant="ghost" className="text-error hover:text-error/80" onClick={onCancel}>
+              <X className="mr-1 h-4 w-4" />
+              {tWizard('cancel')}
             </Button>
           </div>
           <Button type="button" onClick={onNext}>

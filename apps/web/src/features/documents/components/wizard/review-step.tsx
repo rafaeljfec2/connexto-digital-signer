@@ -17,6 +17,7 @@ import {
   RotateCcw,
   Save,
   Send,
+  X,
 } from 'lucide-react';
 import { Button, Card, Dialog } from '@/shared/ui';
 
@@ -24,9 +25,10 @@ export type ReviewStepProps = {
   readonly documentId: string;
   readonly onBack: () => void;
   readonly onRestart: () => void;
+  readonly onCancel: () => void;
 };
 
-export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewStepProps>) {
+export function ReviewStep({ documentId, onBack, onRestart, onCancel }: Readonly<ReviewStepProps>) {
   const tReview = useTranslations('review');
   const tWizard = useTranslations('wizard');
   const signersQuery = useSigners(documentId);
@@ -123,6 +125,10 @@ export function ReviewStep({ documentId, onBack, onRestart }: Readonly<ReviewSte
           <Button type="button" variant="ghost" onClick={onRestart}>
             <RotateCcw className="mr-1 h-4 w-4" />
             {tWizard('restart')}
+          </Button>
+          <Button type="button" variant="ghost" className="text-error hover:text-error/80" onClick={onCancel}>
+            <X className="mr-1 h-4 w-4" />
+            {tWizard('cancel')}
           </Button>
         </div>
       </div>

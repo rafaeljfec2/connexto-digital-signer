@@ -209,6 +209,13 @@
     "back": "Back",
     "hint": "Complete all steps before sending",
     "restart": "Restart",
+    "cancel": "Cancel",
+    "cancelConfirmTitle": "Cancel signature",
+    "cancelConfirmDescription": "Are you sure you want to cancel? The draft of this document will be permanently deleted.",
+    "cancelConfirmButton": "Delete draft",
+    "cancelCancelButton": "Go back",
+    "cancelSuccess": "Draft deleted successfully",
+    "cancelError": "Failed to delete draft",
     "notFound": "Document not found"
   },
   "signers": {

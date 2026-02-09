@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, RotateCcw, ArrowRight, Info } from 'lucide-react';
+import { ArrowLeft, RotateCcw, ArrowRight, Info, X } from 'lucide-react';
 import type { ClosureMode, ReminderInterval, SigningLanguage } from '@/features/documents/api';
 import {
   useDocument,
@@ -14,10 +14,11 @@ export type SettingsStepProps = {
   readonly documentId: string;
   readonly onBack: () => void;
   readonly onRestart: () => void;
+  readonly onCancel: () => void;
   readonly onNext: () => void;
 };
 
-export function SettingsStep({ documentId, onBack, onRestart, onNext }: SettingsStepProps) {
+export function SettingsStep({ documentId, onBack, onRestart, onCancel, onNext }: SettingsStepProps) {
   const tSettings = useTranslations('settings');
   const tWizard = useTranslations('wizard');
   const { data: document } = useDocument(documentId);
@@ -186,6 +187,10 @@ export function SettingsStep({ documentId, onBack, onRestart, onNext }: Settings
           <Button variant="ghost" onClick={onRestart}>
             <RotateCcw className="mr-1 h-4 w-4" />
             {tWizard('restart')}
+          </Button>
+          <Button variant="ghost" className="text-error hover:text-error/80" onClick={onCancel}>
+            <X className="mr-1 h-4 w-4" />
+            {tWizard('cancel')}
           </Button>
         </div>
         <Button

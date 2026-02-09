@@ -209,6 +209,13 @@
     "back": "Voltar",
     "hint": "Complete todas as etapas antes de enviar",
     "restart": "Reiniciar",
+    "cancel": "Cancelar",
+    "cancelConfirmTitle": "Cancelar assinatura",
+    "cancelConfirmDescription": "Tem certeza que deseja cancelar? O rascunho deste documento sera excluido permanentemente.",
+    "cancelConfirmButton": "Excluir rascunho",
+    "cancelCancelButton": "Voltar",
+    "cancelSuccess": "Rascunho excluido com sucesso",
+    "cancelError": "Falha ao excluir o rascunho",
     "notFound": "Documento nao encontrado"
   },
   "signers": {

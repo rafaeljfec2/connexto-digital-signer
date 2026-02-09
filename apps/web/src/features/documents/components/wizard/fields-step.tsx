@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { PenTool, ArrowRight, CheckCircle } from 'lucide-react';
+import { PenTool, ArrowRight, CheckCircle, X } from 'lucide-react';
 import { useSignatureFields } from '@/features/documents/hooks/use-document-wizard';
 import { Button, Card } from '@/shared/ui';
 import { SignatureEditorModal } from './signature-editor-modal';
@@ -11,10 +11,11 @@ export type FieldsStepProps = Readonly<{
   documentId: string;
   onBack: () => void;
   onRestart: () => void;
+  onCancel: () => void;
   onNext: () => void;
 }>;
 
-export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStepProps) {
+export function FieldsStep({ documentId, onBack, onRestart, onCancel, onNext }: FieldsStepProps) {
   const tFields = useTranslations('fields');
   const tWizard = useTranslations('wizard');
   const fieldsQuery = useSignatureFields(documentId);
@@ -83,6 +84,10 @@ export function FieldsStep({ documentId, onBack, onRestart, onNext }: FieldsStep
             </Button>
             <Button type="button" variant="ghost" onClick={onRestart}>
               {tWizard('restart')}
+            </Button>
+            <Button type="button" variant="ghost" className="text-error hover:text-error/80" onClick={onCancel}>
+              <X className="mr-1 h-4 w-4" />
+              {tWizard('cancel')}
             </Button>
           </div>
         </div>
