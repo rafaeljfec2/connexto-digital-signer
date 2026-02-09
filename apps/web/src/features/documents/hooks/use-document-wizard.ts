@@ -10,6 +10,7 @@ import {
   previewEmail,
   removeSigner,
   sendDocument,
+  suggestFields,
   updateSigner,
   uploadDocumentFile,
   updateDocument,
@@ -88,6 +89,11 @@ export const useUpdateDocument = (documentId: string) =>
 export const useUploadDocumentFile = (documentId: string) =>
   useMutation({
     mutationFn: (input: UploadDocumentFileInput) => uploadDocumentFile(documentId, input),
+  });
+
+export const useSuggestFields = (documentId: string) =>
+  useMutation({
+    mutationFn: (signerCount: number) => suggestFields(documentId, signerCount),
   });
 
 export const useDocumentAuditSummary = (documentId: string) =>

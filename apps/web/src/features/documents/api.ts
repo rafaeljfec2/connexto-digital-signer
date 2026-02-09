@@ -314,6 +314,36 @@ export const getDocumentAuditSummary = async (
   return response.data;
 };
 
+export type SuggestedField = {
+  readonly type: SignatureFieldType;
+  readonly page: number;
+  readonly x: number;
+  readonly y: number;
+  readonly width: number;
+  readonly height: number;
+  readonly label: string;
+  readonly signerIndex: number;
+};
+
+export type SuggestFieldsResponse = {
+  readonly fields: ReadonlyArray<SuggestedField>;
+  readonly detectedSigners: number;
+  readonly documentType: string;
+  readonly confidence: number;
+};
+
+export const suggestFields = async (
+  documentId: string,
+  signerCount: number,
+): Promise<SuggestFieldsResponse> => {
+  const response = await apiClient.post<SuggestFieldsResponse>(
+    `/documents/${documentId}/ai/suggest-fields`,
+    null,
+    { params: { signerCount } },
+  );
+  return response.data;
+};
+
 export const getDocumentSignedFile = async (documentId: string): Promise<Blob | null> => {
   try {
     const response = await apiClient.get(`/documents/${documentId}/signed-file`, {

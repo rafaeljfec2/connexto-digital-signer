@@ -327,7 +327,7 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
 
           <div>
             <p className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground-subtle">
-              {tSigners('sectionVerification')}
+              {tSigners('sectionRequest')}
             </p>
             <div className="space-y-2.5">
               <label className="flex items-center gap-2.5 text-sm text-foreground">
@@ -337,7 +337,7 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
                   onChange={(event) => setAuthMethod(event.target.checked ? 'email' : 'none')}
                   className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
                 />
-                {tSigners('authMethodLabel')}
+                {tSigners('requestEmailLabel')}
               </label>
               <label className="flex items-center gap-2.5 text-sm text-foreground">
                 <input
@@ -357,6 +357,26 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
                 />
                 {tSigners('requestPhoneLabel')}
               </label>
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-3 text-xs font-medium uppercase tracking-wide text-foreground-subtle">
+              {tSigners('sectionVerification')}
+            </p>
+            <div className="grid gap-3 md:grid-cols-2">
+              <div className="space-y-1.5">
+                <label className="text-sm font-normal text-foreground-muted">
+                  {tSigners('authMethodLabel')}
+                </label>
+                <Select
+                  value={authMethod}
+                  onChange={(event) => setAuthMethod(event.target.value)}
+                >
+                  <option value="email">{tSigners('authMethodEmail')}</option>
+                  <option value="none">{tSigners('authMethodNone')}</option>
+                </Select>
+              </div>
             </div>
           </div>
 

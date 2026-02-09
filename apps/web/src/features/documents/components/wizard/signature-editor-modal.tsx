@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useTranslations } from 'next-intl';
-import { PenTool, Fingerprint, ChevronLeft } from 'lucide-react';
+import { PenTool, Fingerprint, ChevronLeft, Sparkles, Loader2 } from 'lucide-react';
 import type { DragEndEvent } from '@dnd-kit/core';
 import { DndContext } from '@dnd-kit/core';
 import {
@@ -11,6 +11,7 @@ import {
   useDocumentFile,
   useSignatureFields,
   useSigners,
+  useSuggestFields,
 } from '@/features/documents/hooks/use-document-wizard';
 import { Button, Select } from '@/shared/ui';
 import type { SignatureFieldInput } from '@/features/documents/api';
@@ -44,11 +45,13 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
   const signersQuery = useSigners(documentId);
   const fieldsQuery = useSignatureFields(documentId);
   const batchUpdate = useBatchUpdateFields(documentId);
+  const suggestFieldsMutation = useSuggestFields(documentId);
   const fileQuery = useDocumentFile(documentId);
   const [activeSignerId, setActiveSignerId] = useState<string>('');
   const [activeFieldType, setActiveFieldType] = useState<SignatureFieldType>('signature');
   const pageRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
 
   const initialFields = useMemo(() => fieldsQuery.data ?? undefined, [fieldsQuery.data]);
   const { fields, addField, moveField, removeField } = usePdfFields({ initialFields });
@@ -152,6 +155,45 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
     [activeSignerId, activeFieldType, addField]
   );
 
+  const handleSuggestWithAi = useCallback(async () => {
+    const signers = signersQuery.data ?? [];
+    if (signers.length === 0) return;
+    setAiMessage(null);
+
+    try {
+      const result = await suggestFieldsMutation.mutateAsync(signers.length);
+
+      if (result.fields.length === 0) {
+        setAiMessage(tFields('aiEmpty'));
+        return;
+      }
+
+      for (const suggested of result.fields) {
+        const signer = signers[suggested.signerIndex];
+        if (!signer) continue;
+
+        addField({
+          id: createTempId(),
+          signerId: signer.id,
+          type: suggested.type as SignatureFieldType,
+          page: suggested.page,
+          x: suggested.x,
+          y: suggested.y,
+          width: suggested.width,
+          height: suggested.height,
+          required: true,
+          value: null,
+        });
+      }
+
+      setAiMessage(
+        tFields('aiSuccess', { count: result.fields.length }),
+      );
+    } catch {
+      setAiMessage(tFields('aiError'));
+    }
+  }, [signersQuery.data, suggestFieldsMutation, addField, tFields]);
+
   const handleDragEnd = useCallback(
     (event: DragEndEvent) => {
       const overId = event.over?.id?.toString();
@@ -226,6 +268,30 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
           <p className="text-xs text-foreground-subtle">
             {tFields('clickToAdd')}
           </p>
+
+          <div className="space-y-2 border-t border-th-border pt-4">
+            <Button
+              type="button"
+              variant="secondary"
+              className="w-full gap-2"
+              onClick={handleSuggestWithAi}
+              disabled={suggestFieldsMutation.isPending || (signersQuery.data ?? []).length === 0}
+            >
+              {suggestFieldsMutation.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4" />
+              )}
+              {suggestFieldsMutation.isPending
+                ? tFields('aiSuggesting')
+                : tFields('suggestWithAi')}
+            </Button>
+            {aiMessage ? (
+              <p className="text-center text-xs text-foreground-muted">
+                {aiMessage}
+              </p>
+            ) : null}
+          </div>
         </div>
 
         <div className="flex flex-col gap-2 border-t border-th-border p-4">
