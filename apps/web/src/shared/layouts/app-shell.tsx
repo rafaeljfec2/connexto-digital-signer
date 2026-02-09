@@ -55,7 +55,6 @@ export type AppShellProps = {
 export function AppShell({
   children,
   navItems,
-  helpLabel: _helpLabel,
   appName,
   tenantLabel,
   signOutLabel,

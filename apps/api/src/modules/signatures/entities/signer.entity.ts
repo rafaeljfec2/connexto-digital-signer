@@ -46,8 +46,14 @@ export class Signer {
   @Column({ name: 'birth_date', type: 'date', nullable: true })
   birthDate!: string | null;
 
+  @Column({ type: 'varchar', length: 20, nullable: true })
+  phone!: string | null;
+
   @Column({ name: 'request_cpf', type: 'boolean', default: false })
   requestCpf!: boolean;
+
+  @Column({ name: 'request_phone', type: 'boolean', default: false })
+  requestPhone!: boolean;
 
   @Column({ name: 'auth_method', type: 'varchar', length: 50, default: 'email' })
   authMethod!: string;

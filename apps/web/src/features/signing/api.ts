@@ -10,10 +10,13 @@ export type SignerWithDocument = {
     readonly id: string;
     readonly name: string;
     readonly email: string;
+    readonly phone: string | null;
     readonly status: 'pending' | 'signed';
     readonly documentId: string;
     readonly signedAt: string | null;
     readonly authMethod: string;
+    readonly requestCpf: boolean;
+    readonly requestPhone: boolean;
   };
   readonly document: {
     readonly id: string;
@@ -42,6 +45,22 @@ export type AcceptSignatureInput = {
     readonly value: string;
   }>;
   readonly signatureData?: string;
+};
+
+export type IdentifySignerInput = {
+  readonly cpf?: string;
+  readonly phone?: string;
+};
+
+export const identifySigner = async (
+  token: string,
+  input: IdentifySignerInput,
+): Promise<{ readonly identified: boolean }> => {
+  const response = await publicClient.post<{ readonly identified: boolean }>(
+    `/sign/${token}/identify`,
+    input,
+  );
+  return response.data;
 };
 
 export const getSignerByToken = async (

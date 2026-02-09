@@ -32,9 +32,11 @@ export type Signer = {
   readonly id: string;
   readonly name: string;
   readonly email: string;
+  readonly phone: string | null;
   readonly cpf: string | null;
   readonly birthDate: string | null;
   readonly requestCpf: boolean;
+  readonly requestPhone: boolean;
   readonly authMethod: string;
   readonly status: 'pending' | 'signed';
   readonly order: number | null;
@@ -45,9 +47,11 @@ export type Signer = {
 export type CreateSignerInput = {
   readonly name: string;
   readonly email: string;
+  readonly phone?: string;
   readonly cpf?: string;
   readonly birthDate?: string;
   readonly requestCpf?: boolean;
+  readonly requestPhone?: boolean;
   readonly authMethod?: string;
   readonly order?: number;
 };

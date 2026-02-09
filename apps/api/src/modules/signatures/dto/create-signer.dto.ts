@@ -36,9 +36,21 @@ export class CreateSignerDto {
   readonly birthDate?: string;
 
   @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  @Matches(/^\+?\d[\d\s()-]{7,18}$/, { message: 'Phone must be in a valid format' })
+  @ApiPropertyOptional({ example: '+5511999998888' })
+  readonly phone?: string;
+
+  @IsOptional()
   @IsBoolean()
   @ApiPropertyOptional({ example: false })
   readonly requestCpf?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  @ApiPropertyOptional({ example: false })
+  readonly requestPhone?: boolean;
 
   @IsOptional()
   @IsString()

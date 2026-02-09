@@ -2,6 +2,7 @@
 
 import {
   useAcceptSignature,
+  useIdentifySigner,
   useSendVerificationCode,
   useSignerData,
   useSignerFields,
@@ -15,6 +16,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { FillFieldsStep } from './components/fill-fields-step';
+import { IdentifyStep } from './components/identify-step';
 import { ReviewStep } from './components/review-step';
 import type { SignStep } from './components/sign-stepper';
 import { SignStepper } from './components/sign-stepper';
@@ -53,10 +55,9 @@ export default function SignerDocumentPage() {
   const pdfQuery = useSignerPdf(token);
   const fieldsQuery = useSignerFields(token);
   const acceptMutation = useAcceptSignature(token);
+  const identifyMutation = useIdentifySigner(token);
   const sendCodeMutation = useSendVerificationCode(token);
   const verifyCodeMutation = useVerifyCode(token);
-
-  const [currentStep, setCurrentStep] = useState<SignStep>('view');
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
@@ -74,7 +75,19 @@ export default function SignerDocumentPage() {
   const fields = useMemo(() => fieldsQuery.data ?? [], [fieldsQuery.data]);
   const alreadySigned = signerData?.signer.status === 'signed';
   const requiresValidation = signerData?.signer.authMethod === 'email';
+  const requiresIdentify = (signerData?.signer.requestCpf ?? false) || (signerData?.signer.requestPhone ?? false);
   const hasFields = fields.length > 0;
+
+  const [currentStep, setCurrentStep] = useState<SignStep>('view');
+  const [stepInitialized, setStepInitialized] = useState(false);
+
+  useEffect(() => {
+    if (stepInitialized || !signerData) return;
+    if (requiresIdentify) {
+      setCurrentStep('identify');
+    }
+    setStepInitialized(true);
+  }, [signerData, requiresIdentify, stepInitialized]);
 
   const fileUrl = useMemo(() => {
     if (!pdfQuery.data) return '';
@@ -266,7 +279,9 @@ export default function SignerDocumentPage() {
           <SignStepper
             currentStep={currentStep}
             showValidation={requiresValidation ?? false}
+            showIdentify={requiresIdentify}
             labels={{
+              identify: t('steps.identify'),
               view: t('steps.view'),
               fill: t('steps.fill'),
               validate: t('steps.validate'),
@@ -277,6 +292,28 @@ export default function SignerDocumentPage() {
       </div>
 
       <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 pt-6 pb-16 md:px-6 md:pt-8 md:pb-2">
+        {currentStep === 'identify' && signerData ? (
+          <IdentifyStep
+            requestCpf={signerData.signer.requestCpf}
+            requestPhone={signerData.signer.requestPhone}
+            onIdentify={(input) => identifyMutation.mutateAsync(input)}
+            onNext={() => setCurrentStep('view')}
+            isSubmitting={identifyMutation.isPending}
+            labels={{
+              title: t('identifyStep.title'),
+              instruction: t('identifyStep.instruction'),
+              cpfLabel: t('identifyStep.cpfLabel'),
+              cpfPlaceholder: t('identifyStep.cpfPlaceholder'),
+              phoneLabel: t('identifyStep.phoneLabel'),
+              phonePlaceholder: t('identifyStep.phonePlaceholder'),
+              next: t('identifyStep.next'),
+              cpfRequired: t('identifyStep.cpfRequired'),
+              phoneRequired: t('identifyStep.phoneRequired'),
+              error: t('identifyStep.error'),
+            }}
+          />
+        ) : null}
+
         {currentStep === 'view' ? (
           <ViewStep
             fileUrl={fileUrl}

@@ -7,9 +7,9 @@
     "dev": "nest start --watch",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\"",
     "test": "jest",
-    "migration:generate": "typeorm-ts-node-commonjs -d apps/api/src/database/data-source.ts migration:generate",
-    "migration:run": "typeorm-ts-node-commonjs -d apps/api/src/database/data-source.ts migration:run",
-    "migration:revert": "typeorm-ts-node-commonjs -d apps/api/src/database/data-source.ts migration:revert"
+    "migration:generate": "typeorm-ts-node-commonjs -d src/database/data-source.ts migration:generate",
+    "migration:run": "typeorm-ts-node-commonjs -d src/database/data-source.ts migration:run",
+    "migration:revert": "typeorm-ts-node-commonjs -d src/database/data-source.ts migration:revert"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.700.0",

@@ -23,6 +23,7 @@ import { VerificationService } from '../services/verification.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
 import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { AcceptSignatureDto } from '../dto/accept-signature.dto';
+import { IdentifySignerDto } from '../dto/identify-signer.dto';
 import { VerifyCodeDto } from '../dto/verify-code.dto';
 import { CreateSignatureFieldDto } from '../dto/create-signature-field.dto';
 import { UpdateSignatureFieldDto } from '../dto/update-signature-field.dto';
@@ -223,6 +224,16 @@ export class SignController {
   @Get(':token/summary')
   getSignerSummary(@Param('token') token: string) {
     return this.signaturesService.getDocumentAuditSummaryByToken(token);
+  }
+
+  @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Post(':token/identify')
+  identifySigner(
+    @Param('token') token: string,
+    @Body() dto: IdentifySignerDto,
+  ) {
+    return this.signaturesService.identifySigner(token, dto);
   }
 
   @Public()

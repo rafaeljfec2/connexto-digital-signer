@@ -1,10 +1,10 @@
 "use client";
 
-import { Check, Eye, PenTool, ShieldCheck, FileCheck } from 'lucide-react';
+import { Check, Eye, PenTool, ShieldCheck, FileCheck, UserCheck } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useMemo } from 'react';
 
-export type SignStep = 'view' | 'fill' | 'validate' | 'review';
+export type SignStep = 'identify' | 'view' | 'fill' | 'validate' | 'review';
 
 type StepDefinition = Readonly<{
   id: SignStep;
@@ -14,7 +14,9 @@ type StepDefinition = Readonly<{
 type SignStepperProps = Readonly<{
   currentStep: SignStep;
   showValidation: boolean;
+  showIdentify: boolean;
   labels: Readonly<{
+    identify: string;
     view: string;
     fill: string;
     validate: string;
@@ -23,17 +25,21 @@ type SignStepperProps = Readonly<{
 }>;
 
 const ALL_STEPS: readonly StepDefinition[] = [
+  { id: 'identify', icon: UserCheck },
   { id: 'view', icon: Eye },
   { id: 'fill', icon: PenTool },
   { id: 'validate', icon: ShieldCheck },
   { id: 'review', icon: FileCheck },
 ];
 
-export function SignStepper({ currentStep, showValidation, labels }: SignStepperProps) {
+export function SignStepper({ currentStep, showValidation, showIdentify, labels }: SignStepperProps) {
   const steps = useMemo(() => {
-    if (showValidation) return ALL_STEPS;
-    return ALL_STEPS.filter((s) => s.id !== 'validate');
-  }, [showValidation]);
+    return ALL_STEPS.filter((s) => {
+      if (s.id === 'validate' && !showValidation) return false;
+      if (s.id === 'identify' && !showIdentify) return false;
+      return true;
+    });
+  }, [showValidation, showIdentify]);
 
   const activeIdx = steps.findIndex((s) => s.id === currentStep);
 

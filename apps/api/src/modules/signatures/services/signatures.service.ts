@@ -11,6 +11,7 @@ import { DocumentStatus, SigningMode } from '../../documents/entities/document.e
 import { DocumentsService } from '../../documents/services/documents.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
+import { IdentifySignerDto } from '../dto/identify-signer.dto';
 import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { Signer, SignerStatus } from '../entities/signer.entity';
 import type {
@@ -93,6 +94,43 @@ export class SignaturesService {
         signingLanguage: document.signingLanguage,
       },
     };
+  }
+
+  async identifySigner(
+    accessToken: string,
+    dto: IdentifySignerDto,
+  ): Promise<{ identified: true }> {
+    const signer = await this.findByToken(accessToken);
+
+    if (signer.requestCpf) {
+      this.validateIdentityField(dto.cpf, signer.cpf, 'CPF');
+      signer.cpf = signer.cpf ?? (dto.cpf as string);
+    }
+
+    if (signer.requestPhone) {
+      this.validateIdentityField(dto.phone, signer.phone, 'Phone');
+      signer.phone = signer.phone ?? (dto.phone as string);
+    }
+
+    await this.signerRepository.save(signer);
+    return { identified: true };
+  }
+
+  private validateIdentityField(
+    inputValue: string | undefined,
+    storedValue: string | null,
+    fieldName: string,
+  ): void {
+    if (!inputValue) {
+      throw new BadRequestException(`${fieldName} is required for this signer`);
+    }
+    const normalizedInput = inputValue.replaceAll(/\D/g, '');
+    if (storedValue) {
+      const normalizedStored = storedValue.replaceAll(/\D/g, '');
+      if (normalizedInput !== normalizedStored) {
+        throw new BadRequestException(`${fieldName} does not match`);
+      }
+    }
   }
 
   async getSignerPdf(accessToken: string): Promise<Buffer> {

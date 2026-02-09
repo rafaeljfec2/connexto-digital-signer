@@ -8,10 +8,10 @@ export default new DataSource({
   username: process.env['DB_USERNAME'] ?? 'postgres',
   password: process.env['DB_PASSWORD'] ?? 'postgres',
   database: process.env['DB_DATABASE'] ?? 'connexto_signer',
-  entities: ['apps/api/src/**/*.entity.ts', 'dist/apps/api/**/*.entity.js'],
+  entities: ['src/**/*.entity.ts', 'dist/**/*.entity.js'],
   migrations: [
-    'apps/api/src/database/migrations/*{.ts,.js}',
-    'dist/apps/api/database/migrations/*{.js}',
+    'src/database/migrations/*{.ts,.js}',
+    'dist/database/migrations/*{.js}',
   ],
   synchronize: false,
   logging: process.env['DB_LOGGING'] === 'true',

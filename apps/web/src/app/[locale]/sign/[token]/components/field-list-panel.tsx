@@ -36,7 +36,7 @@ export function FieldListPanel({
     <div className="space-y-2">
       <p className="text-xs text-foreground-subtle">{labels.fieldsProgress}</p>
       <div className="space-y-2">
-        {fields.map((field, idx) => {
+        {fields.map((field) => {
           const value = fieldValues[field.id] ?? field.value ?? '';
           const isFilled = value.length > 0;
           const Icon = FIELD_ICONS[field.type] ?? PenTool;

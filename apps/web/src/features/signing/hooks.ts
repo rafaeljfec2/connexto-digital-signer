@@ -4,11 +4,12 @@ import {
   getSignerPdf,
   getSignerFields,
   acceptSignature,
+  identifySigner,
   sendVerificationCode,
   verifyCode,
   getSignerSummary,
 } from './api';
-import type { AcceptSignatureInput } from './api';
+import type { AcceptSignatureInput, IdentifySignerInput } from './api';
 
 export const useSignerData = (token: string) =>
   useQuery({
@@ -38,6 +39,12 @@ export const useAcceptSignature = (token: string) =>
   useMutation({
     mutationFn: (input: AcceptSignatureInput) =>
       acceptSignature(token, input),
+  });
+
+export const useIdentifySigner = (token: string) =>
+  useMutation({
+    mutationFn: (input: IdentifySignerInput) =>
+      identifySigner(token, input),
   });
 
 export const useSendVerificationCode = (token: string) =>

@@ -223,7 +223,8 @@ export default function DashboardPage() {
           <OnboardingChecklist
             labels={{
               title: tDashboard('onboarding.title'),
-              progress: tDashboard('onboarding.progress'),
+              progressFormat: (completed, total) =>
+                tDashboard('onboarding.progress', { completed, total }),
               dismiss: tDashboard('onboarding.dismiss'),
               createAccount: tDashboard('onboarding.createAccount'),
               sendFirstDocument: tDashboard('onboarding.sendFirstDocument'),

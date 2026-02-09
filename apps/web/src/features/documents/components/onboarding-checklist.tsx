@@ -13,7 +13,7 @@ type OnboardingStep = {
 export type OnboardingChecklistProps = {
   readonly labels: Readonly<{
     title: string;
-    progress: string;
+    progressFormat: (completed: number, total: number) => string;
     dismiss: string;
     createAccount: string;
     sendFirstDocument: string;
@@ -57,9 +57,7 @@ export function OnboardingChecklist({
     setDismissed(true);
   };
 
-  const progressLabel = labels.progress
-    .replace('{completed}', String(completedCount))
-    .replace('{total}', String(steps.length));
+  const progressLabel = labels.progressFormat(completedCount, steps.length);
 
   return (
     <Card variant="glass" className="p-5">

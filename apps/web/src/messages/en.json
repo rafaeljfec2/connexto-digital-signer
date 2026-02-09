@@ -221,6 +221,10 @@
   "signers": {
     "title": "Define signers",
     "subtitle": "Add people who will sign this document",
+    "sectionPersonal": "Personal information",
+    "sectionDocuments": "Documents",
+    "sectionVerification": "Verification and identification",
+    "sectionConfig": "Configuration",
     "mode": "Signing mode",
     "modeParallel": "Parallel",
     "modeSequential": "Sequential",
@@ -228,12 +232,15 @@
     "namePlaceholder": "Signer full name",
     "emailLabel": "Email",
     "emailPlaceholder": "signer@email.com",
+    "phoneLabel": "Phone",
+    "phonePlaceholder": "+55 (11) 99999-8888",
     "cpfLabel": "CPF",
     "cpfPlaceholder": "000.000.000-00",
     "birthDateLabel": "Date of birth",
     "birthDatePlaceholder": "MM/DD/YYYY",
     "requestCpfLabel": "Request CPF from signer",
-    "authMethodLabel": "Authentication",
+    "requestPhoneLabel": "Request phone from signer",
+    "authMethodLabel": "Email verification (OTP)",
     "authMethodEmail": "Token via email",
     "authMethodNone": "No authentication",
     "orderPlaceholder": "Order (1, 2, 3)",
@@ -362,10 +369,25 @@
       "signed": "Signed"
     },
     "steps": {
+      "identify": "Identify",
       "view": "View",
       "fill": "Fill",
       "validate": "Validate",
       "review": "Sign"
+    },
+    "identifyStep": {
+      "title": "Signer identification",
+      "instruction": "Please provide the required information to proceed with the signature.",
+      "cpfLabel": "CPF",
+      "cpfPlaceholder": "000.000.000-00",
+      "phoneLabel": "Phone",
+      "phonePlaceholder": "+55 (11) 99999-8888",
+      "next": "Continue",
+      "cpfRequired": "Please enter your CPF to continue",
+      "phoneRequired": "Please enter your phone to continue",
+      "cpfMismatch": "The CPF provided does not match",
+      "phoneMismatch": "The phone provided does not match",
+      "error": "Verification failed. Please try again."
     },
     "viewStep": {
       "instruction": "Read the document below before proceeding with the signature.",
