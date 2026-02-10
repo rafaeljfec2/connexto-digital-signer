@@ -6,13 +6,12 @@ import {
   Menu,
   Home,
   FileText,
-  Users,
   Settings,
   LogOut,
   Search,
   Bell,
   User,
-  X,
+  X
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Avatar, Button, Sidebar, ThemeToggle } from '@/shared/ui';
@@ -22,7 +21,7 @@ import { useAuth } from '@/features/auth/hooks/use-auth';
 const ICON_MAP: Record<string, LucideIcon> = {
   home: Home,
   documents: FileText,
-  signers: Users,
+
   settings: Settings,
 };
 
@@ -102,9 +101,10 @@ export function AppShell({
   const initials = isMounted ? (user?.name ?? tenantLabel) : tenantLabel;
 
   const sidebarGroups: SidebarGroup[] = useMemo(() => {
+    const filteredNavItems = navItems.filter(item => item.iconKey !== 'signers');
     const groupMap = new Map<string, AppShellNavItem[]>();
 
-    for (const item of navItems) {
+    for (const item of filteredNavItems) {
       const groupKey = item.group ?? 'main';
       const existing = groupMap.get(groupKey) ?? [];
       existing.push(item);
