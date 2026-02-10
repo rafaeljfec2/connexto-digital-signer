@@ -1,6 +1,6 @@
 import type { DocumentSentEvent, SignatureCompletedEvent } from '@connexto/events';
 import { EVENT_DOCUMENT_SENT, EVENT_SIGNATURE_COMPLETED } from '@connexto/events';
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'node:crypto';
@@ -10,8 +10,10 @@ import { PdfService } from '../../../shared/pdf/pdf.service';
 import { DocumentStatus, SigningMode } from '../../documents/entities/document.entity';
 import { DocumentsService } from '../../documents/services/documents.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
+import { CertificateService } from '../../tenants/services/certificate.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
 import { IdentifySignerDto } from '../dto/identify-signer.dto';
+import { ListSignersQueryDto } from '../dto/list-signers-query.dto';
 import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { Signer, SignerStatus } from '../entities/signer.entity';
 import type {
@@ -26,6 +28,8 @@ export type { AuditSignerInfo } from '../interfaces/audit.interface';
 
 @Injectable()
 export class SignaturesService {
+  private readonly logger = new Logger(SignaturesService.name);
+
   constructor(
     @InjectRepository(Signer)
     private readonly signerRepository: Repository<Signer>,
@@ -33,7 +37,8 @@ export class SignaturesService {
     private readonly eventEmitter: EventEmitter2,
     private readonly pdfService: PdfService,
     private readonly fieldsService: SignatureFieldsService,
-    private readonly notificationsService: NotificationsService
+    private readonly notificationsService: NotificationsService,
+    private readonly certificateService: CertificateService,
   ) {}
 
   async addSigner(
@@ -73,6 +78,55 @@ export class SignaturesService {
       where: { documentId, tenantId },
       order: { createdAt: 'ASC' },
     });
+  }
+
+  async findByTenant(
+    tenantId: string,
+    query: ListSignersQueryDto,
+  ): Promise<{
+    data: Array<Signer & { documentTitle: string }>;
+    meta: { page: number; limit: number; total: number; totalPages: number };
+  }> {
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 10;
+    const skip = (page - 1) * limit;
+
+    const where: FindOptionsWhere<Signer> = { tenantId };
+    if (query.status) {
+      where.status = query.status;
+    }
+
+    const [signers, total] = await this.signerRepository.findAndCount({
+      where,
+      order: { createdAt: 'DESC' },
+      take: limit,
+      skip,
+    });
+
+    const documentIds = [...new Set(signers.map((s) => s.documentId))];
+    const documentMap = new Map<string, string>();
+
+    if (documentIds.length > 0) {
+      const documents = await this.documentsService.findByIds(documentIds, tenantId);
+      for (const doc of documents) {
+        documentMap.set(doc.id, doc.title);
+      }
+    }
+
+    const data = signers.map((signer) => ({
+      ...signer,
+      documentTitle: documentMap.get(signer.documentId) ?? '',
+    }));
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findByToken(accessToken: string): Promise<Signer> {
@@ -450,12 +504,24 @@ export class SignaturesService {
       userAgent: s.userAgent,
       signatureData: s.signatureData,
     }));
-    const finalBuffer = await this.pdfService.appendEvidencePage(
+    let finalBuffer = await this.pdfService.appendEvidencePage(
       withSignatures,
       evidence,
       document.title,
       document.signingLanguage ?? 'en',
     );
+
+    const hasCertificate = await this.certificateService.hasCertificate(tenantId);
+    if (hasCertificate) {
+      try {
+        finalBuffer = await this.certificateService.signPdf(tenantId, finalBuffer);
+        this.logger.log(`Document ${documentId} digitally signed with tenant certificate`);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.error(`Digital signature failed for document ${documentId}: ${message}`);
+      }
+    }
+
     await this.documentsService.setFinalPdf(documentId, tenantId, finalBuffer);
   }
 

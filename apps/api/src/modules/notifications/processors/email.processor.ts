@@ -12,10 +12,10 @@ export class EmailProcessor {
 
   @Process('email')
   async handleEmail(job: Job<SendEmailJobPayload>): Promise<void> {
-    const { to, subject, text, html } = job.data;
+    const { to, subject, text, html, senderName } = job.data;
 
     if (process.env['SMTP_HOST']) {
-      await this.sendViaSmtp(to, subject, text, html);
+      await this.sendViaSmtp(to, subject, text, html, senderName);
     } else {
       this.logger.log(`[Email] To: ${to}, Subject: ${subject}\n${text}`);
     }
@@ -48,10 +48,12 @@ export class EmailProcessor {
     to: string,
     subject: string,
     text: string,
-    html?: string
+    html?: string,
+    senderName?: string,
   ): Promise<void> {
     const transporter = await this.getTransporter();
-    const from = process.env['SMTP_FROM'] ?? 'noreply@localhost';
+    const fromAddress = process.env['SMTP_FROM'] ?? 'noreply@localhost';
+    const from = senderName ? `${senderName} <${fromAddress}>` : fromAddress;
 
     await transporter.sendMail({
       from,

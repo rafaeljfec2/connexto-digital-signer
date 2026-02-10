@@ -25,6 +25,7 @@ export class TenantsService {
     const tenant = this.tenantRepository.create(tenantData);
     const rawApiKey = `sk_${randomBytes(32).toString('hex')}`;
     tenant.apiKeyHash = sha256(Buffer.from(rawApiKey, 'utf-8'));
+    tenant.apiKeyLastFour = rawApiKey.slice(-4);
     const saved = await this.tenantRepository.save(tenant);
     await this.usersService.createOwner(
       saved.id,
@@ -72,5 +73,20 @@ export class TenantsService {
     });
     if (tenant === null) return null;
     return { tenantId: tenant.id };
+  }
+
+  async updatePartial(id: string, fields: Partial<Tenant>): Promise<Tenant> {
+    const tenant = await this.findOne(id, id);
+    Object.assign(tenant, fields);
+    return this.tenantRepository.save(tenant);
+  }
+
+  async regenerateApiKey(tenantId: string): Promise<string> {
+    const tenant = await this.findOne(tenantId, tenantId);
+    const rawApiKey = `sk_${randomBytes(32).toString('hex')}`;
+    tenant.apiKeyHash = sha256(Buffer.from(rawApiKey, 'utf-8'));
+    tenant.apiKeyLastFour = rawApiKey.slice(-4);
+    await this.tenantRepository.save(tenant);
+    return rawApiKey;
   }
 }

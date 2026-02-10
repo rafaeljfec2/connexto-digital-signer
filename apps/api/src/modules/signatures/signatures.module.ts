@@ -4,7 +4,9 @@ import { Signer } from './entities/signer.entity';
 import { SignatureField } from './entities/signature-field.entity';
 import { DocumentsModule } from '../documents/documents.module';
 import { NotificationsModule } from '../notifications/notifications.module';
+import { TenantsModule } from '../tenants/tenants.module';
 import {
+  SignersListController,
   SignaturesController,
   SignController,
   SignatureFieldsController,
@@ -19,8 +21,10 @@ import { VerificationService } from './services/verification.service';
     TypeOrmModule.forFeature([Signer, SignatureField]),
     DocumentsModule,
     NotificationsModule,
+    TenantsModule,
   ],
   controllers: [
+    SignersListController,
     SignaturesController,
     SignatureFieldsController,
     DocumentSendController,

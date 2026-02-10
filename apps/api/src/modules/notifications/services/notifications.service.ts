@@ -8,6 +8,7 @@ export interface SendEmailJobPayload {
   subject: string;
   text: string;
   html?: string;
+  senderName?: string;
 }
 
 @Injectable()
@@ -20,7 +21,7 @@ export class NotificationsService {
 
   async sendEmail(payload: SendEmailJobPayload): Promise<string> {
     const job = await this.queue.add('email', payload);
-    return job.id !== undefined ? String(job.id) : '';
+    return job.id === undefined ? '' : String(job.id);
   }
 
   async sendSignatureInvite(params: {
@@ -31,6 +32,7 @@ export class NotificationsService {
     signUrl: string;
     locale?: string;
     message?: string;
+    senderName?: string;
   }): Promise<string> {
     const { subject, text, html } = this.templateService.renderTemplate(
       'signature-invite',
@@ -43,7 +45,7 @@ export class NotificationsService {
       params.locale ?? 'en',
     );
 
-    return this.sendEmail({ to: params.signerEmail, subject, text, html });
+    return this.sendEmail({ to: params.signerEmail, subject, text, html, senderName: params.senderName });
   }
 
   async sendSignatureReminder(params: {
@@ -55,6 +57,7 @@ export class NotificationsService {
     reminderCount: number;
     maxReminders: number;
     locale?: string;
+    senderName?: string;
   }): Promise<string> {
     const { subject, text, html } = this.templateService.renderTemplate(
       'signature-reminder',
@@ -68,7 +71,7 @@ export class NotificationsService {
       params.locale ?? 'en',
     );
 
-    return this.sendEmail({ to: params.signerEmail, subject, text, html });
+    return this.sendEmail({ to: params.signerEmail, subject, text, html, senderName: params.senderName });
   }
 
   async sendDocumentCompleted(params: {

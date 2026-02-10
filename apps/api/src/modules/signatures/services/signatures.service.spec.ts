@@ -10,6 +10,7 @@ import { EVENT_SIGNATURE_COMPLETED, EVENT_DOCUMENT_SENT } from '@connexto/events
 import type { SignatureCompletedEvent } from '@connexto/events';
 import { SignatureFieldsService } from './signature-fields.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
+import { CertificateService } from '../../tenants/services/certificate.service';
 import { SignatureFieldType } from '../entities/signature-field.entity';
 
 const buildSigner = (overrides?: Partial<Signer>): Signer => ({
@@ -71,6 +72,7 @@ describe('SignaturesService', () => {
   let pdfService: jest.Mocked<PdfService>;
   let fieldsService: jest.Mocked<SignatureFieldsService>;
   let notificationsService: jest.Mocked<NotificationsService>;
+  let certificateService: jest.Mocked<CertificateService>;
 
   beforeEach(() => {
     signerRepository = {
@@ -100,13 +102,22 @@ describe('SignaturesService', () => {
       sendSignatureInvite: jest.fn(),
       buildSignatureInvite: jest.fn(),
     } as unknown as jest.Mocked<NotificationsService>;
+    certificateService = {
+      hasCertificate: jest.fn().mockResolvedValue(false),
+      signPdf: jest.fn(),
+      uploadCertificate: jest.fn(),
+      getCertificateStatus: jest.fn(),
+      removeCertificate: jest.fn(),
+      validateAndExtract: jest.fn(),
+    } as unknown as jest.Mocked<CertificateService>;
     service = new SignaturesService(
       signerRepository,
       documentsService,
       eventEmitter,
       pdfService,
       fieldsService,
-      notificationsService
+      notificationsService,
+      certificateService,
     );
   });
 

@@ -3,10 +3,12 @@ import {
   createDraftDocument,
   deleteDocument,
   getDocumentsStats,
+  listAllSigners,
   listDocuments,
   uploadDocument,
   type CreateDraftInput,
   type ListDocumentsParams,
+  type ListSignersParams,
   type UploadDocumentInput,
 } from '../api';
 
@@ -31,6 +33,13 @@ export const useUploadDocument = () =>
 export const useCreateDraft = () =>
   useMutation({
     mutationFn: (input: CreateDraftInput) => createDraftDocument(input),
+  });
+
+export const useSignersList = (params: ListSignersParams) =>
+  useQuery({
+    queryKey: ['signers', 'list', params],
+    queryFn: () => listAllSigners(params),
+    placeholderData: (previous) => previous,
   });
 
 export const useDeleteDocument = () => {

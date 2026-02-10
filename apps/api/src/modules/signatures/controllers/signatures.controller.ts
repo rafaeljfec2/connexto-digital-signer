@@ -21,6 +21,7 @@ import { SignaturesService } from '../services/signatures.service';
 import { SignatureFieldsService } from '../services/signature-fields.service';
 import { VerificationService } from '../services/verification.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
+import { ListSignersQueryDto } from '../dto/list-signers-query.dto';
 import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { AcceptSignatureDto } from '../dto/accept-signature.dto';
 import { IdentifySignerDto } from '../dto/identify-signer.dto';
@@ -41,6 +42,21 @@ function getClientIp(
     if (first) return first;
   }
   return req.ip ?? req.socket?.remoteAddress ?? req.connection?.remoteAddress ?? '';
+}
+
+@ApiTags('Signers')
+@RequireAuthMethod('jwt')
+@Controller('signers')
+export class SignersListController {
+  constructor(private readonly signaturesService: SignaturesService) {}
+
+  @Get()
+  listAllSigners(
+    @TenantId() tenantId: string,
+    @Query() query: ListSignersQueryDto,
+  ) {
+    return this.signaturesService.findByTenant(tenantId, query);
+  }
 }
 
 @ApiTags('Signers')

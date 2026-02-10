@@ -356,3 +356,45 @@ export const getDocumentSignedFile = async (documentId: string): Promise<Blob | 
     return null;
   }
 };
+
+export type SignerStatus = 'pending' | 'signed';
+
+export type SignerWithDocument = {
+  readonly id: string;
+  readonly name: string;
+  readonly email: string;
+  readonly phone: string | null;
+  readonly cpf: string | null;
+  readonly status: SignerStatus;
+  readonly authMethod: string;
+  readonly documentId: string;
+  readonly documentTitle: string;
+  readonly notifiedAt: string | null;
+  readonly signedAt: string | null;
+  readonly createdAt: string;
+};
+
+export type SignersListResponse = {
+  readonly data: ReadonlyArray<SignerWithDocument>;
+  readonly meta: {
+    readonly page: number;
+    readonly limit: number;
+    readonly total: number;
+    readonly totalPages: number;
+  };
+};
+
+export type ListSignersParams = {
+  readonly page?: number;
+  readonly limit?: number;
+  readonly status?: SignerStatus;
+};
+
+export const listAllSigners = async (
+  params: ListSignersParams,
+): Promise<SignersListResponse> => {
+  const response = await apiClient.get<SignersListResponse>('/signers', {
+    params,
+  });
+  return response.data;
+};

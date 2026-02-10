@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Document, DocumentStatus } from '../entities/document.entity';
 import { CreateDocumentDto } from '../dto/create-document.dto';
@@ -18,6 +18,7 @@ import type {
   DocumentCreatedEvent,
 } from '@connexto/events';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
+import { TenantsService } from '../../tenants/services/tenants.service';
 
 @Injectable()
 export class DocumentsService {
@@ -26,7 +27,8 @@ export class DocumentsService {
     private readonly documentRepository: Repository<Document>,
     private readonly eventEmitter: EventEmitter2,
     private readonly storage: S3StorageService,
-    private readonly logger: Logger
+    private readonly logger: Logger,
+    private readonly tenantsService: TenantsService,
   ) {}
 
   async create(
@@ -50,12 +52,17 @@ export class DocumentsService {
       }
     }
 
+    const tenant = await this.tenantsService.findOne(tenantId, tenantId);
+
     const document = this.documentRepository.create({
       ...createDocumentDto,
       tenantId,
       originalFileKey: key,
       originalHash: hash,
       status: DocumentStatus.DRAFT,
+      signingLanguage: createDocumentDto.signingLanguage ?? tenant.defaultSigningLanguage ?? 'pt-br',
+      reminderInterval: createDocumentDto.reminderInterval ?? tenant.defaultReminderInterval ?? 'none',
+      closureMode: createDocumentDto.closureMode ?? tenant.defaultClosureMode ?? 'automatic',
       expiresAt: createDocumentDto.expiresAt
         ? new Date(createDocumentDto.expiresAt)
         : null,
@@ -172,6 +179,13 @@ export class DocumentsService {
       throw new NotFoundException(`Document ${id} not found`);
     }
     return document;
+  }
+
+  async findByIds(ids: string[], tenantId: string): Promise<Document[]> {
+    if (ids.length === 0) return [];
+    return this.documentRepository.find({
+      where: { id: In(ids), tenantId },
+    });
   }
 
   async update(

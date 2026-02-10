@@ -13,6 +13,7 @@ import { Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { Repository } from 'typeorm';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
+import { TenantsService } from '../../tenants/services/tenants.service';
 import { Document, DocumentStatus, SigningMode } from '../entities/document.entity';
 import { DocumentsService } from './documents.service';
 
@@ -55,7 +56,14 @@ describe('DocumentsService', () => {
       delete: jest.fn(),
       getSignedUrl: jest.fn(),
     } as unknown as jest.Mocked<S3StorageService>;
-    service = new DocumentsService(documentRepository, eventEmitter, storage, new Logger());
+    const tenantsService = {
+      findOne: jest.fn().mockResolvedValue({
+        defaultSigningLanguage: 'pt-br',
+        defaultReminderInterval: 'none',
+        defaultClosureMode: 'automatic',
+      }),
+    } as unknown as TenantsService;
+    service = new DocumentsService(documentRepository, eventEmitter, storage, new Logger(), tenantsService);
   });
 
   describe('create', () => {

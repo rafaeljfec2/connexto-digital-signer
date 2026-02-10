@@ -188,6 +188,10 @@ export default function DashboardPage() {
             actionLabels={{
               continue: tDocuments('actions.continue'),
               view: tDocuments('actions.view'),
+              viewSummary: tDocuments('actions.viewSummary'),
+              downloadOriginal: tDocuments('actions.downloadOriginal'),
+              downloadSigned: tDocuments('actions.downloadSigned'),
+              delete: tDocuments('actions.delete'),
             }}
             onDocumentClick={handleDocumentClick}
             onDeleteDocument={setDeleteTarget}
