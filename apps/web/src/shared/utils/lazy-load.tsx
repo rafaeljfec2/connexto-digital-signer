@@ -1,5 +1,6 @@
-import type { ComponentType } from 'react';
-import dynamic from 'next/dynamic';
+"use client";
+
+import { lazy, Suspense, useState, useEffect, type ComponentType } from 'react';
 import { LazySpinner } from '@/shared/ui/lazy-spinner';
 
 type LazyLoadOptions = Readonly<{
@@ -13,11 +14,29 @@ export function lazyLoad<P extends object>(
 ) {
   const { minHeight = '60vh' } = options;
 
-  return dynamic<P>(
-    () => importFn().then((mod) => mod[exportName]),
-    {
-      ssr: false,
-      loading: () => <LazySpinner minHeight={minHeight} />,
-    },
+  const LazyComponent = lazy(() =>
+    importFn().then((mod) => ({ default: mod[exportName] })),
   );
+
+  function LazyLoadWrapper(props: P) {
+    const [isMounted, setIsMounted] = useState(false);
+
+    useEffect(() => {
+      setIsMounted(true);
+    }, []);
+
+    if (!isMounted) {
+      return <LazySpinner minHeight={minHeight} />;
+    }
+
+    return (
+      <Suspense fallback={<LazySpinner minHeight={minHeight} />}>
+        <LazyComponent {...props} />
+      </Suspense>
+    );
+  }
+
+  LazyLoadWrapper.displayName = `LazyLoad(${exportName})`;
+
+  return LazyLoadWrapper;
 }
