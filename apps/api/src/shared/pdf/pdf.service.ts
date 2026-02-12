@@ -31,11 +31,24 @@ export interface EmbedFieldData {
   readonly value: string | null;
 }
 
+export interface CertificateInfo {
+  readonly subject: string;
+  readonly issuer: string;
+  readonly expiresAt: string;
+}
+
 interface EvidenceLabels {
   readonly title: string;
   readonly subtitle: string;
   readonly document: string;
   readonly generated: string;
+  readonly originalHash: string;
+  readonly certification: string;
+  readonly certSubject: string;
+  readonly certIssuer: string;
+  readonly certExpires: string;
+  readonly certStatus: string;
+  readonly certStatusActive: string;
   readonly signers: string;
   readonly signedAt: string;
   readonly ipAddress: string;
@@ -85,6 +98,13 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     subtitle: 'Digital signature certificate',
     document: 'DOCUMENT',
     generated: 'Generated',
+    originalHash: 'Original Hash (SHA-256)',
+    certification: 'DIGITAL CERTIFICATION',
+    certSubject: 'Certificate',
+    certIssuer: 'Issuer',
+    certExpires: 'Valid until',
+    certStatus: 'Status',
+    certStatusActive: 'Active - Digitally signed',
     signers: 'SIGNERS',
     signedAt: 'Signed at',
     ipAddress: 'IP Address',
@@ -99,14 +119,21 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     subtitle: 'Certificado de assinatura digital',
     document: 'DOCUMENTO',
     generated: 'Gerado em',
-    signers: 'SIGNATÁRIOS',
+    originalHash: 'Hash Original (SHA-256)',
+    certification: 'CERTIFICACAO DIGITAL',
+    certSubject: 'Certificado',
+    certIssuer: 'Emissor',
+    certExpires: 'Valido ate',
+    certStatus: 'Status',
+    certStatusActive: 'Ativo - Assinado digitalmente',
+    signers: 'SIGNATARIOS',
     signedAt: 'Assinado em',
     ipAddress: 'Endereco IP',
     userAgent: 'Navegador',
     signed: 'Assinado',
     footer1: 'Este documento foi assinado digitalmente usando o Connexto Digital Signer.',
     footer2:
-      'Todas as evidências de assinatura são criptograficamente protegidas e podem ser verificadas de forma independente.',
+      'Todas as evidencias de assinatura sao criptograficamente protegidas e podem ser verificadas de forma independente.',
   },
 };
 
@@ -185,7 +212,11 @@ export class PdfService {
     originalPdfBuffer: Buffer,
     signers: SignerEvidence[],
     documentTitle: string,
-    locale = 'en'
+    locale = 'en',
+    options?: {
+      readonly originalHash?: string;
+      readonly certificate?: CertificateInfo;
+    },
   ): Promise<Buffer> {
     const pdfDoc = await PDFDocument.load(originalPdfBuffer, {
       ignoreEncryption: true,
@@ -218,7 +249,10 @@ export class PdfService {
     };
 
     this.drawEvidenceHeader(ctx);
-    this.drawDocumentSection(ctx, documentTitle);
+    this.drawDocumentSection(ctx, documentTitle, options?.originalHash);
+    if (options?.certificate) {
+      this.drawCertificationSection(ctx, options.certificate);
+    }
     await this.drawSignersSection(ctx, signers);
     this.drawEvidenceFooter(ctx);
 
@@ -344,26 +378,22 @@ export class PdfService {
     ctx.y -= 85;
   }
 
-  private drawDocumentSection(ctx: EvidencePageContext, documentTitle: string): void {
+  private drawDocumentSection(
+    ctx: EvidencePageContext,
+    documentTitle: string,
+    originalHash?: string,
+  ): void {
     const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
+    const boxHeight = originalHash ? 70 : 55;
 
     currentPage.drawRectangle({
       x: margin,
-      y: ctx.y - 50,
+      y: ctx.y - boxHeight + 5,
       width: contentWidth,
-      height: 55,
+      height: boxHeight,
       color: colors.headerBg,
-      borderWidth: 0,
-    });
-
-    currentPage.drawRectangle({
-      x: margin,
-      y: ctx.y - 50,
-      width: contentWidth,
-      height: 55,
       borderColor: colors.border,
       borderWidth: 0.5,
-      color: colors.headerBg,
     });
 
     currentPage.drawText(labels.document, {
@@ -391,7 +421,99 @@ export class PdfService {
       color: colors.muted,
     });
 
-    ctx.y -= 70;
+    if (originalHash) {
+      currentPage.drawText(`${labels.originalHash}: ${originalHash}`, {
+        x: margin + 12,
+        y: ctx.y - 57,
+        size: 6.5,
+        font: fonts.regular,
+        color: colors.muted,
+      });
+    }
+
+    ctx.y -= boxHeight + 15;
+  }
+
+  private drawCertificationSection(
+    ctx: EvidencePageContext,
+    certificate: CertificateInfo,
+  ): void {
+    const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
+    const cardHeight = 80;
+
+    this.ensureSpace(ctx, cardHeight + 25);
+
+    currentPage.drawText(labels.certification, {
+      x: margin,
+      y: ctx.y,
+      size: 8,
+      font: fonts.bold,
+      color: colors.muted,
+    });
+
+    ctx.y -= 15;
+
+    currentPage.drawRectangle({
+      x: margin,
+      y: ctx.y - cardHeight,
+      width: contentWidth,
+      height: cardHeight,
+      color: colors.cardBg,
+      borderColor: colors.border,
+      borderWidth: 0.5,
+    });
+
+    currentPage.drawRectangle({
+      x: margin,
+      y: ctx.y - cardHeight,
+      width: 3,
+      height: cardHeight,
+      color: rgb(0.1, 0.6, 0.3),
+      borderWidth: 0,
+    });
+
+    let detailY = ctx.y - 16;
+
+    detailY = this.drawDetailRow(currentPage, fonts, colors, {
+      label: labels.certSubject,
+      value: certificate.subject,
+      x: margin + 14,
+      y: detailY,
+    });
+
+    detailY = this.drawDetailRow(currentPage, fonts, colors, {
+      label: labels.certIssuer,
+      value: certificate.issuer,
+      x: margin + 14,
+      y: detailY,
+    });
+
+    detailY = this.drawDetailRow(currentPage, fonts, colors, {
+      label: labels.certExpires,
+      value: formatEvidenceDate(certificate.expiresAt, ctx.locale),
+      x: margin + 14,
+      y: detailY,
+    });
+
+    currentPage.drawText(`${labels.certStatus}:`, {
+      x: margin + 14,
+      y: detailY,
+      size: 8,
+      font: fonts.bold,
+      color: colors.muted,
+    });
+
+    const statusLabelWidth = fonts.bold.widthOfTextAtSize(`${labels.certStatus}: `, 8);
+
+    currentPage.drawText(labels.certStatusActive, {
+      x: margin + 14 + statusLabelWidth,
+      y: detailY,
+      size: 8,
+      font: fonts.bold,
+      color: rgb(0.1, 0.6, 0.3),
+    });
+
+    ctx.y = ctx.y - cardHeight - 15;
   }
 
   private async drawSignersSection(

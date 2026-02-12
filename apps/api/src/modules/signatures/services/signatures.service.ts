@@ -504,15 +504,28 @@ export class SignaturesService {
       userAgent: s.userAgent,
       signatureData: s.signatureData,
     }));
+
+    const originalHash = document.originalHash ?? this.pdfService.computeHash(originalBuffer);
+    const certificateStatus = await this.certificateService.getCertificateStatus(tenantId);
+
     let finalBuffer = await this.pdfService.appendEvidencePage(
       withSignatures,
       evidence,
       document.title,
       document.signingLanguage ?? 'en',
+      {
+        originalHash,
+        certificate: certificateStatus
+          ? {
+              subject: certificateStatus.subject,
+              issuer: certificateStatus.issuer,
+              expiresAt: certificateStatus.expiresAt,
+            }
+          : undefined,
+      },
     );
 
-    const hasCertificate = await this.certificateService.hasCertificate(tenantId);
-    if (hasCertificate) {
+    if (certificateStatus && !certificateStatus.isExpired) {
       try {
         finalBuffer = await this.certificateService.signPdf(tenantId, finalBuffer);
         this.logger.log(`Document ${documentId} digitally signed with tenant certificate`);

@@ -292,7 +292,7 @@ describe('SignaturesService', () => {
   });
 
   describe('finalizeDocument', () => {
-    test('should embed signatures, append evidence page and persist final pdf', async () => {
+    test('should embed signatures, append evidence page with hash and persist final pdf', async () => {
       const signerA = buildSigner({ signedAt: new Date('2026-01-02T00:00:00.000Z') });
       const signerB = buildSigner({
         id: 'signer-2',
@@ -300,7 +300,7 @@ describe('SignaturesService', () => {
         name: 'John Doe',
         signedAt: new Date('2026-01-03T00:00:00.000Z'),
       });
-      const document = buildDocument({ title: 'Agreement' });
+      const document = buildDocument({ title: 'Agreement', originalHash: 'abc123' });
       const original = Buffer.from('pdf');
       const withSignatures = Buffer.from('pdf-with-signatures');
       const finalized = Buffer.from('final');
@@ -310,6 +310,7 @@ describe('SignaturesService', () => {
       (signerRepository.find as jest.Mock).mockResolvedValue([signerA, signerB]);
       pdfService.embedSignatures.mockResolvedValue(withSignatures);
       pdfService.appendEvidencePage.mockResolvedValue(finalized);
+      certificateService.getCertificateStatus.mockResolvedValue(null);
 
       const servicePrivate = service as unknown as {
         finalizeDocument: (documentId: string, tenantId: string) => Promise<void>;
@@ -339,7 +340,91 @@ describe('SignaturesService', () => {
         ],
         document.title,
         document.signingLanguage ?? 'en',
+        {
+          originalHash: 'abc123',
+          certificate: undefined,
+        },
       );
+      expect(documentsService.setFinalPdf).toHaveBeenCalledWith('doc-1', 'tenant-1', finalized);
+    });
+
+    test('should include certificate info and digitally sign when certificate exists', async () => {
+      const signer = buildSigner({ signedAt: new Date('2026-01-02T00:00:00.000Z') });
+      const document = buildDocument({ title: 'Contract', originalHash: 'def456' });
+      const original = Buffer.from('pdf');
+      const withSignatures = Buffer.from('pdf-with-signatures');
+      const finalized = Buffer.from('final');
+      const signedPdf = Buffer.from('signed-final');
+      const certStatus = {
+        subject: 'Acme Corp',
+        issuer: 'CA Authority',
+        expiresAt: '2027-01-01T00:00:00.000Z',
+        configuredAt: '2026-01-01T00:00:00.000Z',
+        isExpired: false,
+      };
+
+      documentsService.findOne.mockResolvedValue(document);
+      documentsService.getOriginalFile.mockResolvedValue(original);
+      fieldsService.findByDocument.mockResolvedValue([]);
+      (signerRepository.find as jest.Mock).mockResolvedValue([signer]);
+      pdfService.embedSignatures.mockResolvedValue(withSignatures);
+      pdfService.appendEvidencePage.mockResolvedValue(finalized);
+      certificateService.getCertificateStatus.mockResolvedValue(certStatus);
+      certificateService.signPdf.mockResolvedValue(signedPdf);
+
+      const servicePrivate = service as unknown as {
+        finalizeDocument: (documentId: string, tenantId: string) => Promise<void>;
+      };
+      await servicePrivate.finalizeDocument('doc-1', 'tenant-1');
+
+      expect(pdfService.appendEvidencePage).toHaveBeenCalledWith(
+        withSignatures,
+        expect.arrayContaining([
+          expect.objectContaining({ name: signer.name }),
+        ]),
+        document.title,
+        document.signingLanguage ?? 'en',
+        {
+          originalHash: 'def456',
+          certificate: {
+            subject: 'Acme Corp',
+            issuer: 'CA Authority',
+            expiresAt: '2027-01-01T00:00:00.000Z',
+          },
+        },
+      );
+      expect(certificateService.signPdf).toHaveBeenCalledWith('tenant-1', finalized);
+      expect(documentsService.setFinalPdf).toHaveBeenCalledWith('doc-1', 'tenant-1', signedPdf);
+    });
+
+    test('should not digitally sign when certificate is expired', async () => {
+      const signer = buildSigner({ signedAt: new Date('2026-01-02T00:00:00.000Z') });
+      const document = buildDocument({ originalHash: 'ghi789' });
+      const original = Buffer.from('pdf');
+      const withSignatures = Buffer.from('pdf-with-signatures');
+      const finalized = Buffer.from('final');
+      const expiredCert = {
+        subject: 'Expired Corp',
+        issuer: 'CA Authority',
+        expiresAt: '2020-01-01T00:00:00.000Z',
+        configuredAt: '2019-01-01T00:00:00.000Z',
+        isExpired: true,
+      };
+
+      documentsService.findOne.mockResolvedValue(document);
+      documentsService.getOriginalFile.mockResolvedValue(original);
+      fieldsService.findByDocument.mockResolvedValue([]);
+      (signerRepository.find as jest.Mock).mockResolvedValue([signer]);
+      pdfService.embedSignatures.mockResolvedValue(withSignatures);
+      pdfService.appendEvidencePage.mockResolvedValue(finalized);
+      certificateService.getCertificateStatus.mockResolvedValue(expiredCert);
+
+      const servicePrivate = service as unknown as {
+        finalizeDocument: (documentId: string, tenantId: string) => Promise<void>;
+      };
+      await servicePrivate.finalizeDocument('doc-1', 'tenant-1');
+
+      expect(certificateService.signPdf).not.toHaveBeenCalled();
       expect(documentsService.setFinalPdf).toHaveBeenCalledWith('doc-1', 'tenant-1', finalized);
     });
   });
