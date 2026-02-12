@@ -16,6 +16,7 @@ import {
 } from '@/features/documents/hooks/use-documents';
 import { useRouter } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/ui';
+import { FadeIn, PageTransition, StaggerChildren, StaggerItem } from '@/shared/animations';
 import { ArrowRight } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -127,17 +128,20 @@ export default function DashboardPage() {
       : tDashboard('heroSubtitleNone');
 
   return (
-    <div className="space-y-6">
-      <div className="space-y-1">
-        <h1 className="text-xl font-semibold text-foreground sm:text-2xl">
-          {greeting}
-          {userName ? `, ${userName}` : ''}
-        </h1>
-        <p className="text-sm text-foreground-muted">{heroSubtitle}</p>
-      </div>
+    <PageTransition className="space-y-6">
+      <FadeIn>
+        <div className="space-y-1">
+          <h1 className="text-xl font-semibold text-foreground sm:text-2xl">
+            {greeting}
+            {userName ? `, ${userName}` : ''}
+          </h1>
+          <p className="text-sm text-foreground-muted">{heroSubtitle}</p>
+        </div>
+      </FadeIn>
 
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="space-y-5 lg:col-span-2">
+          <FadeIn delay={0.1}>
           <KpiCards
             items={[
               {
@@ -160,6 +164,8 @@ export default function DashboardPage() {
             isLoading={statsQuery.isLoading}
             onCardClick={handleKpiClick}
           />
+          </FadeIn>
+          <FadeIn delay={0.2}>
           <div className="flex items-center justify-between">
             <h2 className="text-base font-medium text-foreground">{tDashboard('recentTitle')}</h2>
             <button
@@ -198,6 +204,8 @@ export default function DashboardPage() {
             deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
           />
 
+          </FadeIn>
+          <FadeIn delay={0.3}>
           <TipsBanner
             labels={{
               dismiss: tDashboard('tips.dismiss'),
@@ -209,9 +217,11 @@ export default function DashboardPage() {
             }}
             onLearnMore={() => router.push('/documents/new')}
           />
+          </FadeIn>
         </div>
 
-        <div className="space-y-4">
+        <StaggerChildren staggerDelay={0.1} className="space-y-4">
+          <StaggerItem>
           <QuickActionsPanel
             labels={{
               title: tDashboard('quickActions.title'),
@@ -223,7 +233,9 @@ export default function DashboardPage() {
             onSendDocument={() => router.push('/documents/new')}
             onViewAll={() => router.push('/documents')}
           />
+          </StaggerItem>
 
+          <StaggerItem>
           <OnboardingChecklist
             labels={{
               title: tDashboard('onboarding.title'),
@@ -241,7 +253,9 @@ export default function DashboardPage() {
               completed: statsQuery.data?.completed ?? 0,
             }}
           />
+          </StaggerItem>
 
+          <StaggerItem>
           <ActivityFeed
             labels={{
               title: tDashboard('activity.title'),
@@ -256,7 +270,9 @@ export default function DashboardPage() {
             isLoading={recentQuery.isLoading}
             formatRelativeDate={(d) => formatRelativeDate(d, locale)}
           />
+          </StaggerItem>
 
+          <StaggerItem>
           <HelpSection
             labels={{
               title: tDashboard('help.title'),
@@ -265,7 +281,8 @@ export default function DashboardPage() {
               docs: tDashboard('help.docs'),
             }}
           />
-        </div>
+          </StaggerItem>
+        </StaggerChildren>
       </div>
 
       <ConfirmDialog
@@ -278,6 +295,6 @@ export default function DashboardPage() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </div>
+    </PageTransition>
   );
 }

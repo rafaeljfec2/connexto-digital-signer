@@ -1,9 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { FileUp, Users, PenTool, Settings, CheckCircle } from 'lucide-react';
 import { Stepper } from '@/shared/ui';
+import { StepTransition } from '@/shared/animations';
 import { UploadStep } from './upload-step';
 import { SignersStep } from './signers-step';
 import { FieldsStep } from './fields-step';
@@ -11,6 +12,8 @@ import { SettingsStep } from './settings-step';
 import { ReviewStep } from './review-step';
 
 export type WizardStepId = 'upload' | 'signers' | 'fields' | 'settings' | 'review';
+
+const STEP_ORDER: WizardStepId[] = ['upload', 'signers', 'fields', 'settings', 'review'];
 
 const STEP_ICONS: Record<WizardStepId, React.ReactNode> = {
   upload: <FileUp className="h-5 w-5" />,
@@ -20,16 +23,24 @@ const STEP_ICONS: Record<WizardStepId, React.ReactNode> = {
   review: <CheckCircle className="h-5 w-5" />,
 };
 
-export type DocumentWizardProps = {
-  readonly documentId: string;
-  readonly hasFile: boolean;
-  readonly onCancel: () => void;
-};
+export type DocumentWizardProps = Readonly<{
+  documentId: string;
+  hasFile: boolean;
+  onCancel: () => void;
+}>;
 
-export function DocumentWizard({ documentId, hasFile, onCancel }: Readonly<DocumentWizardProps>) {
+export function DocumentWizard({ documentId, hasFile, onCancel }: DocumentWizardProps) {
   const tWizard = useTranslations('wizard');
   const [uploadComplete, setUploadComplete] = useState(hasFile);
   const [step, setStep] = useState<WizardStepId>(hasFile ? 'signers' : 'upload');
+  const prevIndexRef = useRef(STEP_ORDER.indexOf(step));
+
+  const currentIndex = STEP_ORDER.indexOf(step);
+  const direction: 1 | -1 = currentIndex >= prevIndexRef.current ? 1 : -1;
+
+  useEffect(() => {
+    prevIndexRef.current = currentIndex;
+  }, [currentIndex]);
 
   useEffect(() => {
     if (hasFile && !uploadComplete) {
@@ -42,15 +53,8 @@ export function DocumentWizard({ documentId, hasFile, onCancel }: Readonly<Docum
     if (!uploadComplete && step !== 'upload') setStep('upload');
   }, [step, uploadComplete]);
 
-  const stepOrder: WizardStepId[] = useMemo(
-    () => ['upload', 'signers', 'fields', 'settings', 'review'],
-    []
-  );
-
-  const currentIndex = stepOrder.indexOf(step);
-
   const steps = useMemo(() => {
-    return stepOrder.map((id, index) => {
+    return STEP_ORDER.map((id, index) => {
       let status: 'completed' | 'active' | 'pending';
       if (index < currentIndex) {
         status = 'completed';
@@ -66,20 +70,20 @@ export function DocumentWizard({ documentId, hasFile, onCancel }: Readonly<Docum
         icon: STEP_ICONS[id],
       };
     });
-  }, [tWizard, stepOrder, currentIndex]);
+  }, [tWizard, currentIndex]);
 
   const counterLabel = tWizard('progressCounter', {
     current: currentIndex + 1,
-    total: stepOrder.length,
+    total: STEP_ORDER.length,
   });
 
   const handleStepClick = useCallback(
     (index: number) => {
       if (index < currentIndex) {
-        setStep(stepOrder[index]);
+        setStep(STEP_ORDER[index]);
       }
     },
-    [currentIndex, stepOrder],
+    [currentIndex],
   );
 
   return (
@@ -90,53 +94,55 @@ export function DocumentWizard({ documentId, hasFile, onCancel }: Readonly<Docum
         counterLabel={counterLabel}
         onStepClick={handleStepClick}
       />
-      {step === 'upload' ? (
-        <UploadStep
-          documentId={documentId}
-          hasFile={uploadComplete}
-          onRestart={() => setStep('upload')}
-          onCancel={onCancel}
-          onNext={() => {
-            setUploadComplete(true);
-            setStep('signers');
-          }}
-        />
-      ) : null}
-      {step === 'signers' ? (
-        <SignersStep
-          documentId={documentId}
-          onBack={() => setStep('upload')}
-          onRestart={() => setStep('upload')}
-          onCancel={onCancel}
-          onNext={() => setStep('fields')}
-        />
-      ) : null}
-      {step === 'fields' ? (
-        <FieldsStep
-          documentId={documentId}
-          onBack={() => setStep('signers')}
-          onRestart={() => setStep('upload')}
-          onCancel={onCancel}
-          onNext={() => setStep('settings')}
-        />
-      ) : null}
-      {step === 'settings' ? (
-        <SettingsStep
-          documentId={documentId}
-          onBack={() => setStep('fields')}
-          onRestart={() => setStep('upload')}
-          onCancel={onCancel}
-          onNext={() => setStep('review')}
-        />
-      ) : null}
-      {step === 'review' ? (
-        <ReviewStep
-          documentId={documentId}
-          onBack={() => setStep('settings')}
-          onRestart={() => setStep('upload')}
-          onCancel={onCancel}
-        />
-      ) : null}
+      <StepTransition stepKey={step} direction={direction}>
+        {step === 'upload' ? (
+          <UploadStep
+            documentId={documentId}
+            hasFile={uploadComplete}
+            onRestart={() => setStep('upload')}
+            onCancel={onCancel}
+            onNext={() => {
+              setUploadComplete(true);
+              setStep('signers');
+            }}
+          />
+        ) : null}
+        {step === 'signers' ? (
+          <SignersStep
+            documentId={documentId}
+            onBack={() => setStep('upload')}
+            onRestart={() => setStep('upload')}
+            onCancel={onCancel}
+            onNext={() => setStep('fields')}
+          />
+        ) : null}
+        {step === 'fields' ? (
+          <FieldsStep
+            documentId={documentId}
+            onBack={() => setStep('signers')}
+            onRestart={() => setStep('upload')}
+            onCancel={onCancel}
+            onNext={() => setStep('settings')}
+          />
+        ) : null}
+        {step === 'settings' ? (
+          <SettingsStep
+            documentId={documentId}
+            onBack={() => setStep('fields')}
+            onRestart={() => setStep('upload')}
+            onCancel={onCancel}
+            onNext={() => setStep('review')}
+          />
+        ) : null}
+        {step === 'review' ? (
+          <ReviewStep
+            documentId={documentId}
+            onBack={() => setStep('settings')}
+            onRestart={() => setStep('upload')}
+            onCancel={onCancel}
+          />
+        ) : null}
+      </StepTransition>
     </div>
   );
 }

@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 
 export type StepperItem = {
   readonly label: string;
@@ -14,6 +17,7 @@ export type StepperProps = {
 };
 
 export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Readonly<StepperProps>) {
+  const prefersReduced = useReducedMotion();
   const activeIndex = steps.findIndex((s) => s.status === 'active');
   const currentIndex = activeIndex >= 0 ? activeIndex : steps.length;
   const progressPercent = ((currentIndex + 1) / steps.length) * 100;
@@ -29,9 +33,15 @@ export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Rea
             ) : null}
           </div>
           <div className="h-2 w-full overflow-hidden rounded-full bg-th-hover">
-            <div
-              className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
-              style={{ width: `${progressPercent}%` }}
+            <motion.div
+              className="h-full rounded-full bg-primary"
+              initial={false}
+              animate={{ width: `${String(progressPercent)}%` }}
+              transition={
+                prefersReduced
+                  ? { duration: 0 }
+                  : { type: 'spring', stiffness: 200, damping: 25 }
+              }
             />
           </div>
         </div>
@@ -65,22 +75,29 @@ export function Stepper({ steps, progressLabel, counterLabel, onStepClick }: Rea
           return (
             <button
               type="button"
-              key={`step-${step.label}-${index}`}
+              key={`step-${step.label}-${String(index)}`}
               className={`flex flex-1 flex-col items-center gap-2 bg-transparent ${
                 isClickable ? 'cursor-pointer' : 'cursor-default'
               }`}
               disabled={!isClickable}
               onClick={() => isClickable && onStepClick(index)}
             >
-              <div
-                className={`flex h-12 w-12 items-center justify-center rounded-full border-2 transition-all duration-300 ${circleClass} ${
+              <motion.div
+                className={`flex h-12 w-12 items-center justify-center rounded-full border-2 ${circleClass} ${
                   isClickable ? 'hover:scale-110 hover:brightness-125' : ''
                 }`}
+                initial={false}
+                animate={
+                  isCompleted && !prefersReduced
+                    ? { scale: [1, 1.15, 1] }
+                    : { scale: 1 }
+                }
+                transition={{ duration: 0.3, ease: 'easeInOut' }}
               >
                 {step.icon ?? (
                   <span className="text-sm font-medium">{index + 1}</span>
                 )}
-              </div>
+              </motion.div>
               <span className={`text-center text-xs leading-tight ${labelClass}`}>
                 {step.label}
               </span>

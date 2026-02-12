@@ -18,6 +18,7 @@ import {
   RefreshCw,
 } from 'lucide-react';
 import { Badge, Button, Card, ConfirmDialog, Input, Select } from '@/shared/ui';
+import { FadeIn, PageTransition, StaggerChildren, StaggerItem } from '@/shared/animations';
 import {
   useCertificateStatus,
   useUploadCertificate,
@@ -647,17 +648,21 @@ export default function SettingsPage() {
   const tCommon = useTranslations('common');
 
   return (
-    <div className="space-y-5">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-medium text-foreground">{tCommon('settingsTitle')}</h1>
-        <p className="text-sm text-foreground-muted">{tCommon('settingsSubtitle')}</p>
-      </div>
+    <PageTransition className="space-y-5">
+      <FadeIn>
+        <div className="space-y-2">
+          <h1 className="text-2xl font-medium text-foreground">{tCommon('settingsTitle')}</h1>
+          <p className="text-sm text-foreground-muted">{tCommon('settingsSubtitle')}</p>
+        </div>
+      </FadeIn>
 
-      <BrandingSection />
-      <DefaultsSection />
-      <NotificationsSection />
-      <ApiKeySection />
-      <CertificateSection />
-    </div>
+      <StaggerChildren staggerDelay={0.08} className="space-y-5">
+        <StaggerItem><BrandingSection /></StaggerItem>
+        <StaggerItem><DefaultsSection /></StaggerItem>
+        <StaggerItem><NotificationsSection /></StaggerItem>
+        <StaggerItem><ApiKeySection /></StaggerItem>
+        <StaggerItem><CertificateSection /></StaggerItem>
+      </StaggerChildren>
+    </PageTransition>
   );
 }

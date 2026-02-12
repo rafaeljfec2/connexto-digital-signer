@@ -14,7 +14,7 @@ import { Avatar, Badge, Card } from '@/shared/ui';
 import { AlertTriangle, Check, FileText, ShieldCheck } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useParams } from 'next/navigation';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { FillFieldsStep } from './components/fill-fields-step';
 import { IdentifyStep } from './components/identify-step';
 import { ReviewStep } from './components/review-step';
@@ -23,6 +23,9 @@ import { SignStepper } from './components/sign-stepper';
 import { ValidateStep } from './components/validate-step';
 import { ViewStep } from './components/view-step';
 import { lazyLoad } from '@/shared/utils/lazy-load';
+import { StepTransition } from '@/shared/animations';
+
+const SIGN_STEP_ORDER: SignStep[] = ['identify', 'view', 'fill', 'validate', 'review'];
 
 const PdfPreviewModal = lazyLoad(
   () => import('./components/pdf-preview-modal'),
@@ -88,6 +91,14 @@ export default function SignerDocumentPage() {
 
   const [currentStep, setCurrentStep] = useState<SignStep>('view');
   const [stepInitialized, setStepInitialized] = useState(false);
+  const prevStepIndexRef = useRef(SIGN_STEP_ORDER.indexOf(currentStep));
+
+  const currentStepIndex = SIGN_STEP_ORDER.indexOf(currentStep);
+  const stepDirection: 1 | -1 = currentStepIndex >= prevStepIndexRef.current ? 1 : -1;
+
+  useEffect(() => {
+    prevStepIndexRef.current = currentStepIndex;
+  }, [currentStepIndex]);
 
   useEffect(() => {
     if (stepInitialized || !signerData) return;
@@ -323,6 +334,7 @@ export default function SignerDocumentPage() {
       </div>
 
       <main className="mx-auto flex min-h-0 w-full max-w-6xl flex-1 flex-col px-3 pt-6 pb-16 md:px-6 md:pt-8 md:pb-2">
+        <StepTransition stepKey={currentStep} direction={stepDirection} className="flex min-h-0 flex-1 flex-col">
         {currentStep === 'identify' && signerData ? (
           <IdentifyStep
             requestEmail={signerData.signer.requestEmail}
@@ -446,6 +458,7 @@ export default function SignerDocumentPage() {
             fieldTypeLabels={fieldTypeLabels}
           />
         ) : null}
+        </StepTransition>
       </main>
 
       <SignatureModal

@@ -14,7 +14,7 @@ export default async function DashboardLayout({
       helpLabel={tCommon('help')}
       signOutLabel={tCommon('signOut')}
       searchPlaceholder={tCommon('searchPlaceholder')}
-      notificationsLabel={tCommon('notifications')}
+      notificationsLabel={tCommon('notificationsLabel')}
       noNotificationsLabel={tCommon('noNotifications')}
       myAccountLabel={tCommon('myAccount')}
       ctaLabel={tCommon('newDocument')}

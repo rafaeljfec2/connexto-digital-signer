@@ -2,11 +2,13 @@
 
 import { useCallback, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
+import { AnimatePresence, motion } from 'framer-motion';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
 import { EmptyState } from '@/features/documents/components/empty-state';
 import { useDeleteDocument, useDocumentsList } from '@/features/documents/hooks/use-documents';
 import { getDocumentFile, getDocumentSignedFile } from '@/features/documents/api';
 import { Badge, Button, Card, ConfirmDialog, Pagination, Select, Skeleton } from '@/shared/ui';
+import { FadeIn, PageTransition } from '@/shared/animations';
 import type { DocumentStatus, DocumentSummary } from '@/features/documents/api';
 import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
 import { useRouter } from '@/i18n/navigation';
@@ -118,7 +120,8 @@ export default function DocumentsPage() {
   const skeletonCards = useMemo(() => ['card-1', 'card-2', 'card-3', 'card-4', 'card-5', 'card-6'], []);
 
   return (
-    <div className="space-y-5">
+    <PageTransition className="space-y-5">
+      <FadeIn>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div className="space-y-1">
           <h1 className="text-2xl font-medium text-foreground">{tDocuments('title')}</h1>
@@ -178,8 +181,17 @@ export default function DocumentsPage() {
           </div>
         </div>
       </div>
+      </FadeIn>
+      <AnimatePresence mode="wait">
       {view === 'list' ? (
-        <div className="glass-card rounded-2xl p-4">
+        <motion.div
+          key="list-view"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="glass-card rounded-2xl p-4"
+        >
           <DocumentsTable
             documents={query.data?.data ?? []}
             isLoading={query.isLoading}
@@ -201,9 +213,16 @@ export default function DocumentsPage() {
             onViewSummary={handleViewSummary}
             deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
           />
-        </div>
+        </motion.div>
       ) : (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        <motion.div
+          key="grid-view"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+          className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
+        >
           {query.isLoading
             ? skeletonCards.map((card) => (
                 <Card key={card} variant="glass" className="space-y-3 p-5">
@@ -241,8 +260,9 @@ export default function DocumentsPage() {
               />
             </div>
           ) : null}
-        </div>
+        </motion.div>
       )}
+      </AnimatePresence>
       <Pagination
         page={query.data?.meta.page ?? page}
         totalPages={query.data?.meta.totalPages ?? 1}
@@ -262,7 +282,7 @@ export default function DocumentsPage() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
-    </div>
+    </PageTransition>
   );
 }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Menu,
   Home,
@@ -146,24 +147,36 @@ export function AppShell({
           />
         </div>
 
-        {sidebarOpen ? (
-          <div className="fixed inset-0 z-40 flex lg:hidden">
-            <div className="h-full w-72 bg-th-dialog backdrop-blur-xl">
-              <Sidebar
-                groups={sidebarGroups}
-                title={appName}
-                ctaLabel={ctaLabel}
-                ctaHref={ctaHref}
-                footer={sidebarFooter}
+        <AnimatePresence>
+          {sidebarOpen ? (
+            <div className="fixed inset-0 z-40 flex lg:hidden">
+              <motion.div
+                initial={{ x: -288 }}
+                animate={{ x: 0 }}
+                exit={{ x: -288 }}
+                transition={{ type: 'spring', stiffness: 400, damping: 35 }}
+                className="h-full w-72 bg-th-dialog backdrop-blur-xl"
+              >
+                <Sidebar
+                  groups={sidebarGroups}
+                  title={appName}
+                  ctaLabel={ctaLabel}
+                  ctaHref={ctaHref}
+                  footer={sidebarFooter}
+                />
+              </motion.div>
+              <motion.button
+                type="button"
+                onClick={() => setSidebarOpen(false)}
+                className="flex-1 bg-black/60"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
               />
             </div>
-            <button
-              type="button"
-              onClick={() => setSidebarOpen(false)}
-              className="flex-1 bg-black/60"
-            />
-          </div>
-        ) : null}
+          ) : null}
+        </AnimatePresence>
 
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="z-30 flex shrink-0 items-center gap-3 border-b border-th-header-border bg-th-header px-3 py-2.5 sm:px-5">
