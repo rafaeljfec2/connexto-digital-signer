@@ -31,6 +31,75 @@ type IdentifyStepProps = Readonly<{
   labels: IdentifyStepLabels;
 }>;
 
+function EmailField({ value, onChange, label, placeholder, errorMessage, showError }: Readonly<{
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  placeholder: string;
+  errorMessage: string;
+  showError: boolean;
+}>) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-normal text-foreground-muted">{label}</label>
+      <Input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        type="email"
+        inputMode="email"
+        autoComplete="email"
+      />
+      {showError ? <p className="text-xs text-error">{errorMessage}</p> : null}
+    </div>
+  );
+}
+
+function CpfField({ value, onChange, label, placeholder, errorMessage, showError }: Readonly<{
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  placeholder: string;
+  errorMessage: string;
+  showError: boolean;
+}>) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-normal text-foreground-muted">{label}</label>
+      <Input
+        value={value}
+        onChange={(event) => onChange(formatCpf(event.target.value))}
+        placeholder={placeholder}
+        inputMode="numeric"
+      />
+      {showError ? <p className="text-xs text-error">{errorMessage}</p> : null}
+    </div>
+  );
+}
+
+function PhoneField({ value, onChange, label, placeholder, errorMessage, showError }: Readonly<{
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  placeholder: string;
+  errorMessage: string;
+  showError: boolean;
+}>) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-sm font-normal text-foreground-muted">{label}</label>
+      <Input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        type="tel"
+        inputMode="tel"
+      />
+      {showError ? <p className="text-xs text-error">{errorMessage}</p> : null}
+    </div>
+  );
+}
+
 export function IdentifyStep({
   requestEmail,
   requestCpf,
@@ -46,7 +115,7 @@ export function IdentifyStep({
   const [error, setError] = useState<string | null>(null);
 
   const isEmailValid = !requestEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
-  const cpfDigits = cpf.replace(/\D/g, '');
+  const cpfDigits = cpf.replaceAll(/\D/g, '');
   const isCpfComplete = cpfDigits.length === 11;
   const isCpfValid = !requestCpf || (isCpfComplete && isValidCpf(cpf));
   const isPhoneValid = !requestPhone || phone.replaceAll(/\D/g, '').length >= 8;
@@ -87,57 +156,36 @@ export function IdentifyStep({
 
           <div className="space-y-4">
             {requestEmail ? (
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {labels.emailLabel}
-                </label>
-                <Input
-                  value={emailValue}
-                  onChange={(event) => setEmailValue(event.target.value)}
-                  placeholder={labels.emailPlaceholder}
-                  type="email"
-                  inputMode="email"
-                  autoComplete="email"
-                />
-                {emailValue.length > 0 && !isEmailValid ? (
-                  <p className="text-xs text-error">{labels.emailRequired}</p>
-                ) : null}
-              </div>
+              <EmailField
+                value={emailValue}
+                onChange={setEmailValue}
+                label={labels.emailLabel}
+                placeholder={labels.emailPlaceholder}
+                errorMessage={labels.emailRequired}
+                showError={emailValue.length > 0 && !isEmailValid}
+              />
             ) : null}
 
             {requestCpf ? (
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {labels.cpfLabel}
-                </label>
-                <Input
-                  value={cpf}
-                  onChange={(event) => setCpf(formatCpf(event.target.value))}
-                  placeholder={labels.cpfPlaceholder}
-                  inputMode="numeric"
-                />
-                {cpf.length > 0 && !isCpfValid ? (
-                  <p className="text-xs text-error">{labels.cpfRequired}</p>
-                ) : null}
-              </div>
+              <CpfField
+                value={cpf}
+                onChange={setCpf}
+                label={labels.cpfLabel}
+                placeholder={labels.cpfPlaceholder}
+                errorMessage={labels.cpfRequired}
+                showError={cpf.length > 0 && !isCpfValid}
+              />
             ) : null}
 
             {requestPhone ? (
-              <div className="space-y-1.5">
-                <label className="text-sm font-normal text-foreground-muted">
-                  {labels.phoneLabel}
-                </label>
-                <Input
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  placeholder={labels.phonePlaceholder}
-                  type="tel"
-                  inputMode="tel"
-                />
-                {phone.length > 0 && !isPhoneValid ? (
-                  <p className="text-xs text-error">{labels.phoneRequired}</p>
-                ) : null}
-              </div>
+              <PhoneField
+                value={phone}
+                onChange={setPhone}
+                label={labels.phoneLabel}
+                placeholder={labels.phonePlaceholder}
+                errorMessage={labels.phoneRequired}
+                showError={phone.length > 0 && !isPhoneValid}
+              />
             ) : null}
 
             {error ? (

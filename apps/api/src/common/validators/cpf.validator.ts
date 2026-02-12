@@ -7,7 +7,7 @@ import {
 } from 'class-validator';
 
 function isValidCpf(raw: string): boolean {
-  const digits = raw.replace(/\D/g, '');
+  const digits = raw.replaceAll(/\D/g, '');
 
   if (digits.length !== 11) return false;
 

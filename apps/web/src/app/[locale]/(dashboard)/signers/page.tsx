@@ -115,7 +115,7 @@ export default function SignersManagementPage() {
     setModalOpen(true);
   };
 
-  const cpfDigits = formCpf.replace(/\D/g, '');
+  const cpfDigits = formCpf.replaceAll(/\D/g, '');
   const isCpfTouched = cpfDigits.length > 0;
   const isCpfComplete = cpfDigits.length === 11;
   const cpfValid = !isCpfTouched || (isCpfComplete && isValidCpf(formCpf));

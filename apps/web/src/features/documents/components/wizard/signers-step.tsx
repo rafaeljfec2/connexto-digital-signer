@@ -131,7 +131,7 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
     setModalOpen(true);
   };
 
-  const cpfDigits = cpf.replace(/\D/g, '');
+  const cpfDigits = cpf.replaceAll(/\D/g, '');
   const isCpfTouched = cpfDigits.length > 0;
   const isCpfComplete = cpfDigits.length === 11;
   const cpfValid = !isCpfTouched || (isCpfComplete && isValidCpf(cpf));
