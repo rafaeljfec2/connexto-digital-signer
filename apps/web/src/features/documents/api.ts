@@ -398,3 +398,77 @@ export const listAllSigners = async (
   });
   return response.data;
 };
+
+export type TenantSigner = {
+  readonly id: string;
+  readonly tenantId: string;
+  readonly name: string;
+  readonly email: string;
+  readonly cpf: string | null;
+  readonly phone: string | null;
+  readonly birthDate: string | null;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+};
+
+export type TenantSignersListResponse = {
+  readonly data: ReadonlyArray<TenantSigner>;
+  readonly meta: {
+    readonly page: number;
+    readonly limit: number;
+    readonly total: number;
+    readonly totalPages: number;
+  };
+};
+
+export type ListTenantSignersParams = {
+  readonly page?: number;
+  readonly limit?: number;
+};
+
+export type CreateTenantSignerInput = {
+  readonly name: string;
+  readonly email: string;
+  readonly cpf?: string;
+  readonly phone?: string;
+  readonly birthDate?: string;
+};
+
+export type UpdateTenantSignerInput = Partial<CreateTenantSignerInput>;
+
+export const searchTenantSigners = async (
+  query: string,
+): Promise<TenantSigner[]> => {
+  const response = await apiClient.get<TenantSigner[]>('/tenant-signers/search', {
+    params: { q: query },
+  });
+  return response.data;
+};
+
+export const listTenantSigners = async (
+  params: ListTenantSignersParams,
+): Promise<TenantSignersListResponse> => {
+  const response = await apiClient.get<TenantSignersListResponse>('/tenant-signers', {
+    params,
+  });
+  return response.data;
+};
+
+export const createTenantSigner = async (
+  input: CreateTenantSignerInput,
+): Promise<TenantSigner> => {
+  const response = await apiClient.post<TenantSigner>('/tenant-signers', input);
+  return response.data;
+};
+
+export const updateTenantSigner = async (
+  id: string,
+  input: UpdateTenantSignerInput,
+): Promise<TenantSigner> => {
+  const response = await apiClient.patch<TenantSigner>(`/tenant-signers/${id}`, input);
+  return response.data;
+};
+
+export const deleteTenantSigner = async (id: string): Promise<void> => {
+  await apiClient.delete(`/tenant-signers/${id}`);
+};

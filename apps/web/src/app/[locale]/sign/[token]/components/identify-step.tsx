@@ -3,14 +3,7 @@
 import { useCallback, useState } from 'react';
 import { ArrowRight, RefreshCw, UserCheck } from 'lucide-react';
 import { Button, Card, Input } from '@/shared/ui';
-
-function formatCpf(value: string): string {
-  const digits = value.replaceAll(/\D/g, '').slice(0, 11);
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-}
+import { formatCpf, isValidCpf } from '@/shared/utils/cpf';
 
 type IdentifyStepLabels = Readonly<{
   title: string;
@@ -53,7 +46,9 @@ export function IdentifyStep({
   const [error, setError] = useState<string | null>(null);
 
   const isEmailValid = !requestEmail || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailValue);
-  const isCpfValid = !requestCpf || cpf.replaceAll(/\D/g, '').length === 11;
+  const cpfDigits = cpf.replace(/\D/g, '');
+  const isCpfComplete = cpfDigits.length === 11;
+  const isCpfValid = !requestCpf || (isCpfComplete && isValidCpf(cpf));
   const isPhoneValid = !requestPhone || phone.replaceAll(/\D/g, '').length >= 8;
   const canSubmit = isEmailValid && isCpfValid && isPhoneValid;
 

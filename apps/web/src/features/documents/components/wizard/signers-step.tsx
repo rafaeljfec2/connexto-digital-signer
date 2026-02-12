@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { Pencil, Plus, X } from 'lucide-react';
-import type { Signer } from '@/features/documents/api';
+import { Pencil, Plus, X, Search } from 'lucide-react';
+import type { Signer, TenantSigner } from '@/features/documents/api';
 import {
   useAddSigner,
   useDocument,
@@ -12,15 +12,9 @@ import {
   useUpdateDocument,
   useUpdateSigner,
 } from '@/features/documents/hooks/use-document-wizard';
+import { useSearchTenantSigners } from '@/features/documents/hooks/use-search-tenant-signers';
 import { Avatar, Badge, Button, Card, Dialog, Input, Select } from '@/shared/ui';
-
-function formatCpf(value: string): string {
-  const digits = value.replaceAll(/\D/g, '').slice(0, 11);
-  if (digits.length <= 3) return digits;
-  if (digits.length <= 6) return `${digits.slice(0, 3)}.${digits.slice(3)}`;
-  if (digits.length <= 9) return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6)}`;
-  return `${digits.slice(0, 3)}.${digits.slice(3, 6)}.${digits.slice(6, 9)}-${digits.slice(9)}`;
-}
+import { formatCpf, isValidCpf } from '@/shared/utils/cpf';
 
 export type SignersStepProps = {
   readonly documentId: string;
@@ -40,6 +34,10 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
   const removeSignerMutation = useRemoveSigner(documentId);
   const updateDocument = useUpdateDocument(documentId);
 
+  const { results: searchResults, isLoading: isSearching, search: searchContacts, clear: clearSearch } = useSearchTenantSigners();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [editingSigner, setEditingSigner] = useState<Signer | null>(null);
   const [name, setName] = useState('');
@@ -58,6 +56,42 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
     setIsMounted(true);
   }, []);
 
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const handleSearchInput = (value: string) => {
+    setName(value);
+    if (!isEditing) {
+      searchContacts(value);
+      setShowDropdown(value.trim().length >= 2);
+    }
+  };
+
+  const handleEmailInput = (value: string) => {
+    setEmail(value);
+    if (!isEditing) {
+      searchContacts(value);
+      setShowDropdown(value.trim().length >= 2);
+    }
+  };
+
+  const selectContact = (contact: TenantSigner) => {
+    setName(contact.name);
+    setEmail(contact.email);
+    setPhone(contact.phone ?? '');
+    setCpf(contact.cpf ? formatCpf(contact.cpf) : '');
+    setBirthDate(contact.birthDate ?? '');
+    setShowDropdown(false);
+    clearSearch();
+  };
+
   const signingMode = documentQuery.data?.signingMode ?? 'parallel';
   const isEditing = editingSigner !== null;
 
@@ -73,6 +107,8 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
     setAuthMethod('email');
     setOrder('');
     setEditingSigner(null);
+    setShowDropdown(false);
+    clearSearch();
   };
 
   const openAddModal = () => {
@@ -95,8 +131,14 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
     setModalOpen(true);
   };
 
+  const cpfDigits = cpf.replace(/\D/g, '');
+  const isCpfTouched = cpfDigits.length > 0;
+  const isCpfComplete = cpfDigits.length === 11;
+  const cpfValid = !isCpfTouched || (isCpfComplete && isValidCpf(cpf));
+
   const handleSubmit = async () => {
     if (!name.trim() || !email.trim()) return;
+    if (isCpfTouched && !isValidCpf(cpf)) return;
 
     const payload = {
       name: name.trim(),
@@ -252,7 +294,7 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
               type="button"
               onClick={handleSubmit}
               isLoading={isEditing ? updateSignerMutation.isPending : addSignerMutation.isPending}
-              disabled={!name.trim() || !email.trim()}
+              disabled={!name.trim() || !email.trim() || !cpfValid}
             >
               {isEditing ? tSigners('save') : tSigners('confirm')}
             </Button>
@@ -260,15 +302,39 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
         }
       >
         <div className="grid gap-3 md:grid-cols-2">
-          <div className="space-y-1.5">
+          <div className="relative space-y-1.5" ref={dropdownRef}>
             <label className="text-sm font-normal text-foreground-muted">
               {tSigners('nameLabel')}
             </label>
-            <Input
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder={tSigners('namePlaceholder')}
-            />
+            <div className="relative">
+              <Input
+                value={name}
+                onChange={(event) => handleSearchInput(event.target.value)}
+                placeholder={tSigners('namePlaceholder')}
+                autoComplete="off"
+              />
+              {isSearching && (
+                <Search className="absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 animate-pulse text-foreground-muted" />
+              )}
+            </div>
+            {showDropdown && searchResults.length > 0 && !isEditing && (
+              <div className="absolute z-50 mt-1 max-h-48 w-full overflow-y-auto rounded-lg border border-th-border bg-th-card shadow-lg">
+                {searchResults.map((contact) => (
+                  <button
+                    key={contact.id}
+                    type="button"
+                    className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-th-hover"
+                    onClick={() => selectContact(contact)}
+                  >
+                    <Avatar name={contact.name} size="sm" />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-medium text-foreground">{contact.name}</p>
+                      <p className="truncate text-xs text-foreground-muted">{contact.email}</p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-normal text-foreground-muted">
@@ -276,9 +342,10 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
             </label>
             <Input
               value={email}
-              onChange={(event) => setEmail(event.target.value)}
+              onChange={(event) => handleEmailInput(event.target.value)}
               placeholder={tSigners('emailPlaceholder')}
               type="email"
+              autoComplete="off"
             />
           </div>
           <div className="space-y-1.5">
@@ -311,7 +378,11 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
               value={cpf}
               onChange={(event) => setCpf(formatCpf(event.target.value))}
               placeholder={tSigners('cpfPlaceholder')}
+              className={isCpfTouched && isCpfComplete && !cpfValid ? 'border-error' : ''}
             />
+            {isCpfTouched && isCpfComplete && !cpfValid && (
+              <p className="text-xs text-error">{tSigners('cpfInvalid')}</p>
+            )}
           </div>
           <div className="space-y-1.5">
             <label className="text-sm font-normal text-foreground-muted">

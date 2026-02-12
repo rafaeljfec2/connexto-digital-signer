@@ -310,6 +310,13 @@ export default function SignerDocumentPage() {
               <p className="truncate text-[10px] text-foreground-subtle">{signer.email}</p>
             </div>
           </div>
+          {doc.expiresAt ? (
+            <Badge variant="default" className="hidden shrink-0 text-[10px] sm:inline-flex">
+              {t('deadline', {
+                date: new Intl.DateTimeFormat(currentLocale, { dateStyle: 'medium' }).format(new Date(doc.expiresAt)),
+              })}
+            </Badge>
+          ) : null}
           <Badge variant="info" className="shrink-0 text-xs">
             {t('status.pending')}
           </Badge>

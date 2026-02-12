@@ -19,7 +19,7 @@
     "nav": {
       "home": "Dashboard",
       "documents": "Documentos",
-      "signers": "Signatários",
+      "signers": "Contatos",
       "settings": "Configurações"
     },
     "navGroups": {
@@ -27,33 +27,32 @@
       "management": "Gerenciamento"
     },
     "newDocument": "Novo documento",
-    "signersTitle": "Signatários",
-    "signersSubtitle": "Gerencie signatários e acompanhe status",
-    "signersEmptyTitle": "Nenhum signatário encontrado",
-    "signersEmptyDescription": "Adicione signatários em um documento para visualizar aqui.",
+    "signersTitle": "Contatos",
+    "signersSubtitle": "Gerencie seus contatos de signatários reutilizáveis",
+    "signersEmptyTitle": "Nenhum contato encontrado",
+    "signersEmptyDescription": "Os contatos são criados automaticamente ao adicionar signatários em documentos, ou você pode adicioná-los manualmente.",
     "signersTable": {
       "name": "Nome",
       "email": "Email",
-      "document": "Documento",
-      "status": "Status",
-      "notifiedAt": "Notificado em",
-      "signedAt": "Assinado em",
-      "actions": "Acoes"
+      "cpf": "CPF",
+      "phone": "Telefone",
+      "createdAt": "Adicionado",
+      "actions": "Ações"
     },
     "signersFilters": {
-      "status": "Status",
-      "all": "Todos",
-      "pending": "Pendente",
-      "signed": "Assinado"
+      "search": "Buscar contatos..."
     },
     "signersActions": {
-      "viewDocument": "Ver documento",
-      "viewSummary": "Ver resumo"
+      "edit": "Editar",
+      "delete": "Excluir",
+      "addNew": "Novo contato",
+      "confirmDelete": "Tem certeza que deseja excluir este contato?",
+      "confirmDeleteDescription": "Esta ação não pode ser desfeita. As assinaturas existentes em documentos não serão afetadas."
     },
     "signersPagination": {
       "previous": "Anterior",
-      "next": "Proximo",
-      "page": "Pagina"
+      "next": "Próximo",
+      "page": "Página"
     },
     "settingsTitle": "Configurações",
     "settingsSubtitle": "Preferencias e ajustes da conta",
@@ -356,6 +355,7 @@
     "phonePlaceholder": "+55 (11) 99999-8888",
     "cpfLabel": "CPF",
     "cpfPlaceholder": "000.000.000-00",
+    "cpfInvalid": "CPF inválido",
     "birthDateLabel": "Data de nascimento",
     "birthDatePlaceholder": "DD/MM/AAAA",
     "requestEmailLabel": "Solicitar email",
@@ -467,6 +467,7 @@
   },
   "signer": {
     "title": "Assinar documento",
+    "deadline": "Prazo: {date}",
     "documentLabel": "Documento",
     "documentHint": "Visualizacao segura",
     "preview": "Visualizar",

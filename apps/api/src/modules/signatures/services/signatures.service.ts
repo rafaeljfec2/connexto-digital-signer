@@ -22,6 +22,7 @@ import type {
   SigningContext,
 } from '../interfaces/audit.interface';
 import { SignatureFieldsService } from './signature-fields.service';
+import { TenantSignerService } from './tenant-signer.service';
 
 export type { AuditTimelineEvent, DocumentAuditSummary, SigningContext } from '../interfaces/audit.interface';
 export type { AuditSignerInfo } from '../interfaces/audit.interface';
@@ -39,6 +40,7 @@ export class SignaturesService {
     private readonly fieldsService: SignatureFieldsService,
     private readonly notificationsService: NotificationsService,
     private readonly certificateService: CertificateService,
+    private readonly tenantSignerService: TenantSignerService,
   ) {}
 
   async addSigner(
@@ -47,11 +49,24 @@ export class SignaturesService {
     createSignerDto: CreateSignerDto
   ): Promise<Signer> {
     await this.documentsService.findOne(documentId, tenantId);
+
+    const tenantSigner = await this.tenantSignerService.findOrCreate(
+      tenantId,
+      {
+        name: createSignerDto.name,
+        email: createSignerDto.email,
+        cpf: createSignerDto.cpf,
+        phone: createSignerDto.phone,
+        birthDate: createSignerDto.birthDate,
+      },
+    );
+
     const accessToken = randomBytes(32).toString('hex');
     const signer = this.signerRepository.create({
       ...createSignerDto,
       tenantId,
       documentId,
+      tenantSignerId: tenantSigner.id,
       accessToken,
     });
     return this.signerRepository.save(signer);
@@ -135,7 +150,7 @@ export class SignaturesService {
 
   async findByTokenWithDocument(accessToken: string): Promise<{
     signer: Signer;
-    document: { id: string; title: string; status: DocumentStatus; signingLanguage: string };
+    document: { id: string; title: string; status: DocumentStatus; signingLanguage: string; expiresAt: Date | null };
   }> {
     const signer = await this.findByToken(accessToken);
     const document = await this.documentsService.findOne(signer.documentId, signer.tenantId);
@@ -146,6 +161,7 @@ export class SignaturesService {
         title: document.title,
         status: document.status,
         signingLanguage: document.signingLanguage,
+        expiresAt: document.expiresAt,
       },
     };
   }
@@ -506,6 +522,7 @@ export class SignaturesService {
     }));
 
     const originalHash = document.originalHash ?? this.pdfService.computeHash(originalBuffer);
+    const signedHash = this.pdfService.computeHash(withSignatures);
     const certificateStatus = await this.certificateService.getCertificateStatus(tenantId);
 
     let finalBuffer = await this.pdfService.appendEvidencePage(
@@ -515,6 +532,7 @@ export class SignaturesService {
       document.signingLanguage ?? 'en',
       {
         originalHash,
+        signedHash,
         certificate: certificateStatus
           ? {
               subject: certificateStatus.subject,

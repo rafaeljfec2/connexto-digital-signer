@@ -102,10 +102,9 @@ export function AppShell({
   const initials = isMounted ? (user?.name ?? tenantLabel) : tenantLabel;
 
   const sidebarGroups: SidebarGroup[] = useMemo(() => {
-    const filteredNavItems = navItems.filter(item => item.iconKey !== 'signers');
     const groupMap = new Map<string, AppShellNavItem[]>();
 
-    for (const item of filteredNavItems) {
+    for (const item of navItems) {
       const groupKey = item.group ?? 'main';
       const existing = groupMap.get(groupKey) ?? [];
       existing.push(item);

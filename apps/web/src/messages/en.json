@@ -19,7 +19,7 @@
     "nav": {
       "home": "Home",
       "documents": "Documents",
-      "signers": "Signers",
+      "signers": "Contacts",
       "settings": "Settings"
     },
     "navGroups": {
@@ -27,28 +27,27 @@
       "management": "Management"
     },
     "newDocument": "New document",
-    "signersTitle": "Signers",
-    "signersSubtitle": "Manage signers and track status",
-    "signersEmptyTitle": "No signers found",
-    "signersEmptyDescription": "Add signers to a document to see them here.",
+    "signersTitle": "Contacts",
+    "signersSubtitle": "Manage your reusable signer contacts",
+    "signersEmptyTitle": "No contacts found",
+    "signersEmptyDescription": "Contacts are created automatically when you add signers to documents, or you can add them manually.",
     "signersTable": {
       "name": "Name",
       "email": "Email",
-      "document": "Document",
-      "status": "Status",
-      "notifiedAt": "Notified at",
-      "signedAt": "Signed at",
+      "cpf": "CPF",
+      "phone": "Phone",
+      "createdAt": "Added",
       "actions": "Actions"
     },
     "signersFilters": {
-      "status": "Status",
-      "all": "All",
-      "pending": "Pending",
-      "signed": "Signed"
+      "search": "Search contacts..."
     },
     "signersActions": {
-      "viewDocument": "View document",
-      "viewSummary": "View summary"
+      "edit": "Edit",
+      "delete": "Delete",
+      "addNew": "New contact",
+      "confirmDelete": "Are you sure you want to delete this contact?",
+      "confirmDeleteDescription": "This action cannot be undone. Existing document signatures will not be affected."
     },
     "signersPagination": {
       "previous": "Previous",
@@ -356,6 +355,7 @@
     "phonePlaceholder": "+55 (11) 99999-8888",
     "cpfLabel": "CPF",
     "cpfPlaceholder": "000.000.000-00",
+    "cpfInvalid": "Invalid CPF",
     "birthDateLabel": "Date of birth",
     "birthDatePlaceholder": "MM/DD/YYYY",
     "requestEmailLabel": "Request email",
@@ -467,6 +467,7 @@
   },
   "signer": {
     "title": "Sign document",
+    "deadline": "Deadline: {date}",
     "documentLabel": "Document",
     "documentHint": "Secure preview",
     "preview": "Preview",

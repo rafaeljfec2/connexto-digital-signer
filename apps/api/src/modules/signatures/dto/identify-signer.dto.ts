@@ -1,5 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail, IsOptional, IsString, Matches, MaxLength } from 'class-validator';
+import { IsCpf } from '../../../common/validators/cpf.validator';
 
 export class IdentifySignerDto {
   @IsOptional()
@@ -11,7 +12,7 @@ export class IdentifySignerDto {
   @IsOptional()
   @IsString()
   @MaxLength(14)
-  @Matches(/^\d{3}\.?\d{3}\.?\d{3}-?\d{2}$/, { message: 'CPF must be in a valid format' })
+  @IsCpf({ message: 'CPF is invalid' })
   @ApiPropertyOptional({ example: '123.456.789-00' })
   readonly cpf?: string;
 

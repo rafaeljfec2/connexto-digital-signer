@@ -24,6 +24,9 @@ export class Signer {
   @Column({ name: 'document_id', type: 'varchar', length: 255 })
   documentId!: string;
 
+  @Column({ name: 'tenant_signer_id', type: 'uuid', nullable: true })
+  tenantSignerId!: string | null;
+
   @Column({ type: 'varchar', length: 255 })
   name!: string;
 

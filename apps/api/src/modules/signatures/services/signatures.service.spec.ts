@@ -9,6 +9,7 @@ import { PdfService } from '../../../shared/pdf/pdf.service';
 import { EVENT_SIGNATURE_COMPLETED, EVENT_DOCUMENT_SENT } from '@connexto/events';
 import type { SignatureCompletedEvent } from '@connexto/events';
 import { SignatureFieldsService } from './signature-fields.service';
+import { TenantSignerService } from './tenant-signer.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { CertificateService } from '../../tenants/services/certificate.service';
 import { SignatureFieldType } from '../entities/signature-field.entity';
@@ -17,6 +18,7 @@ const buildSigner = (overrides?: Partial<Signer>): Signer => ({
   id: 'signer-1',
   tenantId: 'tenant-1',
   documentId: 'doc-1',
+  tenantSignerId: null,
   name: 'Jane Doe',
   email: 'jane@acme.com',
   status: SignerStatus.PENDING,
@@ -73,6 +75,7 @@ describe('SignaturesService', () => {
   let fieldsService: jest.Mocked<SignatureFieldsService>;
   let notificationsService: jest.Mocked<NotificationsService>;
   let certificateService: jest.Mocked<CertificateService>;
+  let tenantSignerService: jest.Mocked<TenantSignerService>;
 
   beforeEach(() => {
     signerRepository = {
@@ -110,6 +113,15 @@ describe('SignaturesService', () => {
       removeCertificate: jest.fn(),
       validateAndExtract: jest.fn(),
     } as unknown as jest.Mocked<CertificateService>;
+    tenantSignerService = {
+      findOrCreate: jest.fn().mockResolvedValue({ id: 'ts-1' }),
+      search: jest.fn().mockResolvedValue([]),
+      findAll: jest.fn(),
+      findOne: jest.fn(),
+      create: jest.fn(),
+      update: jest.fn(),
+      remove: jest.fn(),
+    } as unknown as jest.Mocked<TenantSignerService>;
     service = new SignaturesService(
       signerRepository,
       documentsService,
@@ -118,15 +130,17 @@ describe('SignaturesService', () => {
       fieldsService,
       notificationsService,
       certificateService,
+      tenantSignerService,
     );
   });
 
   describe('addSigner', () => {
-    test('should create signer and return saved signer', async () => {
+    test('should create signer, link to tenant signer and return saved signer', async () => {
       const document = buildDocument({ signingMode: SigningMode.PARALLEL });
-      const created = buildSigner({ accessToken: 'token-generated' });
-      const saved = buildSigner({ id: 'signer-2', accessToken: 'token-generated' });
+      const created = buildSigner({ accessToken: 'token-generated', tenantSignerId: 'ts-1' });
+      const saved = buildSigner({ id: 'signer-2', accessToken: 'token-generated', tenantSignerId: 'ts-1' });
       documentsService.findOne.mockResolvedValue(document);
+      tenantSignerService.findOrCreate.mockResolvedValue({ id: 'ts-1' } as never);
       (signerRepository.create as jest.Mock).mockReturnValue(created);
       (signerRepository.save as jest.Mock).mockResolvedValue(saved);
       const result = await service.addSigner('tenant-1', 'doc-1', {
@@ -135,6 +149,13 @@ describe('SignaturesService', () => {
       });
 
       expect(result).toEqual(saved);
+      expect(tenantSignerService.findOrCreate).toHaveBeenCalledWith('tenant-1', {
+        name: 'Jane',
+        email: 'jane@acme.com',
+        cpf: undefined,
+        phone: undefined,
+        birthDate: undefined,
+      });
       expect(documentsService.findOne).toHaveBeenCalledWith('doc-1', 'tenant-1');
       expect(signerRepository.create).toHaveBeenCalled();
       expect(signerRepository.save).toHaveBeenCalledWith(created);
@@ -309,6 +330,7 @@ describe('SignaturesService', () => {
       fieldsService.findByDocument.mockResolvedValue([]);
       (signerRepository.find as jest.Mock).mockResolvedValue([signerA, signerB]);
       pdfService.embedSignatures.mockResolvedValue(withSignatures);
+      pdfService.computeHash.mockReturnValue('signed-hash-123');
       pdfService.appendEvidencePage.mockResolvedValue(finalized);
       certificateService.getCertificateStatus.mockResolvedValue(null);
 
@@ -318,6 +340,7 @@ describe('SignaturesService', () => {
       await servicePrivate.finalizeDocument('doc-1', 'tenant-1');
 
       expect(pdfService.embedSignatures).toHaveBeenCalledWith(original, []);
+      expect(pdfService.computeHash).toHaveBeenCalledWith(withSignatures);
       expect(pdfService.appendEvidencePage).toHaveBeenCalledWith(
         withSignatures,
         [
@@ -342,6 +365,7 @@ describe('SignaturesService', () => {
         document.signingLanguage ?? 'en',
         {
           originalHash: 'abc123',
+          signedHash: 'signed-hash-123',
           certificate: undefined,
         },
       );
@@ -368,6 +392,7 @@ describe('SignaturesService', () => {
       fieldsService.findByDocument.mockResolvedValue([]);
       (signerRepository.find as jest.Mock).mockResolvedValue([signer]);
       pdfService.embedSignatures.mockResolvedValue(withSignatures);
+      pdfService.computeHash.mockReturnValue('signed-hash-456');
       pdfService.appendEvidencePage.mockResolvedValue(finalized);
       certificateService.getCertificateStatus.mockResolvedValue(certStatus);
       certificateService.signPdf.mockResolvedValue(signedPdf);
@@ -386,6 +411,7 @@ describe('SignaturesService', () => {
         document.signingLanguage ?? 'en',
         {
           originalHash: 'def456',
+          signedHash: 'signed-hash-456',
           certificate: {
             subject: 'Acme Corp',
             issuer: 'CA Authority',
@@ -415,6 +441,7 @@ describe('SignaturesService', () => {
       fieldsService.findByDocument.mockResolvedValue([]);
       (signerRepository.find as jest.Mock).mockResolvedValue([signer]);
       pdfService.embedSignatures.mockResolvedValue(withSignatures);
+      pdfService.computeHash.mockReturnValue('signed-hash-789');
       pdfService.appendEvidencePage.mockResolvedValue(finalized);
       certificateService.getCertificateStatus.mockResolvedValue(expiredCert);
 

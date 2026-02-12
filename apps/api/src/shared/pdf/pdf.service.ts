@@ -45,6 +45,7 @@ interface EvidenceLabels {
   readonly certification: string;
   readonly certSubject: string;
   readonly certIssuer: string;
+  readonly certHash: string;
   readonly certStatus: string;
   readonly certStatusActive: string;
   readonly signers: string;
@@ -100,6 +101,7 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     certification: 'DIGITAL CERTIFICATION',
     certSubject: 'Certificate',
     certIssuer: 'Issuer',
+    certHash: 'Signed Hash (SHA-256)',
     certStatus: 'Status',
     certStatusActive: 'Active - Digitally signed',
     signers: 'SIGNERS',
@@ -112,24 +114,25 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
       'All signature evidence is cryptographically secured and can be independently verified.',
   },
   'pt-br': {
-    title: 'EVIDENCIA DE ASSINATURA',
+    title: 'EVIDÊNCIA DE ASSINATURA',
     subtitle: 'Certificado de assinatura digital',
     document: 'DOCUMENTO',
     generated: 'Gerado em',
     originalHash: 'Hash Original (SHA-256)',
-    certification: 'CERTIFICACAO DIGITAL',
+    certification: 'CERTIFICAÇÃO DIGITAL',
     certSubject: 'Certificado',
     certIssuer: 'Emissor',
+    certHash: 'Hash Assinado (SHA-256)',
     certStatus: 'Status',
     certStatusActive: 'Ativo - Assinado digitalmente',
-    signers: 'SIGNATARIOS',
+    signers: 'SIGNATÁRIOS',
     signedAt: 'Assinado em',
-    ipAddress: 'Endereco IP',
+    ipAddress: 'Endereço IP',
     userAgent: 'Navegador',
     signed: 'Assinado',
     footer1: 'Este documento foi assinado digitalmente usando o Connexto Digital Signer.',
     footer2:
-      'Todas as evidencias de assinatura sao criptograficamente protegidas e podem ser verificadas de forma independente.',
+      'Todas as evidências de assinatura são criptograficamente protegidas e podem ser verificadas de forma independente.',
   },
 };
 
@@ -211,8 +214,9 @@ export class PdfService {
     locale = 'en',
     options?: {
       readonly originalHash?: string;
+      readonly signedHash?: string;
       readonly certificate?: CertificateInfo;
-    },
+    }
   ): Promise<Buffer> {
     const pdfDoc = await PDFDocument.load(originalPdfBuffer, {
       ignoreEncryption: true,
@@ -247,7 +251,7 @@ export class PdfService {
     this.drawEvidenceHeader(ctx);
     this.drawDocumentSection(ctx, documentTitle, options?.originalHash);
     if (options?.certificate) {
-      this.drawCertificationSection(ctx, options.certificate);
+      this.drawCertificationSection(ctx, options.certificate, options.signedHash);
     }
     await this.drawSignersSection(ctx, signers);
     this.drawEvidenceFooter(ctx);
@@ -377,7 +381,7 @@ export class PdfService {
   private drawDocumentSection(
     ctx: EvidencePageContext,
     documentTitle: string,
-    originalHash?: string,
+    originalHash?: string
   ): void {
     const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
     const boxHeight = originalHash ? 70 : 55;
@@ -430,12 +434,9 @@ export class PdfService {
     ctx.y -= boxHeight + 15;
   }
 
-  private drawCertificationSection(
-    ctx: EvidencePageContext,
-    certificate: CertificateInfo,
-  ): void {
+  private drawCertificationSection(ctx: EvidencePageContext, certificate: CertificateInfo, signedHash?: string): void {
     const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
-    const cardHeight = 65;
+    const cardHeight = signedHash ? 80 : 65;
 
     this.ensureSpace(ctx, cardHeight + 25);
 
@@ -483,6 +484,16 @@ export class PdfService {
       x: margin + 14,
       y: detailY,
     });
+
+    if (signedHash) {
+      detailY = this.drawDetailRow(currentPage, fonts, colors, {
+        label: labels.certHash,
+        value: signedHash,
+        x: margin + 14,
+        y: detailY,
+        fontSize: 6.5,
+      });
+    }
 
     currentPage.drawText(`${labels.certStatus}:`, {
       x: margin + 14,
@@ -691,22 +702,25 @@ export class PdfService {
       readonly value: string;
       readonly x: number;
       readonly y: number;
+      readonly fontSize?: number;
     }
   ): number {
+    const size = options.fontSize ?? 8;
+
     page.drawText(`${options.label}:`, {
       x: options.x,
       y: options.y,
-      size: 8,
+      size,
       font: fonts.bold,
       color: colors.muted,
     });
 
-    const labelWidth = fonts.bold.widthOfTextAtSize(`${options.label}: `, 8);
+    const labelWidth = fonts.bold.widthOfTextAtSize(`${options.label}: `, size);
 
     page.drawText(options.value, {
       x: options.x + labelWidth,
       y: options.y,
-      size: 8,
+      size,
       font: fonts.regular,
       color: colors.secondary,
     });

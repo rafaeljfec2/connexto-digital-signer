@@ -14,7 +14,7 @@ import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import { useRouter, Link } from '@/i18n/navigation';
 import { Button, Card } from '@/shared/ui';
-import { FadeIn, ScaleIn, StaggerChildren, StaggerItem } from '@/shared/animations';
+import { FadeIn } from '@/shared/animations';
 import { getSignerByToken, getSignerPdf, getSignerSignedPdf } from '@/features/signing/api';
 
 function downloadBlob(blob: Blob, filename: string): void {
@@ -63,7 +63,7 @@ function SuccessActions({
   labels,
 }: SuccessActionsProps) {
   return (
-    <>
+    <div className="space-y-3">
       <div className="space-y-3">
         <p className="text-xs font-normal uppercase tracking-wider text-foreground-subtle">
           {labels.downloads}
@@ -124,7 +124,7 @@ function SuccessActions({
         <FileSearch className="h-4 w-4" />
         {labels.viewSummary}
       </Link>
-    </>
+    </div>
   );
 }
 
@@ -202,72 +202,58 @@ function SuccessPageContent() {
 
   return (
     <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main px-4 py-8 text-foreground">
-      <div className="mx-auto flex w-full max-w-md flex-col items-center gap-5">
-        <FadeIn>
+      <FadeIn className="w-full max-w-md">
         <Card variant="glass" className="w-full space-y-6 p-6 md:p-8">
           <div className="flex flex-col items-center gap-3 text-center">
-            <ScaleIn bounce>
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
-                <CheckCircle2 className="h-9 w-9 text-success" />
-              </div>
-            </ScaleIn>
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-success/20">
+              <CheckCircle2 className="h-9 w-9 text-success" />
+            </div>
 
-            <FadeIn delay={0.2}>
-              {greeting ? (
-                <p className="text-base font-medium text-success">{greeting}</p>
-              ) : null}
-            </FadeIn>
+            {greeting ? (
+              <p className="text-base font-medium text-success">{greeting}</p>
+            ) : null}
 
-            <FadeIn delay={0.3}>
+            <div>
               <h1 className="text-xl font-medium md:text-2xl">{t('title')}</h1>
               <p className="text-sm leading-relaxed text-foreground-muted">{t('subtitle')}</p>
-            </FadeIn>
+            </div>
           </div>
 
           {token ? (
-            <StaggerChildren staggerDelay={0.1}>
-              <StaggerItem>
-                <SuccessActions
-                  token={token}
-                  signerInfo={signerInfo}
-                  signedAvailable={signedAvailable}
-                  downloadingOriginal={downloadingOriginal}
-                  downloadingSigned={downloadingSigned}
-                  onDownloadOriginal={handleDownloadOriginal}
-                  onDownloadSigned={handleDownloadSigned}
-                  labels={{
-                    downloads: t('downloads'),
-                    downloadOriginal: t('downloadOriginal'),
-                    downloadOriginalDesc: t('downloadOriginalDesc'),
-                    downloadSigned: t('downloadSigned'),
-                    downloadSignedDesc: t('downloadSignedDesc'),
-                    downloadSignedUnavailable: t('downloadSignedUnavailable'),
-                    viewSummary: t('viewSummary'),
-                  }}
-                />
-              </StaggerItem>
-            </StaggerChildren>
+            <SuccessActions
+              token={token}
+              signerInfo={signerInfo}
+              signedAvailable={signedAvailable}
+              downloadingOriginal={downloadingOriginal}
+              downloadingSigned={downloadingSigned}
+              onDownloadOriginal={handleDownloadOriginal}
+              onDownloadSigned={handleDownloadSigned}
+              labels={{
+                downloads: t('downloads'),
+                downloadOriginal: t('downloadOriginal'),
+                downloadOriginalDesc: t('downloadOriginalDesc'),
+                downloadSigned: t('downloadSigned'),
+                downloadSignedDesc: t('downloadSignedDesc'),
+                downloadSignedUnavailable: t('downloadSignedUnavailable'),
+                viewSummary: t('viewSummary'),
+              }}
+            />
           ) : null}
 
-          <FadeIn delay={0.5}>
-            <div className="flex justify-center pt-1">
-              <Button type="button" variant="primary" onClick={() => router.push('/')}>
-                {t('cta')}
-              </Button>
-            </div>
-          </FadeIn>
+          <div className="flex justify-center pt-1">
+            <Button type="button" variant="primary" onClick={() => router.push('/')}>
+              {t('cta')}
+            </Button>
+          </div>
 
-          <FadeIn delay={0.6}>
-            <div className="flex items-center justify-center gap-2 text-xs text-foreground-subtle">
-              <ShieldCheck className="h-4 w-4 text-success/60" />
-              <span>{t('securityNote')}</span>
-              <span className="mx-1">·</span>
-              <span>{t('badge')}</span>
-            </div>
-          </FadeIn>
+          <div className="flex items-center justify-center gap-2 text-xs text-foreground-subtle">
+            <ShieldCheck className="h-4 w-4 text-success/60" />
+            <span>{t('securityNote')}</span>
+            <span className="mx-1">·</span>
+            <span>{t('badge')}</span>
+          </div>
         </Card>
-        </FadeIn>
-      </div>
+      </FadeIn>
     </div>
   );
 }

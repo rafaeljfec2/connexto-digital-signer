@@ -24,6 +24,7 @@ export type SignerWithDocument = {
     readonly title: string;
     readonly status: string;
     readonly signingLanguage: string;
+    readonly expiresAt: string | null;
   };
 };
 
