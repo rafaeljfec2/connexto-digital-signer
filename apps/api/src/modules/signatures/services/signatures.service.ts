@@ -519,7 +519,6 @@ export class SignaturesService {
           ? {
               subject: certificateStatus.subject,
               issuer: certificateStatus.issuer,
-              expiresAt: certificateStatus.expiresAt,
             }
           : undefined,
       },

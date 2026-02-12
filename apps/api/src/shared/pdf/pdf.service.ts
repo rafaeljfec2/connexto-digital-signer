@@ -34,7 +34,6 @@ export interface EmbedFieldData {
 export interface CertificateInfo {
   readonly subject: string;
   readonly issuer: string;
-  readonly expiresAt: string;
 }
 
 interface EvidenceLabels {
@@ -46,7 +45,6 @@ interface EvidenceLabels {
   readonly certification: string;
   readonly certSubject: string;
   readonly certIssuer: string;
-  readonly certExpires: string;
   readonly certStatus: string;
   readonly certStatusActive: string;
   readonly signers: string;
@@ -102,7 +100,6 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     certification: 'DIGITAL CERTIFICATION',
     certSubject: 'Certificate',
     certIssuer: 'Issuer',
-    certExpires: 'Valid until',
     certStatus: 'Status',
     certStatusActive: 'Active - Digitally signed',
     signers: 'SIGNERS',
@@ -123,7 +120,6 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     certification: 'CERTIFICACAO DIGITAL',
     certSubject: 'Certificado',
     certIssuer: 'Emissor',
-    certExpires: 'Valido ate',
     certStatus: 'Status',
     certStatusActive: 'Ativo - Assinado digitalmente',
     signers: 'SIGNATARIOS',
@@ -439,7 +435,7 @@ export class PdfService {
     certificate: CertificateInfo,
   ): void {
     const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
-    const cardHeight = 80;
+    const cardHeight = 65;
 
     this.ensureSpace(ctx, cardHeight + 25);
 
@@ -484,13 +480,6 @@ export class PdfService {
     detailY = this.drawDetailRow(currentPage, fonts, colors, {
       label: labels.certIssuer,
       value: certificate.issuer,
-      x: margin + 14,
-      y: detailY,
-    });
-
-    detailY = this.drawDetailRow(currentPage, fonts, colors, {
-      label: labels.certExpires,
-      value: formatEvidenceDate(certificate.expiresAt, ctx.locale),
       x: margin + 14,
       y: detailY,
     });
