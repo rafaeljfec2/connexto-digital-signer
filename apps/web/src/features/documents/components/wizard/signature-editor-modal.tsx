@@ -219,7 +219,7 @@ export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureE
   );
 
   return createPortal(
-    <div className="fixed inset-0 z-[9999] flex bg-[var(--th-page-bg)] dark:bg-brand-900">
+    <div className="fixed inset-0 z-[9999] flex bg-[var(--th-page-bg)]">
       <div
         className={`absolute inset-y-0 left-0 z-10 flex w-64 flex-col border-r border-th-border bg-th-sidebar transition-transform duration-200 xl:relative xl:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full xl:translate-x-0'

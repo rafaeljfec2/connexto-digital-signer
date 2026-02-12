@@ -131,7 +131,7 @@ function SuccessActions({
 export default function SuccessPage() {
   return (
     <Suspense fallback={
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main px-4 py-8 text-foreground">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] px-4 py-8 text-foreground">
         <Loader2 className="h-8 w-8 animate-spin text-foreground-subtle" />
       </div>
     }>
@@ -201,7 +201,7 @@ function SuccessPageContent() {
   }, [token, signerInfo]);
 
   return (
-    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main px-4 py-8 text-foreground">
+    <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] px-4 py-8 text-foreground">
       <FadeIn className="w-full max-w-md">
         <Card variant="glass" className="w-full space-y-6 p-6 md:p-8">
           <div className="flex flex-col items-center gap-3 text-center">

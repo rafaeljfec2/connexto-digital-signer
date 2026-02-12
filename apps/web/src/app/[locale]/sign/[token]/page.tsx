@@ -247,7 +247,7 @@ export default function SignerDocumentPage() {
 
   if (signerQuery.isLoading || pdfQuery.isLoading || fieldsQuery.isLoading) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main text-foreground">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] text-foreground">
         <div className="text-center">
           <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-2 border-foreground-subtle border-t-foreground" />
           <p className="text-sm text-foreground-muted">{t('loading')}</p>
@@ -258,7 +258,7 @@ export default function SignerDocumentPage() {
 
   if (signerQuery.isError || !signerData) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main px-4 text-foreground">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] px-4 text-foreground">
         <Card variant="glass" className="max-w-sm space-y-4 p-8 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/20">
             <AlertTriangle className="h-6 w-6 text-error" />
@@ -274,7 +274,7 @@ export default function SignerDocumentPage() {
 
   if (alreadySigned) {
     return (
-      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] dark:bg-gradient-main px-4 text-foreground">
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] px-4 text-foreground">
         <Card variant="glass" className="max-w-sm space-y-4 p-8 text-center">
           <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-success/20">
             <Check className="h-6 w-6 text-success" />
@@ -291,7 +291,7 @@ export default function SignerDocumentPage() {
   }
 
   return (
-    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[var(--th-page-bg)] dark:bg-gradient-main text-foreground">
+    <div className="flex h-[100dvh] flex-col overflow-hidden bg-[var(--th-page-bg)] text-foreground">
       <header className="shrink-0 border-b border-th-border px-3 py-2 md:px-6 md:py-3">
         <div className="mx-auto flex w-full max-w-6xl items-center gap-3">
           <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-th-hover">

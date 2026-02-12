@@ -70,46 +70,47 @@
 }
 
 .dark {
-  --th-page-bg: transparent;
-  --th-sidebar-bg: rgba(255, 255, 255, 0.08);
-  --th-header-bg: rgba(255, 255, 255, 0.03);
-  --th-card-bg: rgba(255, 255, 255, 0.12);
-  --th-card-border: rgba(255, 255, 255, 0.1);
-  --th-card-shadow: 0 20px 50px rgba(11, 31, 59, 0.15);
-  --th-fg: #ffffff;
-  --th-fg-muted: rgba(241, 245, 249, 0.5);
-  --th-fg-subtle: rgba(241, 245, 249, 0.3);
-  --th-fg-inverted: #0f172a;
-  --th-border: rgba(255, 255, 255, 0.1);
-  --th-border-subtle: rgba(255, 255, 255, 0.05);
-  --th-hover-bg: rgba(255, 255, 255, 0.05);
-  --th-input-bg: rgba(255, 255, 255, 0.1);
-  --th-input-border: rgba(255, 255, 255, 0.2);
-  --th-overlay: rgba(11, 31, 59, 0.7);
-  --th-dialog-bg: #0f1e36;
-  --th-icon-bg: rgba(255, 255, 255, 0.1);
-  --th-icon-fg: rgba(241, 245, 249, 0.5);
-  --th-active-bg: rgba(255, 255, 255, 0.12);
-  --th-active-text: #ffffff;
-  --th-badge-default-bg: rgba(255, 255, 255, 0.15);
-  --th-badge-default-text: #ffffff;
-  --th-badge-default-border: rgba(255, 255, 255, 0.2);
+  --th-page-bg: #0a0a0a;
+  --th-sidebar-bg: #111111;
+  --th-header-bg: #111111;
+  --th-card-bg: #161616;
+  --th-card-border: #262626;
+  --th-card-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+  --th-fg: #fafafa;
+  --th-fg-muted: #a1a1aa;
+  --th-fg-subtle: #71717a;
+  --th-fg-inverted: #0a0a0a;
+  --th-border: #262626;
+  --th-border-subtle: #1a1a1a;
+  --th-hover-bg: #1a1a1a;
+  --th-input-bg: #141414;
+  --th-input-border: #303030;
+  --th-overlay: rgba(0, 0, 0, 0.7);
+  --th-dialog-bg: #141414;
+  --th-icon-bg: #1e1e1e;
+  --th-icon-fg: #a1a1aa;
+  --th-active-bg: #1e1e1e;
+  --th-active-text: #fafafa;
+  --th-badge-default-bg: #1e1e1e;
+  --th-badge-default-text: #fafafa;
+  --th-badge-default-border: #303030;
   --th-glass-backdrop: blur(24px);
-  --th-body-bg: none;
-  --th-header-border: rgba(255, 255, 255, 0.08);
+  --th-body-bg: #0a0a0a;
+  --th-header-border: #1e1e1e;
 
-  --th-btn-primary-bg: linear-gradient(135deg, #1f5ea8 0%, #14b8a6 100%);
-  --th-btn-primary-hover: linear-gradient(135deg, #1a4f8f 0%, #109e90 100%);
-  --th-btn-primary-shadow: 0 4px 14px rgba(11, 31, 59, 0.25);
-  --th-btn-primary-shadow-hover: 0 6px 20px rgba(11, 31, 59, 0.4);
+  --th-btn-primary-bg: #fafafa;
+  --th-btn-primary-hover: #e4e4e7;
+  --th-btn-primary-text: #0a0a0a;
+  --th-btn-primary-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --th-btn-primary-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
 
-  --color-surface-glass: rgba(255, 255, 255, 0.08);
-  --color-surface-card: rgba(255, 255, 255, 0.12);
-  --color-background: transparent;
-  --color-surface: rgba(255, 255, 255, 0.08);
-  --color-text: #ffffff;
-  --color-text-muted: rgba(241, 245, 249, 0.5);
-  --color-border: rgba(255, 255, 255, 0.1);
+  --color-surface-glass: #111111;
+  --color-surface-card: #161616;
+  --color-background: #0a0a0a;
+  --color-surface: #111111;
+  --color-text: #fafafa;
+  --color-text-muted: #a1a1aa;
+  --color-border: #262626;
 }
 
 * {
@@ -124,7 +125,7 @@ body {
 }
 
 .dark body {
-  background: var(--gradient-main);
+  background: var(--th-body-bg);
 }
 
 .glass-card {
@@ -161,7 +162,7 @@ body {
 @layer components {
   .btn-primary-themed {
     background: var(--th-btn-primary-bg);
-    color: #ffffff;
+    color: var(--th-btn-primary-text, #ffffff);
     box-shadow: var(--th-btn-primary-shadow);
   }
   .btn-primary-themed:hover {
