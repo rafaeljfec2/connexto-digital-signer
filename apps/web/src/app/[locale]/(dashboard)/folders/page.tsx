@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from 'react';
+import { usePersistedView } from '@/shared/hooks/use-persisted-view';
 import { useLocale, useTranslations } from 'next-intl';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
@@ -22,7 +23,7 @@ import { useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/
 import { getDocumentFile, getDocumentSignedFile, getEnvelopeAuditSummary } from '@/features/documents/api';
 import type { DocumentStatus, EnvelopeSummary, FolderTreeNode } from '@/features/documents/api';
 import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
-import { Badge, Button, Card, ConfirmDialog, Pagination, Skeleton } from '@/shared/ui';
+import { Button, Card, ConfirmDialog, Pagination, Skeleton } from '@/shared/ui';
 import { FadeIn, PageTransition } from '@/shared/animations';
 import { useRouter } from '@/i18n/navigation';
 import {
@@ -78,7 +79,7 @@ export default function FoldersPage() {
   const locale = useLocale();
   const router = useRouter();
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
-  const [view, setView] = useState<'list' | 'grid'>('grid');
+  const [view, setView] = usePersistedView('folders-view');
   const [folderModal, setFolderModal] = useState<FolderModalState>({ mode: 'closed' });
   const [moveModal, setMoveModal] = useState<MoveModalState>({ mode: 'closed' });
   const [activeDrag, setActiveDrag] = useState<DragState>(null);
@@ -281,7 +282,7 @@ export default function FoldersPage() {
         />
       ) : null}
 
-      {currentFolderId !== null ? (
+      {currentFolderId === null ? null : (
         <EnvelopeSection
           view={view}
           envelopes={envelopes}
@@ -317,7 +318,7 @@ export default function FoldersPage() {
           emptyTitle={t('empty.title')}
           emptyDescription={t('empty.description')}
         />
-      ) : null}
+      )}
 
       <ConfirmDialog
         open={folderModal.mode === 'delete'}
@@ -508,39 +509,74 @@ function EnvelopeSection({
     );
   }
 
+  const gridContent = renderGridContent({
+    isLoading, envelopes, statusLabels, actionLabels, formatDate,
+    gridMenuOpenId, onToggleMenu, onDocumentClick, onDeleteDocument,
+    onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder,
+    emptyTitle, emptyDescription,
+  });
+
   return (
     <>
-      {isLoading ? (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {['es1', 'es2', 'es3'].map((id) => (
-            <Card key={id} variant="glass" className="space-y-3 p-5">
-              <div className="flex items-center gap-3">
-                <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
-                <div className="flex-1 space-y-1.5"><Skeleton className="h-4 w-3/5" /><Skeleton className="h-3 w-1/3" /></div>
-              </div>
-              <Skeleton className="h-8 w-24" />
-            </Card>
-          ))}
-        </div>
-      ) : envelopes.length > 0 ? (
-        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {envelopes.map((doc) => (
-            <GridDocumentCard
-              key={doc.id} doc={doc} statusLabels={statusLabels} actionLabels={actionLabels}
-              formatDate={formatDate} isMenuOpen={gridMenuOpenId === doc.id}
-              onToggleMenu={(open) => onToggleMenu(open ? doc.id : null)}
-              onDocumentClick={onDocumentClick} onDeleteDocument={onDeleteDocument}
-              onDownloadOriginal={onDownloadOriginal} onDownloadSigned={onDownloadSigned}
-              onViewSummary={onViewSummary} onMoveToFolder={onMoveToFolder}
-            />
-          ))}
-        </div>
-      ) : (
-        <EmptyState title={emptyTitle} description={emptyDescription} />
-      )}
+      {gridContent}
       <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange}
         previousLabel={paginationLabels.previous} nextLabel={paginationLabels.next} pageLabel={paginationLabels.page}
       />
     </>
+  );
+}
+
+type GridContentParams = Readonly<{
+  isLoading: boolean;
+  envelopes: readonly EnvelopeSummary[];
+  statusLabels: Record<DocumentStatus, string>;
+  actionLabels: DocumentActionLabels;
+  formatDate: (v: string) => string;
+  gridMenuOpenId: string | null;
+  onToggleMenu: (id: string | null) => void;
+  onDocumentClick: (d: EnvelopeSummary) => void;
+  onDeleteDocument: (d: EnvelopeSummary) => void;
+  onDownloadOriginal: (d: EnvelopeSummary) => void;
+  onDownloadSigned: (d: EnvelopeSummary) => void;
+  onViewSummary: (d: EnvelopeSummary) => void;
+  onMoveToFolder: (d: EnvelopeSummary) => void;
+  emptyTitle: string;
+  emptyDescription: string;
+}>;
+
+function renderGridContent(params: GridContentParams) {
+  if (params.isLoading) {
+    return (
+      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {['es1', 'es2', 'es3'].map((id) => (
+          <Card key={id} variant="glass" className="space-y-3 p-5">
+            <div className="flex items-center gap-3">
+              <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+              <div className="flex-1 space-y-1.5"><Skeleton className="h-4 w-3/5" /><Skeleton className="h-3 w-1/3" /></div>
+            </div>
+            <Skeleton className="h-8 w-24" />
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (params.envelopes.length === 0) {
+    return <EmptyState title={params.emptyTitle} description={params.emptyDescription} />;
+  }
+
+  return (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {params.envelopes.map((doc) => (
+        <GridDocumentCard
+          key={doc.id} doc={doc} statusLabels={params.statusLabels} actionLabels={params.actionLabels}
+          formatDate={params.formatDate} isMenuOpen={params.gridMenuOpenId === doc.id}
+          onToggleMenu={(open) => params.onToggleMenu(open ? doc.id : null)}
+          onDocumentClick={params.onDocumentClick} onDeleteDocument={params.onDeleteDocument}
+          onDownloadOriginal={params.onDownloadOriginal} onDownloadSigned={params.onDownloadSigned}
+          onViewSummary={params.onViewSummary} onMoveToFolder={params.onMoveToFolder}
+        />
+      ))}
+    </div>
   );
 }

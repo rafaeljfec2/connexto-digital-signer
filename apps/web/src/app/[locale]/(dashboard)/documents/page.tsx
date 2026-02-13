@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from 'react';
+import { usePersistedView } from '@/shared/hooks/use-persisted-view';
 import { useLocale, useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
@@ -70,7 +71,7 @@ export default function DocumentsPage() {
   const router = useRouter();
   const [status, setStatus] = useState<DocumentStatus | 'all'>('all');
   const [page, setPage] = useState(1);
-  const [view, setView] = useState<'list' | 'grid'>('list');
+  const [view, setView] = usePersistedView('documents-view');
   const [deleteTarget, setDeleteTarget] = useState<EnvelopeSummary | null>(null);
   const [gridMenuOpenId, setGridMenuOpenId] = useState<string | null>(null);
   const [moveTarget, setMoveTarget] = useState<EnvelopeSummary | null>(null);
