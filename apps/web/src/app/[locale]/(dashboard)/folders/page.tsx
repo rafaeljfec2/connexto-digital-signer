@@ -1,24 +1,32 @@
 "use client";
 
 import { useCallback, useMemo, useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
 import type { DragEndEvent, DragStartEvent } from '@dnd-kit/core';
 import { FolderBreadcrumb } from '@/features/documents/components/folder-breadcrumb';
 import { FolderCardList, FolderCardGrid } from '@/features/documents/components/folder-card';
 import { FolderFormModal } from '@/features/documents/components/folder-form-modal';
 import { MoveToFolderModal } from '@/features/documents/components/move-to-folder-modal';
+import { DocumentsTable } from '@/features/documents/components/documents-table';
+import { GridDocumentCard } from '@/features/documents/components/grid-document-card';
 import { EmptyState } from '@/features/documents/components/empty-state';
 import {
   useFolderTree,
   useCreateFolder,
   useUpdateFolder,
   useDeleteFolder,
+  useMoveEnvelopeToFolder,
 } from '@/features/documents/hooks/use-folders';
-import type { FolderTreeNode } from '@/features/documents/api';
-import { Button, Card, ConfirmDialog, Skeleton } from '@/shared/ui';
+import { useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/use-documents';
+import { getDocumentFile, getDocumentSignedFile, getEnvelopeAuditSummary } from '@/features/documents/api';
+import type { DocumentStatus, EnvelopeSummary, FolderTreeNode } from '@/features/documents/api';
+import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
+import { Badge, Button, Card, ConfirmDialog, Pagination, Skeleton } from '@/shared/ui';
 import { FadeIn, PageTransition } from '@/shared/animations';
+import { useRouter } from '@/i18n/navigation';
 import {
+  FileText,
   Folder as FolderIcon,
   FolderPlus,
   LayoutGrid,
@@ -41,6 +49,17 @@ function findSubfolders(
   return search(tree) ?? [];
 }
 
+function downloadBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 type FolderModalState =
   | { readonly mode: 'closed' }
   | { readonly mode: 'create' }
@@ -49,123 +68,23 @@ type FolderModalState =
 
 type MoveModalState =
   | { readonly mode: 'closed' }
-  | { readonly mode: 'folder'; readonly folder: FolderTreeNode };
+  | { readonly mode: 'folder'; readonly folder: FolderTreeNode }
+  | { readonly mode: 'envelope'; readonly envelope: EnvelopeSummary };
 
-type DragState = Readonly<{
-  type: 'folder';
-  id: string;
-  title: string;
-}> | null;
-
-type FoldersContentProps = Readonly<{
-  isLoading: boolean;
-  isEmpty: boolean;
-  view: 'list' | 'grid';
-  subfolders: readonly FolderTreeNode[];
-  menuLabels: Readonly<{ rename: string; move: string; delete: string }>;
-  emptyTitle: string;
-  emptyDescription: string;
-  onNavigate: (folderId: string | null) => void;
-  onRename: (folder: FolderTreeNode) => void;
-  onMove: (folder: FolderTreeNode) => void;
-  onDelete: (folder: FolderTreeNode) => void;
-}>;
-
-function FoldersContent({
-  isLoading,
-  isEmpty,
-  view,
-  subfolders,
-  menuLabels,
-  emptyTitle,
-  emptyDescription,
-  onNavigate,
-  onRename,
-  onMove,
-  onDelete,
-}: FoldersContentProps) {
-  if (isLoading) {
-    return view === 'grid' ? (
-      <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-        {['s1', 's2', 's3', 's4', 's5', 's6'].map((id) => (
-          <Card key={id} variant="glass" className="space-y-3 p-5">
-            <div className="flex items-center gap-3">
-              <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
-              <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-4 w-3/5" />
-                <Skeleton className="h-3 w-1/3" />
-              </div>
-            </div>
-          </Card>
-        ))}
-      </div>
-    ) : (
-      <div className="glass-card rounded-2xl p-4">
-        <div className="divide-y divide-th-border rounded-xl border border-th-border bg-th-card">
-          {['s1', 's2', 's3', 's4', 's5'].map((id) => (
-            <div key={id} className="flex items-center gap-3 px-4 py-3">
-              <Skeleton className="h-9 w-9 shrink-0 rounded-lg" />
-              <div className="flex-1 space-y-1.5">
-                <Skeleton className="h-4 w-40" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  if (isEmpty) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} />;
-  }
-
-  if (view === 'list') {
-    return (
-      <div className="glass-card rounded-2xl p-4">
-        <div className="divide-y divide-th-border rounded-xl border border-th-border bg-th-card">
-          {subfolders.map((folder) => (
-            <FolderCardList
-              key={folder.id}
-              folder={folder}
-              variant="list"
-              onNavigate={onNavigate}
-              onRename={onRename}
-              onMove={onMove}
-              onDelete={onDelete}
-              menuLabels={menuLabels}
-            />
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-      {subfolders.map((folder) => (
-        <FolderCardGrid
-          key={folder.id}
-          folder={folder}
-          variant="grid"
-          onNavigate={onNavigate}
-          onRename={onRename}
-          onMove={onMove}
-          onDelete={onDelete}
-          menuLabels={menuLabels}
-        />
-      ))}
-    </div>
-  );
-}
+type DragState = Readonly<{ type: 'folder' | 'envelope'; id: string; title: string }> | null;
 
 export default function FoldersPage() {
   const t = useTranslations('documents');
+  const locale = useLocale();
+  const router = useRouter();
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const [view, setView] = useState<'list' | 'grid'>('grid');
   const [folderModal, setFolderModal] = useState<FolderModalState>({ mode: 'closed' });
   const [moveModal, setMoveModal] = useState<MoveModalState>({ mode: 'closed' });
   const [activeDrag, setActiveDrag] = useState<DragState>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EnvelopeSummary | null>(null);
+  const [gridMenuOpenId, setGridMenuOpenId] = useState<string | null>(null);
+  const [envelopePage, setEnvelopePage] = useState(1);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -178,87 +97,148 @@ export default function FoldersPage() {
     [folderTree, currentFolderId],
   );
 
+  const envelopesQuery = useEnvelopesList({
+    page: envelopePage,
+    limit: 10,
+    folderId: currentFolderId ?? undefined,
+  });
+  const envelopes = envelopesQuery.data?.data ?? [];
+
   const createMut = useCreateFolder();
   const updateMut = useUpdateFolder();
   const deleteMut = useDeleteFolder();
+  const deleteEnvelopeMut = useDeleteEnvelope();
+  const moveEnvelopeMut = useMoveEnvelopeToFolder();
 
-  const menuLabels = useMemo(
-    () => ({
-      rename: t('folders.rename'),
-      move: t('folders.move'),
-      delete: t('folders.delete'),
-    }),
-    [t],
-  );
+  const deletingEnvelopeId = deleteEnvelopeMut.isPending ? (deleteEnvelopeMut.variables ?? null) : null;
+
+  const formatDate = (value: string) =>
+    new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value));
+
+  const menuLabels = useMemo(() => ({
+    rename: t('folders.rename'),
+    move: t('folders.move'),
+    delete: t('folders.delete'),
+  }), [t]);
+
+  const statusLabels = useMemo(() => ({
+    draft: t('status.draft'),
+    pending_signatures: t('status.pending'),
+    completed: t('status.completed'),
+    expired: t('status.expired'),
+  }), [t]);
+
+  const actionLabels: DocumentActionLabels = useMemo(() => ({
+    continue: t('actions.continue'),
+    view: t('actions.view'),
+    viewSummary: t('actions.viewSummary'),
+    downloadOriginal: t('actions.downloadOriginal'),
+    downloadSigned: t('actions.downloadSigned'),
+    delete: t('actions.delete'),
+    moveToFolder: t('actions.moveToFolder'),
+  }), [t]);
 
   const handleNavigate = useCallback((folderId: string | null) => {
     setCurrentFolderId(folderId);
+    setEnvelopePage(1);
   }, []);
 
-  const handleCreate = useCallback(
-    (name: string) => {
-      createMut.mutate(
-        { name, parentId: currentFolderId ?? undefined },
-        { onSuccess: () => setFolderModal({ mode: 'closed' }) },
-      );
-    },
-    [createMut, currentFolderId],
+  const handleDocumentClick = useCallback((env: EnvelopeSummary) => {
+    router.push(env.status === 'completed' ? `/documents/${env.id}/summary` : `/documents/${env.id}`);
+  }, [router]);
+
+  const handleViewSummary = useCallback(
+    (env: EnvelopeSummary) => router.push(`/documents/${env.id}/summary`),
+    [router],
   );
 
-  const handleRename = useCallback(
-    (name: string) => {
-      if (folderModal.mode !== 'rename') return;
-      updateMut.mutate(
-        { id: folderModal.folder.id, input: { name } },
-        { onSuccess: () => setFolderModal({ mode: 'closed' }) },
-      );
-    },
-    [folderModal, updateMut],
-  );
+  const handleDownloadOriginal = useCallback(async (env: EnvelopeSummary) => {
+    const summary = await getEnvelopeAuditSummary(env.id);
+    const blob = await getDocumentFile(summary.document.id);
+    downloadBlob(blob, `${env.title}.pdf`);
+  }, []);
 
-  const handleConfirmDelete = useCallback(() => {
+  const handleDownloadSigned = useCallback(async (env: EnvelopeSummary) => {
+    const summary = await getEnvelopeAuditSummary(env.id);
+    const blob = await getDocumentSignedFile(summary.document.id);
+    if (blob) downloadBlob(blob, `${env.title}-signed.pdf`);
+  }, []);
+
+  const handleCreate = useCallback((name: string) => {
+    createMut.mutate(
+      { name, parentId: currentFolderId ?? undefined },
+      { onSuccess: () => setFolderModal({ mode: 'closed' }) },
+    );
+  }, [createMut, currentFolderId]);
+
+  const handleRename = useCallback((name: string) => {
+    if (folderModal.mode !== 'rename') return;
+    updateMut.mutate(
+      { id: folderModal.folder.id, input: { name } },
+      { onSuccess: () => setFolderModal({ mode: 'closed' }) },
+    );
+  }, [folderModal, updateMut]);
+
+  const handleConfirmDeleteFolder = useCallback(() => {
     if (folderModal.mode !== 'delete') return;
     deleteMut.mutate(folderModal.folder.id, {
       onSuccess: () => setFolderModal({ mode: 'closed' }),
     });
   }, [folderModal, deleteMut]);
 
-  const handleConfirmMove = useCallback(
-    (targetFolderId: string) => {
-      if (moveModal.mode !== 'folder') return;
+  const handleConfirmDeleteEnvelope = useCallback(() => {
+    if (!deleteTarget) return;
+    deleteEnvelopeMut.mutate(deleteTarget.id, {
+      onSuccess: () => setDeleteTarget(null),
+    });
+  }, [deleteTarget, deleteEnvelopeMut]);
+
+  const handleConfirmMove = useCallback((targetFolderId: string) => {
+    if (moveModal.mode === 'folder') {
       updateMut.mutate(
         { id: moveModal.folder.id, input: { parentId: targetFolderId } },
         { onSuccess: () => setMoveModal({ mode: 'closed' }) },
       );
-    },
-    [moveModal, updateMut],
-  );
+    }
+    if (moveModal.mode === 'envelope') {
+      moveEnvelopeMut.mutate(
+        { envelopeId: moveModal.envelope.id, folderId: targetFolderId },
+        { onSuccess: () => setMoveModal({ mode: 'closed' }) },
+      );
+    }
+  }, [moveModal, updateMut, moveEnvelopeMut]);
 
-  const handleDragStart = useCallback(
-    (event: DragStartEvent) => {
-      const data = event.active.data.current as { type: string; id: string } | undefined;
-      if (data?.type !== 'folder') return;
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    const data = event.active.data.current as { type: string; id: string } | undefined;
+    if (!data) return;
+    if (data.type === 'folder') {
       const folder = subfolders.find((f) => f.id === data.id);
       setActiveDrag({ type: 'folder', id: data.id, title: folder?.name ?? '' });
-    },
-    [subfolders],
-  );
+    }
+    if (data.type === 'envelope') {
+      const env = envelopes.find((e) => e.id === data.id);
+      setActiveDrag({ type: 'envelope', id: data.id, title: env?.title ?? '' });
+    }
+  }, [subfolders, envelopes]);
 
-  const handleDragEnd = useCallback(
-    (event: DragEndEvent) => {
-      setActiveDrag(null);
-      const { active, over } = event;
-      if (!over) return;
-      const dragData = active.data.current as { type: string; id: string } | undefined;
-      const dropData = over.data.current as { type: string; folderId: string | null } | undefined;
-      if (dragData?.type !== 'folder' || dropData?.type !== 'folder') return;
-      if (dropData.folderId === dragData.id) return;
+  const handleDragEnd = useCallback((event: DragEndEvent) => {
+    setActiveDrag(null);
+    const { active, over } = event;
+    if (!over) return;
+    const dragData = active.data.current as { type: string; id: string } | undefined;
+    const dropData = over.data.current as { type: string; folderId: string | null } | undefined;
+    if (!dragData || dropData?.type !== 'folder') return;
+    if (dragData.type === 'folder' && dropData.folderId !== dragData.id) {
       updateMut.mutate({ id: dragData.id, input: { parentId: dropData.folderId ?? undefined } });
-    },
-    [updateMut],
-  );
+    }
+    if (dragData.type === 'envelope' && dropData.folderId !== null) {
+      moveEnvelopeMut.mutate({ envelopeId: dragData.id, folderId: dropData.folderId });
+    }
+  }, [updateMut, moveEnvelopeMut]);
 
-  const isEmpty = !folderTreeQuery.isLoading && subfolders.length === 0;
+  const hasSubfolders = subfolders.length > 0;
+  const hasEnvelopes = envelopes.length > 0;
+  const isAllEmpty = !folderTreeQuery.isLoading && !envelopesQuery.isLoading && !hasSubfolders && !hasEnvelopes;
 
   return (
     <DndContext sensors={sensors} onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
@@ -269,17 +249,11 @@ export default function FoldersPage() {
             <h1 className="text-2xl font-medium text-foreground">{t('folders.title')}</h1>
             <p className="text-sm text-foreground-muted">{t('folders.subtitle')}</p>
           </div>
-          <Button
-            type="button"
-            variant="primary"
-            className="gap-2"
-            onClick={() => setFolderModal({ mode: 'create' })}
-          >
+          <Button type="button" variant="primary" className="gap-2" onClick={() => setFolderModal({ mode: 'create' })}>
             <FolderPlus className="h-4 w-4" />
             {t('folders.newFolder')}
           </Button>
         </div>
-
         <div className="flex items-center justify-between gap-3">
           <FolderBreadcrumb
             folderTree={folderTree}
@@ -287,46 +261,63 @@ export default function FoldersPage() {
             onNavigate={handleNavigate}
             rootLabel={t('folders.root')}
           />
-          <div className="flex items-center gap-1 rounded-full border border-th-border bg-th-hover p-1">
-            <button
-              type="button"
-              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
-                view === 'list'
-                  ? 'bg-white border border-th-card-border text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-foreground-muted hover:bg-th-hover hover:text-foreground'
-              }`}
-              onClick={() => setView('list')}
-            >
-              <List className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
-                view === 'grid'
-                  ? 'bg-white border border-th-card-border text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-foreground-muted hover:bg-th-hover hover:text-foreground'
-              }`}
-              onClick={() => setView('grid')}
-            >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
-          </div>
+          <ViewToggle view={view} onViewChange={setView} />
         </div>
       </FadeIn>
 
-      <FoldersContent
-        isLoading={folderTreeQuery.isLoading}
-        isEmpty={isEmpty}
-        view={view}
-        subfolders={subfolders}
-        menuLabels={menuLabels}
-        emptyTitle={t('folders.emptyTitle')}
-        emptyDescription={t('folders.emptyDescription')}
-        onNavigate={handleNavigate}
-        onRename={(f) => setFolderModal({ mode: 'rename', folder: f })}
-        onMove={(f) => setMoveModal({ mode: 'folder', folder: f })}
-        onDelete={(f) => setFolderModal({ mode: 'delete', folder: f })}
-      />
+      {isAllEmpty ? (
+        <EmptyState title={t('folders.emptyTitle')} description={t('folders.emptyDescription')} />
+      ) : null}
+
+      {hasSubfolders ? (
+        <FolderSection
+          view={view}
+          subfolders={subfolders}
+          menuLabels={menuLabels}
+          onNavigate={handleNavigate}
+          onRename={(f) => setFolderModal({ mode: 'rename', folder: f })}
+          onMove={(f) => setMoveModal({ mode: 'folder', folder: f })}
+          onDelete={(f) => setFolderModal({ mode: 'delete', folder: f })}
+        />
+      ) : null}
+
+      {currentFolderId !== null ? (
+        <EnvelopeSection
+          view={view}
+          envelopes={envelopes}
+          isLoading={envelopesQuery.isLoading}
+          statusLabels={statusLabels}
+          actionLabels={actionLabels}
+          formatDate={formatDate}
+          gridMenuOpenId={gridMenuOpenId}
+          deletingId={deletingEnvelopeId}
+          page={envelopesQuery.data?.meta.page ?? envelopePage}
+          totalPages={envelopesQuery.data?.meta.totalPages ?? 1}
+          onPageChange={setEnvelopePage}
+          onToggleMenu={setGridMenuOpenId}
+          onDocumentClick={handleDocumentClick}
+          onDeleteDocument={setDeleteTarget}
+          onDownloadOriginal={handleDownloadOriginal}
+          onDownloadSigned={handleDownloadSigned}
+          onViewSummary={handleViewSummary}
+          onMoveToFolder={(env) => setMoveModal({ mode: 'envelope', envelope: env })}
+          paginationLabels={{
+            previous: t('pagination.previous'),
+            next: t('pagination.next'),
+            page: t('pagination.page'),
+          }}
+          tableHeaders={{
+            title: t('table.title'),
+            status: t('table.status'),
+            docs: t('table.docs'),
+            folder: t('table.folder'),
+            created: t('table.created'),
+            actions: t('table.actions'),
+          }}
+          emptyTitle={t('empty.title')}
+          emptyDescription={t('empty.description')}
+        />
+      ) : null}
 
       <ConfirmDialog
         open={folderModal.mode === 'delete'}
@@ -335,8 +326,19 @@ export default function FoldersPage() {
         confirmLabel={t('folders.delete')}
         cancelLabel={t('actions.cancel')}
         isLoading={deleteMut.isPending}
-        onConfirm={handleConfirmDelete}
+        onConfirm={handleConfirmDeleteFolder}
         onCancel={() => setFolderModal({ mode: 'closed' })}
+      />
+
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title={t('actions.deleteTitle')}
+        description={t('actions.deleteConfirm')}
+        confirmLabel={t('actions.delete')}
+        cancelLabel={t('actions.cancel')}
+        isLoading={deleteEnvelopeMut.isPending}
+        onConfirm={handleConfirmDeleteEnvelope}
+        onCancel={() => setDeleteTarget(null)}
       />
 
       <FolderFormModal
@@ -375,7 +377,7 @@ export default function FoldersPage() {
         folderTree={folderTree}
         currentFolderId={currentFolderId}
         excludeFolderId={moveModal.mode === 'folder' ? moveModal.folder.id : undefined}
-        isLoading={updateMut.isPending}
+        isLoading={updateMut.isPending || moveEnvelopeMut.isPending}
         onConfirm={handleConfirmMove}
         onCancel={() => setMoveModal({ mode: 'closed' })}
         labels={{
@@ -390,12 +392,155 @@ export default function FoldersPage() {
       <DragOverlay>
         {activeDrag ? (
           <div className="flex items-center gap-2 rounded-xl border border-th-border bg-th-dialog px-4 py-2.5 shadow-lg">
-            <FolderIcon className="h-4 w-4 text-warning" />
+            {activeDrag.type === 'folder'
+              ? <FolderIcon className="h-4 w-4 text-warning" />
+              : <FileText className="h-4 w-4 text-primary" />}
             <span className="text-sm font-medium text-foreground">{activeDrag.title}</span>
           </div>
         ) : null}
       </DragOverlay>
     </PageTransition>
     </DndContext>
+  );
+}
+
+type ViewToggleProps = Readonly<{ view: 'list' | 'grid'; onViewChange: (v: 'list' | 'grid') => void }>;
+
+function ViewToggle({ view, onViewChange }: ViewToggleProps) {
+  const listCls = view === 'list'
+    ? 'bg-white border border-th-card-border text-foreground shadow-sm dark:bg-white/10'
+    : 'text-foreground-muted hover:bg-th-hover hover:text-foreground';
+  const gridCls = view === 'grid'
+    ? 'bg-white border border-th-card-border text-foreground shadow-sm dark:bg-white/10'
+    : 'text-foreground-muted hover:bg-th-hover hover:text-foreground';
+  return (
+    <div className="flex items-center gap-1 rounded-full border border-th-border bg-th-hover p-1">
+      <button type="button" className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${listCls}`} onClick={() => onViewChange('list')}>
+        <List className="h-4 w-4" />
+      </button>
+      <button type="button" className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${gridCls}`} onClick={() => onViewChange('grid')}>
+        <LayoutGrid className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
+type FolderSectionProps = Readonly<{
+  view: 'list' | 'grid';
+  subfolders: readonly FolderTreeNode[];
+  menuLabels: Readonly<{ rename: string; move: string; delete: string }>;
+  onNavigate: (id: string | null) => void;
+  onRename: (f: FolderTreeNode) => void;
+  onMove: (f: FolderTreeNode) => void;
+  onDelete: (f: FolderTreeNode) => void;
+}>;
+
+function FolderSection({ view, subfolders, menuLabels, onNavigate, onRename, onMove, onDelete }: FolderSectionProps) {
+  if (view === 'list') {
+    return (
+      <div className="glass-card rounded-2xl p-4">
+        <div className="divide-y divide-th-border rounded-xl border border-th-border bg-th-card">
+          {subfolders.map((folder) => (
+            <FolderCardList key={folder.id} folder={folder} variant="list" onNavigate={onNavigate} onRename={onRename} onMove={onMove} onDelete={onDelete} menuLabels={menuLabels} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+      {subfolders.map((folder) => (
+        <FolderCardGrid key={folder.id} folder={folder} variant="grid" onNavigate={onNavigate} onRename={onRename} onMove={onMove} onDelete={onDelete} menuLabels={menuLabels} />
+      ))}
+    </div>
+  );
+}
+
+type EnvelopeSectionProps = Readonly<{
+  view: 'list' | 'grid';
+  envelopes: readonly EnvelopeSummary[];
+  isLoading: boolean;
+  statusLabels: Record<DocumentStatus, string>;
+  actionLabels: DocumentActionLabels;
+  formatDate: (v: string) => string;
+  gridMenuOpenId: string | null;
+  deletingId: string | null;
+  page: number;
+  totalPages: number;
+  onPageChange: (p: number) => void;
+  onToggleMenu: (id: string | null) => void;
+  onDocumentClick: (d: EnvelopeSummary) => void;
+  onDeleteDocument: (d: EnvelopeSummary) => void;
+  onDownloadOriginal: (d: EnvelopeSummary) => void;
+  onDownloadSigned: (d: EnvelopeSummary) => void;
+  onViewSummary: (d: EnvelopeSummary) => void;
+  onMoveToFolder: (d: EnvelopeSummary) => void;
+  paginationLabels: Readonly<{ previous: string; next: string; page: string }>;
+  tableHeaders: Readonly<{ title: string; status: string; docs: string; folder: string; created: string; actions: string }>;
+  emptyTitle: string;
+  emptyDescription: string;
+}>;
+
+function EnvelopeSection({
+  view, envelopes, isLoading, statusLabels, actionLabels, formatDate,
+  gridMenuOpenId, deletingId, page, totalPages, onPageChange, onToggleMenu,
+  onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned,
+  onViewSummary, onMoveToFolder, paginationLabels, tableHeaders,
+  emptyTitle, emptyDescription,
+}: EnvelopeSectionProps) {
+  if (view === 'list') {
+    return (
+      <>
+        <div className="glass-card rounded-2xl p-4">
+          <DocumentsTable
+            documents={envelopes} isLoading={isLoading} statusLabels={statusLabels}
+            headers={tableHeaders} emptyTitle={emptyTitle} emptyDescription={emptyDescription}
+            formatDate={formatDate} actionLabels={actionLabels}
+            onDocumentClick={onDocumentClick} onDeleteDocument={onDeleteDocument}
+            onDownloadOriginal={onDownloadOriginal} onDownloadSigned={onDownloadSigned}
+            onViewSummary={onViewSummary} onMoveToFolder={onMoveToFolder} deletingId={deletingId}
+          />
+        </div>
+        <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange}
+          previousLabel={paginationLabels.previous} nextLabel={paginationLabels.next} pageLabel={paginationLabels.page}
+        />
+      </>
+    );
+  }
+
+  return (
+    <>
+      {isLoading ? (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {['es1', 'es2', 'es3'].map((id) => (
+            <Card key={id} variant="glass" className="space-y-3 p-5">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+                <div className="flex-1 space-y-1.5"><Skeleton className="h-4 w-3/5" /><Skeleton className="h-3 w-1/3" /></div>
+              </div>
+              <Skeleton className="h-8 w-24" />
+            </Card>
+          ))}
+        </div>
+      ) : envelopes.length > 0 ? (
+        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {envelopes.map((doc) => (
+            <GridDocumentCard
+              key={doc.id} doc={doc} statusLabels={statusLabels} actionLabels={actionLabels}
+              formatDate={formatDate} isMenuOpen={gridMenuOpenId === doc.id}
+              onToggleMenu={(open) => onToggleMenu(open ? doc.id : null)}
+              onDocumentClick={onDocumentClick} onDeleteDocument={onDeleteDocument}
+              onDownloadOriginal={onDownloadOriginal} onDownloadSigned={onDownloadSigned}
+              onViewSummary={onViewSummary} onMoveToFolder={onMoveToFolder}
+            />
+          ))}
+        </div>
+      ) : (
+        <EmptyState title={emptyTitle} description={emptyDescription} />
+      )}
+      <Pagination page={page} totalPages={totalPages} onPageChange={onPageChange}
+        previousLabel={paginationLabels.previous} nextLabel={paginationLabels.next} pageLabel={paginationLabels.page}
+      />
+    </>
   );
 }
