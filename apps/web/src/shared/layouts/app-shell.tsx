@@ -7,6 +7,7 @@ import {
   Menu,
   Home,
   FileText,
+  Folder,
   Settings,
   LogOut,
   Search,
@@ -22,7 +23,7 @@ import { useAuth } from '@/features/auth/hooks/use-auth';
 const ICON_MAP: Record<string, LucideIcon> = {
   home: Home,
   documents: FileText,
-
+  folders: Folder,
   settings: Settings,
 };
 

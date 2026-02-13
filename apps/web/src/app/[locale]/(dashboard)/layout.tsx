@@ -26,6 +26,7 @@ export default async function DashboardLayout({
       navItems={[
         { id: 'home', label: tCommon('nav.home'), href: '/overview', iconKey: 'home', group: 'main' },
         { id: 'documents', label: tCommon('nav.documents'), href: '/documents', iconKey: 'documents', group: 'main' },
+        { id: 'folders', label: tCommon('nav.folders'), href: '/folders', iconKey: 'folders', group: 'main' },
         { id: 'signers', label: tCommon('nav.signers'), href: '/signers', iconKey: 'signers', group: 'management' },
         { id: 'settings', label: tCommon('nav.settings'), href: '/settings', iconKey: 'settings', group: 'management' },
       ]}

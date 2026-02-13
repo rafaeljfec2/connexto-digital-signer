@@ -19,6 +19,7 @@
     "nav": {
       "home": "Home",
       "documents": "Documents",
+      "folders": "Folders",
       "signers": "Contacts",
       "settings": "Settings"
     },
@@ -291,6 +292,7 @@
     },
     "folders": {
       "title": "Folders",
+      "subtitle": "Organize your documents into folders",
       "newFolder": "New folder",
       "rename": "Rename",
       "move": "Move",
@@ -305,7 +307,9 @@
       "moveToFolder": "Move to folder",
       "selectFolder": "Select destination folder",
       "rootFolder": "Root (Documents)",
-      "docCount": "{count, plural, =0 {no documents} =1 {1 document} other {# documents}}"
+      "docCount": "{count, plural, =0 {no documents} =1 {1 document} other {# documents}}",
+      "emptyTitle": "No folders yet",
+      "emptyDescription": "Create your first folder to organize your documents."
     },
     "searchPlaceholder": "Search is coming soon",
     "upload": {

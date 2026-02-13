@@ -1,9 +1,9 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useDraggable } from '@dnd-kit/core';
 import {
   FileText,
+  Folder as FolderIcon,
   Calendar,
   ChevronRight,
   MoreVertical,
@@ -57,6 +57,7 @@ export type DocumentsTableProps = Readonly<{
   onViewSummary?: (doc: EnvelopeSummary) => void;
   onMoveToFolder?: (doc: EnvelopeSummary) => void;
   deletingId?: string | null;
+  folderNameMap?: Map<string, string>;
 }>;
 
 const STATUS_VARIANT: Record<
@@ -226,6 +227,7 @@ export function DocumentsTable({
   onViewSummary,
   onMoveToFolder,
   deletingId = null,
+  folderNameMap,
 }: DocumentsTableProps) {
   const handlers = { onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder };
 
@@ -263,6 +265,7 @@ export function DocumentsTable({
                 actionLabels={actionLabels}
                 handlers={handlers}
                 isDeleting={deletingId === doc.id}
+                folderName={folderNameMap?.get(doc.folderId)}
               />
             ))}
       </div>
@@ -284,23 +287,17 @@ type DocumentRowProps = Readonly<{
     onMoveToFolder?: (doc: EnvelopeSummary) => void;
   }>;
   isDeleting: boolean;
+  folderName?: string;
 }>;
 
-function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, isDeleting }: DocumentRowProps) {
+function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, isDeleting, folderName }: DocumentRowProps) {
   const actions = useDocumentActions(doc, actionLabels, handlers);
-  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
-    id: `drag-envelope-list-${doc.id}`,
-    data: { type: 'envelope', id: doc.id },
-  });
 
   return (
     <button
-      ref={setNodeRef}
       type="button"
       onClick={() => handlers.onDocumentClick(doc)}
-      className={`group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-th-hover ${isDeleting ? 'pointer-events-none opacity-50' : 'cursor-pointer'} ${isDragging ? 'opacity-50' : ''}`}
-      {...attributes}
-      {...listeners}
+      className={`group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-th-hover ${isDeleting ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
     >
       <div
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${STATUS_ICON_CLASS[doc.status]}`}
@@ -325,10 +322,18 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
             </Badge>
           ) : null}
         </div>
-        <p className="mt-0.5 flex items-center gap-1 text-[11px] text-foreground-subtle md:hidden">
-          <Calendar className="h-3 w-3" />
-          {formatDate(doc.createdAt)}
-        </p>
+        <div className="mt-0.5 flex flex-wrap items-center gap-2 md:hidden">
+          <span className="flex items-center gap-1 text-[11px] text-foreground-subtle">
+            <Calendar className="h-3 w-3" />
+            {formatDate(doc.createdAt)}
+          </span>
+          {folderName ? (
+            <span className="flex items-center gap-1 text-[10px] text-foreground-subtle">
+              <FolderIcon className="h-3 w-3" />
+              {folderName}
+            </span>
+          ) : null}
+        </div>
       </div>
 
       <div className="hidden items-center gap-2 sm:flex">
@@ -342,6 +347,12 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
           <Badge variant="default" className="text-[10px]">
             {doc.documentCount} docs
           </Badge>
+        ) : null}
+        {folderName ? (
+          <span className="flex items-center gap-1 text-[10px] text-foreground-subtle">
+            <FolderIcon className="h-3 w-3" />
+            {folderName}
+          </span>
         ) : null}
       </div>
 
