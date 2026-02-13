@@ -45,6 +45,7 @@ export type EnvelopeSummary = {
   readonly reminderInterval: ReminderInterval;
   readonly signingLanguage: SigningLanguage;
   readonly closureMode: ClosureMode;
+  readonly documentCount: number;
   readonly createdAt: string;
   readonly updatedAt: string;
 };

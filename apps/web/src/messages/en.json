@@ -267,7 +267,8 @@
       "deleteConfirm": "Are you sure you want to delete this draft? This action cannot be undone.",
       "deleteSuccess": "Draft deleted successfully",
       "deleting": "Deleting...",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "moveToFolder": "Move to folder"
     },
     "status": {
       "draft": "Draft",
@@ -297,7 +298,14 @@
       "deleteTitle": "Delete folder",
       "deleteConfirm": "Are you sure you want to delete this folder? This action cannot be undone.",
       "namePlaceholder": "Folder name",
-      "root": "Documents"
+      "root": "Documents",
+      "createTitle": "Create folder",
+      "renameTitle": "Rename folder",
+      "moveTitle": "Move to folder",
+      "moveToFolder": "Move to folder",
+      "selectFolder": "Select destination folder",
+      "rootFolder": "Root (Documents)",
+      "docCount": "{count, plural, =0 {no documents} =1 {1 document} other {# documents}}"
     },
     "searchPlaceholder": "Search is coming soon",
     "upload": {

@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useDraggable } from '@dnd-kit/core';
 import {
   FileText,
   Calendar,
@@ -11,6 +12,7 @@ import {
   Trash2,
   Pencil,
   FileDown,
+  ArrowRight,
 } from 'lucide-react';
 import { Badge, Skeleton } from '@/shared/ui';
 import type { DocumentStatus, EnvelopeSummary } from '../api';
@@ -31,6 +33,7 @@ export type DocumentActionLabels = Readonly<{
   downloadOriginal: string;
   downloadSigned: string;
   delete: string;
+  moveToFolder?: string;
 }>;
 
 export type DocumentsTableProps = Readonly<{
@@ -52,6 +55,7 @@ export type DocumentsTableProps = Readonly<{
   onDownloadOriginal?: (doc: EnvelopeSummary) => void;
   onDownloadSigned?: (doc: EnvelopeSummary) => void;
   onViewSummary?: (doc: EnvelopeSummary) => void;
+  onMoveToFolder?: (doc: EnvelopeSummary) => void;
   deletingId?: string | null;
 }>;
 
@@ -92,11 +96,18 @@ type ActionHandlers = Readonly<{
   onDownloadOriginal?: (doc: EnvelopeSummary) => void;
   onDownloadSigned?: (doc: EnvelopeSummary) => void;
   onViewSummary?: (doc: EnvelopeSummary) => void;
+  onMoveToFolder?: (doc: EnvelopeSummary) => void;
 }>;
+
+function buildMoveAction(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: ActionHandlers): DocumentAction[] {
+  if (!handlers.onMoveToFolder || !labels.moveToFolder) return [];
+  return [{ key: 'move', label: labels.moveToFolder, icon: ArrowRight, onClick: () => handlers.onMoveToFolder?.(doc) }];
+}
 
 function buildDraftActions(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: ActionHandlers): ReadonlyArray<DocumentAction> {
   return [
     { key: 'continue', label: labels.continue, icon: Pencil, onClick: () => handlers.onDocumentClick(doc) },
+    ...buildMoveAction(doc, labels, handlers),
     ...(handlers.onDeleteDocument
       ? [{ key: 'delete', label: labels.delete, icon: Trash2, variant: 'danger' as const, onClick: () => handlers.onDeleteDocument?.(doc) }]
       : []),
@@ -114,6 +125,7 @@ function buildViewableActions(doc: EnvelopeSummary, labels: DocumentActionLabels
     ...(handlers.onDownloadOriginal
       ? [{ key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal?.(doc) }]
       : []),
+    ...buildMoveAction(doc, labels, handlers),
   ];
 }
 
@@ -212,9 +224,10 @@ export function DocumentsTable({
   onDownloadOriginal,
   onDownloadSigned,
   onViewSummary,
+  onMoveToFolder,
   deletingId = null,
 }: DocumentsTableProps) {
-  const handlers = { onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary };
+  const handlers = { onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder };
 
   if (!isLoading && documents.length === 0) {
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
@@ -268,25 +281,26 @@ type DocumentRowProps = Readonly<{
     onDownloadOriginal?: (doc: EnvelopeSummary) => void;
     onDownloadSigned?: (doc: EnvelopeSummary) => void;
     onViewSummary?: (doc: EnvelopeSummary) => void;
+    onMoveToFolder?: (doc: EnvelopeSummary) => void;
   }>;
   isDeleting: boolean;
 }>;
 
 function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, isDeleting }: DocumentRowProps) {
   const actions = useDocumentActions(doc, actionLabels, handlers);
+  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
+    id: `drag-envelope-list-${doc.id}`,
+    data: { type: 'envelope', id: doc.id },
+  });
 
   return (
-    <div
-      role="button"
-      tabIndex={0}
+    <button
+      ref={setNodeRef}
+      type="button"
       onClick={() => handlers.onDocumentClick(doc)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handlers.onDocumentClick(doc);
-        }
-      }}
-      className={`group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-th-hover ${isDeleting ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
+      className={`group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-th-hover ${isDeleting ? 'pointer-events-none opacity-50' : 'cursor-pointer'} ${isDragging ? 'opacity-50' : ''}`}
+      {...attributes}
+      {...listeners}
     >
       <div
         className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${STATUS_ICON_CLASS[doc.status]}`}
@@ -305,6 +319,11 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
           >
             {statusLabels[doc.status]}
           </Badge>
+          {doc.documentCount > 1 ? (
+            <Badge variant="default" className="mt-1 text-[10px]">
+              {doc.documentCount} docs
+            </Badge>
+          ) : null}
         </div>
         <p className="mt-0.5 flex items-center gap-1 text-[11px] text-foreground-subtle md:hidden">
           <Calendar className="h-3 w-3" />
@@ -312,13 +331,18 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
         </p>
       </div>
 
-      <div className="hidden sm:block">
+      <div className="hidden items-center gap-2 sm:flex">
         <Badge
           variant={STATUS_VARIANT[doc.status]}
           className="w-24 justify-center text-[10px]"
         >
           {statusLabels[doc.status]}
         </Badge>
+        {doc.documentCount > 1 ? (
+          <Badge variant="default" className="text-[10px]">
+            {doc.documentCount} docs
+          </Badge>
+        ) : null}
       </div>
 
       <p className="hidden w-32 text-center text-xs text-foreground-muted md:block">
@@ -329,6 +353,6 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
         <ActionsDropdown actions={actions} />
         <ChevronRight className="hidden h-4 w-4 text-foreground-subtle transition-colors group-hover:text-foreground-muted sm:block" />
       </div>
-    </div>
+    </button>
   );
 }

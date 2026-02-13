@@ -3,16 +3,38 @@
 import { useCallback, useMemo, useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'framer-motion';
+import { DndContext, DragOverlay, PointerSensor, useSensor, useSensors, useDraggable } from '@dnd-kit/core';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
 import { EmptyState } from '@/features/documents/components/empty-state';
+import { FolderBreadcrumb } from '@/features/documents/components/folder-breadcrumb';
+import { FolderCardList, FolderCardGrid } from '@/features/documents/components/folder-card';
+import { FolderFormModal } from '@/features/documents/components/folder-form-modal';
+import { MoveToFolderModal } from '@/features/documents/components/move-to-folder-modal';
 import { useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/use-documents';
+import { useFolderTree } from '@/features/documents/hooks/use-folders';
+import { useFolderManagement } from '@/features/documents/hooks/use-folder-management';
 import { getDocumentFile, getDocumentSignedFile, getEnvelopeAuditSummary } from '@/features/documents/api';
+import type { DocumentStatus, EnvelopeSummary, FolderTreeNode } from '@/features/documents/api';
+import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
 import { Badge, Button, Card, ConfirmDialog, Pagination, Select, Skeleton } from '@/shared/ui';
 import { FadeIn, PageTransition } from '@/shared/animations';
-import type { DocumentStatus, EnvelopeSummary } from '@/features/documents/api';
-import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
 import { useRouter } from '@/i18n/navigation';
-import { Calendar, Download, Eye, FileDown, FileText, LayoutGrid, List, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
+import {
+  ArrowRight,
+  Calendar,
+  Download,
+  Eye,
+  FileDown,
+  FileText,
+  Folder as FolderIcon,
+  FolderPlus,
+  LayoutGrid,
+  List,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Trash2,
+} from 'lucide-react';
 
 const GRID_ICON_CLASS: Record<string, string> = {
   completed: 'bg-success/15 text-success',
@@ -32,6 +54,22 @@ function downloadBlob(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
+function findSubfolders(
+  tree: readonly FolderTreeNode[],
+  parentId: string | null,
+): FolderTreeNode[] {
+  if (parentId === null) return [...tree];
+  function search(nodes: readonly FolderTreeNode[]): FolderTreeNode[] | null {
+    for (const node of nodes) {
+      if (node.id === parentId) return [...node.children];
+      const found = search(node.children);
+      if (found) return found;
+    }
+    return null;
+  }
+  return search(tree) ?? [];
+}
+
 export default function DocumentsPage() {
   const tDocuments = useTranslations('documents');
   const locale = useLocale();
@@ -41,12 +79,35 @@ export default function DocumentsPage() {
   const [view, setView] = useState<'list' | 'grid'>('list');
   const [deleteTarget, setDeleteTarget] = useState<EnvelopeSummary | null>(null);
   const [gridMenuOpenId, setGridMenuOpenId] = useState<string | null>(null);
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null);
   const limit = 10;
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
+
+  const folderTreeQuery = useFolderTree();
+  const folderTree = folderTreeQuery.data ?? [];
+  const subfolders = useMemo(
+    () => findSubfolders(folderTree, currentFolderId),
+    [folderTree, currentFolderId],
+  );
 
   const query = useEnvelopesList({
     page,
     limit,
     status: status === 'all' ? undefined : status,
+    folderId: currentFolderId ?? undefined,
+  });
+
+  const deleteMutation = useDeleteEnvelope();
+  const deletingId = deleteMutation.isPending ? (deleteMutation.variables ?? null) : null;
+  const envelopes = query.data?.data ?? [];
+
+  const fm = useFolderManagement({
+    currentFolderId,
+    subfolders,
+    envelopes,
   });
 
   const formatDate = (value: string) =>
@@ -59,7 +120,7 @@ export default function DocumentsPage() {
       completed: tDocuments('status.completed'),
       expired: tDocuments('status.expired'),
     }),
-    [tDocuments]
+    [tDocuments],
   );
 
   const actionLabels: DocumentActionLabels = useMemo(
@@ -70,28 +131,41 @@ export default function DocumentsPage() {
       downloadOriginal: tDocuments('actions.downloadOriginal'),
       downloadSigned: tDocuments('actions.downloadSigned'),
       delete: tDocuments('actions.delete'),
+      moveToFolder: tDocuments('actions.moveToFolder'),
     }),
-    [tDocuments]
+    [tDocuments],
   );
 
-  const deleteMutation = useDeleteEnvelope();
+  const folderMenuLabels = useMemo(
+    () => ({
+      rename: tDocuments('folders.rename'),
+      move: tDocuments('folders.move'),
+      delete: tDocuments('folders.delete'),
+    }),
+    [tDocuments],
+  );
+
+  const handleNavigateFolder = useCallback(
+    (folderId: string | null) => {
+      setCurrentFolderId(folderId);
+      setPage(1);
+    },
+    [],
+  );
 
   const handleDocumentClick = useCallback(
     (env: EnvelopeSummary) => {
-      if (env.status === 'completed') {
-        router.push(`/documents/${env.id}/summary`);
-      } else {
-        router.push(`/documents/${env.id}`);
-      }
+      const route = env.status === 'completed'
+        ? `/documents/${env.id}/summary`
+        : `/documents/${env.id}`;
+      router.push(route);
     },
-    [router]
+    [router],
   );
 
   const handleViewSummary = useCallback(
-    (env: EnvelopeSummary) => {
-      router.push(`/documents/${env.id}/summary`);
-    },
-    [router]
+    (env: EnvelopeSummary) => router.push(`/documents/${env.id}/summary`),
+    [router],
   );
 
   const handleDownloadOriginal = useCallback(async (env: EnvelopeSummary) => {
@@ -103,9 +177,7 @@ export default function DocumentsPage() {
   const handleDownloadSigned = useCallback(async (env: EnvelopeSummary) => {
     const summary = await getEnvelopeAuditSummary(env.id);
     const blob = await getDocumentSignedFile(summary.document.id);
-    if (blob) {
-      downloadBlob(blob, `${env.title}-signed.pdf`);
-    }
+    if (blob) downloadBlob(blob, `${env.title}-signed.pdf`);
   }, []);
 
   const handleConfirmDelete = useCallback(() => {
@@ -115,156 +187,188 @@ export default function DocumentsPage() {
     });
   }, [deleteTarget, deleteMutation]);
 
-  const handleNewDocument = useCallback(() => {
-    router.push('/documents/new');
-  }, [router]);
+  const handleNewDocument = useCallback(() => router.push('/documents/new'), [router]);
 
-  const skeletonCards = useMemo(() => ['card-1', 'card-2', 'card-3', 'card-4', 'card-5', 'card-6'], []);
+  const skeletonCards = useMemo(
+    () => ['card-1', 'card-2', 'card-3', 'card-4', 'card-5', 'card-6'],
+    [],
+  );
+
+  const hasSubfolders = subfolders.length > 0;
+  const hasContent = hasSubfolders || envelopes.length > 0;
 
   return (
+    <DndContext sensors={sensors} onDragStart={fm.handleDragStart} onDragEnd={fm.handleDragEnd}>
     <PageTransition className="space-y-5">
       <FadeIn>
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-medium text-foreground">{tDocuments('title')}</h1>
-          <p className="text-sm text-foreground-muted">{tDocuments('subtitle')}</p>
-        </div>
-        <Button
-          type="button"
-          variant="primary"
-          className="w-full sm:w-auto"
-          onClick={handleNewDocument}
-        >
-          <Plus className="mr-2 h-4 w-4" />
-          {tDocuments('actions.newDocument')}
-        </Button>
-      </div>
-
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
-          <span>{tDocuments('filters.status')}</span>
-          <Select
-            className="min-w-[200px]"
-            value={status}
-            onChange={(event) => {
-              setStatus(event.target.value as DocumentStatus | 'all');
-              setPage(1);
-            }}
-          >
-            <option value="all">{tDocuments('filters.all')}</option>
-            <option value="draft">{tDocuments('status.draft')}</option>
-            <option value="pending_signatures">{tDocuments('status.pending')}</option>
-            <option value="completed">{tDocuments('status.completed')}</option>
-            <option value="expired">{tDocuments('status.expired')}</option>
-          </Select>
-          <div className="flex items-center gap-1 rounded-full border border-th-border bg-th-hover p-1">
-            <button
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <div className="space-y-1">
+            <h1 className="text-2xl font-medium text-foreground">{tDocuments('title')}</h1>
+            <p className="text-sm text-foreground-muted">{tDocuments('subtitle')}</p>
+          </div>
+          <div className="flex gap-2">
+            <Button
               type="button"
-              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
-                view === 'list'
-                  ? 'bg-white border border-th-card-border text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-foreground-muted hover:bg-th-hover hover:text-foreground'
-              }`}
-              onClick={() => setView('list')}
+              variant="secondary"
+              className="gap-2"
+              onClick={fm.openCreateFolder}
             >
-              <List className="h-4 w-4" />
-            </button>
-            <button
+              <FolderPlus className="h-4 w-4" />
+              <span className="hidden sm:inline">{tDocuments('folders.newFolder')}</span>
+            </Button>
+            <Button
               type="button"
-              className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
-                view === 'grid'
-                  ? 'bg-white border border-th-card-border text-foreground shadow-sm dark:bg-white/10'
-                  : 'text-foreground-muted hover:bg-th-hover hover:text-foreground'
-              }`}
-              onClick={() => setView('grid')}
+              variant="primary"
+              className="gap-2"
+              onClick={handleNewDocument}
             >
-              <LayoutGrid className="h-4 w-4" />
-            </button>
+              <Plus className="h-4 w-4" />
+              <span className="hidden sm:inline">{tDocuments('actions.newDocument')}</span>
+            </Button>
           </div>
         </div>
-      </div>
+
+        <FolderBreadcrumb
+          folderTree={folderTree}
+          currentFolderId={currentFolderId}
+          onNavigate={handleNavigateFolder}
+          rootLabel={tDocuments('folders.root')}
+        />
+
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
+            <span>{tDocuments('filters.status')}</span>
+            <Select
+              className="min-w-[200px]"
+              value={status}
+              onChange={(event) => {
+                setStatus(event.target.value as DocumentStatus | 'all');
+                setPage(1);
+              }}
+            >
+              <option value="all">{tDocuments('filters.all')}</option>
+              <option value="draft">{tDocuments('status.draft')}</option>
+              <option value="pending_signatures">{tDocuments('status.pending')}</option>
+              <option value="completed">{tDocuments('status.completed')}</option>
+              <option value="expired">{tDocuments('status.expired')}</option>
+            </Select>
+            <ViewToggle view={view} onViewChange={setView} />
+          </div>
+        </div>
       </FadeIn>
+
       <AnimatePresence mode="wait">
-      {view === 'list' ? (
-        <motion.div
-          key="list-view"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="glass-card rounded-2xl p-4"
-        >
-          <DocumentsTable
-            documents={query.data?.data ?? []}
-            isLoading={query.isLoading}
-            statusLabels={statusLabels}
-            headers={{
-              title: tDocuments('table.title'),
-              status: tDocuments('table.status'),
-              created: tDocuments('table.created'),
-              actions: tDocuments('table.actions'),
-            }}
-            emptyTitle={tDocuments('empty.title')}
-            emptyDescription={tDocuments('empty.description')}
-            formatDate={formatDate}
-            actionLabels={actionLabels}
-            onDocumentClick={handleDocumentClick}
-            onDeleteDocument={setDeleteTarget}
-            onDownloadOriginal={handleDownloadOriginal}
-            onDownloadSigned={handleDownloadSigned}
-            onViewSummary={handleViewSummary}
-            deletingId={deleteMutation.isPending ? (deleteMutation.variables ?? null) : null}
-          />
-        </motion.div>
-      ) : (
-        <motion.div
-          key="grid-view"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.2 }}
-          className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
-        >
-          {query.isLoading
-            ? skeletonCards.map((card) => (
-                <Card key={card} variant="glass" className="space-y-3 p-5">
-                  <div className="flex items-center gap-3">
-                    <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
-                    <div className="flex-1 space-y-1.5">
-                      <Skeleton className="h-4 w-3/5" />
-                      <Skeleton className="h-3 w-1/3" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-8 w-24" />
-                </Card>
-              ))
-            : (query.data?.data ?? []).map((doc) => (
-                <GridDocumentCard
-                  key={doc.id}
-                  doc={doc}
-                  statusLabels={statusLabels}
-                  actionLabels={actionLabels}
-                  formatDate={formatDate}
-                  isMenuOpen={gridMenuOpenId === doc.id}
-                  onToggleMenu={(open) => setGridMenuOpenId(open ? doc.id : null)}
-                  onDocumentClick={handleDocumentClick}
-                  onDeleteDocument={setDeleteTarget}
-                  onDownloadOriginal={handleDownloadOriginal}
-                  onDownloadSigned={handleDownloadSigned}
-                  onViewSummary={handleViewSummary}
-                />
-              ))}
-          {!query.isLoading && (query.data?.data ?? []).length === 0 ? (
-            <div className="md:col-span-2 xl:col-span-3">
-              <EmptyState
-                title={tDocuments('empty.title')}
-                description={tDocuments('empty.description')}
+        {view === 'list' ? (
+          <motion.div
+            key="list-view"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="glass-card rounded-2xl p-4"
+          >
+            {hasSubfolders ? (
+              <div className="mb-2 rounded-xl border border-th-border bg-th-card divide-y divide-th-border">
+                {subfolders.map((folder) => (
+                  <FolderCardList
+                    key={folder.id}
+                    folder={folder}
+                    variant="list"
+                    onNavigate={handleNavigateFolder}
+                    onRename={fm.openRenameFolder}
+                    onMove={fm.openMoveFolder}
+                    onDelete={fm.openDeleteFolder}
+                    menuLabels={folderMenuLabels}
+                  />
+                ))}
+              </div>
+            ) : null}
+            <DocumentsTable
+              documents={envelopes}
+              isLoading={query.isLoading}
+              statusLabels={statusLabels}
+              headers={{
+                title: tDocuments('table.title'),
+                status: tDocuments('table.status'),
+                created: tDocuments('table.created'),
+                actions: tDocuments('table.actions'),
+              }}
+              emptyTitle={tDocuments('empty.title')}
+              emptyDescription={tDocuments('empty.description')}
+              formatDate={formatDate}
+              actionLabels={actionLabels}
+              onDocumentClick={handleDocumentClick}
+              onDeleteDocument={setDeleteTarget}
+              onDownloadOriginal={handleDownloadOriginal}
+              onDownloadSigned={handleDownloadSigned}
+              onViewSummary={handleViewSummary}
+              onMoveToFolder={fm.openMoveEnvelope}
+              deletingId={deletingId}
+            />
+          </motion.div>
+        ) : (
+          <motion.div
+            key="grid-view"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3"
+          >
+            {subfolders.map((folder) => (
+              <FolderCardGrid
+                key={folder.id}
+                folder={folder}
+                variant="grid"
+                onNavigate={handleNavigateFolder}
+                onRename={fm.openRenameFolder}
+                onMove={fm.openMoveFolder}
+                onDelete={fm.openDeleteFolder}
+                menuLabels={folderMenuLabels}
               />
-            </div>
-          ) : null}
-        </motion.div>
-      )}
+            ))}
+            {query.isLoading
+              ? skeletonCards.map((card) => (
+                  <Card key={card} variant="glass" className="space-y-3 p-5">
+                    <div className="flex items-center gap-3">
+                      <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
+                      <div className="flex-1 space-y-1.5">
+                        <Skeleton className="h-4 w-3/5" />
+                        <Skeleton className="h-3 w-1/3" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-8 w-24" />
+                  </Card>
+                ))
+              : envelopes.map((doc) => (
+                  <GridDocumentCard
+                    key={doc.id}
+                    doc={doc}
+                    statusLabels={statusLabels}
+                    actionLabels={actionLabels}
+                    formatDate={formatDate}
+                    isMenuOpen={gridMenuOpenId === doc.id}
+                    onToggleMenu={(open) => setGridMenuOpenId(open ? doc.id : null)}
+                    onDocumentClick={handleDocumentClick}
+                    onDeleteDocument={setDeleteTarget}
+                    onDownloadOriginal={handleDownloadOriginal}
+                    onDownloadSigned={handleDownloadSigned}
+                    onViewSummary={handleViewSummary}
+                    onMoveToFolder={fm.openMoveEnvelope}
+                  />
+                ))}
+            {!query.isLoading && !hasContent ? (
+              <div className="md:col-span-2 xl:col-span-3">
+                <EmptyState
+                  title={tDocuments('empty.title')}
+                  description={tDocuments('empty.description')}
+                />
+              </div>
+            ) : null}
+          </motion.div>
+        )}
       </AnimatePresence>
+
       <Pagination
         page={query.data?.meta.page ?? page}
         totalPages={query.data?.meta.totalPages ?? 1}
@@ -284,12 +388,119 @@ export default function DocumentsPage() {
         onConfirm={handleConfirmDelete}
         onCancel={() => setDeleteTarget(null)}
       />
+
+      <ConfirmDialog
+        open={fm.folderModal.mode === 'delete'}
+        title={tDocuments('folders.deleteTitle')}
+        description={tDocuments('folders.deleteConfirm')}
+        confirmLabel={tDocuments('folders.delete')}
+        cancelLabel={tDocuments('actions.cancel')}
+        isLoading={fm.deleteFolderMutation.isPending}
+        onConfirm={fm.handleConfirmDeleteFolder}
+        onCancel={fm.closeFolderModal}
+      />
+
+      <FolderFormModal
+        open={fm.folderModal.mode === 'create'}
+        mode="create"
+        isLoading={fm.createFolderMutation.isPending}
+        onConfirm={fm.handleCreateFolder}
+        onCancel={fm.closeFolderModal}
+        labels={{
+          createTitle: tDocuments('folders.createTitle'),
+          renameTitle: tDocuments('folders.renameTitle'),
+          placeholder: tDocuments('folders.namePlaceholder'),
+          confirm: tDocuments('folders.newFolder'),
+          cancel: tDocuments('actions.cancel'),
+        }}
+      />
+
+      <FolderFormModal
+        open={fm.folderModal.mode === 'rename'}
+        mode="rename"
+        initialName={fm.folderModal.mode === 'rename' ? fm.folderModal.folder.name : ''}
+        isLoading={fm.updateFolderMutation.isPending}
+        onConfirm={fm.handleRenameFolder}
+        onCancel={fm.closeFolderModal}
+        labels={{
+          createTitle: tDocuments('folders.createTitle'),
+          renameTitle: tDocuments('folders.renameTitle'),
+          placeholder: tDocuments('folders.namePlaceholder'),
+          confirm: tDocuments('folders.rename'),
+          cancel: tDocuments('actions.cancel'),
+        }}
+      />
+
+      <MoveToFolderModal
+        open={fm.moveModal.mode !== 'closed'}
+        folderTree={folderTree}
+        currentFolderId={currentFolderId}
+        excludeFolderId={fm.moveModal.mode === 'folder' ? fm.moveModal.folder.id : undefined}
+        isLoading={fm.moveEnvelopeMutation.isPending || fm.updateFolderMutation.isPending}
+        onConfirm={fm.handleConfirmMove}
+        onCancel={fm.closeMoveModal}
+        labels={{
+          title: tDocuments('folders.moveTitle'),
+          selectFolder: tDocuments('folders.selectFolder'),
+          rootFolder: tDocuments('folders.rootFolder'),
+          confirm: tDocuments('folders.move'),
+          cancel: tDocuments('actions.cancel'),
+        }}
+      />
+
+      <DragOverlay>
+        {fm.activeDrag ? (
+          <div className="flex items-center gap-2 rounded-xl border border-th-border bg-th-dialog px-4 py-2.5 shadow-lg">
+            {fm.activeDrag.type === 'folder' ? (
+              <FolderIcon className="h-4 w-4 text-warning" />
+            ) : (
+              <FileText className="h-4 w-4 text-foreground-muted" />
+            )}
+            <span className="text-sm font-medium text-foreground">{fm.activeDrag.title}</span>
+          </div>
+        ) : null}
+      </DragOverlay>
     </PageTransition>
+    </DndContext>
+  );
+}
+
+type ViewToggleProps = Readonly<{
+  view: 'list' | 'grid';
+  onViewChange: (view: 'list' | 'grid') => void;
+}>;
+
+function ViewToggle({ view, onViewChange }: ViewToggleProps) {
+  return (
+    <div className="flex items-center gap-1 rounded-full border border-th-border bg-th-hover p-1">
+      <button
+        type="button"
+        className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+          view === 'list'
+            ? 'bg-white border border-th-card-border text-foreground shadow-sm dark:bg-white/10'
+            : 'text-foreground-muted hover:bg-th-hover hover:text-foreground'
+        }`}
+        onClick={() => onViewChange('list')}
+      >
+        <List className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        className={`flex h-8 w-8 items-center justify-center rounded-lg transition-colors ${
+          view === 'grid'
+            ? 'bg-white border border-th-card-border text-foreground shadow-sm dark:bg-white/10'
+            : 'text-foreground-muted hover:bg-th-hover hover:text-foreground'
+        }`}
+        onClick={() => onViewChange('grid')}
+      >
+        <LayoutGrid className="h-4 w-4" />
+      </button>
+    </div>
   );
 }
 
 const statusLabelsToVariant = (
-  status: DocumentStatus
+  status: DocumentStatus,
 ): 'default' | 'success' | 'warning' | 'danger' | 'info' => {
   if (status === 'completed') return 'success';
   if (status === 'pending_signatures') return 'info';
@@ -311,33 +522,92 @@ type GridActionHandlers = Readonly<{
   onDownloadOriginal: (doc: EnvelopeSummary) => void;
   onDownloadSigned: (doc: EnvelopeSummary) => void;
   onViewSummary: (doc: EnvelopeSummary) => void;
+  onMoveToFolder: (doc: EnvelopeSummary) => void;
 }>;
 
-function buildSummaryAction(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: GridActionHandlers): GridActionItem {
-  return { key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary(doc) };
+function buildSummaryAction(
+  doc: EnvelopeSummary,
+  labels: DocumentActionLabels,
+  handlers: GridActionHandlers,
+): GridActionItem {
+  return {
+    key: 'summary',
+    label: labels.viewSummary,
+    icon: Eye,
+    onClick: () => handlers.onViewSummary(doc),
+  };
 }
 
-function buildDownloadOriginalAction(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: GridActionHandlers): GridActionItem {
-  return { key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal(doc) };
+function buildDownloadOriginalAction(
+  doc: EnvelopeSummary,
+  labels: DocumentActionLabels,
+  handlers: GridActionHandlers,
+): GridActionItem {
+  return {
+    key: 'download-original',
+    label: labels.downloadOriginal,
+    icon: Download,
+    onClick: () => handlers.onDownloadOriginal(doc),
+  };
 }
 
-const GRID_ACTIONS_BY_STATUS: Record<DocumentStatus, (doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: GridActionHandlers) => ReadonlyArray<GridActionItem>> = {
+function buildMoveAction(
+  doc: EnvelopeSummary,
+  labels: DocumentActionLabels,
+  handlers: GridActionHandlers,
+): GridActionItem {
+  return {
+    key: 'move',
+    label: labels.moveToFolder ?? 'Move to folder',
+    icon: ArrowRight,
+    onClick: () => handlers.onMoveToFolder(doc),
+  };
+}
+
+const GRID_ACTIONS_BY_STATUS: Record<
+  DocumentStatus,
+  (
+    doc: EnvelopeSummary,
+    labels: DocumentActionLabels,
+    handlers: GridActionHandlers,
+  ) => ReadonlyArray<GridActionItem>
+> = {
   draft: (doc, labels, handlers) => [
-    { key: 'continue', label: labels.continue, icon: Pencil, onClick: () => handlers.onDocumentClick(doc) },
-    { key: 'delete', label: labels.delete, icon: Trash2, variant: 'danger', onClick: () => handlers.onDeleteDocument(doc) },
+    {
+      key: 'continue',
+      label: labels.continue,
+      icon: Pencil,
+      onClick: () => handlers.onDocumentClick(doc),
+    },
+    buildMoveAction(doc, labels, handlers),
+    {
+      key: 'delete',
+      label: labels.delete,
+      icon: Trash2,
+      variant: 'danger',
+      onClick: () => handlers.onDeleteDocument(doc),
+    },
   ],
   pending_signatures: (doc, labels, handlers) => [
     buildSummaryAction(doc, labels, handlers),
     buildDownloadOriginalAction(doc, labels, handlers),
+    buildMoveAction(doc, labels, handlers),
   ],
   completed: (doc, labels, handlers) => [
     buildSummaryAction(doc, labels, handlers),
-    { key: 'download-signed', label: labels.downloadSigned, icon: FileDown, onClick: () => handlers.onDownloadSigned(doc) },
+    {
+      key: 'download-signed',
+      label: labels.downloadSigned,
+      icon: FileDown,
+      onClick: () => handlers.onDownloadSigned(doc),
+    },
     buildDownloadOriginalAction(doc, labels, handlers),
+    buildMoveAction(doc, labels, handlers),
   ],
   expired: (doc, labels, handlers) => [
     buildSummaryAction(doc, labels, handlers),
     buildDownloadOriginalAction(doc, labels, handlers),
+    buildMoveAction(doc, labels, handlers),
   ],
 };
 
@@ -362,6 +632,7 @@ type GridDocumentCardProps = Readonly<{
   onDownloadOriginal: (doc: EnvelopeSummary) => void;
   onDownloadSigned: (doc: EnvelopeSummary) => void;
   onViewSummary: (doc: EnvelopeSummary) => void;
+  onMoveToFolder: (doc: EnvelopeSummary) => void;
 }>;
 
 function GridDocumentCard({
@@ -376,20 +647,30 @@ function GridDocumentCard({
   onDownloadOriginal,
   onDownloadSigned,
   onViewSummary,
+  onMoveToFolder,
 }: GridDocumentCardProps) {
+  const { setNodeRef, attributes, listeners, isDragging } = useDraggable({
+    id: `drag-envelope-${doc.id}`,
+    data: { type: 'envelope', id: doc.id },
+  });
+
   const actions = getGridActions(doc, actionLabels, {
     onDocumentClick,
     onDeleteDocument,
     onDownloadOriginal,
     onDownloadSigned,
     onViewSummary,
+    onMoveToFolder,
   });
 
   return (
     <Card
+      ref={setNodeRef}
       variant="glass"
-      className="group cursor-pointer space-y-3 p-5 transition-all hover:border-th-card-border hover:bg-th-hover"
+      className={`group cursor-pointer space-y-3 p-5 transition-all hover:border-th-card-border hover:bg-th-hover ${isDragging ? 'opacity-50' : ''}`}
       onClick={() => onDocumentClick(doc)}
+      {...attributes}
+      {...listeners}
     >
       <div className="flex items-start gap-3">
         <div
@@ -416,17 +697,19 @@ function GridDocumentCard({
             <MoreVertical className="h-4 w-4" />
           </button>
           {isMenuOpen ? (
-            <GridDropdown
-              actions={actions}
-              onClose={() => onToggleMenu(false)}
-            />
+            <GridDropdown actions={actions} onClose={() => onToggleMenu(false)} />
           ) : null}
         </div>
       </div>
-      <div className="flex items-center">
+      <div className="flex items-center gap-2">
         <Badge variant={statusLabelsToVariant(doc.status)}>
           {statusLabels[doc.status]}
         </Badge>
+        {doc.documentCount > 1 ? (
+          <Badge variant="default" className="text-[10px]">
+            {doc.documentCount} docs
+          </Badge>
+        ) : null}
       </div>
     </Card>
   );

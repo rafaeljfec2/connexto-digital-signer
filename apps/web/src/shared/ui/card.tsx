@@ -1,4 +1,4 @@
-import type { HTMLAttributes } from 'react';
+import { forwardRef, type HTMLAttributes } from 'react';
 
 type CardVariant = 'default' | 'glass';
 
@@ -13,12 +13,10 @@ const getVariantClass = (variant: CardVariant): string => {
   return 'rounded-xl bg-th-card border border-th-card-border shadow-th-card';
 };
 
-export function Card({
-  className = '',
-  variant = 'default',
-  ...props
-}: Readonly<CardProps>) {
-  const base = 'rounded-xl';
-  const variantClass = getVariantClass(variant);
-  return <div className={`${base} ${variantClass} ${className}`} {...props} />;
-}
+export const Card = forwardRef<HTMLDivElement, Readonly<CardProps>>(
+  function Card({ className = '', variant = 'default', ...props }, ref) {
+    const base = 'rounded-xl';
+    const variantClass = getVariantClass(variant);
+    return <div ref={ref} className={`${base} ${variantClass} ${className}`} {...props} />;
+  },
+);

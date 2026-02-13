@@ -5,7 +5,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import type { FindOptionsWhere } from 'typeorm';
 import { Repository } from 'typeorm';
 import { Envelope, EnvelopeStatus } from '../entities/envelope.entity';
 import { CreateEnvelopeDto } from '../dto/create-envelope.dto';
@@ -59,23 +58,44 @@ export class EnvelopesService {
     tenantId: string,
     query: ListEnvelopesQueryDto,
   ): Promise<{
-    data: Envelope[];
+    data: (Envelope & { documentCount: number })[];
     meta: { page: number; limit: number; total: number; totalPages: number };
   }> {
     const page = query.page ?? 1;
     const limit = query.limit ?? 10;
     const skip = (page - 1) * limit;
 
-    const where: FindOptionsWhere<Envelope> = { tenantId };
-    if (query.status) where.status = query.status;
-    if (query.folderId) where.folderId = query.folderId;
+    const qb = this.envelopeRepository
+      .createQueryBuilder('envelope')
+      .addSelect(
+        (sub) =>
+          sub
+            .select('COUNT(*)')
+            .from('documents', 'd')
+            .where('d.envelope_id = envelope.id'),
+        'documentCount',
+      )
+      .where('envelope.tenantId = :tenantId', { tenantId });
 
-    const [data, total] = await this.envelopeRepository.findAndCount({
-      where,
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip,
-    });
+    if (query.status) {
+      qb.andWhere('envelope.status = :status', { status: query.status });
+    }
+    if (query.folderId) {
+      qb.andWhere('envelope.folderId = :folderId', { folderId: query.folderId });
+    }
+
+    const total = await qb.getCount();
+
+    const rawResults = await qb
+      .orderBy('envelope.createdAt', 'DESC')
+      .take(limit)
+      .skip(skip)
+      .getRawAndEntities();
+
+    const data = rawResults.entities.map((envelope, index) => ({
+      ...envelope,
+      documentCount: Number(rawResults.raw[index]?.documentCount ?? 0),
+    }));
 
     return {
       data,
