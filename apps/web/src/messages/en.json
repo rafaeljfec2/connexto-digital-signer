@@ -398,6 +398,8 @@
     "subtitle": "Click on the PDF to position fields",
     "decisionTitle": "Position signatures",
     "decisionDescription": "You can define where each signer should sign on the document, or proceed without positioning fields.",
+    "documentTabsLabel": "Select document",
+    "fieldsPerDocument": "{count, plural, one {# field} other {# fields}}",
     "openEditor": "Position signatures",
     "editPositioning": "Edit positioning",
     "skipPositioning": "Proceed without positioning",
@@ -541,7 +543,8 @@
     },
     "viewStep": {
       "instruction": "Read the document below before proceeding with the signature.",
-      "next": "I read the document, proceed"
+      "next": "I read the document, proceed",
+      "documentsLabel": "Documents ({count})"
     },
     "fillStep": {
       "instruction": "Click on the fields below to fill in your signature.",
@@ -551,7 +554,8 @@
       "optional": "Optional",
       "filled": "Filled",
       "tapToFill": "Tap to fill",
-      "next": "Proceed to review"
+      "next": "Proceed to review",
+      "documentGroup": "Document: {title}"
     },
     "validateStep": {
       "title": "Identity verification",

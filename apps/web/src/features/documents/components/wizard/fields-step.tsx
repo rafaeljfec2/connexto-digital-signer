@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
 import { PenTool, ArrowRight, CheckCircle, X, Sparkles, Loader2 } from 'lucide-react';
 import {
@@ -9,8 +9,8 @@ import {
   useSuggestFields,
   useBatchUpdateFields,
 } from '@/features/documents/hooks/use-document-wizard';
-import type { SignatureFieldInput } from '@/features/documents/api';
-import { Button, Card } from '@/shared/ui';
+import type { DocumentDetail, SignatureFieldInput } from '@/features/documents/api';
+import { Button, Card, DocumentTabs } from '@/shared/ui';
 import { lazyLoad } from '@/shared/utils/lazy-load';
 
 const SignatureEditorModal = lazyLoad(
@@ -20,30 +20,50 @@ const SignatureEditorModal = lazyLoad(
 
 export type FieldsStepProps = Readonly<{
   envelopeId: string;
-  documentId: string;
+  documents: readonly DocumentDetail[];
   onBack: () => void;
   onRestart: () => void;
   onCancel: () => void;
   onNext: () => void;
 }>;
 
-export function FieldsStep({ envelopeId, documentId, onBack, onRestart, onCancel, onNext }: FieldsStepProps) {
+export function FieldsStep({
+  envelopeId,
+  documents,
+  onBack,
+  onRestart,
+  onCancel,
+  onNext,
+}: FieldsStepProps) {
   const tFields = useTranslations('fields');
   const tWizard = useTranslations('wizard');
-  const fieldsQuery = useSignatureFields(documentId);
-  const signersQuery = useSigners(envelopeId);
-  const suggestMutation = useSuggestFields(documentId);
-  const batchUpdate = useBatchUpdateFields(documentId);
+
+  const [selectedDocumentId, setSelectedDocumentId] = useState(
+    () => documents[0]?.id ?? '',
+  );
   const [editorOpen, setEditorOpen] = useState(false);
   const [aiMessage, setAiMessage] = useState<string | null>(null);
+
+  const fieldsQuery = useSignatureFields(selectedDocumentId);
+  const signersQuery = useSigners(envelopeId);
+  const suggestMutation = useSuggestFields(selectedDocumentId);
+  const batchUpdate = useBatchUpdateFields(selectedDocumentId);
 
   const fieldCount = fieldsQuery.data?.length ?? 0;
   const hasFields = fieldCount > 0;
 
+  const documentTabs = useMemo(
+    () =>
+      documents.map((doc) => ({
+        id: doc.id,
+        title: doc.title,
+      })),
+    [documents],
+  );
+
   const handleEditorSave = () => {
     setEditorOpen(false);
     fieldsQuery.refetch();
-    onNext();
   };
 
   const handleEditorClose = () => {
@@ -92,7 +112,8 @@ export function FieldsStep({ envelopeId, documentId, onBack, onRestart, onCancel
     return (
       <SignatureEditorModal
         envelopeId={envelopeId}
-        documentId={documentId}
+        documentId={selectedDocumentId}
+        documents={documentTabs}
         onClose={handleEditorClose}
         onSave={handleEditorSave}
       />
@@ -101,6 +122,17 @@ export function FieldsStep({ envelopeId, documentId, onBack, onRestart, onCancel
 
   return (
     <div className="space-y-4">
+      {documents.length > 1 ? (
+        <DocumentTabs
+          documents={documentTabs}
+          selectedId={selectedDocumentId}
+          onSelect={(id) => {
+            setSelectedDocumentId(id);
+            setAiMessage(null);
+          }}
+        />
+      ) : null}
+
       <Card variant="glass" className="space-y-6 p-8 text-center">
         <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full border border-primary/30 bg-primary/10">
           <PenTool className="h-7 w-7 text-primary" />

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { FileUp, Users, PenTool, Settings, CheckCircle } from 'lucide-react';
+import { useEnvelopeDocuments } from '@/features/documents/hooks/use-document-wizard';
 import { Stepper } from '@/shared/ui';
 import { StepTransition } from '@/shared/animations';
 import { UploadStep } from './upload-step';
@@ -32,6 +33,8 @@ export type DocumentWizardProps = Readonly<{
 
 export function DocumentWizard({ envelopeId, documentId, hasFile, onCancel }: DocumentWizardProps) {
   const tWizard = useTranslations('wizard');
+  const documentsQuery = useEnvelopeDocuments(envelopeId);
+  const documents = useMemo(() => documentsQuery.data ?? [], [documentsQuery.data]);
   const [uploadComplete, setUploadComplete] = useState(hasFile);
   const [step, setStep] = useState<WizardStepId>(hasFile ? 'signers' : 'upload');
   const prevIndexRef = useRef(STEP_ORDER.indexOf(step));
@@ -121,7 +124,7 @@ export function DocumentWizard({ envelopeId, documentId, hasFile, onCancel }: Do
         {step === 'fields' ? (
           <FieldsStep
             envelopeId={envelopeId}
-            documentId={documentId}
+            documents={documents}
             onBack={() => setStep('signers')}
             onRestart={() => setStep('upload')}
             onCancel={onCancel}
@@ -140,7 +143,7 @@ export function DocumentWizard({ envelopeId, documentId, hasFile, onCancel }: Do
         {step === 'review' ? (
           <ReviewStep
             envelopeId={envelopeId}
-            documentId={documentId}
+            documents={documents}
             onBack={() => setStep('settings')}
             onRestart={() => setStep('upload')}
             onCancel={onCancel}

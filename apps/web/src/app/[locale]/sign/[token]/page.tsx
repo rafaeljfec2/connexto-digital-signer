@@ -63,12 +63,27 @@ export default function SignerDocumentPage() {
   const currentLocale = useLocale();
 
   const signerQuery = useSignerData(token);
-  const pdfQuery = useSignerPdf(token);
   const fieldsQuery = useSignerFields(token);
   const acceptMutation = useAcceptSignature(token);
   const identifyMutation = useIdentifySigner(token);
   const sendCodeMutation = useSendVerificationCode(token);
   const verifyCodeMutation = useVerifyCode(token);
+
+  const documents = useMemo(
+    () => signerQuery.data?.documents ?? [],
+    [signerQuery.data?.documents],
+  );
+
+  const [selectedDocumentId, setSelectedDocumentId] = useState('');
+
+  useEffect(() => {
+    if (documents.length > 0 && selectedDocumentId === '') {
+      setSelectedDocumentId(documents[0].id);
+    }
+  }, [documents, selectedDocumentId]);
+
+  const pdfQuery = useSignerPdf(token, selectedDocumentId);
+
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
   const [showPdfPreview, setShowPdfPreview] = useState(false);
@@ -83,11 +98,20 @@ export default function SignerDocumentPage() {
   }, [signerQuery.data?.envelope.signingLanguage, currentLocale, token]);
 
   const signerData = signerQuery.data;
-  const fields = useMemo(() => fieldsQuery.data ?? [], [fieldsQuery.data]);
+  const allFields = useMemo(() => fieldsQuery.data ?? [], [fieldsQuery.data]);
+
+  const selectedDocFields = useMemo(
+    () =>
+      selectedDocumentId
+        ? allFields.filter((f) => f.documentId === selectedDocumentId)
+        : allFields,
+    [allFields, selectedDocumentId],
+  );
+
   const alreadySigned = signerData?.signer.status === 'signed';
   const requiresValidation = signerData?.signer.authMethod === 'email';
   const requiresIdentify = (signerData?.signer.requestEmail ?? false) || (signerData?.signer.requestCpf ?? false) || (signerData?.signer.requestPhone ?? false);
-  const hasFields = fields.length > 0;
+  const hasFields = allFields.length > 0;
 
   const [currentStep, setCurrentStep] = useState<SignStep>('view');
   const [stepInitialized, setStepInitialized] = useState(false);
@@ -142,8 +166,8 @@ export default function SignerDocumentPage() {
   );
 
   const hasSignatureField = useMemo(
-    () => fields.some((f) => f.type === 'signature' || f.type === 'initials'),
-    [fields]
+    () => allFields.some((f) => f.type === 'signature' || f.type === 'initials'),
+    [allFields]
   );
 
   const handleFillNext = useCallback(() => {
@@ -167,7 +191,7 @@ export default function SignerDocumentPage() {
   }, [requiresValidation]);
 
   const handleSubmit = async () => {
-    const fieldPayload = fields
+    const fieldPayload = allFields
       .filter((f) => (fieldValues[f.id] ?? '').length > 0)
       .map((f) => ({
         fieldId: f.id,
@@ -175,7 +199,7 @@ export default function SignerDocumentPage() {
       }));
 
     const signaturePayload = standaloneSignature
-      ?? fields
+      ?? allFields
         .filter((f) => f.type === 'signature' && (fieldValues[f.id] ?? '').startsWith('data:image/'))
         .map((f) => fieldValues[f.id])[0];
 
@@ -238,14 +262,14 @@ export default function SignerDocumentPage() {
 
   const activeFieldType = useMemo(() => {
     if (!activeFieldId) return null;
-    const field = fields.find((f) => f.id === activeFieldId);
+    const field = allFields.find((f) => f.id === activeFieldId);
     return field?.type ?? null;
-  }, [activeFieldId, fields]);
+  }, [activeFieldId, allFields]);
 
   const isTextInputField = activeFieldType !== null && TEXT_INPUT_FIELD_TYPES.has(activeFieldType);
   const isSignatureInputField = activeFieldId !== null && !isTextInputField;
 
-  if (signerQuery.isLoading || pdfQuery.isLoading || fieldsQuery.isLoading) {
+  if (signerQuery.isLoading || fieldsQuery.isLoading) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] text-foreground">
         <div className="text-center">
@@ -371,7 +395,10 @@ export default function SignerDocumentPage() {
         {currentStep === 'view' ? (
           <ViewStep
             fileUrl={fileUrl}
-            fields={fields}
+            fields={selectedDocFields}
+            documents={documents}
+            selectedDocumentId={selectedDocumentId}
+            onSelectDocument={setSelectedDocumentId}
             labels={{
               instruction: t('viewStep.instruction'),
               next: t('viewStep.next'),
@@ -384,10 +411,11 @@ export default function SignerDocumentPage() {
 
         {currentStep === 'fill' ? (
           <FillFieldsStep
-            fields={fields}
+            fields={allFields}
             fieldValues={fieldValues}
             standaloneSignature={standaloneSignature}
             requireStandaloneSignature={!hasSignatureField}
+            documents={documents}
             onFieldClick={handleFieldClick}
             onRequestSignature={() => setShowStandaloneSignature(true)}
             onNext={handleFillNext}
@@ -406,6 +434,7 @@ export default function SignerDocumentPage() {
               changeSignature: t('changeSignature'),
               signatureRequired: t('signatureRequired'),
               yourSignature: t('yourSignature'),
+              documentGroup: (title: string) => t('fillStep.documentGroup', { title }),
             }}
             fieldTypeLabels={fieldTypeLabels}
           />
@@ -438,7 +467,7 @@ export default function SignerDocumentPage() {
         {currentStep === 'review' ? (
           <ReviewStep
             signerData={signerData}
-            fields={fields}
+            fields={allFields}
             fieldValues={fieldValues}
             standaloneSignature={standaloneSignature}
             onRequestSignature={() => setShowStandaloneSignature(true)}
@@ -488,8 +517,9 @@ export default function SignerDocumentPage() {
 
       <PdfPreviewModal
         open={showPdfPreview}
-        fileUrl={fileUrl}
-        fields={fields as import('@/features/signing/api').SignerField[]}
+        token={token}
+        documents={documents}
+        fields={allFields}
         fieldValues={fieldValues}
         onClose={() => setShowPdfPreview(false)}
         labels={{

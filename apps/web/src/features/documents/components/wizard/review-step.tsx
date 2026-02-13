@@ -3,11 +3,12 @@
 import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
+  useAllEnvelopeFields,
   useEmailPreview,
   useSendEnvelope,
-  useSignatureFields,
   useSigners,
 } from '@/features/documents/hooks/use-document-wizard';
+import type { DocumentDetail } from '@/features/documents/api';
 import {
   AlertCircle,
   ArrowLeft,
@@ -23,17 +24,29 @@ import { Button, Card, Dialog } from '@/shared/ui';
 
 export type ReviewStepProps = {
   readonly envelopeId: string;
-  readonly documentId: string;
+  readonly documents: readonly DocumentDetail[];
   readonly onBack: () => void;
   readonly onRestart: () => void;
   readonly onCancel: () => void;
 };
 
-export function ReviewStep({ envelopeId, documentId, onBack, onRestart, onCancel }: Readonly<ReviewStepProps>) {
+export function ReviewStep({
+  envelopeId,
+  documents,
+  onBack,
+  onRestart,
+  onCancel,
+}: Readonly<ReviewStepProps>) {
   const tReview = useTranslations('review');
   const tWizard = useTranslations('wizard');
   const signersQuery = useSigners(envelopeId);
-  const fieldsQuery = useSignatureFields(documentId);
+
+  const documentIds = useMemo(
+    () => documents.map((d) => d.id),
+    [documents],
+  );
+  const fieldsQuery = useAllEnvelopeFields(documentIds);
+
   const previewMutation = useEmailPreview(envelopeId);
   const sendMutation = useSendEnvelope(envelopeId);
   const [previewOpen, setPreviewOpen] = useState(false);

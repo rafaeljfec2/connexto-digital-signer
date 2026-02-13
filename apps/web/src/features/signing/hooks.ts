@@ -19,11 +19,11 @@ export const useSignerData = (token: string) =>
     retry: false,
   });
 
-export const useSignerPdf = (token: string) =>
+export const useSignerPdf = (token: string, documentId?: string) =>
   useQuery({
-    queryKey: ['signer-pdf', token],
-    queryFn: () => getSignerPdf(token),
-    enabled: token.length > 0,
+    queryKey: ['signer-pdf', token, documentId],
+    queryFn: () => getSignerPdf(token, documentId),
+    enabled: token.length > 0 && (documentId === undefined || documentId.length > 0),
     retry: false,
   });
 

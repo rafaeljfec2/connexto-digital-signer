@@ -398,6 +398,8 @@
     "subtitle": "Clique no PDF para posicionar os campos",
     "decisionTitle": "Posicionar assinaturas",
     "decisionDescription": "Voce pode definir onde cada signatario deve assinar no documento, ou prosseguir sem posicionar os campos.",
+    "documentTabsLabel": "Selecione o documento",
+    "fieldsPerDocument": "{count, plural, one {# campo} other {# campos}}",
     "openEditor": "Posicionar assinaturas",
     "editPositioning": "Editar posicionamento",
     "skipPositioning": "Prosseguir sem posicionar",
@@ -541,7 +543,8 @@
     },
     "viewStep": {
       "instruction": "Leia o documento abaixo antes de prosseguir com a assinatura.",
-      "next": "Li o documento, prosseguir"
+      "next": "Li o documento, prosseguir",
+      "documentsLabel": "Documentos ({count})"
     },
     "fillStep": {
       "instruction": "Clique nos campos abaixo para preencher sua assinatura.",
@@ -551,7 +554,8 @@
       "optional": "Opcional",
       "filled": "Preenchido",
       "tapToFill": "Toque para preencher",
-      "next": "Prosseguir para revisão"
+      "next": "Prosseguir para revisão",
+      "documentGroup": "Documento: {title}"
     },
     "validateStep": {
       "title": "Verificação de identidade",

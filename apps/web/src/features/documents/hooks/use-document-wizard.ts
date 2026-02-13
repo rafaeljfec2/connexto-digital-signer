@@ -148,6 +148,16 @@ export const useRemoveDocument = (envelopeId: string) => {
   });
 };
 
+export const useAllEnvelopeFields = (documentIds: readonly string[]) =>
+  useQuery({
+    queryKey: ['documents', 'all-fields', [...documentIds].sort((a, b) => a.localeCompare(b))],
+    queryFn: () =>
+      Promise.all(documentIds.map((id) => listFields(id))).then((results) =>
+        results.flat(),
+      ),
+    enabled: documentIds.length > 0,
+  });
+
 export const useEnvelopeAuditSummary = (envelopeId: string) =>
   useQuery({
     queryKey: ['envelopes', envelopeId, 'audit-summary'],

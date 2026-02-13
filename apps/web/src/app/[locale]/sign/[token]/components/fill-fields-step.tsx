@@ -1,16 +1,22 @@
 "use client";
 
 import { useMemo } from 'react';
-import { ArrowRight, ArrowLeft, PenTool } from 'lucide-react';
+import { ArrowRight, ArrowLeft, FileText, PenTool } from 'lucide-react';
 import { Button, Card } from '@/shared/ui';
 import { FieldListPanel } from './field-list-panel';
 import type { SignerField } from '@/features/signing/api';
+
+type DocumentItem = {
+  readonly id: string;
+  readonly title: string;
+};
 
 type FillFieldsStepProps = Readonly<{
   fields: ReadonlyArray<SignerField>;
   fieldValues: Readonly<Record<string, string>>;
   standaloneSignature: string | null;
   requireStandaloneSignature: boolean;
+  documents: ReadonlyArray<DocumentItem>;
   onFieldClick: (fieldId: string) => void;
   onRequestSignature: () => void;
   onNext: () => void;
@@ -28,6 +34,7 @@ type FillFieldsStepProps = Readonly<{
     changeSignature: string;
     signatureRequired: string;
     yourSignature: string;
+    documentGroup: (title: string) => string;
   }>;
   fieldTypeLabels: Readonly<Record<string, string>>;
 }>;
@@ -37,6 +44,7 @@ export function FillFieldsStep({
   fieldValues,
   standaloneSignature,
   requireStandaloneSignature,
+  documents,
   onFieldClick,
   onRequestSignature,
   onNext,
@@ -45,6 +53,7 @@ export function FillFieldsStep({
   fieldTypeLabels,
 }: FillFieldsStepProps) {
   const hasFields = fields.length > 0;
+  const hasMultipleDocuments = documents.length > 1;
 
   const requiredFields = useMemo(
     () => fields.filter((f) => f.required),
@@ -73,6 +82,29 @@ export function FillFieldsStep({
   const filledCount = fieldFilledCount + (requireStandaloneSignature && standaloneSignature !== null ? 1 : 0);
   const progressText = labels.progressFormat(filledCount, totalCount);
 
+  const documentTitleMap = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const doc of documents) {
+      map.set(doc.id, doc.title);
+    }
+    return map;
+  }, [documents]);
+
+  const fieldsByDocument = useMemo(() => {
+    if (!hasMultipleDocuments) return null;
+    const grouped = new Map<string, SignerField[]>();
+    for (const field of fields) {
+      const docId = field.documentId;
+      const existing = grouped.get(docId);
+      if (existing) {
+        existing.push(field);
+      } else {
+        grouped.set(docId, [field]);
+      }
+    }
+    return grouped;
+  }, [fields, hasMultipleDocuments]);
+
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="flex min-h-0 flex-1 flex-col items-center justify-center gap-4">
@@ -80,7 +112,35 @@ export function FillFieldsStep({
           {labels.instruction}
         </p>
 
-        {hasFields ? (
+        {hasFields && hasMultipleDocuments && fieldsByDocument ? (
+          <div className="w-full max-w-md space-y-3">
+            {Array.from(fieldsByDocument.entries()).map(([docId, docFields]) => (
+              <Card key={docId} variant="glass" className="w-full p-4 md:p-5">
+                <div className="mb-3 flex items-center gap-2">
+                  <FileText className="h-3.5 w-3.5 shrink-0 text-foreground-subtle" />
+                  <p className="truncate text-[10px] font-normal uppercase tracking-widest text-foreground-subtle">
+                    {labels.documentGroup(documentTitleMap.get(docId) ?? docId)}
+                  </p>
+                </div>
+                <FieldListPanel
+                  fields={docFields}
+                  fieldValues={fieldValues as Record<string, string>}
+                  onFieldClick={onFieldClick}
+                  labels={{
+                    fieldsProgress: progressText,
+                    required: labels.required,
+                    optional: labels.optional,
+                    filled: labels.filled,
+                    tapToFill: labels.tapToFill,
+                  }}
+                  fieldTypeLabels={fieldTypeLabels}
+                />
+              </Card>
+            ))}
+          </div>
+        ) : null}
+
+        {hasFields && !hasMultipleDocuments ? (
           <Card variant="glass" className="w-full max-w-md p-4 md:p-5">
             <FieldListPanel
               fields={fields}

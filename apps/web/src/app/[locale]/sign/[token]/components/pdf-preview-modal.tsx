@@ -1,7 +1,10 @@
 "use client";
 
+import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import type { SignerField } from '@/features/signing/api';
+import { useSignerPdf } from '@/features/signing/hooks';
+import { DocumentTabs } from '@/shared/ui';
 import { lazyLoad } from '@/shared/utils/lazy-load';
 
 const SignerPdfViewer = lazyLoad(
@@ -10,10 +13,16 @@ const SignerPdfViewer = lazyLoad(
   { minHeight: '40vh' },
 );
 
+type DocumentItem = {
+  readonly id: string;
+  readonly title: string;
+};
+
 type PdfPreviewModalProps = Readonly<{
   open: boolean;
-  fileUrl: string;
-  fields: SignerField[];
+  token: string;
+  documents: ReadonlyArray<DocumentItem>;
+  fields: ReadonlyArray<SignerField>;
   fieldValues: Record<string, string>;
   onClose: () => void;
   labels: Readonly<{
@@ -25,12 +34,47 @@ type PdfPreviewModalProps = Readonly<{
 
 export function PdfPreviewModal({
   open,
-  fileUrl,
+  token,
+  documents,
   fields,
   fieldValues,
   onClose,
   labels,
 }: PdfPreviewModalProps) {
+  const [selectedDocId, setSelectedDocId] = useState(
+    () => documents[0]?.id ?? '',
+  );
+
+  useEffect(() => {
+    if (open && documents.length > 0 && selectedDocId === '') {
+      setSelectedDocId(documents[0].id);
+    }
+  }, [open, documents, selectedDocId]);
+
+  const pdfQuery = useSignerPdf(
+    open ? token : '',
+    selectedDocId,
+  );
+
+  const fileUrl = useMemo(() => {
+    if (!pdfQuery.data) return '';
+    return URL.createObjectURL(pdfQuery.data);
+  }, [pdfQuery.data]);
+
+  useEffect(() => {
+    return () => {
+      if (fileUrl) URL.revokeObjectURL(fileUrl);
+    };
+  }, [fileUrl]);
+
+  const selectedFields = useMemo(
+    () =>
+      selectedDocId
+        ? fields.filter((f) => f.documentId === selectedDocId)
+        : [],
+    [fields, selectedDocId],
+  );
+
   if (!open) return null;
 
   return (
@@ -46,18 +90,35 @@ export function PdfPreviewModal({
         </button>
       </div>
 
+      {documents.length > 1 ? (
+        <div className="shrink-0 border-b border-th-border bg-th-dialog px-4 py-1.5">
+          <DocumentTabs
+            documents={documents}
+            selectedId={selectedDocId}
+            onSelect={setSelectedDocId}
+            size="sm"
+          />
+        </div>
+      ) : null}
+
       <div className="flex min-h-0 flex-1 flex-col">
-        <SignerPdfViewer
-          fileUrl={fileUrl}
-          fields={fields}
-          fieldValues={fieldValues}
-          onFieldClick={() => undefined}
-          disabled
-          labels={{
-            clickToSign: labels.clickToSign,
-            clickToInitials: labels.clickToInitials,
-          }}
-        />
+        {fileUrl ? (
+          <SignerPdfViewer
+            fileUrl={fileUrl}
+            fields={selectedFields as SignerField[]}
+            fieldValues={fieldValues}
+            onFieldClick={() => undefined}
+            disabled
+            labels={{
+              clickToSign: labels.clickToSign,
+              clickToInitials: labels.clickToInitials,
+            }}
+          />
+        ) : (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="h-6 w-6 animate-spin rounded-full border-2 border-foreground-subtle border-t-foreground" />
+          </div>
+        )}
       </div>
     </div>
   );

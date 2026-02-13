@@ -13,7 +13,7 @@ import {
   useSigners,
   useSuggestFields,
 } from '@/features/documents/hooks/use-document-wizard';
-import { Button, Select } from '@/shared/ui';
+import { Button, Select, DocumentTabs } from '@/shared/ui';
 import type { SignatureFieldInput } from '@/features/documents/api';
 import {
   PdfViewer,
@@ -33,21 +33,30 @@ const createTempId = () => `temp-${Math.random().toString(36).slice(2, 10)}`;
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
+type DocumentTabItem = {
+  readonly id: string;
+  readonly title: string;
+};
+
 export type SignatureEditorModalProps = Readonly<{
   envelopeId: string;
   documentId: string;
+  documents?: readonly DocumentTabItem[];
   onClose: () => void;
   onSave: () => void;
 }>;
 
-export function SignatureEditorModal({ envelopeId, documentId, onClose, onSave }: SignatureEditorModalProps) {
+export function SignatureEditorModal({ envelopeId, documentId, documents, onClose, onSave }: SignatureEditorModalProps) {
   const tFields = useTranslations('fields');
   const tWizard = useTranslations('wizard');
+
+  const [activeDocumentId, setActiveDocumentId] = useState(documentId);
+
   const signersQuery = useSigners(envelopeId);
-  const fieldsQuery = useSignatureFields(documentId);
-  const batchUpdate = useBatchUpdateFields(documentId);
-  const suggestFieldsMutation = useSuggestFields(documentId);
-  const fileQuery = useDocumentFile(documentId);
+  const fieldsQuery = useSignatureFields(activeDocumentId);
+  const batchUpdate = useBatchUpdateFields(activeDocumentId);
+  const suggestFieldsMutation = useSuggestFields(activeDocumentId);
+  const fileQuery = useDocumentFile(activeDocumentId);
   const [activeSignerId, setActiveSignerId] = useState<string>('');
   const [activeFieldType, setActiveFieldType] = useState<SignatureFieldType>('signature');
   const pageRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
@@ -130,6 +139,28 @@ export function SignatureEditorModal({ envelopeId, documentId, onClose, onSave }
     await fieldsQuery.refetch();
     onSave();
   };
+
+  const handleSwitchDocument = useCallback(
+    async (nextDocId: string) => {
+      if (nextDocId === activeDocumentId) return;
+      const payload: SignatureFieldInput[] = fields.map((field) => ({
+        id: field.id.startsWith('temp-') ? undefined : field.id,
+        signerId: field.signerId,
+        type: field.type,
+        page: field.page,
+        x: field.x,
+        y: field.y,
+        width: field.width,
+        height: field.height,
+        required: field.required,
+      }));
+      await batchUpdate.mutateAsync(payload);
+      setAiMessage(null);
+      pageRefs.current.clear();
+      setActiveDocumentId(nextDocId);
+    },
+    [activeDocumentId, fields, batchUpdate],
+  );
 
   const handlePageReady = useCallback((pageNumber: number, element: HTMLDivElement | null) => {
     pageRefs.current.set(pageNumber, element);
@@ -315,18 +346,30 @@ export function SignatureEditorModal({ envelopeId, documentId, onClose, onSave }
       ) : null}
 
       <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
-        <div className="flex shrink-0 items-center gap-2 border-b border-th-border px-3 py-2 xl:hidden">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setSidebarOpen(true)}
-            className="h-8 w-8 p-0"
-          >
-            <PenTool className="h-4 w-4" />
-          </Button>
-          <span className="text-xs text-foreground-muted">
+        <div className="flex shrink-0 items-center gap-2 border-b border-th-border px-3 py-2">
+          <div className="xl:hidden">
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setSidebarOpen(true)}
+              className="h-8 w-8 p-0"
+            >
+              <PenTool className="h-4 w-4" />
+            </Button>
+          </div>
+          <span className="text-xs text-foreground-muted xl:hidden">
             {tFields('title')}
           </span>
+          {documents && documents.length > 1 ? (
+            <div className="flex-1 overflow-x-auto">
+              <DocumentTabs
+                documents={documents}
+                selectedId={activeDocumentId}
+                onSelect={handleSwitchDocument}
+                size="sm"
+              />
+            </div>
+          ) : null}
         </div>
 
         <div className="min-h-0 flex-1 overflow-hidden">

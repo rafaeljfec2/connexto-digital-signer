@@ -36,6 +36,7 @@ export type SignerWithEnvelope = {
 
 export type SignerField = {
   readonly id: string;
+  readonly documentId: string;
   readonly type: string;
   readonly page: number;
   readonly x: number;

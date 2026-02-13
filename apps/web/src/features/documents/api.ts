@@ -102,6 +102,7 @@ export type SignatureFieldType = 'signature' | 'name' | 'date' | 'initials' | 't
 
 export type SignatureField = {
   readonly id: string;
+  readonly documentId: string;
   readonly signerId: string;
   readonly type: SignatureFieldType;
   readonly page: number;
