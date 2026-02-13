@@ -12,7 +12,7 @@
     "accountCreatedSubtitle": "Voce ja esta logado.",
     "help": "Ajuda",
     "searchPlaceholder": "Buscar documentos...",
-    "notificationsLabel": "Notificacoes",
+    "notificationsLabel": "Notificações",
     "noNotifications": "Sem novidades por aqui hoje.",
     "myAccount": "Minha conta",
     "plan": "Plano",
@@ -55,9 +55,9 @@
       "page": "Página"
     },
     "settingsTitle": "Configurações",
-    "settingsSubtitle": "Preferencias e ajustes da conta",
+    "settingsSubtitle": "Preferências e ajustes da conta",
     "settingsEmptyTitle": "Configurações em breve",
-    "settingsEmptyDescription": "Novas opcoes estarao disponiveis nesta area.",
+    "settingsEmptyDescription": "Novas opções estarão disponíveis nesta área.",
     "certificate": {
       "title": "Certificado Digital",
       "description": "Configure um certificado digital (.p12 ou .pfx) para assinar digitalmente os documentos finalizados.",
@@ -72,7 +72,7 @@
       "configuredAt": "Configurado em",
       "remove": "Remover certificado",
       "removeTitle": "Remover certificado digital",
-      "removeConfirm": "Tem certeza que deseja remover o certificado digital? Documentos futuros nao serao assinados digitalmente ate que um novo certificado seja configurado.",
+      "removeConfirm": "Tem certeza que deseja remover o certificado digital? Documentos futuros não serão assinados digitalmente até que um novo certificado seja configurado.",
       "removeCancel": "Cancelar",
       "expired": "Expirado",
       "valid": "Valido",
@@ -103,33 +103,33 @@
       "success": "Perfil atualizado com sucesso"
     },
     "defaults": {
-      "title": "Padroes de Assinatura",
-      "description": "Defina os valores padrao aplicados automaticamente a cada novo documento criado.",
-      "languageLabel": "Idioma padrao da assinatura",
-      "languagePtBr": "Portugues",
+      "title": "Padrões de Assinatura",
+      "description": "Defina os valores padrão aplicados automaticamente a cada novo documento criado.",
+      "languageLabel": "Idioma padrão da assinatura",
+      "languagePtBr": "Português",
       "languageEn": "English",
-      "reminderLabel": "Lembrete padrao",
+      "reminderLabel": "Lembrete padrão",
       "reminderNone": "Nao enviar",
       "reminder1Day": "A cada 1 dia",
       "reminder2Days": "A cada 2 dias",
       "reminder3Days": "A cada 3 dias",
       "reminder7Days": "A cada 7 dias",
-      "closureLabel": "Modo de encerramento padrao",
+      "closureLabel": "Modo de encerramento padrão",
       "closureAutomatic": "Automatico",
       "closureManual": "Manual",
-      "save": "Salvar padroes",
+      "save": "Salvar padrões",
       "saving": "Salvando...",
-      "success": "Padroes atualizados com sucesso"
+      "success": "Padrões atualizados com sucesso"
     },
     "notifications": {
-      "title": "Notificacoes",
-      "description": "Configure como os emails sao enviados aos signatarios.",
+      "title": "Notificações",
+      "description": "Configure como os emails são enviados aos signatários.",
       "senderNameLabel": "Nome do remetente",
       "senderNamePlaceholder": "Ex: Acme Corp",
-      "senderNameHint": "Nome exibido no campo 'De' dos emails enviados. Deixe vazio para usar o padrao.",
+      "senderNameHint": "Nome exibido no campo 'De' dos emails enviados. Deixe vazio para usar o padrão.",
       "save": "Salvar",
       "saving": "Salvando...",
-      "success": "Configuracoes de notificacao atualizadas"
+      "success": "Configurações de notificação atualizadas"
     },
     "apiKey": {
       "title": "Chave de API",
@@ -140,10 +140,10 @@
       "regenerate": "Regenerar chave",
       "regenerating": "Gerando...",
       "regenerateTitle": "Regenerar chave de API",
-      "regenerateConfirm": "A chave atual sera invalidada imediatamente. Sistemas que usam a chave atual deixarao de funcionar. Deseja continuar?",
+      "regenerateConfirm": "A chave atual será invalidada imediatamente. Sistemas que usam a chave atual deixarão de funcionar. Deseja continuar?",
       "regenerateCancel": "Cancelar",
       "newKeyTitle": "Nova chave de API gerada",
-      "newKeyWarning": "Copie a chave abaixo. Ela nao sera exibida novamente.",
+      "newKeyWarning": "Copie a chave abaixo. Ela não será exibida novamente.",
       "copy": "Copiar",
       "copied": "Copiado!",
       "close": "Fechar"
@@ -164,21 +164,21 @@
     "companyNamePlaceholder": "Acme Corp",
     "companySlugLabel": "Slug da empresa",
     "companySlugPlaceholder": "acme",
-    "companySlugHelper": "Use apenas letras minusculas, numeros e hifens.",
+    "companySlugHelper": "Use apenas letras minúsculas, números e hífens.",
     "ownerNameLabel": "Nome do owner",
     "ownerNamePlaceholder": "Nome do owner",
     "ownerEmailLabel": "Email do owner",
     "ownerEmailPlaceholder": "owner@acme.com",
     "ownerPasswordLabel": "Senha",
     "ownerPasswordPlaceholder": "Sua senha",
-    "ownerPasswordHelper": "Minimo 8 caracteres, com maiuscula, minuscula e numero.",
+    "ownerPasswordHelper": "Mínimo 8 caracteres, com maiúscula, minúscula e número.",
     "ownerPasswordConfirmLabel": "Confirmar senha",
     "ownerPasswordConfirmPlaceholder": "Repita sua senha",
-    "companyNameRequired": "Nome da empresa obrigatorio",
-    "slugRequired": "Slug obrigatorio",
-    "ownerNameRequired": "Nome do owner obrigatorio",
-    "ownerEmailRequired": "Email valido obrigatorio",
-    "ownerPasswordRequired": "Senha obrigatoria",
+    "companyNameRequired": "Nome da empresa obrigatório",
+    "slugRequired": "Slug obrigatório",
+    "ownerNameRequired": "Nome do owner obrigatório",
+    "ownerEmailRequired": "Email válido obrigatório",
+    "ownerPasswordRequired": "Senha obrigatória",
     "ownerPasswordConfirmError": "As senhas precisam ser iguais",
     "createAccountCta": "Criar conta"
   },
@@ -196,7 +196,7 @@
     "sendDocument": "Enviar documento",
     "kpi": {
       "pending": "Pendentes",
-      "completed": "Concluidos",
+      "completed": "Concluídos",
       "expired": "Expirados",
       "draft": "Rascunhos"
     },
@@ -216,7 +216,7 @@
     },
     "onboarding": {
       "title": "Primeiros passos",
-      "progress": "{completed} de {total} concluidos",
+      "progress": "{completed} de {total} concluídos",
       "dismiss": "Dispensar",
       "createAccount": "Criar sua conta",
       "sendFirstDocument": "Enviar primeiro documento",
@@ -227,14 +227,14 @@
       "title": "Atividade recente",
       "empty": "Nenhuma atividade recente",
       "sentForSignature": "{title} enviado para assinatura",
-      "documentCompleted": "{title} foi concluido",
+      "documentCompleted": "{title} foi concluído",
       "documentExpired": "{title} expirou"
     },
     "help": {
       "title": "Precisa de ajuda?",
       "faq": "Perguntas frequentes",
       "support": "Contato com suporte",
-      "docs": "Documentacao"
+      "docs": "Documentação"
     },
     "tips": {
       "dismiss": "Dispensar",
@@ -272,7 +272,7 @@
     "status": {
       "draft": "Rascunho",
       "pending": "Pendente",
-      "completed": "Concluido",
+      "completed": "Concluído",
       "expired": "Expirado"
     },
     "filters": {
