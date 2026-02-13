@@ -252,6 +252,8 @@
     "table": {
       "title": "Title",
       "status": "Status",
+      "docs": "Docs",
+      "folder": "Folder",
       "created": "Created",
       "actions": "Actions"
     },

@@ -185,6 +185,8 @@ export default function DashboardPage() {
             headers={{
               title: tDocuments('table.title'),
               status: tDocuments('table.status'),
+              docs: tDocuments('table.docs'),
+              folder: tDocuments('table.folder'),
               created: tDocuments('table.created'),
               actions: tDocuments('table.actions'),
             }}

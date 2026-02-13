@@ -1,11 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FileText,
   Folder as FolderIcon,
   Calendar,
   ChevronRight,
+  ChevronDown,
+  ChevronUp,
+  ChevronsUpDown,
   MoreVertical,
   Download,
   Eye,
@@ -17,6 +20,66 @@ import {
 import { Badge, Skeleton } from '@/shared/ui';
 import type { DocumentStatus, EnvelopeSummary } from '../api';
 import { EmptyState } from './empty-state';
+
+type SortColumn = 'title' | 'status' | 'docs' | 'folder' | 'created';
+type SortDirection = 'asc' | 'desc';
+type SortState = Readonly<{ column: SortColumn; direction: SortDirection }>;
+
+const STATUS_ORDER: Record<DocumentStatus, number> = {
+  draft: 0,
+  pending_signatures: 1,
+  completed: 2,
+  expired: 3,
+};
+
+function sortDocuments(
+  documents: ReadonlyArray<EnvelopeSummary>,
+  sort: SortState,
+  folderNameMap?: Map<string, string>,
+): ReadonlyArray<EnvelopeSummary> {
+  const sorted = [...documents];
+  const dir = sort.direction === 'asc' ? 1 : -1;
+
+  sorted.sort((a, b) => {
+    switch (sort.column) {
+      case 'title':
+        return dir * a.title.localeCompare(b.title);
+      case 'status':
+        return dir * ((STATUS_ORDER[a.status] ?? 0) - (STATUS_ORDER[b.status] ?? 0));
+      case 'docs':
+        return dir * (a.documentCount - b.documentCount);
+      case 'folder': {
+        const fa = folderNameMap?.get(a.folderId) ?? '';
+        const fb = folderNameMap?.get(b.folderId) ?? '';
+        return dir * fa.localeCompare(fb);
+      }
+      case 'created':
+        return dir * (new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+      default:
+        return 0;
+    }
+  });
+
+  return sorted;
+}
+
+function toggleSort(current: SortState, column: SortColumn): SortState {
+  if (current.column === column) {
+    return { column, direction: current.direction === 'asc' ? 'desc' : 'asc' };
+  }
+  return { column, direction: 'asc' };
+}
+
+type SortIconProps = Readonly<{ column: SortColumn; sort: SortState }>;
+
+function SortIcon({ column, sort }: SortIconProps) {
+  if (sort.column !== column) {
+    return <ChevronsUpDown className="h-3 w-3 text-foreground-subtle/50" />;
+  }
+  return sort.direction === 'asc'
+    ? <ChevronUp className="h-3 w-3 text-primary" />
+    : <ChevronDown className="h-3 w-3 text-primary" />;
+}
 
 type DocumentAction = Readonly<{
   key: string;
@@ -43,6 +106,8 @@ export type DocumentsTableProps = Readonly<{
   headers: Readonly<{
     title: string;
     status: string;
+    docs: string;
+    folder: string;
     created: string;
     actions: string;
   }>;
@@ -86,6 +151,9 @@ function DocumentRowSkeleton() {
         <Skeleton className="h-3 w-24" />
       </div>
       <Skeleton className="hidden h-5 w-20 sm:block" />
+      <Skeleton className="hidden h-5 w-12 md:block" />
+      <Skeleton className="hidden h-5 w-24 lg:block" />
+      <Skeleton className="hidden h-5 w-28 md:block" />
       <Skeleton className="h-8 w-20" />
     </div>
   );
@@ -211,6 +279,8 @@ function ActionsDropdown({ actions }: ActionsDropdownProps) {
   );
 }
 
+const DEFAULT_SORT: SortState = { column: 'created', direction: 'desc' };
+
 export function DocumentsTable({
   documents,
   isLoading = false,
@@ -230,6 +300,16 @@ export function DocumentsTable({
   folderNameMap,
 }: DocumentsTableProps) {
   const handlers = { onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder };
+  const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
+
+  const sortedDocuments = useMemo(
+    () => sortDocuments(documents, sort, folderNameMap),
+    [documents, sort, folderNameMap],
+  );
+
+  const handleSort = useCallback((column: SortColumn) => {
+    setSort((prev) => toggleSort(prev, column));
+  }, []);
 
   if (!isLoading && documents.length === 0) {
     return <EmptyState title={emptyTitle} description={emptyDescription} />;
@@ -239,15 +319,11 @@ export function DocumentsTable({
     <div className="rounded-xl border border-th-border bg-th-card">
       <div className="hidden items-center gap-3 rounded-t-xl border-b border-th-border bg-th-hover/50 px-4 py-2.5 sm:flex">
         <div className="w-9 shrink-0" />
-        <p className="min-w-0 flex-1 text-[10px] font-medium uppercase tracking-widest text-foreground-subtle">
-          {headers.title}
-        </p>
-        <p className="w-24 text-center text-[10px] font-medium uppercase tracking-widest text-foreground-subtle">
-          {headers.status}
-        </p>
-        <p className="hidden w-32 text-center text-[10px] font-medium uppercase tracking-widest text-foreground-subtle md:block">
-          {headers.created}
-        </p>
+        <SortableHeader column="title" label={headers.title} sort={sort} onSort={handleSort} className="min-w-0 flex-1" />
+        <SortableHeader column="status" label={headers.status} sort={sort} onSort={handleSort} className="w-24 justify-center" />
+        <SortableHeader column="docs" label={headers.docs} sort={sort} onSort={handleSort} className="hidden w-14 justify-center md:flex" />
+        <SortableHeader column="folder" label={headers.folder} sort={sort} onSort={handleSort} className="hidden w-28 justify-center lg:flex" />
+        <SortableHeader column="created" label={headers.created} sort={sort} onSort={handleSort} className="hidden w-32 justify-center md:flex" />
         <div className="w-20" />
       </div>
 
@@ -256,7 +332,7 @@ export function DocumentsTable({
           ? Array.from({ length: 5 }, (_, i) => (
               <DocumentRowSkeleton key={`skeleton-${String(i)}`} />
             ))
-          : documents.map((doc) => (
+          : sortedDocuments.map((doc) => (
               <DocumentRow
                 key={doc.id}
                 doc={doc}
@@ -270,6 +346,30 @@ export function DocumentsTable({
             ))}
       </div>
     </div>
+  );
+}
+
+type SortableHeaderProps = Readonly<{
+  column: SortColumn;
+  label: string;
+  sort: SortState;
+  onSort: (column: SortColumn) => void;
+  className?: string;
+}>;
+
+function SortableHeader({ column, label, sort, onSort, className = '' }: SortableHeaderProps) {
+  const isActive = sort.column === column;
+  return (
+    <button
+      type="button"
+      onClick={() => onSort(column)}
+      className={`flex items-center gap-1 text-[10px] font-medium uppercase tracking-widest transition-colors ${
+        isActive ? 'text-primary' : 'text-foreground-subtle hover:text-foreground-muted'
+      } ${className}`}
+    >
+      {label}
+      <SortIcon column={column} sort={sort} />
+    </button>
   );
 }
 
@@ -309,52 +409,49 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
         <p className="truncate text-sm font-normal text-foreground">
           {doc.title}
         </p>
-        <div className="flex items-center gap-2 sm:hidden">
-          <Badge
-            variant={STATUS_VARIANT[doc.status]}
-            className="mt-1 text-[10px]"
-          >
+        <div className="mt-0.5 flex flex-wrap items-center gap-2 sm:hidden">
+          <Badge variant={STATUS_VARIANT[doc.status]} className="text-[10px]">
             {statusLabels[doc.status]}
           </Badge>
           {doc.documentCount > 1 ? (
-            <Badge variant="default" className="mt-1 text-[10px]">
+            <Badge variant="default" className="text-[10px]">
               {doc.documentCount} docs
             </Badge>
           ) : null}
-        </div>
-        <div className="mt-0.5 flex flex-wrap items-center gap-2 md:hidden">
-          <span className="flex items-center gap-1 text-[11px] text-foreground-subtle">
-            <Calendar className="h-3 w-3" />
-            {formatDate(doc.createdAt)}
-          </span>
           {folderName ? (
             <span className="flex items-center gap-1 text-[10px] text-foreground-subtle">
               <FolderIcon className="h-3 w-3" />
               {folderName}
             </span>
           ) : null}
+          <span className="flex items-center gap-1 text-[11px] text-foreground-subtle">
+            <Calendar className="h-3 w-3" />
+            {formatDate(doc.createdAt)}
+          </span>
         </div>
       </div>
 
-      <div className="hidden items-center gap-2 sm:flex">
-        <Badge
-          variant={STATUS_VARIANT[doc.status]}
-          className="w-24 justify-center text-[10px]"
-        >
-          {statusLabels[doc.status]}
-        </Badge>
-        {doc.documentCount > 1 ? (
-          <Badge variant="default" className="text-[10px]">
-            {doc.documentCount} docs
-          </Badge>
-        ) : null}
+      <Badge
+        variant={STATUS_VARIANT[doc.status]}
+        className="hidden w-24 justify-center text-[10px] sm:flex"
+      >
+        {statusLabels[doc.status]}
+      </Badge>
+
+      <p className="hidden w-14 text-center text-xs text-foreground-muted md:block">
+        {doc.documentCount > 1 ? `${doc.documentCount}` : '1'}
+      </p>
+
+      <p className="hidden w-28 truncate text-center text-xs text-foreground-muted lg:block">
         {folderName ? (
-          <span className="flex items-center gap-1 text-[10px] text-foreground-subtle">
-            <FolderIcon className="h-3 w-3" />
+          <span className="inline-flex items-center gap-1">
+            <FolderIcon className="h-3 w-3 shrink-0" />
             {folderName}
           </span>
-        ) : null}
-      </div>
+        ) : (
+          <span className="text-foreground-subtle/50">—</span>
+        )}
+      </p>
 
       <p className="hidden w-32 text-center text-xs text-foreground-muted md:block">
         {formatDate(doc.createdAt)}

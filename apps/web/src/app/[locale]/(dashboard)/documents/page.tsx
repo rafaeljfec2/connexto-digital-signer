@@ -173,7 +173,7 @@ export default function DocumentsPage() {
           <motion.div key="list-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="glass-card rounded-2xl p-4">
             <DocumentsTable
               documents={envelopes} isLoading={query.isLoading} statusLabels={statusLabels}
-              headers={{ title: t('table.title'), status: t('table.status'), created: t('table.created'), actions: t('table.actions') }}
+              headers={{ title: t('table.title'), status: t('table.status'), docs: t('table.docs'), folder: t('table.folder'), created: t('table.created'), actions: t('table.actions') }}
               emptyTitle={t('empty.title')} emptyDescription={t('empty.description')}
               formatDate={formatDate} actionLabels={actionLabels} folderNameMap={folderNameMap}
               onDocumentClick={handleDocumentClick} onDeleteDocument={setDeleteTarget}

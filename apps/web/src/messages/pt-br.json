@@ -252,6 +252,8 @@
     "table": {
       "title": "Titulo",
       "status": "Status",
+      "docs": "Docs",
+      "folder": "Pasta",
       "created": "Criado em",
       "actions": "Acoes"
     },
