@@ -271,7 +271,8 @@
       "deleteSuccess": "Rascunho excluído com sucesso",
       "deleting": "Excluindo...",
       "cancel": "Cancelar",
-      "moveToFolder": "Mover para pasta"
+      "moveToFolder": "Mover para pasta",
+      "track": "Acompanhar"
     },
     "status": {
       "draft": "Rascunho",
@@ -694,6 +695,23 @@
     "loading": "Carregando resumo...",
     "error": "Erro ao carregar resumo",
     "errorSubtitle": "Não foi possível carregar os dados do documento."
+  },
+  "tracking": {
+    "title": "Progresso de assinatura",
+    "progress": "Progresso",
+    "waiting": "Aguardando...",
+    "errorLoading": "Falha ao carregar dados de acompanhamento.",
+    "reminders": "lembretes enviados",
+    "steps": {
+      "notified": "Notificação enviada",
+      "viewed": "Documento visualizado",
+      "verified": "Identidade verificada",
+      "signed": "Assinatura concluída"
+    },
+    "signerStatus": {
+      "pending": "Pendente",
+      "signed": "Assinado"
+    }
   },
   "landing": {
     "header": {

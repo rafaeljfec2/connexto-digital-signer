@@ -12,6 +12,7 @@ import {
   Pencil,
   FileDown,
   ArrowRight,
+  Activity,
 } from 'lucide-react';
 import { Badge, Card } from '@/shared/ui';
 import type { DocumentStatus, EnvelopeSummary } from '../api';
@@ -49,6 +50,7 @@ type GridActionHandlers = Readonly<{
   onDownloadSigned: (doc: EnvelopeSummary) => void;
   onViewSummary: (doc: EnvelopeSummary) => void;
   onMoveToFolder: (doc: EnvelopeSummary) => void;
+  onTrackDocument?: (doc: EnvelopeSummary) => void;
 }>;
 
 function buildGridActions(
@@ -70,19 +72,29 @@ function buildGridActions(
         move,
         { key: 'delete', label: labels.delete, icon: Trash2, variant: 'danger', onClick: () => handlers.onDeleteDocument(doc) },
       ];
-    case 'pending_signatures':
+    case 'pending_signatures': {
+      const track: GridAction[] = handlers.onTrackDocument && labels.track
+        ? [{ key: 'track', label: labels.track, icon: Activity, onClick: () => handlers.onTrackDocument?.(doc) }]
+        : [];
       return [
+        ...track,
         { key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary(doc) },
         { key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal(doc) },
         move,
       ];
-    case 'completed':
+    }
+    case 'completed': {
+      const track: GridAction[] = handlers.onTrackDocument && labels.track
+        ? [{ key: 'track', label: labels.track, icon: Activity, onClick: () => handlers.onTrackDocument?.(doc) }]
+        : [];
       return [
+        ...track,
         { key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary(doc) },
         { key: 'download-signed', label: labels.downloadSigned, icon: FileDown, onClick: () => handlers.onDownloadSigned(doc) },
         { key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal(doc) },
         move,
       ];
+    }
     case 'expired':
       return [
         { key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary(doc) },
@@ -108,6 +120,7 @@ export type GridDocumentCardProps = Readonly<{
   onDownloadSigned: (doc: EnvelopeSummary) => void;
   onViewSummary: (doc: EnvelopeSummary) => void;
   onMoveToFolder: (doc: EnvelopeSummary) => void;
+  onTrackDocument?: (doc: EnvelopeSummary) => void;
 }>;
 
 export function GridDocumentCard({
@@ -124,10 +137,11 @@ export function GridDocumentCard({
   onDownloadSigned,
   onViewSummary,
   onMoveToFolder,
+  onTrackDocument,
 }: GridDocumentCardProps) {
   const handlers: GridActionHandlers = useMemo(
-    () => ({ onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder }),
-    [onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder],
+    () => ({ onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder, onTrackDocument }),
+    [onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder, onTrackDocument],
   );
 
   const actions = useMemo(

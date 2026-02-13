@@ -73,6 +73,9 @@ export class Signer {
   @Column({ name: 'notified_at', type: 'timestamptz', nullable: true })
   notifiedAt!: Date | null;
 
+  @Column({ name: 'viewed_at', type: 'timestamptz', nullable: true })
+  viewedAt!: Date | null;
+
   @Column({ name: 'signed_at', type: 'timestamptz', nullable: true })
   signedAt!: Date | null;
 

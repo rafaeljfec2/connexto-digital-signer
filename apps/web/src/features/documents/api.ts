@@ -420,6 +420,44 @@ export const previewEmail = async (
   return response.data;
 };
 
+export type TrackingStepKey = 'notified' | 'viewed' | 'verified' | 'signed';
+
+export type TrackingStep = Readonly<{
+  key: TrackingStepKey;
+  completedAt: string | null;
+  reminderCount?: number;
+}>;
+
+export type TrackingSigner = Readonly<{
+  id: string;
+  name: string;
+  email: string;
+  order: number | null;
+  status: 'pending' | 'signed';
+  steps: ReadonlyArray<TrackingStep>;
+}>;
+
+export type EnvelopeTracking = Readonly<{
+  envelope: Readonly<{
+    id: string;
+    title: string;
+    status: EnvelopeStatus;
+    signingMode: SigningMode;
+    createdAt: string;
+    expiresAt: string | null;
+  }>;
+  signers: ReadonlyArray<TrackingSigner>;
+}>;
+
+export const getEnvelopeTracking = async (
+  envelopeId: string,
+): Promise<EnvelopeTracking> => {
+  const response = await apiClient.get<EnvelopeTracking>(
+    `/envelopes/${envelopeId}/tracking`,
+  );
+  return response.data;
+};
+
 export const getEnvelopeAuditSummary = async (
   envelopeId: string,
 ): Promise<DocumentAuditSummary> => {

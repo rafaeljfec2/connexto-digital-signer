@@ -16,6 +16,7 @@ import {
   Pencil,
   FileDown,
   ArrowRight,
+  Activity,
 } from 'lucide-react';
 import { Badge, Skeleton } from '@/shared/ui';
 import type { DocumentStatus, EnvelopeSummary } from '../api';
@@ -97,6 +98,7 @@ export type DocumentActionLabels = Readonly<{
   downloadSigned: string;
   delete: string;
   moveToFolder?: string;
+  track?: string;
 }>;
 
 export type DocumentsTableProps = Readonly<{
@@ -121,6 +123,7 @@ export type DocumentsTableProps = Readonly<{
   onDownloadSigned?: (doc: EnvelopeSummary) => void;
   onViewSummary?: (doc: EnvelopeSummary) => void;
   onMoveToFolder?: (doc: EnvelopeSummary) => void;
+  onTrackDocument?: (doc: EnvelopeSummary) => void;
   deletingId?: string | null;
   folderNameMap?: Map<string, string>;
 }>;
@@ -166,6 +169,7 @@ type ActionHandlers = Readonly<{
   onDownloadSigned?: (doc: EnvelopeSummary) => void;
   onViewSummary?: (doc: EnvelopeSummary) => void;
   onMoveToFolder?: (doc: EnvelopeSummary) => void;
+  onTrackDocument?: (doc: EnvelopeSummary) => void;
 }>;
 
 function buildMoveAction(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: ActionHandlers): DocumentAction[] {
@@ -183,8 +187,14 @@ function buildDraftActions(doc: EnvelopeSummary, labels: DocumentActionLabels, h
   ];
 }
 
+function buildTrackAction(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: ActionHandlers): DocumentAction[] {
+  if (!handlers.onTrackDocument || !labels.track) return [];
+  return [{ key: 'track', label: labels.track, icon: Activity, onClick: () => handlers.onTrackDocument?.(doc) }];
+}
+
 function buildViewableActions(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: ActionHandlers, includeSigned: boolean): ReadonlyArray<DocumentAction> {
   return [
+    ...buildTrackAction(doc, labels, handlers),
     ...(handlers.onViewSummary
       ? [{ key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary?.(doc) }]
       : []),
@@ -296,10 +306,11 @@ export function DocumentsTable({
   onDownloadSigned,
   onViewSummary,
   onMoveToFolder,
+  onTrackDocument,
   deletingId = null,
   folderNameMap,
 }: DocumentsTableProps) {
-  const handlers = { onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder };
+  const handlers = { onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder, onTrackDocument };
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
   const sortedDocuments = useMemo(
@@ -385,6 +396,7 @@ type DocumentRowProps = Readonly<{
     onDownloadSigned?: (doc: EnvelopeSummary) => void;
     onViewSummary?: (doc: EnvelopeSummary) => void;
     onMoveToFolder?: (doc: EnvelopeSummary) => void;
+    onTrackDocument?: (doc: EnvelopeSummary) => void;
   }>;
   isDeleting: boolean;
   folderName?: string;

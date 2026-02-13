@@ -271,7 +271,8 @@
       "deleteSuccess": "Draft deleted successfully",
       "deleting": "Deleting...",
       "cancel": "Cancel",
-      "moveToFolder": "Move to folder"
+      "moveToFolder": "Move to folder",
+    "track": "Track"
     },
     "status": {
       "draft": "Draft",
@@ -694,6 +695,23 @@
     "loading": "Loading summary...",
     "error": "Error loading summary",
     "errorSubtitle": "Could not load document data."
+  },
+  "tracking": {
+    "title": "Signing progress",
+    "progress": "Progress",
+    "waiting": "Waiting...",
+    "errorLoading": "Failed to load tracking data.",
+    "reminders": "reminders sent",
+    "steps": {
+      "notified": "Notification sent",
+      "viewed": "Document viewed",
+      "verified": "Identity verified",
+      "signed": "Signature completed"
+    },
+    "signerStatus": {
+      "pending": "Pending",
+      "signed": "Signed"
+    }
   },
   "landing": {
     "header": {

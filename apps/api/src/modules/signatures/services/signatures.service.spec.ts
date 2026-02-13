@@ -34,6 +34,7 @@ const buildSigner = (overrides?: Partial<Signer>): Signer => ({
   reminderCount: 0,
   order: null,
   notifiedAt: null,
+  viewedAt: null,
   signedAt: null,
   ipAddress: null,
   userAgent: null,

@@ -99,6 +99,48 @@ export class SignaturesService {
     });
   }
 
+  async getEnvelopeTracking(envelopeId: string, tenantId: string) {
+    const envelope = await this.envelopesService.findOne(envelopeId, tenantId);
+    const signers = await this.findByEnvelope(envelopeId, tenantId);
+
+    return {
+      envelope: {
+        id: envelope.id,
+        title: envelope.title,
+        status: envelope.status,
+        signingMode: envelope.signingMode,
+        createdAt: envelope.createdAt,
+        expiresAt: envelope.expiresAt,
+      },
+      signers: signers.map((signer) => ({
+        id: signer.id,
+        name: signer.name,
+        email: signer.email,
+        order: signer.order,
+        status: signer.status,
+        steps: [
+          {
+            key: 'notified' as const,
+            completedAt: signer.notifiedAt,
+            reminderCount: signer.reminderCount,
+          },
+          {
+            key: 'viewed' as const,
+            completedAt: signer.viewedAt,
+          },
+          {
+            key: 'verified' as const,
+            completedAt: signer.verifiedAt,
+          },
+          {
+            key: 'signed' as const,
+            completedAt: signer.signedAt,
+          },
+        ],
+      })),
+    };
+  }
+
   async findByTenant(
     tenantId: string,
     query: ListSignersQueryDto,
@@ -166,6 +208,12 @@ export class SignaturesService {
     documents: Array<{ id: string; title: string; status: DocumentStatus; position: number }>;
   }> {
     const signer = await this.findByToken(accessToken);
+
+    if (signer.viewedAt === null) {
+      signer.viewedAt = new Date();
+      await this.signerRepository.save(signer);
+    }
+
     const envelope = await this.envelopesService.findOne(signer.envelopeId, signer.tenantId);
     const documents = await this.documentsService.findByEnvelope(envelope.id, signer.tenantId);
 

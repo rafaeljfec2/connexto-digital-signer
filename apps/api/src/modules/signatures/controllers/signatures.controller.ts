@@ -289,6 +289,14 @@ export class DocumentSendController {
     return this.signaturesService.getEnvelopeAuditSummary(envelopeId, tenantId);
   }
 
+  @Get('tracking')
+  getEnvelopeTracking(
+    @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
+    @TenantId() tenantId: string,
+  ) {
+    return this.signaturesService.getEnvelopeTracking(envelopeId, tenantId);
+  }
+
   @Get('send/preview')
   previewSend(
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
