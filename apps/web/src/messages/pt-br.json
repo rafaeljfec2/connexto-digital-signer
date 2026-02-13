@@ -3,13 +3,13 @@
     "appName": "Connexto",
     "accessAccount": "Acesse sua conta",
     "createAccount": "Crie sua conta",
-    "alreadyHaveAccount": "Ja tem uma conta?",
+    "alreadyHaveAccount": "Já tem uma conta?",
     "newHere": "Novo por aqui?",
     "signIn": "Entrar",
     "createAccountLink": "Criar conta",
     "tenantLabel": "Tenant",
     "accountCreatedTitle": "Conta criada",
-    "accountCreatedSubtitle": "Voce ja esta logado.",
+    "accountCreatedSubtitle": "Você já está logado.",
     "help": "Ajuda",
     "searchPlaceholder": "Buscar documentos...",
     "notificationsLabel": "Notificações",
@@ -265,7 +265,7 @@
       "delete": "Excluir",
       "deleteTitle": "Excluir rascunho",
       "deleteConfirm": "Tem certeza que deseja excluir este rascunho? Esta ação não pode ser desfeita.",
-      "deleteSuccess": "Rascunho excluido com sucesso",
+      "deleteSuccess": "Rascunho excluído com sucesso",
       "deleting": "Excluindo...",
       "cancel": "Cancelar"
     },
@@ -282,7 +282,7 @@
     "pagination": {
       "previous": "Anterior",
       "next": "Proximo",
-      "page": "Pagina"
+      "page": "Página"
     },
     "empty": {
       "title": "Nenhum documento encontrado",
@@ -292,20 +292,20 @@
     "upload": {
       "title": "Novo documento",
       "subtitle": "Envie seu PDF e defina um titulo",
-      "titleLabel": "Titulo do documento",
+      "titleLabel": "Título do documento",
       "titlePlaceholder": "Contrato de vendas - Fevereiro",
       "dropzoneLabel": "Arraste e solte seu PDF aqui",
-      "dropzoneHelper": "Apenas PDF, ate 10MB",
+      "dropzoneHelper": "Apenas PDF, até 10MB",
       "fileLoaded": "PDF carregado",
       "replaceFile": "Trocar PDF",
       "defaultTitle": "Novo documento",
       "removeFile": "Remover",
       "submit": "Continuar",
       "submitting": "Enviando",
-      "success": "Documento salvo como rascunho",
+      "success": "Documento salvo como Rascunho",
       "errors": {
-        "titleRequired": "Titulo obrigatorio",
-        "fileRequired": "Arquivo obrigatorio",
+        "titleRequired": "Título obrigatório",
+        "fileRequired": "Arquivo obrigatório",
         "onlyPdf": "Apenas arquivos PDF são permitidos",
         "tooLarge": "Arquivo excede {max}MB",
         "failed": "Falha no envio"
@@ -314,7 +314,7 @@
   },
   "wizard": {
     "title": "Preparar documento",
-    "progress": "Progresso nova assinatura",
+    "progress": "Progresso da nova assinatura",
     "progressCounter": "{current} de {total}",
     "steps": {
       "upload": "Documento",
@@ -329,17 +329,17 @@
     "restart": "Reiniciar",
     "cancel": "Cancelar",
     "cancelConfirmTitle": "Cancelar assinatura",
-    "cancelConfirmDescription": "Tem certeza que deseja cancelar? O rascunho deste documento será excluido permanentemente.",
+    "cancelConfirmDescription": "Tem certeza que deseja cancelar? O Rascunho deste documento será excluído permanentemente.",
     "cancelConfirmButton": "Excluir rascunho",
     "cancelCancelButton": "Voltar",
     "cancelSuccess": "Rascunho excluído com sucesso",
-    "cancelError": "Falha ao excluir o rascunho",
-    "notFound": "Documento nao encontrado"
+    "cancelError": "Falha ao excluir o Rascunho",
+    "notFound": "Documento não encontrado"
   },
   "signers": {
     "title": "Definir signatários",
     "subtitle": "Adicione pessoas que vão assinar este documento",
-    "sectionPersonal": "Informacoes pessoais",
+    "sectionPersonal": "Informações pessoais",
     "sectionDocuments": "Documentos",
     "sectionRequest": "Solicitar ao signatário confirmação de dados pessoais",
     "sectionVerification": "Verificação e identificação",
@@ -361,20 +361,20 @@
     "requestEmailLabel": "Solicitar email",
     "requestCpfLabel": "Solicitar CPF",
     "requestPhoneLabel": "Solicitar telefone",
-    "authMethodLabel": "Autenticacao",
+    "authMethodLabel": "Autenticação",
     "authMethodEmail": "Token via email",
-    "authMethodNone": "Sem autenticacao",
+    "authMethodNone": "Sem autenticação",
     "orderPlaceholder": "Ordem (1, 2, 3)",
     "orderLabel": "Ordem",
-    "add": "Adicionar signatario",
+    "add": "Adicionar signatário",
     "edit": "Editar",
-    "editTitle": "Editar signatario",
+    "editTitle": "Editar signatário",
     "save": "Salvar",
     "remove": "Remover",
     "cancel": "Cancelar",
     "confirm": "Adicionar",
-    "listTitle": "Lista de signatarios",
-    "empty": "Nenhum signatario ainda"
+    "listTitle": "Lista de signatários",
+    "empty": "Nenhum signatário ainda"
   },
   "fields": {
     "title": "Campos de assinatura",
