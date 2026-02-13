@@ -51,20 +51,19 @@ function DocumentItem({ doc, isRemoving, canRemove, onRemove, removeLabel }: Doc
         <p className="text-xs text-foreground-muted">PDF</p>
       </div>
       {canRemove ? (
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          className="h-8 w-8 shrink-0 p-0 text-foreground-subtle hover:text-error"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground-muted transition-colors hover:bg-error/10 hover:text-error disabled:opacity-40"
           disabled={isRemoving}
           onClick={onRemove}
+          aria-label={removeLabel}
         >
           {isRemoving ? (
             <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
             <Trash2 className="h-4 w-4" />
           )}
-          <span className="sr-only">{removeLabel}</span>
-        </Button>
+        </button>
       ) : null}
     </div>
   );
@@ -97,15 +96,14 @@ function PendingFileItem({
       {isUploading ? (
         <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-subtle" />
       ) : (
-        <Button
+        <button
           type="button"
-          variant="ghost"
-          className="h-8 w-8 shrink-0 p-0 text-foreground-subtle hover:text-error"
+          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground-muted transition-colors hover:bg-error/10 hover:text-error"
           onClick={onRemove}
+          aria-label={removeLabel}
         >
           <X className="h-4 w-4" />
-          <span className="sr-only">{removeLabel}</span>
-        </Button>
+        </button>
       )}
     </div>
   );
@@ -203,7 +201,6 @@ export function UploadStep({
 
   const handleRemoveDocument = useCallback(
     async (docId: string) => {
-      if (docId === documentId) return;
       setRemovingDocId(docId);
       try {
         await removeDocumentMutation.mutateAsync(docId);
@@ -213,7 +210,7 @@ export function UploadStep({
         setRemovingDocId(null);
       }
     },
-    [documentId, removeDocumentMutation, t]
+    [removeDocumentMutation, t],
   );
 
   const validate = (): boolean => {
