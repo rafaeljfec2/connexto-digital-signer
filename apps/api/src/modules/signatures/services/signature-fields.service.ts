@@ -94,6 +94,21 @@ export class SignatureFieldsService {
     return this.fieldRepository.save(field);
   }
 
+  async updateValueByFieldId(
+    tenantId: string,
+    fieldId: string,
+    value: string,
+  ): Promise<SignatureField> {
+    const field = await this.fieldRepository.findOne({
+      where: { id: fieldId, tenantId },
+    });
+    if (field === null) {
+      throw new NotFoundException('Signature field not found');
+    }
+    field.value = value;
+    return this.fieldRepository.save(field);
+  }
+
   async replaceAll(
     tenantId: string,
     documentId: string,

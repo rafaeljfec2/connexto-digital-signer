@@ -6,10 +6,10 @@ import { Pencil, Plus, X, Search } from 'lucide-react';
 import type { Signer, TenantSigner } from '@/features/documents/api';
 import {
   useAddSigner,
-  useDocument,
+  useEnvelope,
   useRemoveSigner,
   useSigners,
-  useUpdateDocument,
+  useUpdateEnvelope,
   useUpdateSigner,
 } from '@/features/documents/hooks/use-document-wizard';
 import { useSearchTenantSigners } from '@/features/documents/hooks/use-search-tenant-signers';
@@ -17,22 +17,22 @@ import { Avatar, Badge, Button, Card, Dialog, Input, Select } from '@/shared/ui'
 import { formatCpf, isValidCpf } from '@/shared/utils/cpf';
 
 export type SignersStepProps = {
-  readonly documentId: string;
+  readonly envelopeId: string;
   readonly onBack: () => void;
   readonly onRestart: () => void;
   readonly onCancel: () => void;
   readonly onNext: () => void;
 };
 
-export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }: Readonly<SignersStepProps>) {
+export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }: Readonly<SignersStepProps>) {
   const tSigners = useTranslations('signers');
   const tWizard = useTranslations('wizard');
-  const documentQuery = useDocument(documentId);
-  const signersQuery = useSigners(documentId);
-  const addSignerMutation = useAddSigner(documentId);
-  const updateSignerMutation = useUpdateSigner(documentId);
-  const removeSignerMutation = useRemoveSigner(documentId);
-  const updateDocument = useUpdateDocument(documentId);
+  const envelopeQuery = useEnvelope(envelopeId);
+  const signersQuery = useSigners(envelopeId);
+  const addSignerMutation = useAddSigner(envelopeId);
+  const updateSignerMutation = useUpdateSigner(envelopeId);
+  const removeSignerMutation = useRemoveSigner(envelopeId);
+  const updateEnvelopeMutation = useUpdateEnvelope(envelopeId);
 
   const { results: searchResults, isLoading: isSearching, search: searchContacts, clear: clearSearch } = useSearchTenantSigners();
   const [showDropdown, setShowDropdown] = useState(false);
@@ -92,7 +92,7 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
     clearSearch();
   };
 
-  const signingMode = documentQuery.data?.signingMode ?? 'parallel';
+  const signingMode = envelopeQuery.data?.signingMode ?? 'parallel';
   const isEditing = editingSigner !== null;
 
   const resetForm = () => {
@@ -173,8 +173,8 @@ export function SignersStep({ documentId, onBack, onRestart, onCancel, onNext }:
   };
 
   const handleModeChange = async (mode: 'parallel' | 'sequential') => {
-    await updateDocument.mutateAsync({ signingMode: mode });
-    await documentQuery.refetch();
+    await updateEnvelopeMutation.mutateAsync({ signingMode: mode });
+    await envelopeQuery.refetch();
   };
 
   const handleCloseModal = () => {

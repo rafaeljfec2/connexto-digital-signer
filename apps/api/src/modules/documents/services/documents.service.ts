@@ -4,7 +4,6 @@ import { In, Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Document, DocumentStatus } from '../entities/document.entity';
 import { CreateDocumentDto } from '../dto/create-document.dto';
-import { ListDocumentsQueryDto } from '../dto/list-documents-query.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
 import { sha256 } from '@connexto/shared';
 import {
@@ -18,7 +17,6 @@ import type {
   DocumentCreatedEvent,
 } from '@connexto/events';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
-import { TenantsService } from '../../tenants/services/tenants.service';
 
 @Injectable()
 export class DocumentsService {
@@ -28,12 +26,11 @@ export class DocumentsService {
     private readonly eventEmitter: EventEmitter2,
     private readonly storage: S3StorageService,
     private readonly logger: Logger,
-    private readonly tenantsService: TenantsService,
   ) {}
 
   async create(
     tenantId: string,
-    createDocumentDto: CreateDocumentDto,
+    dto: CreateDocumentDto,
     file?: Buffer
   ): Promise<Document> {
     let key: string | null = null;
@@ -52,21 +49,16 @@ export class DocumentsService {
       }
     }
 
-    const tenant = await this.tenantsService.findOne(tenantId, tenantId);
-
     const document = this.documentRepository.create({
-      ...createDocumentDto,
+      title: dto.title,
+      envelopeId: dto.envelopeId,
+      position: dto.position ?? 0,
       tenantId,
       originalFileKey: key,
       originalHash: hash,
       status: DocumentStatus.DRAFT,
-      signingLanguage: createDocumentDto.signingLanguage ?? tenant.defaultSigningLanguage ?? 'pt-br',
-      reminderInterval: createDocumentDto.reminderInterval ?? tenant.defaultReminderInterval ?? 'none',
-      closureMode: createDocumentDto.closureMode ?? tenant.defaultClosureMode ?? 'automatic',
-      expiresAt: createDocumentDto.expiresAt
-        ? new Date(createDocumentDto.expiresAt)
-        : null,
     });
+
     let saved: Document;
     try {
       saved = await this.documentRepository.save(document);
@@ -76,6 +68,7 @@ export class DocumentsService {
       this.logger.error(`Failed to persist document: ${message}`, stack);
       throw error;
     }
+
     const createdPayload: DocumentCreatedEvent = {
       documentId: saved.id,
       tenantId: saved.tenantId,
@@ -110,65 +103,14 @@ export class DocumentsService {
     return this.documentRepository.save(document);
   }
 
-  async getStats(tenantId: string): Promise<{
-    pending: number;
-    completed: number;
-    expired: number;
-    draft: number;
-    total: number;
-  }> {
-    const [pending, completed, expired, draft, total] = await Promise.all([
-      this.documentRepository.count({
-        where: { tenantId, status: DocumentStatus.PENDING_SIGNATURES },
-      }),
-      this.documentRepository.count({
-        where: { tenantId, status: DocumentStatus.COMPLETED },
-      }),
-      this.documentRepository.count({
-        where: { tenantId, status: DocumentStatus.EXPIRED },
-      }),
-      this.documentRepository.count({
-        where: { tenantId, status: DocumentStatus.DRAFT },
-      }),
-      this.documentRepository.count({ where: { tenantId } }),
-    ]);
-    return {
-      pending,
-      completed,
-      expired,
-      draft,
-      total,
-    };
-  }
-
   async findAll(
     tenantId: string,
-    query: ListDocumentsQueryDto
-  ): Promise<{
-    data: Document[];
-    meta: { page: number; limit: number; total: number; totalPages: number };
-  }> {
-    const page = query.page ?? 1;
-    const limit = query.limit ?? 10;
-    const skip = (page - 1) * limit;
-    const where = query.status
-      ? { tenantId, status: query.status }
-      : { tenantId };
-    const [data, total] = await this.documentRepository.findAndCount({
-      where,
-      order: { createdAt: 'DESC' },
-      take: limit,
-      skip,
+    envelopeId: string
+  ): Promise<Document[]> {
+    return this.documentRepository.find({
+      where: { tenantId, envelopeId },
+      order: { position: 'ASC', createdAt: 'ASC' },
     });
-    return {
-      data,
-      meta: {
-        page,
-        limit,
-        total,
-        totalPages: Math.ceil(total / limit),
-      },
-    };
   }
 
   async findOne(id: string, tenantId: string): Promise<Document> {
@@ -188,18 +130,21 @@ export class DocumentsService {
     });
   }
 
+  async findByEnvelope(envelopeId: string, tenantId: string): Promise<Document[]> {
+    return this.documentRepository.find({
+      where: { envelopeId, tenantId },
+      order: { position: 'ASC', createdAt: 'ASC' },
+    });
+  }
+
   async update(
     id: string,
     tenantId: string,
-    updateDocumentDto: UpdateDocumentDto
+    dto: UpdateDocumentDto
   ): Promise<Document> {
     const document = await this.findOne(id, tenantId);
-    Object.assign(document, {
-      ...updateDocumentDto,
-      expiresAt: updateDocumentDto.expiresAt
-        ? new Date(updateDocumentDto.expiresAt)
-        : document.expiresAt,
-    });
+    if (dto.title !== undefined) document.title = dto.title;
+    if (dto.position !== undefined) document.position = dto.position;
     return this.documentRepository.save(document);
   }
 

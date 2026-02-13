@@ -34,15 +34,16 @@ const createTempId = () => `temp-${Math.random().toString(36).slice(2, 10)}`;
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 export type SignatureEditorModalProps = Readonly<{
+  envelopeId: string;
   documentId: string;
   onClose: () => void;
   onSave: () => void;
 }>;
 
-export function SignatureEditorModal({ documentId, onClose, onSave }: SignatureEditorModalProps) {
+export function SignatureEditorModal({ envelopeId, documentId, onClose, onSave }: SignatureEditorModalProps) {
   const tFields = useTranslations('fields');
   const tWizard = useTranslations('wizard');
-  const signersQuery = useSigners(documentId);
+  const signersQuery = useSigners(envelopeId);
   const fieldsQuery = useSignatureFields(documentId);
   const batchUpdate = useBatchUpdateFields(documentId);
   const suggestFieldsMutation = useSuggestFields(documentId);

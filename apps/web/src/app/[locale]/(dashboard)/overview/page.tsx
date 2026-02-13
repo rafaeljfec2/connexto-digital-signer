@@ -1,7 +1,7 @@
 'use client';
 
 import { useAuth } from '@/features/auth/hooks/use-auth';
-import type { DocumentSummary } from '@/features/documents/api';
+import type { EnvelopeSummary } from '@/features/documents/api';
 import { ActivityFeed } from '@/features/documents/components/activity-feed';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
 import { HelpSection } from '@/features/documents/components/help-section';
@@ -10,8 +10,8 @@ import { OnboardingChecklist } from '@/features/documents/components/onboarding-
 import { QuickActionsPanel } from '@/features/documents/components/quick-actions-panel';
 import { TipsBanner } from '@/features/documents/components/tips-banner';
 import {
-  useDeleteDocument,
-  useDocumentsList,
+  useDeleteEnvelope,
+  useEnvelopesList,
   useDocumentsStats,
 } from '@/features/documents/hooks/use-documents';
 import { useRouter } from '@/i18n/navigation';
@@ -58,15 +58,15 @@ export default function DashboardPage() {
   const router = useRouter();
   const { user } = useAuth();
   const [isMounted, setIsMounted] = useState(false);
-  const [deleteTarget, setDeleteTarget] = useState<DocumentSummary | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EnvelopeSummary | null>(null);
 
   useEffect(() => {
     setIsMounted(true);
   }, []);
 
   const statsQuery = useDocumentsStats();
-  const recentQuery = useDocumentsList({ page: 1, limit: 5 });
-  const deleteMutation = useDeleteDocument();
+  const recentQuery = useEnvelopesList({ page: 1, limit: 5 });
+  const deleteMutation = useDeleteEnvelope();
 
   const formatDate = useCallback(
     (value: string) =>
@@ -85,7 +85,7 @@ export default function DashboardPage() {
   );
 
   const handleDocumentClick = useCallback(
-    (doc: DocumentSummary) => {
+    (doc: EnvelopeSummary) => {
       if (doc.status === 'completed') {
         router.push(`/documents/${doc.id}/summary`);
       } else {

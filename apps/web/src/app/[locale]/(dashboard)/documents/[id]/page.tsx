@@ -1,23 +1,29 @@
 "use client";
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useParams, useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { DocumentWizard } from '@/features/documents/components/wizard/document-wizard';
-import { useDocument } from '@/features/documents/hooks/use-document-wizard';
-import { useDeleteDocument } from '@/features/documents/hooks/use-documents';
+import { useEnvelopeDocuments } from '@/features/documents/hooks/use-document-wizard';
+import { useDeleteEnvelope } from '@/features/documents/hooks/use-documents';
 import { ConfirmDialog, Skeleton } from '@/shared/ui';
 
 export default function DocumentWizardPage() {
   const tWizard = useTranslations('wizard');
   const params = useParams<{ id: string }>();
   const router = useRouter();
-  const documentId = params?.id ?? '';
-  const documentQuery = useDocument(documentId);
-  const deleteDocumentMutation = useDeleteDocument();
-  const hasFile = Boolean(documentQuery.data?.originalFileKey);
+  const envelopeId = params?.id ?? '';
+  const documentsQuery = useEnvelopeDocuments(envelopeId);
+  const deleteEnvelopeMutation = useDeleteEnvelope();
   const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const primaryDocument = useMemo(
+    () => documentsQuery.data?.[0] ?? null,
+    [documentsQuery.data],
+  );
+
+  const hasFile = Boolean(primaryDocument?.originalFileKey);
 
   const handleCancel = () => {
     setConfirmOpen(true);
@@ -25,7 +31,9 @@ export default function DocumentWizardPage() {
 
   const handleConfirmDelete = async () => {
     try {
-      await deleteDocumentMutation.mutateAsync(documentId);
+      if (envelopeId) {
+        await deleteEnvelopeMutation.mutateAsync(envelopeId);
+      }
       toast.success(tWizard('cancelSuccess'));
       router.push('/documents');
     } catch {
@@ -35,11 +43,11 @@ export default function DocumentWizardPage() {
     }
   };
 
-  if (!documentId) {
+  if (!envelopeId) {
     return <div className="text-sm text-muted">{tWizard('notFound')}</div>;
   }
 
-  if (documentQuery.isLoading) {
+  if (documentsQuery.isLoading) {
     return (
       <div className="space-y-4">
         <Skeleton className="h-8 w-48" />
@@ -49,10 +57,15 @@ export default function DocumentWizardPage() {
     );
   }
 
+  if (!primaryDocument) {
+    return <div className="text-sm text-muted">{tWizard('notFound')}</div>;
+  }
+
   return (
     <>
       <DocumentWizard
-        documentId={documentId}
+        envelopeId={envelopeId}
+        documentId={primaryDocument.id}
         hasFile={hasFile}
         onCancel={handleCancel}
       />
@@ -62,7 +75,7 @@ export default function DocumentWizardPage() {
         description={tWizard('cancelConfirmDescription')}
         confirmLabel={tWizard('cancelConfirmButton')}
         cancelLabel={tWizard('cancelCancelButton')}
-        isLoading={deleteDocumentMutation.isPending}
+        isLoading={deleteEnvelopeMutation.isPending}
         variant="danger"
         onConfirm={handleConfirmDelete}
         onCancel={() => setConfirmOpen(false)}

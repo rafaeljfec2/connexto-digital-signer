@@ -6,25 +6,65 @@ export type DocumentStatus =
   | 'completed'
   | 'expired';
 
-export type DocumentSummary = {
-  readonly id: string;
-  readonly title: string;
-  readonly status: DocumentStatus;
-  readonly createdAt: string;
-};
+export type EnvelopeStatus =
+  | 'draft'
+  | 'pending_signatures'
+  | 'completed'
+  | 'expired';
 
 export type ReminderInterval = 'none' | '1_day' | '2_days' | '3_days' | '7_days';
 export type SigningLanguage = 'pt-br' | 'en';
 export type ClosureMode = 'automatic' | 'manual';
+export type SigningMode = 'parallel' | 'sequential';
 
-export type DocumentDetail = DocumentSummary & {
+export type Folder = {
+  readonly id: string;
   readonly tenantId: string;
-  readonly signingMode: 'parallel' | 'sequential';
-  readonly originalFileKey: string | null;
+  readonly parentId: string | null;
+  readonly name: string;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+};
+
+export type FolderTreeNode = {
+  readonly id: string;
+  readonly name: string;
+  readonly parentId: string | null;
+  readonly createdAt: string;
+  readonly children: FolderTreeNode[];
+};
+
+export type EnvelopeSummary = {
+  readonly id: string;
+  readonly tenantId: string;
+  readonly folderId: string;
+  readonly title: string;
+  readonly status: EnvelopeStatus;
+  readonly signingMode: SigningMode;
   readonly expiresAt: string | null;
   readonly reminderInterval: ReminderInterval;
   readonly signingLanguage: SigningLanguage;
   readonly closureMode: ClosureMode;
+  readonly createdAt: string;
+  readonly updatedAt: string;
+};
+
+export type DocumentSummary = {
+  readonly id: string;
+  readonly envelopeId: string;
+  readonly title: string;
+  readonly status: DocumentStatus;
+  readonly position: number;
+  readonly createdAt: string;
+};
+
+export type DocumentDetail = DocumentSummary & {
+  readonly tenantId: string;
+  readonly originalFileKey: string | null;
+  readonly originalHash: string | null;
+  readonly finalFileKey: string | null;
+  readonly finalHash: string | null;
+  readonly version: number;
   readonly updatedAt: string;
 };
 
@@ -93,8 +133,8 @@ export type DocumentsStats = {
   readonly total: number;
 };
 
-export type DocumentsListResponse = {
-  readonly data: DocumentSummary[];
+export type EnvelopesListResponse = {
+  readonly data: EnvelopeSummary[];
   readonly meta: {
     readonly page: number;
     readonly limit: number;
@@ -103,36 +143,48 @@ export type DocumentsListResponse = {
   };
 };
 
-export type ListDocumentsParams = {
+export type ListEnvelopesParams = {
   readonly page?: number;
   readonly limit?: number;
-  readonly status?: DocumentStatus;
+  readonly status?: EnvelopeStatus;
+  readonly folderId?: string;
 };
 
-export type UploadDocumentInput = {
+export type CreateEnvelopeInput = {
   readonly title: string;
-  readonly file: File;
+  readonly folderId: string;
+  readonly signingMode?: SigningMode;
+  readonly expiresAt?: string | null;
+  readonly reminderInterval?: ReminderInterval;
+  readonly signingLanguage?: SigningLanguage;
+  readonly closureMode?: ClosureMode;
 };
 
-export type UploadDocumentFileInput = {
-  readonly file: File;
+export type UpdateEnvelopeInput = Partial<CreateEnvelopeInput>;
+
+export type CreateFolderInput = {
+  readonly name: string;
+  readonly parentId?: string;
 };
 
-export type CreateDraftInput = {
-  readonly title: string;
+export type UpdateFolderInput = {
+  readonly name?: string;
+  readonly parentId?: string | null;
 };
 
 export type SendDocumentInput = {
   readonly message?: string;
 };
 
+export type CreateDocumentInput = {
+  readonly title: string;
+  readonly envelopeId: string;
+  readonly position?: number;
+};
+
 export type UpdateDocumentInput = {
   readonly title?: string;
-  readonly signingMode?: 'parallel' | 'sequential';
-  readonly expiresAt?: string | null;
-  readonly reminderInterval?: ReminderInterval;
-  readonly signingLanguage?: SigningLanguage;
-  readonly closureMode?: ClosureMode;
+  readonly position?: number;
 };
 
 export type AuditTimelineEvent = Readonly<{
@@ -172,52 +224,84 @@ export type DocumentAuditSummary = Readonly<{
   timeline: readonly AuditTimelineEvent[];
 }>;
 
-export const getDocumentsStats = async (): Promise<DocumentsStats> => {
-  const response = await apiClient.get<DocumentsStats>('/documents/stats');
+export const getFolderTree = async (): Promise<FolderTreeNode[]> => {
+  const response = await apiClient.get<FolderTreeNode[]>('/folders');
   return response.data;
 };
 
-export const listDocuments = async (
-  params: ListDocumentsParams
-): Promise<DocumentsListResponse> => {
-  const response = await apiClient.get<DocumentsListResponse>('/documents', {
+export const createFolder = async (input: CreateFolderInput): Promise<Folder> => {
+  const response = await apiClient.post<Folder>('/folders', input);
+  return response.data;
+};
+
+export const updateFolder = async (id: string, input: UpdateFolderInput): Promise<Folder> => {
+  const response = await apiClient.patch<Folder>(`/folders/${id}`, input);
+  return response.data;
+};
+
+export const deleteFolder = async (id: string): Promise<void> => {
+  await apiClient.delete(`/folders/${id}`);
+};
+
+export const getEnvelopesStats = async (): Promise<DocumentsStats> => {
+  const response = await apiClient.get<DocumentsStats>('/envelopes/stats');
+  return response.data;
+};
+
+export const listEnvelopes = async (
+  params: ListEnvelopesParams
+): Promise<EnvelopesListResponse> => {
+  const response = await apiClient.get<EnvelopesListResponse>('/envelopes', {
     params,
   });
   return response.data;
 };
 
-export const deleteDocument = async (documentId: string): Promise<void> => {
-  await apiClient.delete(`/documents/${documentId}`);
+export const getEnvelope = async (id: string): Promise<EnvelopeSummary> => {
+  const response = await apiClient.get<EnvelopeSummary>(`/envelopes/${id}`);
+  return response.data;
 };
 
-export const createDraftDocument = async (
-  input: CreateDraftInput
+export const createEnvelope = async (input: CreateEnvelopeInput): Promise<EnvelopeSummary> => {
+  const response = await apiClient.post<EnvelopeSummary>('/envelopes', input);
+  return response.data;
+};
+
+export const updateEnvelope = async (
+  id: string,
+  input: UpdateEnvelopeInput,
+): Promise<EnvelopeSummary> => {
+  const response = await apiClient.patch<EnvelopeSummary>(`/envelopes/${id}`, input);
+  return response.data;
+};
+
+export const deleteEnvelope = async (id: string): Promise<void> => {
+  await apiClient.delete(`/envelopes/${id}`);
+};
+
+export const listDocumentsByEnvelope = async (
+  envelopeId: string
+): Promise<DocumentDetail[]> => {
+  const response = await apiClient.get<DocumentDetail[]>(`/envelopes/${envelopeId}/documents`);
+  return response.data;
+};
+
+export const createDocument = async (
+  input: CreateDocumentInput,
+  file?: File,
 ): Promise<DocumentSummary> => {
+  if (file) {
+    const formData = new FormData();
+    formData.append('title', input.title);
+    formData.append('envelopeId', input.envelopeId);
+    if (input.position !== undefined) formData.append('position', String(input.position));
+    formData.append('file', file);
+    const response = await apiClient.post<DocumentSummary>('/documents', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+    return response.data;
+  }
   const response = await apiClient.post<DocumentSummary>('/documents', input);
-  return response.data;
-};
-
-export const uploadDocument = async (
-  input: UploadDocumentInput
-): Promise<DocumentSummary> => {
-  const formData = new FormData();
-  formData.append('title', input.title);
-  formData.append('file', input.file);
-  const response = await apiClient.post<DocumentSummary>('/documents', formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
-  return response.data;
-};
-
-export const uploadDocumentFile = async (
-  documentId: string,
-  input: UploadDocumentFileInput
-): Promise<DocumentDetail> => {
-  const formData = new FormData();
-  formData.append('file', input.file);
-  const response = await apiClient.post<DocumentDetail>(`/documents/${documentId}/file`, formData, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  });
   return response.data;
 };
 
@@ -233,32 +317,67 @@ export const getDocumentFile = async (id: string): Promise<Blob> => {
   return response.data as Blob;
 };
 
-export const listSigners = async (documentId: string): Promise<Signer[]> => {
-  const response = await apiClient.get<Signer[]>(`/documents/${documentId}/signers`);
+export const uploadDocumentFile = async (
+  documentId: string,
+  file: File
+): Promise<DocumentDetail> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  const response = await apiClient.post<DocumentDetail>(`/documents/${documentId}/file`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+  return response.data;
+};
+
+export const updateDocument = async (
+  documentId: string,
+  input: UpdateDocumentInput
+): Promise<DocumentDetail> => {
+  const response = await apiClient.patch<DocumentDetail>(`/documents/${documentId}`, input);
+  return response.data;
+};
+
+export const deleteDocument = async (documentId: string): Promise<void> => {
+  await apiClient.delete(`/documents/${documentId}`);
+};
+
+export const getDocumentSignedFile = async (documentId: string): Promise<Blob | null> => {
+  try {
+    const response = await apiClient.get(`/documents/${documentId}/signed-file`, {
+      responseType: 'blob',
+    });
+    return response.data as Blob;
+  } catch {
+    return null;
+  }
+};
+
+export const listSigners = async (envelopeId: string): Promise<Signer[]> => {
+  const response = await apiClient.get<Signer[]>(`/envelopes/${envelopeId}/signers`);
   return response.data;
 };
 
 export const addSigner = async (
-  documentId: string,
+  envelopeId: string,
   input: CreateSignerInput
 ): Promise<Signer> => {
-  const response = await apiClient.post<Signer>(`/documents/${documentId}/signers`, input);
+  const response = await apiClient.post<Signer>(`/envelopes/${envelopeId}/signers`, input);
   return response.data;
 };
 
 export type UpdateSignerInput = Partial<CreateSignerInput>;
 
 export const updateSigner = async (
-  documentId: string,
+  envelopeId: string,
   signerId: string,
   input: UpdateSignerInput
 ): Promise<Signer> => {
-  const response = await apiClient.patch<Signer>(`/documents/${documentId}/signers/${signerId}`, input);
+  const response = await apiClient.patch<Signer>(`/envelopes/${envelopeId}/signers/${signerId}`, input);
   return response.data;
 };
 
-export const removeSigner = async (documentId: string, signerId: string): Promise<void> => {
-  await apiClient.delete(`/documents/${documentId}/signers/${signerId}`);
+export const removeSigner = async (envelopeId: string, signerId: string): Promise<void> => {
+  await apiClient.delete(`/envelopes/${envelopeId}/signers/${signerId}`);
 };
 
 export const listFields = async (documentId: string): Promise<SignatureField[]> => {
@@ -277,41 +396,33 @@ export const batchUpdateFields = async (
   return response.data;
 };
 
-export const sendDocument = async (
-  documentId: string,
+export const sendEnvelope = async (
+  envelopeId: string,
   input: SendDocumentInput
 ): Promise<{ notified: string[] }> => {
   const response = await apiClient.post<{ notified: string[] }>(
-    `/documents/${documentId}/send`,
+    `/envelopes/${envelopeId}/send`,
     input
   );
   return response.data;
 };
 
 export const previewEmail = async (
-  documentId: string,
+  envelopeId: string,
   input: SendDocumentInput
 ): Promise<{ subject: string; body: string }> => {
   const response = await apiClient.get<{ subject: string; body: string }>(
-    `/documents/${documentId}/send/preview`,
+    `/envelopes/${envelopeId}/send/preview`,
     { params: input }
   );
   return response.data;
 };
 
-export const updateDocument = async (
-  documentId: string,
-  input: UpdateDocumentInput
-): Promise<DocumentDetail> => {
-  const response = await apiClient.patch<DocumentDetail>(`/documents/${documentId}`, input);
-  return response.data;
-};
-
-export const getDocumentAuditSummary = async (
-  documentId: string,
+export const getEnvelopeAuditSummary = async (
+  envelopeId: string,
 ): Promise<DocumentAuditSummary> => {
   const response = await apiClient.get<DocumentAuditSummary>(
-    `/documents/${documentId}/summary`,
+    `/envelopes/${envelopeId}/summary`,
   );
   return response.data;
 };
@@ -346,36 +457,25 @@ export const suggestFields = async (
   return response.data;
 };
 
-export const getDocumentSignedFile = async (documentId: string): Promise<Blob | null> => {
-  try {
-    const response = await apiClient.get(`/documents/${documentId}/signed-file`, {
-      responseType: 'blob',
-    });
-    return response.data as Blob;
-  } catch {
-    return null;
-  }
-};
+export type SignerStatusType = 'pending' | 'signed';
 
-export type SignerStatus = 'pending' | 'signed';
-
-export type SignerWithDocument = {
+export type SignerWithEnvelope = {
   readonly id: string;
   readonly name: string;
   readonly email: string;
   readonly phone: string | null;
   readonly cpf: string | null;
-  readonly status: SignerStatus;
+  readonly status: SignerStatusType;
   readonly authMethod: string;
-  readonly documentId: string;
-  readonly documentTitle: string;
+  readonly envelopeId: string;
+  readonly envelopeTitle: string;
   readonly notifiedAt: string | null;
   readonly signedAt: string | null;
   readonly createdAt: string;
 };
 
 export type SignersListResponse = {
-  readonly data: ReadonlyArray<SignerWithDocument>;
+  readonly data: ReadonlyArray<SignerWithEnvelope>;
   readonly meta: {
     readonly page: number;
     readonly limit: number;
@@ -387,7 +487,7 @@ export type SignersListResponse = {
 export type ListSignersParams = {
   readonly page?: number;
   readonly limit?: number;
-  readonly status?: SignerStatus;
+  readonly status?: SignerStatusType;
 };
 
 export const listAllSigners = async (

@@ -5,11 +5,11 @@ import { useLocale, useTranslations } from 'next-intl';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
 import { EmptyState } from '@/features/documents/components/empty-state';
-import { useDeleteDocument, useDocumentsList } from '@/features/documents/hooks/use-documents';
-import { getDocumentFile, getDocumentSignedFile } from '@/features/documents/api';
+import { useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/use-documents';
+import { getDocumentFile, getDocumentSignedFile, getEnvelopeAuditSummary } from '@/features/documents/api';
 import { Badge, Button, Card, ConfirmDialog, Pagination, Select, Skeleton } from '@/shared/ui';
 import { FadeIn, PageTransition } from '@/shared/animations';
-import type { DocumentStatus, DocumentSummary } from '@/features/documents/api';
+import type { DocumentStatus, EnvelopeSummary } from '@/features/documents/api';
 import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
 import { useRouter } from '@/i18n/navigation';
 import { Calendar, Download, Eye, FileDown, FileText, LayoutGrid, List, MoreVertical, Pencil, Plus, Trash2 } from 'lucide-react';
@@ -39,11 +39,11 @@ export default function DocumentsPage() {
   const [status, setStatus] = useState<DocumentStatus | 'all'>('all');
   const [page, setPage] = useState(1);
   const [view, setView] = useState<'list' | 'grid'>('list');
-  const [deleteTarget, setDeleteTarget] = useState<DocumentSummary | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<EnvelopeSummary | null>(null);
   const [gridMenuOpenId, setGridMenuOpenId] = useState<string | null>(null);
   const limit = 10;
 
-  const query = useDocumentsList({
+  const query = useEnvelopesList({
     page,
     limit,
     status: status === 'all' ? undefined : status,
@@ -74,35 +74,37 @@ export default function DocumentsPage() {
     [tDocuments]
   );
 
-  const deleteMutation = useDeleteDocument();
+  const deleteMutation = useDeleteEnvelope();
 
   const handleDocumentClick = useCallback(
-    (doc: DocumentSummary) => {
-      if (doc.status === 'completed') {
-        router.push(`/documents/${doc.id}/summary`);
+    (env: EnvelopeSummary) => {
+      if (env.status === 'completed') {
+        router.push(`/documents/${env.id}/summary`);
       } else {
-        router.push(`/documents/${doc.id}`);
+        router.push(`/documents/${env.id}`);
       }
     },
     [router]
   );
 
   const handleViewSummary = useCallback(
-    (doc: DocumentSummary) => {
-      router.push(`/documents/${doc.id}/summary`);
+    (env: EnvelopeSummary) => {
+      router.push(`/documents/${env.id}/summary`);
     },
     [router]
   );
 
-  const handleDownloadOriginal = useCallback(async (doc: DocumentSummary) => {
-    const blob = await getDocumentFile(doc.id);
-    downloadBlob(blob, `${doc.title}.pdf`);
+  const handleDownloadOriginal = useCallback(async (env: EnvelopeSummary) => {
+    const summary = await getEnvelopeAuditSummary(env.id);
+    const blob = await getDocumentFile(summary.document.id);
+    downloadBlob(blob, `${env.title}.pdf`);
   }, []);
 
-  const handleDownloadSigned = useCallback(async (doc: DocumentSummary) => {
-    const blob = await getDocumentSignedFile(doc.id);
+  const handleDownloadSigned = useCallback(async (env: EnvelopeSummary) => {
+    const summary = await getEnvelopeAuditSummary(env.id);
+    const blob = await getDocumentSignedFile(summary.document.id);
     if (blob) {
-      downloadBlob(blob, `${doc.title}-signed.pdf`);
+      downloadBlob(blob, `${env.title}-signed.pdf`);
     }
   }, []);
 
@@ -304,22 +306,22 @@ type GridActionItem = Readonly<{
 }>;
 
 type GridActionHandlers = Readonly<{
-  onDocumentClick: (doc: DocumentSummary) => void;
-  onDeleteDocument: (doc: DocumentSummary) => void;
-  onDownloadOriginal: (doc: DocumentSummary) => void;
-  onDownloadSigned: (doc: DocumentSummary) => void;
-  onViewSummary: (doc: DocumentSummary) => void;
+  onDocumentClick: (doc: EnvelopeSummary) => void;
+  onDeleteDocument: (doc: EnvelopeSummary) => void;
+  onDownloadOriginal: (doc: EnvelopeSummary) => void;
+  onDownloadSigned: (doc: EnvelopeSummary) => void;
+  onViewSummary: (doc: EnvelopeSummary) => void;
 }>;
 
-function buildSummaryAction(doc: DocumentSummary, labels: DocumentActionLabels, handlers: GridActionHandlers): GridActionItem {
+function buildSummaryAction(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: GridActionHandlers): GridActionItem {
   return { key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary(doc) };
 }
 
-function buildDownloadOriginalAction(doc: DocumentSummary, labels: DocumentActionLabels, handlers: GridActionHandlers): GridActionItem {
+function buildDownloadOriginalAction(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: GridActionHandlers): GridActionItem {
   return { key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal(doc) };
 }
 
-const GRID_ACTIONS_BY_STATUS: Record<DocumentStatus, (doc: DocumentSummary, labels: DocumentActionLabels, handlers: GridActionHandlers) => ReadonlyArray<GridActionItem>> = {
+const GRID_ACTIONS_BY_STATUS: Record<DocumentStatus, (doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: GridActionHandlers) => ReadonlyArray<GridActionItem>> = {
   draft: (doc, labels, handlers) => [
     { key: 'continue', label: labels.continue, icon: Pencil, onClick: () => handlers.onDocumentClick(doc) },
     { key: 'delete', label: labels.delete, icon: Trash2, variant: 'danger', onClick: () => handlers.onDeleteDocument(doc) },
@@ -340,7 +342,7 @@ const GRID_ACTIONS_BY_STATUS: Record<DocumentStatus, (doc: DocumentSummary, labe
 };
 
 function getGridActions(
-  doc: DocumentSummary,
+  doc: EnvelopeSummary,
   labels: DocumentActionLabels,
   handlers: GridActionHandlers,
 ): ReadonlyArray<GridActionItem> {
@@ -349,17 +351,17 @@ function getGridActions(
 }
 
 type GridDocumentCardProps = Readonly<{
-  doc: DocumentSummary;
+  doc: EnvelopeSummary;
   statusLabels: Record<DocumentStatus, string>;
   actionLabels: DocumentActionLabels;
   formatDate: (value: string) => string;
   isMenuOpen: boolean;
   onToggleMenu: (open: boolean) => void;
-  onDocumentClick: (doc: DocumentSummary) => void;
-  onDeleteDocument: (doc: DocumentSummary) => void;
-  onDownloadOriginal: (doc: DocumentSummary) => void;
-  onDownloadSigned: (doc: DocumentSummary) => void;
-  onViewSummary: (doc: DocumentSummary) => void;
+  onDocumentClick: (doc: EnvelopeSummary) => void;
+  onDeleteDocument: (doc: EnvelopeSummary) => void;
+  onDownloadOriginal: (doc: EnvelopeSummary) => void;
+  onDownloadSigned: (doc: EnvelopeSummary) => void;
+  onViewSummary: (doc: EnvelopeSummary) => void;
 }>;
 
 function GridDocumentCard({

@@ -13,27 +13,23 @@ import { Logger, NotFoundException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { Repository } from 'typeorm';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
-import { TenantsService } from '../../tenants/services/tenants.service';
-import { Document, DocumentStatus, SigningMode } from '../entities/document.entity';
+import { Document, DocumentStatus } from '../entities/document.entity';
 import { DocumentsService } from './documents.service';
 
 const buildDocument = (overrides?: Partial<Document>): Document => ({
   id: 'doc-1',
   tenantId: 'tenant-1',
+  envelopeId: 'env-1',
   title: 'Agreement',
   originalFileKey: 'original.pdf',
   finalFileKey: null,
   originalHash: 'hash-original',
   finalHash: null,
   status: DocumentStatus.DRAFT,
-  signingMode: SigningMode.PARALLEL,
-  expiresAt: null,
   version: 1,
+  position: 0,
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
   updatedAt: new Date('2026-01-01T00:00:00.000Z'),
-  reminderInterval: 'none',
-  signingLanguage: 'pt-br',
-  closureMode: 'automatic',
   ...overrides,
 });
 
@@ -56,14 +52,7 @@ describe('DocumentsService', () => {
       delete: jest.fn(),
       getSignedUrl: jest.fn(),
     } as unknown as jest.Mocked<S3StorageService>;
-    const tenantsService = {
-      findOne: jest.fn().mockResolvedValue({
-        defaultSigningLanguage: 'pt-br',
-        defaultReminderInterval: 'none',
-        defaultClosureMode: 'automatic',
-      }),
-    } as unknown as TenantsService;
-    service = new DocumentsService(documentRepository, eventEmitter, storage, new Logger(), tenantsService);
+    service = new DocumentsService(documentRepository, eventEmitter, storage, new Logger());
   });
 
   describe('create', () => {
@@ -88,7 +77,7 @@ describe('DocumentsService', () => {
 
       const result = await service.create(
         'tenant-1',
-        { title: 'Agreement', expiresAt: '2026-12-31T23:59:59.000Z' },
+        { title: 'Agreement', envelopeId: 'env-1' },
         file
       );
 
@@ -124,7 +113,7 @@ describe('DocumentsService', () => {
       (documentRepository.create as jest.Mock).mockReturnValue(created);
       (documentRepository.save as jest.Mock).mockResolvedValue(saved);
 
-      const result = await service.create('tenant-1', { title: 'Draft' });
+      const result = await service.create('tenant-1', { title: 'Draft', envelopeId: 'env-1' });
 
       expect(storage.put).not.toHaveBeenCalled();
       expect(documentRepository.save).toHaveBeenCalledWith(created);
@@ -182,32 +171,32 @@ describe('DocumentsService', () => {
   });
 
   describe('update', () => {
-    test('should update expiresAt when provided', async () => {
-      const document = buildDocument({ expiresAt: null });
+    test('should update title when provided', async () => {
+      const document = buildDocument();
       jest.spyOn(service, 'findOne').mockResolvedValue(document);
       (documentRepository.save as jest.Mock).mockResolvedValue({
         ...document,
         title: 'Updated',
-        expiresAt: new Date('2026-12-31T23:59:59.000Z'),
       });
 
       const result = await service.update('doc-1', 'tenant-1', {
         title: 'Updated',
-        expiresAt: '2026-12-31T23:59:59.000Z',
       });
 
-      expect(result.expiresAt?.toISOString()).toBe('2026-12-31T23:59:59.000Z');
+      expect(result.title).toBe('Updated');
     });
 
-    test('should keep expiresAt when not provided', async () => {
-      const existingDate = new Date('2026-01-01T00:00:00.000Z');
-      const document = buildDocument({ expiresAt: existingDate });
+    test('should update position when provided', async () => {
+      const document = buildDocument({ position: 0 });
       jest.spyOn(service, 'findOne').mockResolvedValue(document);
-      (documentRepository.save as jest.Mock).mockResolvedValue(document);
+      (documentRepository.save as jest.Mock).mockResolvedValue({
+        ...document,
+        position: 2,
+      });
 
-      const result = await service.update('doc-1', 'tenant-1', { title: 'Updated' });
+      const result = await service.update('doc-1', 'tenant-1', { position: 2 });
 
-      expect(result.expiresAt).toBe(existingDate);
+      expect(result.position).toBe(2);
     });
   });
 

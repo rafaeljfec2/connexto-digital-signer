@@ -13,7 +13,7 @@ import type {
   TenantCreatedEvent,
 } from '@connexto/events';
 import { User, UserRole } from '../../users/entities/user.entity';
-import { Document } from '../../documents/entities/document.entity';
+import { Envelope } from '../../envelopes/entities/envelope.entity';
 import { NotificationsService } from '../services/notifications.service';
 
 const WEB_URL = process.env['WEB_BASE_URL'] ?? 'http://localhost:3001';
@@ -24,8 +24,8 @@ export class NotificationEventsHandler {
     private readonly notificationsService: NotificationsService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    @InjectRepository(Document)
-    private readonly documentRepository: Repository<Document>,
+    @InjectRepository(Envelope)
+    private readonly envelopeRepository: Repository<Envelope>,
     @Inject('NotificationEventsLogger') private readonly logger: Logger,
   ) {}
 
@@ -44,11 +44,11 @@ export class NotificationEventsHandler {
   @OnEvent(EVENT_DOCUMENT_COMPLETED)
   async handleDocumentCompleted(payload: DocumentCompletedEvent): Promise<void> {
     try {
-      const document = await this.documentRepository.findOne({
+      const envelope = await this.envelopeRepository.findOne({
         where: { id: payload.documentId, tenantId: payload.tenantId },
       });
 
-      if (!document) return;
+      if (!envelope) return;
 
       const owner = await this.userRepository.findOne({
         where: { tenantId: payload.tenantId, role: UserRole.OWNER },
@@ -56,13 +56,13 @@ export class NotificationEventsHandler {
 
       if (!owner) return;
 
-      const locale = document.signingLanguage ?? 'pt-br';
-      const documentUrl = `${WEB_URL}/${locale}/documents/${document.id}/summary`;
+      const locale = envelope.signingLanguage ?? 'pt-br';
+      const documentUrl = `${WEB_URL}/${locale}/documents/${envelope.id}/summary`;
 
       await this.notificationsService.sendDocumentCompleted({
         ownerEmail: owner.email,
         ownerName: owner.name,
-        documentTitle: document.title,
+        documentTitle: envelope.title,
         documentUrl,
         locale,
       });

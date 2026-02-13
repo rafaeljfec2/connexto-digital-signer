@@ -2,6 +2,7 @@ import { Logger, Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bull';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Document } from '../documents/entities/document.entity';
+import { Envelope } from '../envelopes/entities/envelope.entity';
 import { Signer } from '../signatures/entities/signer.entity';
 import { User } from '../users/entities/user.entity';
 import { NotificationsService } from './services/notifications.service';
@@ -12,7 +13,7 @@ import { NotificationEventsHandler } from './events/notification.events-handler'
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Document, Signer, User]),
+    TypeOrmModule.forFeature([Document, Envelope, Signer, User]),
     BullModule.registerQueue({
       name: 'notifications',
       defaultJobOptions: {

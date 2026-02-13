@@ -4,6 +4,7 @@ import { Signer } from './entities/signer.entity';
 import { SignatureField } from './entities/signature-field.entity';
 import { TenantSigner } from './entities/tenant-signer.entity';
 import { DocumentsModule } from '../documents/documents.module';
+import { EnvelopesModule } from '../envelopes/envelopes.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { TenantsModule } from '../tenants/tenants.module';
 import {
@@ -23,6 +24,7 @@ import { VerificationService } from './services/verification.service';
   imports: [
     TypeOrmModule.forFeature([Signer, SignatureField, TenantSigner]),
     DocumentsModule,
+    EnvelopesModule,
     NotificationsModule,
     TenantsModule,
   ],

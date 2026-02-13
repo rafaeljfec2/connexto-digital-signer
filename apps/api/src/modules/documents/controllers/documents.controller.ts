@@ -11,7 +11,6 @@ import {
   Param,
   Res,
   ParseUUIDPipe,
-  Query,
   UseInterceptors,
   UploadedFile,
   StreamableFile,
@@ -24,7 +23,6 @@ import { TenantId } from '@connexto/shared';
 import { DocumentsService } from '../services/documents.service';
 import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
-import { ListDocumentsQueryDto } from '../dto/list-documents-query.dto';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 @ApiTags('Documents')
@@ -55,19 +53,6 @@ export class DocumentsController {
       return this.documentsService.create(tenantId, createDocumentDto, file.buffer);
     }
     return this.documentsService.create(tenantId, createDocumentDto);
-  }
-
-  @Get('stats')
-  getStats(@TenantId() tenantId: string) {
-    return this.documentsService.getStats(tenantId);
-  }
-
-  @Get()
-  findAll(
-    @TenantId() tenantId: string,
-    @Query() query: ListDocumentsQueryDto
-  ) {
-    return this.documentsService.findAll(tenantId, query);
   }
 
   @Get(':id')
@@ -138,14 +123,6 @@ export class DocumentsController {
     @Body() updateDocumentDto: UpdateDocumentDto
   ) {
     return this.documentsService.update(id, tenantId, updateDocumentDto);
-  }
-
-  @Post(':id/close')
-  close(
-    @Param('id', ParseUUIDPipe) id: string,
-    @TenantId() tenantId: string
-  ) {
-    return this.documentsService.closeDocument(id, tenantId);
   }
 
   @Delete(':id')

@@ -2,6 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Not } from 'typeorm';
+import { Envelope, EnvelopeStatus } from '../../envelopes/entities/envelope.entity';
 import { Document, DocumentStatus } from '../../documents/entities/document.entity';
 import { Signer, SignerStatus } from '../../signatures/entities/signer.entity';
 import { NotificationsService } from './notifications.service';
@@ -18,6 +19,8 @@ const MAX_REMINDERS = 3;
 @Injectable()
 export class ReminderSchedulerService {
   constructor(
+    @InjectRepository(Envelope)
+    private readonly envelopeRepository: Repository<Envelope>,
     @InjectRepository(Document)
     private readonly documentRepository: Repository<Document>,
     @InjectRepository(Signer)
@@ -30,45 +33,45 @@ export class ReminderSchedulerService {
   async handleReminders(): Promise<void> {
     this.logger.log('Running reminder scheduler...');
 
-    const documents = await this.documentRepository.find({
+    const envelopes = await this.envelopeRepository.find({
       where: {
-        status: DocumentStatus.PENDING_SIGNATURES,
+        status: EnvelopeStatus.PENDING_SIGNATURES,
         reminderInterval: Not('none'),
       },
     });
 
-    for (const document of documents) {
-      await this.processDocumentReminders(document);
+    for (const envelope of envelopes) {
+      await this.processEnvelopeReminders(envelope);
     }
 
     this.logger.log('Reminder scheduler completed.');
   }
 
   @Cron(CronExpression.EVERY_HOUR)
-  async handleExpiredDocuments(): Promise<void> {
-    this.logger.log('Checking for expired documents...');
+  async handleExpiredEnvelopes(): Promise<void> {
+    this.logger.log('Checking for expired envelopes...');
 
-    const documents = await this.documentRepository.find({
-      where: { status: DocumentStatus.PENDING_SIGNATURES },
+    const envelopes = await this.envelopeRepository.find({
+      where: { status: EnvelopeStatus.PENDING_SIGNATURES },
     });
 
     const now = new Date();
 
-    for (const document of documents) {
-      await this.processExpiredDocument(document, now);
+    for (const envelope of envelopes) {
+      await this.processExpiredEnvelope(envelope, now);
     }
 
-    this.logger.log('Expired documents check completed.');
+    this.logger.log('Expired envelopes check completed.');
   }
 
-  private async processDocumentReminders(document: Document): Promise<void> {
-    const intervalMs = INTERVAL_MS[document.reminderInterval];
+  private async processEnvelopeReminders(envelope: Envelope): Promise<void> {
+    const intervalMs = INTERVAL_MS[envelope.reminderInterval];
     if (!intervalMs) return;
 
     const signers = await this.signerRepository.find({
       where: {
-        documentId: document.id,
-        tenantId: document.tenantId,
+        envelopeId: envelope.id,
+        tenantId: envelope.tenantId,
         status: SignerStatus.PENDING,
       },
     });
@@ -76,13 +79,13 @@ export class ReminderSchedulerService {
     const now = Date.now();
 
     for (const signer of signers) {
-      await this.sendReminderIfDue(signer, document, intervalMs, now);
+      await this.sendReminderIfDue(signer, envelope, intervalMs, now);
     }
   }
 
   private async sendReminderIfDue(
     signer: Signer,
-    document: Document,
+    envelope: Envelope,
     intervalMs: number,
     now: number,
   ): Promise<void> {
@@ -92,18 +95,18 @@ export class ReminderSchedulerService {
     if (now - lastNotified < intervalMs) return;
 
     try {
-      const signUrl = this.buildSignUrl(signer.accessToken, document.signingLanguage ?? 'en');
+      const signUrl = this.buildSignUrl(signer.accessToken, envelope.signingLanguage ?? 'en');
       const nextCount = signer.reminderCount + 1;
 
       await this.notificationsService.sendSignatureReminder({
-        tenantId: document.tenantId,
+        tenantId: envelope.tenantId,
         signerEmail: signer.email,
         signerName: signer.name,
-        documentTitle: document.title,
+        documentTitle: envelope.title,
         signUrl,
         reminderCount: nextCount,
         maxReminders: MAX_REMINDERS,
-        locale: document.signingLanguage ?? 'en',
+        locale: envelope.signingLanguage ?? 'en',
       });
 
       signer.notifiedAt = new Date();
@@ -111,7 +114,7 @@ export class ReminderSchedulerService {
       await this.signerRepository.save(signer);
 
       this.logger.log(
-        `Reminder ${signer.reminderCount}/${MAX_REMINDERS} sent to ${signer.email} for document ${document.id}`,
+        `Reminder ${signer.reminderCount}/${MAX_REMINDERS} sent to ${signer.email} for envelope ${envelope.id}`,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -119,26 +122,39 @@ export class ReminderSchedulerService {
     }
   }
 
-  private async processExpiredDocument(document: Document, now: Date): Promise<void> {
-    if (document.expiresAt === null || document.expiresAt > now) return;
+  private async processExpiredEnvelope(envelope: Envelope, now: Date): Promise<void> {
+    if (envelope.expiresAt === null || envelope.expiresAt > now) return;
 
     const signedSigners = await this.signerRepository.find({
       where: {
-        documentId: document.id,
-        tenantId: document.tenantId,
+        envelopeId: envelope.id,
+        tenantId: envelope.tenantId,
         status: SignerStatus.SIGNED,
       },
     });
 
     const newStatus = signedSigners.length > 0
+      ? EnvelopeStatus.COMPLETED
+      : EnvelopeStatus.EXPIRED;
+
+    envelope.status = newStatus;
+    await this.envelopeRepository.save(envelope);
+
+    const documents = await this.documentRepository.find({
+      where: { envelopeId: envelope.id, tenantId: envelope.tenantId },
+    });
+
+    const docStatus = newStatus === EnvelopeStatus.COMPLETED
       ? DocumentStatus.COMPLETED
       : DocumentStatus.EXPIRED;
 
-    document.status = newStatus;
-    await this.documentRepository.save(document);
+    for (const doc of documents) {
+      doc.status = docStatus;
+      await this.documentRepository.save(doc);
+    }
 
     this.logger.log(
-      `Document ${document.id} expired - marking as ${newStatus} (${signedSigners.length} signatures).`,
+      `Envelope ${envelope.id} expired - marking as ${newStatus} (${signedSigners.length} signatures).`,
     );
   }
 

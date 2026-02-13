@@ -76,11 +76,11 @@ export default function SignerDocumentPage() {
   const [showStandaloneSignature, setShowStandaloneSignature] = useState(false);
 
   useEffect(() => {
-    const signingLang = signerQuery.data?.document.signingLanguage;
+    const signingLang = signerQuery.data?.envelope.signingLanguage;
     if (signingLang && signingLang !== currentLocale) {
       globalThis.location.href = `/${signingLang}/sign/${token}`;
     }
-  }, [signerQuery.data?.document.signingLanguage, currentLocale, token]);
+  }, [signerQuery.data?.envelope.signingLanguage, currentLocale, token]);
 
   const signerData = signerQuery.data;
   const fields = useMemo(() => fieldsQuery.data ?? [], [fieldsQuery.data]);
@@ -270,7 +270,7 @@ export default function SignerDocumentPage() {
     );
   }
 
-  const { signer, document: doc } = signerData;
+  const { signer, envelope: env } = signerData;
 
   if (alreadySigned) {
     return (
@@ -301,7 +301,7 @@ export default function SignerDocumentPage() {
             <div className="text-[10px] font-normal uppercase tracking-[0.15em] text-foreground-subtle">
               {tCommon('appName')}
             </div>
-            <div className="truncate text-xs font-medium md:text-sm">{doc.title}</div>
+            <div className="truncate text-xs font-medium md:text-sm">{env.title}</div>
           </div>
           <div className="hidden items-center gap-2 sm:flex">
             <Avatar name={signer.name} size="sm" />
@@ -310,10 +310,10 @@ export default function SignerDocumentPage() {
               <p className="truncate text-[10px] text-foreground-subtle">{signer.email}</p>
             </div>
           </div>
-          {doc.expiresAt ? (
+          {env.expiresAt ? (
             <Badge variant="default" className="hidden shrink-0 text-[10px] sm:inline-flex">
               {t('deadline', {
-                date: new Intl.DateTimeFormat(currentLocale, { dateStyle: 'medium' }).format(new Date(doc.expiresAt)),
+                date: new Intl.DateTimeFormat(currentLocale, { dateStyle: 'medium' }).format(new Date(env.expiresAt)),
               })}
             </Badge>
           ) : null}
@@ -493,7 +493,7 @@ export default function SignerDocumentPage() {
         fieldValues={fieldValues}
         onClose={() => setShowPdfPreview(false)}
         labels={{
-          title: signerData.document.title,
+          title: signerData.envelope.title,
           clickToSign: t('clickToSign'),
           clickToInitials: t('clickToInitials'),
         }}

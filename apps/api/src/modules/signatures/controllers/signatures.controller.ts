@@ -61,48 +61,48 @@ export class SignersListController {
 
 @ApiTags('Signers')
 @RequireAuthMethod('jwt')
-@Controller('documents/:documentId/signers')
+@Controller('envelopes/:envelopeId/signers')
 export class SignaturesController {
   constructor(private readonly signaturesService: SignaturesService) {}
 
   @Post()
   addSigner(
-    @Param('documentId') documentId: string,
+    @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,
     @Body() createSignerDto: CreateSignerDto
   ) {
     return this.signaturesService.addSigner(
       tenantId,
-      documentId,
+      envelopeId,
       createSignerDto
     );
   }
 
   @Get()
   listSigners(
-    @Param('documentId') documentId: string,
+    @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string
   ) {
-    return this.signaturesService.findByDocument(documentId, tenantId);
+    return this.signaturesService.findByEnvelope(envelopeId, tenantId);
   }
 
   @Patch(':signerId')
   updateSigner(
-    @Param('documentId') documentId: string,
+    @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @Param('signerId', ParseUUIDPipe) signerId: string,
     @TenantId() tenantId: string,
     @Body() dto: UpdateSignerDto
   ) {
-    return this.signaturesService.updateSigner(tenantId, documentId, signerId, dto);
+    return this.signaturesService.updateSigner(tenantId, envelopeId, signerId, dto);
   }
 
   @Delete(':signerId')
   removeSigner(
-    @Param('documentId') documentId: string,
+    @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @Param('signerId', ParseUUIDPipe) signerId: string,
     @TenantId() tenantId: string
   ) {
-    return this.signaturesService.removeSigner(tenantId, documentId, signerId);
+    return this.signaturesService.removeSigner(tenantId, envelopeId, signerId);
   }
 }
 
@@ -170,7 +170,7 @@ export class SignController {
   @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Get(':token')
   getSignerByToken(@Param('token') token: string) {
-    return this.signaturesService.findByTokenWithDocument(token);
+    return this.signaturesService.findByTokenWithEnvelope(token);
   }
 
   @Public()
@@ -178,9 +178,10 @@ export class SignController {
   @Get(':token/pdf')
   async getSignerPdf(
     @Param('token') token: string,
+    @Query('documentId') documentId: string | undefined,
     @Res() res: Response
   ) {
-    const buffer = await this.signaturesService.getSignerPdf(token);
+    const buffer = await this.signaturesService.getSignerPdf(token, documentId);
     res.set({
       'Content-Type': 'application/pdf',
       'Content-Length': buffer.length,
@@ -194,9 +195,10 @@ export class SignController {
   @Get(':token/signed-pdf')
   async getSignerSignedPdf(
     @Param('token') token: string,
+    @Query('documentId') documentId: string | undefined,
     @Res() res: Response
   ) {
-    const buffer = await this.signaturesService.getSignerSignedPdf(token);
+    const buffer = await this.signaturesService.getSignerSignedPdf(token, documentId);
     if (buffer === null) {
       res.status(404).json({ message: 'Signed document is not available yet' });
       return;
@@ -213,8 +215,11 @@ export class SignController {
   @Public()
   @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Get(':token/fields')
-  getSignerFields(@Param('token') token: string) {
-    return this.signaturesService.getSignerFields(token);
+  getSignerFields(
+    @Param('token') token: string,
+    @Query('documentId') documentId: string | undefined,
+  ) {
+    return this.signaturesService.getSignerFields(token, documentId);
   }
 
   @Public()
@@ -239,7 +244,7 @@ export class SignController {
   @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Get(':token/summary')
   getSignerSummary(@Param('token') token: string) {
-    return this.signaturesService.getDocumentAuditSummaryByToken(token);
+    return this.signaturesService.getEnvelopeAuditSummaryByToken(token);
   }
 
   @Public()
@@ -270,35 +275,35 @@ export class SignController {
   }
 }
 
-@ApiTags('Documents')
+@ApiTags('Envelopes')
 @RequireAuthMethod('jwt')
-@Controller('documents/:documentId')
+@Controller('envelopes/:envelopeId')
 export class DocumentSendController {
   constructor(private readonly signaturesService: SignaturesService) {}
 
   @Get('summary')
-  getDocumentSummary(
-    @Param('documentId') documentId: string,
+  getEnvelopeSummary(
+    @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,
   ) {
-    return this.signaturesService.getDocumentAuditSummary(documentId, tenantId);
+    return this.signaturesService.getEnvelopeAuditSummary(envelopeId, tenantId);
   }
 
   @Get('send/preview')
   previewSend(
-    @Param('documentId') documentId: string,
+    @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,
     @Query() dto: SendDocumentDto
   ) {
-    return this.signaturesService.previewSend(tenantId, documentId, dto.message);
+    return this.signaturesService.previewSend(tenantId, envelopeId, dto.message);
   }
 
   @Post('send')
-  sendDocument(
-    @Param('documentId') documentId: string,
+  sendEnvelope(
+    @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,
     @Body() dto: SendDocumentDto
   ) {
-    return this.signaturesService.sendDocument(tenantId, documentId, dto.message);
+    return this.signaturesService.sendEnvelope(tenantId, envelopeId, dto.message);
   }
 }

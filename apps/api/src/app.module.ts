@@ -13,6 +13,8 @@ import { PdfModule } from './shared/pdf/pdf.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
 import { AuthModule } from './modules/auth/auth.module';
 import { DocumentsModule } from './modules/documents/documents.module';
+import { FoldersModule } from './modules/folders/folders.module';
+import { EnvelopesModule } from './modules/envelopes/envelopes.module';
 import { SignaturesModule } from './modules/signatures/signatures.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { NotificationsModule } from './modules/notifications/notifications.module';
@@ -73,6 +75,8 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
     TenantsModule,
     AuthModule,
     DocumentsModule,
+    FoldersModule,
+    EnvelopesModule,
     SignaturesModule,
     AuditModule,
     NotificationsModule,

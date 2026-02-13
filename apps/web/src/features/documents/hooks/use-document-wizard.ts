@@ -1,31 +1,44 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addSigner,
   batchUpdateFields,
+  createDocument,
+  deleteDocument,
   getDocument,
   getDocumentFile,
-  getDocumentAuditSummary,
+  getEnvelope,
+  getEnvelopeAuditSummary,
+  listDocumentsByEnvelope,
   listFields,
   listSigners,
   previewEmail,
   removeSigner,
-  sendDocument,
+  sendEnvelope,
   suggestFields,
   updateSigner,
   uploadDocumentFile,
   updateDocument,
+  updateEnvelope,
+  type CreateDocumentInput,
   type CreateSignerInput,
   type UpdateSignerInput,
   type SendDocumentInput,
   type SignatureFieldInput,
-  type UploadDocumentFileInput,
   type UpdateDocumentInput,
+  type UpdateEnvelopeInput,
 } from '../api';
 
 export const useDocument = (id: string) =>
   useQuery({
     queryKey: ['documents', 'detail', id],
     queryFn: () => getDocument(id),
+    enabled: id.length > 0,
+  });
+
+export const useEnvelope = (id: string) =>
+  useQuery({
+    queryKey: ['envelopes', 'detail', id],
+    queryFn: () => getEnvelope(id),
     enabled: id.length > 0,
   });
 
@@ -36,27 +49,27 @@ export const useDocumentFile = (id: string) =>
     enabled: id.length > 0,
   });
 
-export const useSigners = (documentId: string) =>
+export const useSigners = (envelopeId: string) =>
   useQuery({
-    queryKey: ['documents', documentId, 'signers'],
-    queryFn: () => listSigners(documentId),
-    enabled: documentId.length > 0,
+    queryKey: ['envelopes', envelopeId, 'signers'],
+    queryFn: () => listSigners(envelopeId),
+    enabled: envelopeId.length > 0,
   });
 
-export const useAddSigner = (documentId: string) =>
+export const useAddSigner = (envelopeId: string) =>
   useMutation({
-    mutationFn: (input: CreateSignerInput) => addSigner(documentId, input),
+    mutationFn: (input: CreateSignerInput) => addSigner(envelopeId, input),
   });
 
-export const useUpdateSigner = (documentId: string) =>
+export const useUpdateSigner = (envelopeId: string) =>
   useMutation({
     mutationFn: ({ signerId, input }: { signerId: string; input: UpdateSignerInput }) =>
-      updateSigner(documentId, signerId, input),
+      updateSigner(envelopeId, signerId, input),
   });
 
-export const useRemoveSigner = (documentId: string) =>
+export const useRemoveSigner = (envelopeId: string) =>
   useMutation({
-    mutationFn: (signerId: string) => removeSigner(documentId, signerId),
+    mutationFn: (signerId: string) => removeSigner(envelopeId, signerId),
   });
 
 export const useSignatureFields = (documentId: string) =>
@@ -71,14 +84,14 @@ export const useBatchUpdateFields = (documentId: string) =>
     mutationFn: (fields: SignatureFieldInput[]) => batchUpdateFields(documentId, fields),
   });
 
-export const useSendDocument = (documentId: string) =>
+export const useSendEnvelope = (envelopeId: string) =>
   useMutation({
-    mutationFn: (input: SendDocumentInput) => sendDocument(documentId, input),
+    mutationFn: (input: SendDocumentInput) => sendEnvelope(envelopeId, input),
   });
 
-export const useEmailPreview = (documentId: string) =>
+export const useEmailPreview = (envelopeId: string) =>
   useMutation({
-    mutationFn: (input: SendDocumentInput) => previewEmail(documentId, input),
+    mutationFn: (input: SendDocumentInput) => previewEmail(envelopeId, input),
   });
 
 export const useUpdateDocument = (documentId: string) =>
@@ -86,9 +99,14 @@ export const useUpdateDocument = (documentId: string) =>
     mutationFn: (input: UpdateDocumentInput) => updateDocument(documentId, input),
   });
 
+export const useUpdateEnvelope = (envelopeId: string) =>
+  useMutation({
+    mutationFn: (input: UpdateEnvelopeInput) => updateEnvelope(envelopeId, input),
+  });
+
 export const useUploadDocumentFile = (documentId: string) =>
   useMutation({
-    mutationFn: (input: UploadDocumentFileInput) => uploadDocumentFile(documentId, input),
+    mutationFn: (file: File) => uploadDocumentFile(documentId, file),
   });
 
 export const useSuggestFields = (documentId: string) =>
@@ -96,9 +114,43 @@ export const useSuggestFields = (documentId: string) =>
     mutationFn: (signerCount: number) => suggestFields(documentId, signerCount),
   });
 
-export const useDocumentAuditSummary = (documentId: string) =>
+export const useEnvelopeDocuments = (envelopeId: string) =>
   useQuery({
-    queryKey: ['documents', documentId, 'audit-summary'],
-    queryFn: () => getDocumentAuditSummary(documentId),
-    enabled: documentId.length > 0,
+    queryKey: ['envelopes', envelopeId, 'documents'],
+    queryFn: () => listDocumentsByEnvelope(envelopeId),
+    enabled: envelopeId.length > 0,
+  });
+
+export const useAddDocumentToEnvelope = (envelopeId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const title = file.name.replace(/\.pdf$/i, '');
+      const doc = await createDocument(
+        { title, envelopeId } satisfies CreateDocumentInput,
+        file,
+      );
+      return doc;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['envelopes', envelopeId, 'documents'] });
+    },
+  });
+};
+
+export const useRemoveDocument = (envelopeId: string) => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (documentId: string) => deleteDocument(documentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['envelopes', envelopeId, 'documents'] });
+    },
+  });
+};
+
+export const useEnvelopeAuditSummary = (envelopeId: string) =>
+  useQuery({
+    queryKey: ['envelopes', envelopeId, 'audit-summary'],
+    queryFn: () => getEnvelopeAuditSummary(envelopeId),
+    enabled: envelopeId.length > 0,
   });

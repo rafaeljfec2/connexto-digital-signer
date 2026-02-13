@@ -3,7 +3,7 @@
 import { Card, Skeleton } from '@/shared/ui';
 import type { LucideIcon } from 'lucide-react';
 import { Activity, AlertTriangle, CheckCircle2, Send } from 'lucide-react';
-import type { DocumentSummary } from '../api';
+import type { EnvelopeSummary } from '../api';
 
 type ActivityType = 'sent' | 'completed' | 'expired';
 
@@ -35,13 +35,13 @@ export type ActivityFeedProps = {
     documentCompleted: (title: string) => string;
     documentExpired: (title: string) => string;
   }>;
-  readonly documents: readonly DocumentSummary[];
+  readonly documents: readonly EnvelopeSummary[];
   readonly isLoading?: boolean;
   readonly formatRelativeDate: (date: string) => string;
 };
 
 function deriveActivities(
-  documents: readonly DocumentSummary[],
+  documents: readonly EnvelopeSummary[],
   labels: ActivityFeedProps['labels']
 ): ActivityItem[] {
   const activities: ActivityItem[] = [];

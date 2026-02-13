@@ -19,6 +19,7 @@ const SignatureEditorModal = lazyLoad(
 );
 
 export type FieldsStepProps = Readonly<{
+  envelopeId: string;
   documentId: string;
   onBack: () => void;
   onRestart: () => void;
@@ -26,11 +27,11 @@ export type FieldsStepProps = Readonly<{
   onNext: () => void;
 }>;
 
-export function FieldsStep({ documentId, onBack, onRestart, onCancel, onNext }: FieldsStepProps) {
+export function FieldsStep({ envelopeId, documentId, onBack, onRestart, onCancel, onNext }: FieldsStepProps) {
   const tFields = useTranslations('fields');
   const tWizard = useTranslations('wizard');
   const fieldsQuery = useSignatureFields(documentId);
-  const signersQuery = useSigners(documentId);
+  const signersQuery = useSigners(envelopeId);
   const suggestMutation = useSuggestFields(documentId);
   const batchUpdate = useBatchUpdateFields(documentId);
   const [editorOpen, setEditorOpen] = useState(false);
@@ -90,6 +91,7 @@ export function FieldsStep({ documentId, onBack, onRestart, onCancel, onNext }: 
   if (editorOpen) {
     return (
       <SignatureEditorModal
+        envelopeId={envelopeId}
         documentId={documentId}
         onClose={handleEditorClose}
         onSave={handleEditorSave}

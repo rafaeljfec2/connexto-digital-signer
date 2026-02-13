@@ -288,27 +288,44 @@
       "title": "Nenhum documento encontrado",
       "description": "Ajuste os filtros ou crie um novo documento."
     },
+    "folders": {
+      "title": "Pastas",
+      "newFolder": "Nova pasta",
+      "rename": "Renomear",
+      "move": "Mover",
+      "delete": "Excluir",
+      "deleteTitle": "Excluir pasta",
+      "deleteConfirm": "Tem certeza que deseja excluir esta pasta? Esta ação não pode ser desfeita.",
+      "namePlaceholder": "Nome da pasta",
+      "root": "Documentos"
+    },
     "searchPlaceholder": "Busca em breve",
     "upload": {
       "title": "Novo documento",
-      "subtitle": "Envie seu PDF e defina um titulo",
-      "titleLabel": "Título do documento",
+      "subtitle": "Envie seus PDFs e defina um título para o envelope",
+      "titleLabel": "Título do envelope",
       "titlePlaceholder": "Contrato de vendas - Fevereiro",
-      "dropzoneLabel": "Arraste e solte seu PDF aqui",
-      "dropzoneHelper": "Apenas PDF, até 10MB",
+      "dropzoneLabel": "Arraste e solte seus PDFs aqui",
+      "dropzoneHelper": "Apenas PDF, até 10MB cada. Você pode adicionar múltiplos arquivos.",
       "fileLoaded": "PDF carregado",
       "replaceFile": "Trocar PDF",
       "defaultTitle": "Novo documento",
       "removeFile": "Remover",
+      "addMore": "Adicionar mais arquivos",
+      "documentCount": "{count, plural, one {# documento} other {# documentos}}",
+      "uploading": "Enviando {name}...",
       "submit": "Continuar",
       "submitting": "Enviando",
-      "success": "Documento salvo como Rascunho",
+      "success": "Documentos enviados",
+      "removeDocumentTitle": "Remover documento",
+      "removeDocumentConfirm": "Tem certeza que deseja remover \"{name}\"?",
       "errors": {
         "titleRequired": "Título obrigatório",
-        "fileRequired": "Arquivo obrigatório",
+        "fileRequired": "É necessário pelo menos um arquivo PDF",
         "onlyPdf": "Apenas arquivos PDF são permitidos",
-        "tooLarge": "Arquivo excede {max}MB",
-        "failed": "Falha no envio"
+        "tooLarge": "Arquivo \"{name}\" excede {max}MB",
+        "failed": "Falha no envio",
+        "duplicateFile": "O arquivo \"{name}\" já foi adicionado"
       }
     }
   },

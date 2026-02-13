@@ -5,24 +5,24 @@ import { useTranslations } from 'next-intl';
 import { ArrowLeft, RotateCcw, ArrowRight, Info, X } from 'lucide-react';
 import type { ClosureMode, ReminderInterval, SigningLanguage } from '@/features/documents/api';
 import {
-  useDocument,
-  useUpdateDocument,
+  useEnvelope,
+  useUpdateEnvelope,
 } from '@/features/documents/hooks/use-document-wizard';
 import { Button, Card, Input, Select } from '@/shared/ui';
 
 export type SettingsStepProps = {
-  readonly documentId: string;
+  readonly envelopeId: string;
   readonly onBack: () => void;
   readonly onRestart: () => void;
   readonly onCancel: () => void;
   readonly onNext: () => void;
 };
 
-export function SettingsStep({ documentId, onBack, onRestart, onCancel, onNext }: SettingsStepProps) {
+export function SettingsStep({ envelopeId, onBack, onRestart, onCancel, onNext }: SettingsStepProps) {
   const tSettings = useTranslations('settings');
   const tWizard = useTranslations('wizard');
-  const { data: document } = useDocument(documentId);
-  const updateDocumentMutation = useUpdateDocument(documentId);
+  const { data: envelope } = useEnvelope(envelopeId);
+  const updateEnvelopeMutation = useUpdateEnvelope(envelopeId);
 
   const [deadline, setDeadline] = useState('');
   const [reminderInterval, setReminderInterval] = useState<ReminderInterval>('none');
@@ -30,12 +30,12 @@ export function SettingsStep({ documentId, onBack, onRestart, onCancel, onNext }
   const [closureMode, setClosureMode] = useState<ClosureMode>('automatic');
 
   useEffect(() => {
-    if (!document) return;
-    setDeadline(document.expiresAt ? document.expiresAt.split('T')[0] : '');
-    setReminderInterval(document.reminderInterval);
-    setSigningLanguage(document.signingLanguage);
-    setClosureMode(document.closureMode);
-  }, [document]);
+    if (!envelope) return;
+    setDeadline(envelope.expiresAt ? envelope.expiresAt.split('T')[0] : '');
+    setReminderInterval(envelope.reminderInterval);
+    setSigningLanguage(envelope.signingLanguage);
+    setClosureMode(envelope.closureMode);
+  }, [envelope]);
 
   const daysRemaining = useMemo(() => {
     if (!deadline) return null;
@@ -44,7 +44,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onCancel, onNext }
   }, [deadline]);
 
   const handleSaveAndContinue = useCallback(() => {
-    updateDocumentMutation.mutate(
+    updateEnvelopeMutation.mutate(
       {
         expiresAt: deadline ? new Date(deadline).toISOString() : null,
         reminderInterval,
@@ -53,7 +53,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onCancel, onNext }
       },
       { onSuccess: () => onNext() },
     );
-  }, [deadline, reminderInterval, signingLanguage, closureMode, updateDocumentMutation, onNext]);
+  }, [deadline, reminderInterval, signingLanguage, closureMode, updateEnvelopeMutation, onNext]);
 
   return (
     <Card variant="glass" className="w-full p-6 md:p-8">
@@ -195,7 +195,7 @@ export function SettingsStep({ documentId, onBack, onRestart, onCancel, onNext }
         </div>
         <Button
           onClick={handleSaveAndContinue}
-          disabled={updateDocumentMutation.isPending}
+          disabled={updateEnvelopeMutation.isPending}
         >
           {tWizard('next')}
           <ArrowRight className="ml-1 h-4 w-4" />

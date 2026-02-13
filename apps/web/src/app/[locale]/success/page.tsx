@@ -156,10 +156,10 @@ function SuccessPageContent() {
     getSignerByToken(token).then((data) => {
       setSignerInfo({
         name: data.signer.name,
-        documentTitle: data.document.title,
-        documentStatus: data.document.status,
+        documentTitle: data.envelope.title,
+        documentStatus: data.envelope.status,
       });
-      setSignedAvailable(data.document.status === 'completed');
+      setSignedAvailable(data.envelope.status === 'completed');
     }).catch(() => {
       setSignerInfo(null);
     });

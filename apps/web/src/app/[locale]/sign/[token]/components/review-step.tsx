@@ -15,10 +15,10 @@ import {
   Eye,
 } from 'lucide-react';
 import { Avatar, Badge, Button, Card } from '@/shared/ui';
-import type { SignerField, SignerWithDocument } from '@/features/signing/api';
+import type { SignerField, SignerWithEnvelope } from '@/features/signing/api';
 
 type ReviewStepProps = Readonly<{
-  signerData: SignerWithDocument;
+  signerData: SignerWithEnvelope;
   fields: ReadonlyArray<SignerField>;
   fieldValues: Readonly<Record<string, string>>;
   standaloneSignature: string | null;
@@ -93,7 +93,7 @@ export function ReviewStep({
                 {labels.documentTitle}
               </p>
               <p className="text-sm font-medium">
-                {signerData.document.title}
+                {signerData.envelope.title}
               </p>
             </div>
             <Button

@@ -1,12 +1,16 @@
-import { PartialType } from '@nestjs/mapped-types';
 import { ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsOptional } from 'class-validator';
-import { CreateDocumentDto } from './create-document.dto';
-import { SigningMode } from '../entities/document.entity';
+import { IsString, IsOptional, MaxLength, IsInt, Min } from 'class-validator';
 
-export class UpdateDocumentDto extends PartialType(CreateDocumentDto) {
+export class UpdateDocumentDto {
   @IsOptional()
-  @IsEnum(SigningMode)
-  @ApiPropertyOptional({ enum: SigningMode })
-  readonly signingMode?: SigningMode;
+  @IsString()
+  @MaxLength(500)
+  @ApiPropertyOptional({ example: 'Updated Title' })
+  readonly title?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @ApiPropertyOptional({ example: 1 })
+  readonly position?: number;
 }

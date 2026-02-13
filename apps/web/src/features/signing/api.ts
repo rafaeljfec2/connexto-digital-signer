@@ -5,27 +5,33 @@ const baseURL =
 
 const publicClient = axios.create({ baseURL });
 
-export type SignerWithDocument = {
+export type SignerWithEnvelope = {
   readonly signer: {
     readonly id: string;
     readonly name: string;
     readonly email: string;
     readonly phone: string | null;
     readonly status: 'pending' | 'signed';
-    readonly documentId: string;
+    readonly envelopeId: string;
     readonly signedAt: string | null;
     readonly authMethod: string;
     readonly requestEmail: boolean;
     readonly requestCpf: boolean;
     readonly requestPhone: boolean;
   };
-  readonly document: {
+  readonly envelope: {
     readonly id: string;
     readonly title: string;
     readonly status: string;
     readonly signingLanguage: string;
     readonly expiresAt: string | null;
   };
+  readonly documents: ReadonlyArray<{
+    readonly id: string;
+    readonly title: string;
+    readonly status: string;
+    readonly position: number;
+  }>;
 };
 
 export type SignerField = {
@@ -68,23 +74,28 @@ export const identifySigner = async (
 
 export const getSignerByToken = async (
   token: string
-): Promise<SignerWithDocument> => {
-  const response = await publicClient.get<SignerWithDocument>(`/sign/${token}`);
+): Promise<SignerWithEnvelope> => {
+  const response = await publicClient.get<SignerWithEnvelope>(`/sign/${token}`);
   return response.data;
 };
 
-export const getSignerPdf = async (token: string): Promise<Blob> => {
+export const getSignerPdf = async (token: string, documentId?: string): Promise<Blob> => {
+  const params = documentId ? { documentId } : {};
   const response = await publicClient.get(`/sign/${token}/pdf`, {
     responseType: 'blob',
+    params,
   });
   return response.data as Blob;
 };
 
 export const getSignerFields = async (
-  token: string
+  token: string,
+  documentId?: string,
 ): Promise<SignerField[]> => {
+  const params = documentId ? { documentId } : {};
   const response = await publicClient.get<SignerField[]>(
-    `/sign/${token}/fields`
+    `/sign/${token}/fields`,
+    { params },
   );
   return response.data;
 };
@@ -96,10 +107,12 @@ export const acceptSignature = async (
   await publicClient.post(`/sign/${token}/accept`, input);
 };
 
-export const getSignerSignedPdf = async (token: string): Promise<Blob | null> => {
+export const getSignerSignedPdf = async (token: string, documentId?: string): Promise<Blob | null> => {
   try {
+    const params = documentId ? { documentId } : {};
     const response = await publicClient.get(`/sign/${token}/signed-pdf`, {
       responseType: 'blob',
+      params,
     });
     return response.data as Blob;
   } catch {

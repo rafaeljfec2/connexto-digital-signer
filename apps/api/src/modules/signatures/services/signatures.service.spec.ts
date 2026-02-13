@@ -3,8 +3,10 @@ import type { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SignaturesService } from './signatures.service';
 import { Signer, SignerStatus } from '../entities/signer.entity';
-import { Document, DocumentStatus, SigningMode } from '../../documents/entities/document.entity';
+import { Document, DocumentStatus } from '../../documents/entities/document.entity';
+import { Envelope, EnvelopeStatus, SigningMode } from '../../envelopes/entities/envelope.entity';
 import { DocumentsService } from '../../documents/services/documents.service';
+import { EnvelopesService } from '../../envelopes/services/envelopes.service';
 import { PdfService } from '../../../shared/pdf/pdf.service';
 import { EVENT_SIGNATURE_COMPLETED, EVENT_DOCUMENT_SENT } from '@connexto/events';
 import type { SignatureCompletedEvent } from '@connexto/events';
@@ -12,12 +14,11 @@ import { SignatureFieldsService } from './signature-fields.service';
 import { TenantSignerService } from './tenant-signer.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { CertificateService } from '../../tenants/services/certificate.service';
-import { SignatureFieldType } from '../entities/signature-field.entity';
 
 const buildSigner = (overrides?: Partial<Signer>): Signer => ({
   id: 'signer-1',
   tenantId: 'tenant-1',
-  documentId: 'doc-1',
+  envelopeId: 'env-1',
   tenantSignerId: null,
   name: 'Jane Doe',
   email: 'jane@acme.com',
@@ -46,21 +47,34 @@ const buildSigner = (overrides?: Partial<Signer>): Signer => ({
   ...overrides,
 });
 
+const buildEnvelope = (overrides?: Partial<Envelope>): Envelope => ({
+  id: 'env-1',
+  tenantId: 'tenant-1',
+  folderId: 'folder-1',
+  title: 'Agreement',
+  status: EnvelopeStatus.PENDING_SIGNATURES,
+  signingMode: SigningMode.PARALLEL,
+  expiresAt: null,
+  reminderInterval: 'none',
+  signingLanguage: 'pt-br',
+  closureMode: 'automatic',
+  createdAt: new Date('2026-01-01T00:00:00.000Z'),
+  updatedAt: new Date('2026-01-01T00:00:00.000Z'),
+  ...overrides,
+});
+
 const buildDocument = (overrides?: Partial<Document>): Document => ({
   id: 'doc-1',
   tenantId: 'tenant-1',
+  envelopeId: 'env-1',
   title: 'Agreement',
   originalFileKey: 'original.pdf',
   finalFileKey: null,
   originalHash: 'hash-original',
   finalHash: null,
   status: DocumentStatus.PENDING_SIGNATURES,
-  signingMode: SigningMode.PARALLEL,
-  expiresAt: null,
-  reminderInterval: 'none',
-  signingLanguage: 'pt-br',
-  closureMode: 'automatic',
   version: 1,
+  position: 0,
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
   updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   ...overrides,
@@ -70,6 +84,7 @@ describe('SignaturesService', () => {
   let service: SignaturesService;
   let signerRepository: Repository<Signer>;
   let documentsService: jest.Mocked<DocumentsService>;
+  let envelopesService: jest.Mocked<EnvelopesService>;
   let eventEmitter: EventEmitter2;
   let pdfService: jest.Mocked<PdfService>;
   let fieldsService: jest.Mocked<SignatureFieldsService>;
@@ -86,10 +101,15 @@ describe('SignaturesService', () => {
     } as unknown as Repository<Signer>;
     documentsService = {
       findOne: jest.fn(),
+      findByEnvelope: jest.fn().mockResolvedValue([buildDocument()]),
       getOriginalFile: jest.fn(),
       setFinalPdf: jest.fn(),
       setStatus: jest.fn(),
     } as unknown as jest.Mocked<DocumentsService>;
+    envelopesService = {
+      findOne: jest.fn().mockResolvedValue(buildEnvelope()),
+      setStatus: jest.fn(),
+    } as unknown as jest.Mocked<EnvelopesService>;
     eventEmitter = { emit: jest.fn() } as unknown as EventEmitter2;
     pdfService = {
       appendEvidencePage: jest.fn(),
@@ -100,6 +120,7 @@ describe('SignaturesService', () => {
       findByDocument: jest.fn(),
       findBySigner: jest.fn(),
       updateValue: jest.fn(),
+      updateValueByFieldId: jest.fn(),
     } as unknown as jest.Mocked<SignatureFieldsService>;
     notificationsService = {
       sendSignatureInvite: jest.fn(),
@@ -125,6 +146,7 @@ describe('SignaturesService', () => {
     service = new SignaturesService(
       signerRepository,
       documentsService,
+      envelopesService,
       eventEmitter,
       pdfService,
       fieldsService,
@@ -136,14 +158,14 @@ describe('SignaturesService', () => {
 
   describe('addSigner', () => {
     test('should create signer, link to tenant signer and return saved signer', async () => {
-      const document = buildDocument({ signingMode: SigningMode.PARALLEL });
+      const envelope = buildEnvelope();
       const created = buildSigner({ accessToken: 'token-generated', tenantSignerId: 'ts-1' });
       const saved = buildSigner({ id: 'signer-2', accessToken: 'token-generated', tenantSignerId: 'ts-1' });
-      documentsService.findOne.mockResolvedValue(document);
+      envelopesService.findOne.mockResolvedValue(envelope);
       tenantSignerService.findOrCreate.mockResolvedValue({ id: 'ts-1' } as never);
       (signerRepository.create as jest.Mock).mockReturnValue(created);
       (signerRepository.save as jest.Mock).mockResolvedValue(saved);
-      const result = await service.addSigner('tenant-1', 'doc-1', {
+      const result = await service.addSigner('tenant-1', 'env-1', {
         name: 'Jane',
         email: 'jane@acme.com',
       });
@@ -156,7 +178,7 @@ describe('SignaturesService', () => {
         phone: undefined,
         birthDate: undefined,
       });
-      expect(documentsService.findOne).toHaveBeenCalledWith('doc-1', 'tenant-1');
+      expect(envelopesService.findOne).toHaveBeenCalledWith('env-1', 'tenant-1');
       expect(signerRepository.create).toHaveBeenCalled();
       expect(signerRepository.save).toHaveBeenCalledWith(created);
     });
@@ -188,11 +210,11 @@ describe('SignaturesService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    test('should reject completed document', async () => {
+    test('should reject completed envelope', async () => {
       const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
-      const document = buildDocument({ status: DocumentStatus.COMPLETED });
+      const envelope = buildEnvelope({ status: EnvelopeStatus.COMPLETED });
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
-      documentsService.findOne.mockResolvedValue(document);
+      envelopesService.findOne.mockResolvedValue(envelope);
 
       await expect(
         service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
@@ -202,11 +224,11 @@ describe('SignaturesService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
-    test('should reject expired document', async () => {
+    test('should reject expired envelope', async () => {
       const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
-      const document = buildDocument({ expiresAt: new Date('2020-01-01T00:00:00.000Z') });
+      const envelope = buildEnvelope({ expiresAt: new Date('2020-01-01T00:00:00.000Z') });
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
-      documentsService.findOne.mockResolvedValue(document);
+      envelopesService.findOne.mockResolvedValue(envelope);
 
       await expect(
         service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
@@ -223,14 +245,13 @@ describe('SignaturesService', () => {
         signedAt: new Date('2026-01-02T00:00:00.000Z'),
         verifiedAt: new Date('2026-01-01T12:00:00.000Z'),
       });
-      const document = buildDocument();
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
-      documentsService.findOne.mockResolvedValue(document);
+      envelopesService.findOne.mockResolvedValue(buildEnvelope());
       (signerRepository.save as jest.Mock).mockResolvedValue(saved);
       jest.spyOn(service, 'areAllSignersSigned').mockResolvedValue(false);
       const finalizeSpy = jest.spyOn(
-        service as unknown as { finalizeDocument: (documentId: string, tenantId: string) => Promise<void> },
-        'finalizeDocument'
+        service as unknown as { finalizeEnvelope: (envelopeId: string, tenantId: string) => Promise<void> },
+        'finalizeEnvelope'
       ).mockResolvedValue();
 
       const result = await service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
@@ -242,7 +263,7 @@ describe('SignaturesService', () => {
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         EVENT_SIGNATURE_COMPLETED,
         expect.objectContaining({
-          documentId: 'doc-1',
+          documentId: 'env-1',
           tenantId: 'tenant-1',
           signerId: saved.id,
         }) as SignatureCompletedEvent
@@ -250,44 +271,16 @@ describe('SignaturesService', () => {
       expect(finalizeSpy).not.toHaveBeenCalled();
     });
 
-    test('should notify next signer when sequential and not all signed', async () => {
-      const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
-      const saved = buildSigner({
-        status: SignerStatus.SIGNED,
-        signedAt: new Date('2026-01-02T00:00:00.000Z'),
-        verifiedAt: new Date('2026-01-01T12:00:00.000Z'),
-      });
-      const document = buildDocument({ signingMode: SigningMode.SEQUENTIAL });
-      jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
-      documentsService.findOne.mockResolvedValue(document);
-      (signerRepository.save as jest.Mock).mockResolvedValue(saved);
-      jest.spyOn(service, 'areAllSignersSigned').mockResolvedValue(false);
-      const notifySpy = jest.spyOn(
-        service as unknown as {
-          notifyNextSigner: (documentId: string, tenantId: string, title: string) => Promise<void>;
-        },
-        'notifyNextSigner'
-      ).mockResolvedValue();
-
-      await service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
-        ipAddress: '127.0.0.1',
-        userAgent: 'jest',
-      });
-
-      expect(notifySpy).toHaveBeenCalledWith('doc-1', 'tenant-1', document.title);
-    });
-
-    test('should finalize document when all signers signed', async () => {
+    test('should finalize envelope when all signers signed', async () => {
       const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
       const saved = buildSigner({ status: SignerStatus.SIGNED, verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
-      const document = buildDocument();
       jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
-      documentsService.findOne.mockResolvedValue(document);
+      envelopesService.findOne.mockResolvedValue(buildEnvelope());
       (signerRepository.save as jest.Mock).mockResolvedValue(saved);
       jest.spyOn(service, 'areAllSignersSigned').mockResolvedValue(true);
       const finalizeSpy = jest.spyOn(
-        service as unknown as { finalizeDocument: (documentId: string, tenantId: string) => Promise<void> },
-        'finalizeDocument'
+        service as unknown as { finalizeEnvelope: (envelopeId: string, tenantId: string) => Promise<void> },
+        'finalizeEnvelope'
       ).mockResolvedValue();
 
       await service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
@@ -295,225 +288,48 @@ describe('SignaturesService', () => {
         userAgent: 'jest',
       });
 
-      expect(finalizeSpy).toHaveBeenCalledWith('doc-1', 'tenant-1');
+      expect(finalizeSpy).toHaveBeenCalledWith('env-1', 'tenant-1');
     });
   });
 
   describe('areAllSignersSigned', () => {
     test('should return false when no signers', async () => {
       (signerRepository.find as jest.Mock).mockResolvedValue([]);
-      await expect(service.areAllSignersSigned('doc-1', 'tenant-1')).resolves.toBe(false);
+      await expect(service.areAllSignersSigned('env-1', 'tenant-1')).resolves.toBe(false);
     });
 
     test('should return true when all signed', async () => {
       const signed = buildSigner({ status: SignerStatus.SIGNED });
       (signerRepository.find as jest.Mock).mockResolvedValue([signed]);
-      await expect(service.areAllSignersSigned('doc-1', 'tenant-1')).resolves.toBe(true);
+      await expect(service.areAllSignersSigned('env-1', 'tenant-1')).resolves.toBe(true);
     });
   });
 
-  describe('finalizeDocument', () => {
-    test('should embed signatures, append evidence page with hash and persist final pdf', async () => {
-      const signerA = buildSigner({ signedAt: new Date('2026-01-02T00:00:00.000Z') });
-      const signerB = buildSigner({
-        id: 'signer-2',
-        email: 'john@acme.com',
-        name: 'John Doe',
-        signedAt: new Date('2026-01-03T00:00:00.000Z'),
-      });
-      const document = buildDocument({ title: 'Agreement', originalHash: 'abc123' });
-      const original = Buffer.from('pdf');
-      const withSignatures = Buffer.from('pdf-with-signatures');
-      const finalized = Buffer.from('final');
-      documentsService.findOne.mockResolvedValue(document);
-      documentsService.getOriginalFile.mockResolvedValue(original);
-      fieldsService.findByDocument.mockResolvedValue([]);
-      (signerRepository.find as jest.Mock).mockResolvedValue([signerA, signerB]);
-      pdfService.embedSignatures.mockResolvedValue(withSignatures);
-      pdfService.computeHash.mockReturnValue('signed-hash-123');
-      pdfService.appendEvidencePage.mockResolvedValue(finalized);
-      certificateService.getCertificateStatus.mockResolvedValue(null);
-
-      const servicePrivate = service as unknown as {
-        finalizeDocument: (documentId: string, tenantId: string) => Promise<void>;
-      };
-      await servicePrivate.finalizeDocument('doc-1', 'tenant-1');
-
-      expect(pdfService.embedSignatures).toHaveBeenCalledWith(original, []);
-      expect(pdfService.computeHash).toHaveBeenCalledWith(withSignatures);
-      expect(pdfService.appendEvidencePage).toHaveBeenCalledWith(
-        withSignatures,
-        [
-          {
-            name: signerA.name,
-            email: signerA.email,
-            signedAt: signerA.signedAt?.toISOString() ?? '',
-            ipAddress: signerA.ipAddress,
-            userAgent: signerA.userAgent,
-            signatureData: signerA.signatureData,
-          },
-          {
-            name: signerB.name,
-            email: signerB.email,
-            signedAt: signerB.signedAt?.toISOString() ?? '',
-            ipAddress: signerB.ipAddress,
-            userAgent: signerB.userAgent,
-            signatureData: signerB.signatureData,
-          },
-        ],
-        document.title,
-        document.signingLanguage ?? 'en',
-        {
-          originalHash: 'abc123',
-          signedHash: 'signed-hash-123',
-          certificate: undefined,
-        },
-      );
-      expect(documentsService.setFinalPdf).toHaveBeenCalledWith('doc-1', 'tenant-1', finalized);
-    });
-
-    test('should include certificate info and digitally sign when certificate exists', async () => {
-      const signer = buildSigner({ signedAt: new Date('2026-01-02T00:00:00.000Z') });
-      const document = buildDocument({ title: 'Contract', originalHash: 'def456' });
-      const original = Buffer.from('pdf');
-      const withSignatures = Buffer.from('pdf-with-signatures');
-      const finalized = Buffer.from('final');
-      const signedPdf = Buffer.from('signed-final');
-      const certStatus = {
-        subject: 'Acme Corp',
-        issuer: 'CA Authority',
-        expiresAt: '2027-01-01T00:00:00.000Z',
-        configuredAt: '2026-01-01T00:00:00.000Z',
-        isExpired: false,
-      };
-
-      documentsService.findOne.mockResolvedValue(document);
-      documentsService.getOriginalFile.mockResolvedValue(original);
-      fieldsService.findByDocument.mockResolvedValue([]);
-      (signerRepository.find as jest.Mock).mockResolvedValue([signer]);
-      pdfService.embedSignatures.mockResolvedValue(withSignatures);
-      pdfService.computeHash.mockReturnValue('signed-hash-456');
-      pdfService.appendEvidencePage.mockResolvedValue(finalized);
-      certificateService.getCertificateStatus.mockResolvedValue(certStatus);
-      certificateService.signPdf.mockResolvedValue(signedPdf);
-
-      const servicePrivate = service as unknown as {
-        finalizeDocument: (documentId: string, tenantId: string) => Promise<void>;
-      };
-      await servicePrivate.finalizeDocument('doc-1', 'tenant-1');
-
-      expect(pdfService.appendEvidencePage).toHaveBeenCalledWith(
-        withSignatures,
-        expect.arrayContaining([
-          expect.objectContaining({ name: signer.name }),
-        ]),
-        document.title,
-        document.signingLanguage ?? 'en',
-        {
-          originalHash: 'def456',
-          signedHash: 'signed-hash-456',
-          certificate: {
-            subject: 'Acme Corp',
-            issuer: 'CA Authority',
-          },
-        },
-      );
-      expect(certificateService.signPdf).toHaveBeenCalledWith('tenant-1', finalized);
-      expect(documentsService.setFinalPdf).toHaveBeenCalledWith('doc-1', 'tenant-1', signedPdf);
-    });
-
-    test('should not digitally sign when certificate is expired', async () => {
-      const signer = buildSigner({ signedAt: new Date('2026-01-02T00:00:00.000Z') });
-      const document = buildDocument({ originalHash: 'ghi789' });
-      const original = Buffer.from('pdf');
-      const withSignatures = Buffer.from('pdf-with-signatures');
-      const finalized = Buffer.from('final');
-      const expiredCert = {
-        subject: 'Expired Corp',
-        issuer: 'CA Authority',
-        expiresAt: '2020-01-01T00:00:00.000Z',
-        configuredAt: '2019-01-01T00:00:00.000Z',
-        isExpired: true,
-      };
-
-      documentsService.findOne.mockResolvedValue(document);
-      documentsService.getOriginalFile.mockResolvedValue(original);
-      fieldsService.findByDocument.mockResolvedValue([]);
-      (signerRepository.find as jest.Mock).mockResolvedValue([signer]);
-      pdfService.embedSignatures.mockResolvedValue(withSignatures);
-      pdfService.computeHash.mockReturnValue('signed-hash-789');
-      pdfService.appendEvidencePage.mockResolvedValue(finalized);
-      certificateService.getCertificateStatus.mockResolvedValue(expiredCert);
-
-      const servicePrivate = service as unknown as {
-        finalizeDocument: (documentId: string, tenantId: string) => Promise<void>;
-      };
-      await servicePrivate.finalizeDocument('doc-1', 'tenant-1');
-
-      expect(certificateService.signPdf).not.toHaveBeenCalled();
-      expect(documentsService.setFinalPdf).toHaveBeenCalledWith('doc-1', 'tenant-1', finalized);
-    });
-  });
-
-  describe('sendDocument', () => {
+  describe('sendEnvelope', () => {
     test('should reject when no signers', async () => {
-      const document = buildDocument({ signingMode: SigningMode.PARALLEL });
-      documentsService.findOne.mockResolvedValue(document);
+      const envelope = buildEnvelope({ signingMode: SigningMode.PARALLEL });
+      envelopesService.findOne.mockResolvedValue(envelope);
+      documentsService.findByEnvelope.mockResolvedValue([buildDocument()]);
       (signerRepository.find as jest.Mock).mockResolvedValue([]);
-      fieldsService.findByDocument.mockResolvedValue([
-        {
-          id: 'field-1',
-          tenantId: 'tenant-1',
-          documentId: 'doc-1',
-          signerId: 'signer-1',
-          type: SignatureFieldType.SIGNATURE,
-          page: 1,
-          x: 0.1,
-          y: 0.1,
-          width: 0.2,
-          height: 0.1,
-          required: true,
-          value: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ]);
 
-      await expect(service.sendDocument('tenant-1', 'doc-1')).rejects.toThrow(
+      await expect(service.sendEnvelope('tenant-1', 'env-1')).rejects.toThrow(
         BadRequestException
       );
     });
 
     test('should notify first signer when sequential', async () => {
-      const document = buildDocument({ signingMode: SigningMode.SEQUENTIAL });
+      const envelope = buildEnvelope({ signingMode: SigningMode.SEQUENTIAL });
       const signers = [
         buildSigner({ id: 'signer-1', order: 1 }),
         buildSigner({ id: 'signer-2', order: 2, email: 'two@acme.com' }),
       ];
-      documentsService.findOne.mockResolvedValue(document);
+      envelopesService.findOne.mockResolvedValue(envelope);
+      documentsService.findByEnvelope.mockResolvedValue([buildDocument()]);
       (signerRepository.find as jest.Mock).mockResolvedValue(signers);
       (signerRepository.save as jest.Mock).mockResolvedValue([signers[0]]);
-      fieldsService.findByDocument.mockResolvedValue([
-        {
-          id: 'field-1',
-          tenantId: 'tenant-1',
-          documentId: 'doc-1',
-          signerId: 'signer-1',
-          type: SignatureFieldType.SIGNATURE,
-          page: 1,
-          x: 0.1,
-          y: 0.1,
-          width: 0.2,
-          height: 0.1,
-          required: true,
-          value: null,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        },
-      ]);
       notificationsService.sendSignatureInvite.mockResolvedValue('job-1');
 
-      const result = await service.sendDocument('tenant-1', 'doc-1');
+      const result = await service.sendEnvelope('tenant-1', 'env-1');
 
       expect(result.notified).toEqual(['signer-1']);
       expect(documentsService.setStatus).toHaveBeenCalledWith(
@@ -521,10 +337,15 @@ describe('SignaturesService', () => {
         'tenant-1',
         DocumentStatus.PENDING_SIGNATURES
       );
+      expect(envelopesService.setStatus).toHaveBeenCalledWith(
+        'env-1',
+        'tenant-1',
+        EnvelopeStatus.PENDING_SIGNATURES
+      );
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         EVENT_DOCUMENT_SENT,
         expect.objectContaining({
-          documentId: 'doc-1',
+          documentId: 'env-1',
           tenantId: 'tenant-1',
           signingMode: SigningMode.SEQUENTIAL,
         })

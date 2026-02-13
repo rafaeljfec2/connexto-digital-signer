@@ -14,21 +14,19 @@ export enum DocumentStatus {
   EXPIRED = 'expired',
 }
 
-export enum SigningMode {
-  PARALLEL = 'parallel',
-  SEQUENTIAL = 'sequential',
-}
-
 @Entity('documents')
 @Index(['tenantId'])
 @Index(['tenantId', 'status'])
-@Index(['tenantId', 'expiresAt'])
+@Index(['envelopeId'])
 export class Document {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ name: 'tenant_id', type: 'varchar', length: 255 })
   tenantId!: string;
+
+  @Column({ name: 'envelope_id', type: 'uuid' })
+  envelopeId!: string;
 
   @Column({ type: 'varchar', length: 500 })
   title!: string;
@@ -52,28 +50,11 @@ export class Document {
   })
   status!: DocumentStatus;
 
-  @Column({
-    name: 'signing_mode',
-    type: 'enum',
-    enum: SigningMode,
-    default: SigningMode.PARALLEL,
-  })
-  signingMode!: SigningMode;
-
-  @Column({ name: 'expires_at', type: 'timestamptz', nullable: true })
-  expiresAt!: Date | null;
-
-  @Column({ name: 'reminder_interval', type: 'varchar', length: 20, default: 'none' })
-  reminderInterval!: string;
-
-  @Column({ name: 'signing_language', type: 'varchar', length: 10, default: 'pt-br' })
-  signingLanguage!: string;
-
-  @Column({ name: 'closure_mode', type: 'varchar', length: 20, default: 'automatic' })
-  closureMode!: string;
-
   @Column({ type: 'int', default: 1 })
   version!: number;
+
+  @Column({ type: 'int', default: 0 })
+  position!: number;
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

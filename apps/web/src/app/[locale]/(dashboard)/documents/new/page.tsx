@@ -17,8 +17,8 @@ export default function NewDocumentPage() {
     triggered.current = true;
 
     createDraft.mutateAsync({ title: tDocuments('upload.defaultTitle') }).then(
-      (doc) => {
-        router.replace(`/documents/${doc.id}`);
+      (result) => {
+        router.replace(`/documents/${result.envelopeId}`);
       },
       () => {
         router.replace('/documents');

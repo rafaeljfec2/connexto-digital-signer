@@ -5,7 +5,7 @@ import { createHash, randomInt } from 'node:crypto';
 import { Signer } from '../entities/signer.entity';
 import { SignaturesService } from './signatures.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
-import { DocumentsService } from '../../documents/services/documents.service';
+import { EnvelopesService } from '../../envelopes/services/envelopes.service';
 
 const OTP_EXPIRATION_MINUTES = 10;
 const MAX_VERIFICATION_ATTEMPTS = 5;
@@ -17,7 +17,7 @@ export class VerificationService {
     private readonly signerRepository: Repository<Signer>,
     private readonly signaturesService: SignaturesService,
     private readonly notificationsService: NotificationsService,
-    private readonly documentsService: DocumentsService,
+    private readonly envelopesService: EnvelopesService,
   ) {}
 
   async sendCode(accessToken: string): Promise<{ sent: true }> {
@@ -38,17 +38,17 @@ export class VerificationService {
     signer.verificationAttempts = 0;
     await this.signerRepository.save(signer);
 
-    const document = await this.documentsService.findOne(
-      signer.documentId,
+    const envelope = await this.envelopesService.findOne(
+      signer.envelopeId,
       signer.tenantId,
     );
 
-    const locale = document.signingLanguage ?? 'en';
+    const locale = envelope.signingLanguage ?? 'en';
 
     await this.notificationsService.sendVerificationCode({
       signerEmail: signer.email,
       signerName: signer.name,
-      documentTitle: document.title,
+      documentTitle: envelope.title,
       code: otp,
       locale,
     });

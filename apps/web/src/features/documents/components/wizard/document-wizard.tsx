@@ -24,12 +24,13 @@ const STEP_ICONS: Record<WizardStepId, React.ReactNode> = {
 };
 
 export type DocumentWizardProps = Readonly<{
+  envelopeId: string;
   documentId: string;
   hasFile: boolean;
   onCancel: () => void;
 }>;
 
-export function DocumentWizard({ documentId, hasFile, onCancel }: DocumentWizardProps) {
+export function DocumentWizard({ envelopeId, documentId, hasFile, onCancel }: DocumentWizardProps) {
   const tWizard = useTranslations('wizard');
   const [uploadComplete, setUploadComplete] = useState(hasFile);
   const [step, setStep] = useState<WizardStepId>(hasFile ? 'signers' : 'upload');
@@ -97,6 +98,7 @@ export function DocumentWizard({ documentId, hasFile, onCancel }: DocumentWizard
       <StepTransition stepKey={step} direction={direction}>
         {step === 'upload' ? (
           <UploadStep
+            envelopeId={envelopeId}
             documentId={documentId}
             hasFile={uploadComplete}
             onRestart={() => setStep('upload')}
@@ -109,7 +111,7 @@ export function DocumentWizard({ documentId, hasFile, onCancel }: DocumentWizard
         ) : null}
         {step === 'signers' ? (
           <SignersStep
-            documentId={documentId}
+            envelopeId={envelopeId}
             onBack={() => setStep('upload')}
             onRestart={() => setStep('upload')}
             onCancel={onCancel}
@@ -118,6 +120,7 @@ export function DocumentWizard({ documentId, hasFile, onCancel }: DocumentWizard
         ) : null}
         {step === 'fields' ? (
           <FieldsStep
+            envelopeId={envelopeId}
             documentId={documentId}
             onBack={() => setStep('signers')}
             onRestart={() => setStep('upload')}
@@ -127,7 +130,7 @@ export function DocumentWizard({ documentId, hasFile, onCancel }: DocumentWizard
         ) : null}
         {step === 'settings' ? (
           <SettingsStep
-            documentId={documentId}
+            envelopeId={envelopeId}
             onBack={() => setStep('fields')}
             onRestart={() => setStep('upload')}
             onCancel={onCancel}
@@ -136,6 +139,7 @@ export function DocumentWizard({ documentId, hasFile, onCancel }: DocumentWizard
         ) : null}
         {step === 'review' ? (
           <ReviewStep
+            envelopeId={envelopeId}
             documentId={documentId}
             onBack={() => setStep('settings')}
             onRestart={() => setStep('upload')}

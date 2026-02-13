@@ -288,27 +288,44 @@
       "title": "No documents found",
       "description": "Try adjusting filters or create a new document."
     },
+    "folders": {
+      "title": "Folders",
+      "newFolder": "New folder",
+      "rename": "Rename",
+      "move": "Move",
+      "delete": "Delete",
+      "deleteTitle": "Delete folder",
+      "deleteConfirm": "Are you sure you want to delete this folder? This action cannot be undone.",
+      "namePlaceholder": "Folder name",
+      "root": "Documents"
+    },
     "searchPlaceholder": "Search is coming soon",
     "upload": {
       "title": "New document",
-      "subtitle": "Upload your PDF and set a title",
-      "titleLabel": "Document title",
+      "subtitle": "Upload your PDFs and set a title for the envelope",
+      "titleLabel": "Envelope title",
       "titlePlaceholder": "Sales contract - February",
-      "dropzoneLabel": "Drag and drop your PDF here",
-      "dropzoneHelper": "PDF only, up to 10MB",
+      "dropzoneLabel": "Drag and drop your PDFs here",
+      "dropzoneHelper": "PDF only, up to 10MB each. You can add multiple files.",
       "fileLoaded": "PDF loaded",
       "replaceFile": "Replace PDF",
       "defaultTitle": "New document",
       "removeFile": "Remove",
+      "addMore": "Add more files",
+      "documentCount": "{count, plural, one {# document} other {# documents}}",
+      "uploading": "Uploading {name}...",
       "submit": "Continue",
       "submitting": "Uploading",
-      "success": "Document uploaded",
+      "success": "Documents uploaded",
+      "removeDocumentTitle": "Remove document",
+      "removeDocumentConfirm": "Are you sure you want to remove \"{name}\"?",
       "errors": {
         "titleRequired": "Title is required",
-        "fileRequired": "File is required",
+        "fileRequired": "At least one PDF file is required",
         "onlyPdf": "Only PDF files are allowed",
-        "tooLarge": "File exceeds {max}MB",
-        "failed": "Upload failed"
+        "tooLarge": "File \"{name}\" exceeds {max}MB",
+        "failed": "Upload failed",
+        "duplicateFile": "File \"{name}\" is already added"
       }
     }
   },

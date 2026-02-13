@@ -1,38 +1,31 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  createDraftDocument,
+  createDocument,
+  createEnvelope,
   deleteDocument,
-  getDocumentsStats,
+  deleteEnvelope,
+  getEnvelopesStats,
+  getFolderTree,
   listAllSigners,
-  listDocuments,
-  uploadDocument,
-  type CreateDraftInput,
-  type ListDocumentsParams,
+  listEnvelopes,
+  type CreateDocumentInput,
+  type CreateEnvelopeInput,
+  type DocumentSummary,
+  type ListEnvelopesParams,
   type ListSignersParams,
-  type UploadDocumentInput,
 } from '../api';
 
 export const useDocumentsStats = () =>
   useQuery({
-    queryKey: ['documents', 'stats'],
-    queryFn: getDocumentsStats,
+    queryKey: ['envelopes', 'stats'],
+    queryFn: getEnvelopesStats,
   });
 
-export const useDocumentsList = (params: ListDocumentsParams) =>
+export const useEnvelopesList = (params: ListEnvelopesParams) =>
   useQuery({
-    queryKey: ['documents', 'list', params],
-    queryFn: () => listDocuments(params),
+    queryKey: ['envelopes', 'list', params],
+    queryFn: () => listEnvelopes(params),
     placeholderData: (previous) => previous,
-  });
-
-export const useUploadDocument = () =>
-  useMutation({
-    mutationFn: (input: UploadDocumentInput) => uploadDocument(input),
-  });
-
-export const useCreateDraft = () =>
-  useMutation({
-    mutationFn: (input: CreateDraftInput) => createDraftDocument(input),
   });
 
 export const useSignersList = (params: ListSignersParams) =>
@@ -42,12 +35,75 @@ export const useSignersList = (params: ListSignersParams) =>
     placeholderData: (previous) => previous,
   });
 
+export const useDeleteEnvelope = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (envelopeId: string) => deleteEnvelope(envelopeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['envelopes'] });
+    },
+  });
+};
+
 export const useDeleteDocument = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (documentId: string) => deleteDocument(documentId),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['documents'] });
+      queryClient.invalidateQueries({ queryKey: ['envelopes', 'documents'] });
+    },
+  });
+};
+
+export const useCreateDraft = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { title: string }): Promise<DocumentSummary> => {
+      const tree = await getFolderTree();
+      const folderId = tree[0]?.id;
+      if (!folderId) {
+        throw new Error('No folder available');
+      }
+      const envelope = await createEnvelope({
+        title: input.title,
+        folderId,
+      } satisfies CreateEnvelopeInput);
+      const document = await createDocument({
+        title: input.title,
+        envelopeId: envelope.id,
+      } satisfies CreateDocumentInput);
+      return document;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['envelopes', 'documents'] });
+    },
+  });
+};
+
+export const useUploadDocument = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: { title: string; file: File }): Promise<DocumentSummary> => {
+      const tree = await getFolderTree();
+      const folderId = tree[0]?.id;
+      if (!folderId) {
+        throw new Error('No folder available');
+      }
+      const envelope = await createEnvelope({
+        title: input.title,
+        folderId,
+      } satisfies CreateEnvelopeInput);
+      const document = await createDocument(
+        {
+          title: input.title,
+          envelopeId: envelope.id,
+        } satisfies CreateDocumentInput,
+        input.file
+      );
+      return document;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['envelopes', 'documents'] });
     },
   });
 };

@@ -13,7 +13,7 @@ import {
   FileDown,
 } from 'lucide-react';
 import { Badge, Skeleton } from '@/shared/ui';
-import type { DocumentStatus, DocumentSummary } from '../api';
+import type { DocumentStatus, EnvelopeSummary } from '../api';
 import { EmptyState } from './empty-state';
 
 type DocumentAction = Readonly<{
@@ -34,7 +34,7 @@ export type DocumentActionLabels = Readonly<{
 }>;
 
 export type DocumentsTableProps = Readonly<{
-  documents: ReadonlyArray<DocumentSummary>;
+  documents: ReadonlyArray<EnvelopeSummary>;
   isLoading?: boolean;
   statusLabels: Record<DocumentStatus, string>;
   headers: Readonly<{
@@ -47,11 +47,11 @@ export type DocumentsTableProps = Readonly<{
   emptyDescription?: string;
   formatDate: (value: string) => string;
   actionLabels: DocumentActionLabels;
-  onDocumentClick: (doc: DocumentSummary) => void;
-  onDeleteDocument?: (doc: DocumentSummary) => void;
-  onDownloadOriginal?: (doc: DocumentSummary) => void;
-  onDownloadSigned?: (doc: DocumentSummary) => void;
-  onViewSummary?: (doc: DocumentSummary) => void;
+  onDocumentClick: (doc: EnvelopeSummary) => void;
+  onDeleteDocument?: (doc: EnvelopeSummary) => void;
+  onDownloadOriginal?: (doc: EnvelopeSummary) => void;
+  onDownloadSigned?: (doc: EnvelopeSummary) => void;
+  onViewSummary?: (doc: EnvelopeSummary) => void;
   deletingId?: string | null;
 }>;
 
@@ -87,14 +87,14 @@ function DocumentRowSkeleton() {
 }
 
 type ActionHandlers = Readonly<{
-  onDocumentClick: (doc: DocumentSummary) => void;
-  onDeleteDocument?: (doc: DocumentSummary) => void;
-  onDownloadOriginal?: (doc: DocumentSummary) => void;
-  onDownloadSigned?: (doc: DocumentSummary) => void;
-  onViewSummary?: (doc: DocumentSummary) => void;
+  onDocumentClick: (doc: EnvelopeSummary) => void;
+  onDeleteDocument?: (doc: EnvelopeSummary) => void;
+  onDownloadOriginal?: (doc: EnvelopeSummary) => void;
+  onDownloadSigned?: (doc: EnvelopeSummary) => void;
+  onViewSummary?: (doc: EnvelopeSummary) => void;
 }>;
 
-function buildDraftActions(doc: DocumentSummary, labels: DocumentActionLabels, handlers: ActionHandlers): ReadonlyArray<DocumentAction> {
+function buildDraftActions(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: ActionHandlers): ReadonlyArray<DocumentAction> {
   return [
     { key: 'continue', label: labels.continue, icon: Pencil, onClick: () => handlers.onDocumentClick(doc) },
     ...(handlers.onDeleteDocument
@@ -103,7 +103,7 @@ function buildDraftActions(doc: DocumentSummary, labels: DocumentActionLabels, h
   ];
 }
 
-function buildViewableActions(doc: DocumentSummary, labels: DocumentActionLabels, handlers: ActionHandlers, includeSigned: boolean): ReadonlyArray<DocumentAction> {
+function buildViewableActions(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: ActionHandlers, includeSigned: boolean): ReadonlyArray<DocumentAction> {
   return [
     ...(handlers.onViewSummary
       ? [{ key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary?.(doc) }]
@@ -117,7 +117,7 @@ function buildViewableActions(doc: DocumentSummary, labels: DocumentActionLabels
   ];
 }
 
-const ACTIONS_BY_STATUS: Record<DocumentStatus, (doc: DocumentSummary, labels: DocumentActionLabels, handlers: ActionHandlers) => ReadonlyArray<DocumentAction>> = {
+const ACTIONS_BY_STATUS: Record<DocumentStatus, (doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: ActionHandlers) => ReadonlyArray<DocumentAction>> = {
   draft: buildDraftActions,
   pending_signatures: (doc, labels, handlers) => buildViewableActions(doc, labels, handlers, false),
   completed: (doc, labels, handlers) => buildViewableActions(doc, labels, handlers, true),
@@ -125,7 +125,7 @@ const ACTIONS_BY_STATUS: Record<DocumentStatus, (doc: DocumentSummary, labels: D
 };
 
 function useDocumentActions(
-  doc: DocumentSummary,
+  doc: EnvelopeSummary,
   labels: DocumentActionLabels,
   handlers: ActionHandlers,
 ): ReadonlyArray<DocumentAction> {
@@ -258,16 +258,16 @@ export function DocumentsTable({
 }
 
 type DocumentRowProps = Readonly<{
-  doc: DocumentSummary;
+  doc: EnvelopeSummary;
   statusLabels: Record<DocumentStatus, string>;
   formatDate: (value: string) => string;
   actionLabels: DocumentActionLabels;
   handlers: Readonly<{
-    onDocumentClick: (doc: DocumentSummary) => void;
-    onDeleteDocument?: (doc: DocumentSummary) => void;
-    onDownloadOriginal?: (doc: DocumentSummary) => void;
-    onDownloadSigned?: (doc: DocumentSummary) => void;
-    onViewSummary?: (doc: DocumentSummary) => void;
+    onDocumentClick: (doc: EnvelopeSummary) => void;
+    onDeleteDocument?: (doc: EnvelopeSummary) => void;
+    onDownloadOriginal?: (doc: EnvelopeSummary) => void;
+    onDownloadSigned?: (doc: EnvelopeSummary) => void;
+    onViewSummary?: (doc: EnvelopeSummary) => void;
   }>;
   isDeleting: boolean;
 }>;
@@ -276,9 +276,16 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
   const actions = useDocumentActions(doc, actionLabels, handlers);
 
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       onClick={() => handlers.onDocumentClick(doc)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          handlers.onDocumentClick(doc);
+        }
+      }}
       className={`group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-th-hover ${isDeleting ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
     >
       <div
@@ -322,6 +329,6 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
         <ActionsDropdown actions={actions} />
         <ChevronRight className="hidden h-4 w-4 text-foreground-subtle transition-colors group-hover:text-foreground-muted sm:block" />
       </div>
-    </button>
+    </div>
   );
 }

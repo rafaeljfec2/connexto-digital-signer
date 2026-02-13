@@ -13,7 +13,7 @@ export enum SignerStatus {
 }
 
 @Entity('signers')
-@Index(['tenantId', 'documentId'])
+@Index(['tenantId', 'envelopeId'])
 export class Signer {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
@@ -21,8 +21,8 @@ export class Signer {
   @Column({ name: 'tenant_id', type: 'varchar', length: 255 })
   tenantId!: string;
 
-  @Column({ name: 'document_id', type: 'varchar', length: 255 })
-  documentId!: string;
+  @Column({ name: 'envelope_id', type: 'uuid' })
+  envelopeId!: string;
 
   @Column({ name: 'tenant_signer_id', type: 'uuid', nullable: true })
   tenantSignerId!: string | null;

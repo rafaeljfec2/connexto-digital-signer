@@ -4,7 +4,7 @@ import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle } from 'lucide-react';
 import { Card } from '@/shared/ui';
-import { useDocumentAuditSummary } from '@/features/documents/hooks/use-document-wizard';
+import { useEnvelopeAuditSummary } from '@/features/documents/hooks/use-document-wizard';
 import { getDocumentFile, getDocumentSignedFile } from '@/features/documents/api';
 import { lazyLoad } from '@/shared/utils/lazy-load';
 
@@ -15,10 +15,10 @@ const DocumentAuditView = lazyLoad(
 
 export default function DocumentSummaryPage() {
   const params = useParams<{ id: string }>();
-  const documentId = params.id;
+  const envelopeId = params.id;
   const t = useTranslations('audit');
 
-  const summaryQuery = useDocumentAuditSummary(documentId);
+  const summaryQuery = useEnvelopeAuditSummary(envelopeId);
 
   if (summaryQuery.isLoading) {
     return (
@@ -49,8 +49,8 @@ export default function DocumentSummaryPage() {
     <div className="px-4 py-6 md:px-6 md:py-8">
       <DocumentAuditView
         data={summaryQuery.data}
-        onDownloadOriginal={() => getDocumentFile(documentId)}
-        onDownloadSigned={() => getDocumentSignedFile(documentId)}
+        onDownloadOriginal={() => getDocumentFile(summaryQuery.data!.document.id)}
+        onDownloadSigned={() => getDocumentSignedFile(summaryQuery.data!.document.id)}
         labels={{
           title: t('title'),
           documentDetails: t('documentDetails'),

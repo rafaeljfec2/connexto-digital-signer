@@ -5,6 +5,7 @@ import { useCallback, useState } from 'react';
 export type DropzoneProps = {
   readonly onFiles: (files: File[]) => void;
   readonly accept?: string;
+  readonly multiple?: boolean;
   readonly disabled?: boolean;
   readonly label?: string;
   readonly helperText?: string;
@@ -14,6 +15,7 @@ export type DropzoneProps = {
 export function Dropzone({
   onFiles,
   accept,
+  multiple = false,
   disabled = false,
   label,
   helperText,
@@ -52,6 +54,7 @@ export function Dropzone({
         type="file"
         className="hidden"
         accept={accept}
+        multiple={multiple}
         disabled={disabled}
         onChange={(event) => handleFiles(event.target.files)}
       />

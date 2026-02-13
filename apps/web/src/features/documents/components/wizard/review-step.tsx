@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import {
   useEmailPreview,
-  useSendDocument,
+  useSendEnvelope,
   useSignatureFields,
   useSigners,
 } from '@/features/documents/hooks/use-document-wizard';
@@ -22,19 +22,20 @@ import {
 import { Button, Card, Dialog } from '@/shared/ui';
 
 export type ReviewStepProps = {
+  readonly envelopeId: string;
   readonly documentId: string;
   readonly onBack: () => void;
   readonly onRestart: () => void;
   readonly onCancel: () => void;
 };
 
-export function ReviewStep({ documentId, onBack, onRestart, onCancel }: Readonly<ReviewStepProps>) {
+export function ReviewStep({ envelopeId, documentId, onBack, onRestart, onCancel }: Readonly<ReviewStepProps>) {
   const tReview = useTranslations('review');
   const tWizard = useTranslations('wizard');
-  const signersQuery = useSigners(documentId);
+  const signersQuery = useSigners(envelopeId);
   const fieldsQuery = useSignatureFields(documentId);
-  const previewMutation = useEmailPreview(documentId);
-  const sendMutation = useSendDocument(documentId);
+  const previewMutation = useEmailPreview(envelopeId);
+  const sendMutation = useSendEnvelope(envelopeId);
   const [previewOpen, setPreviewOpen] = useState(false);
 
   const checklist = useMemo(() => {
