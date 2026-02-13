@@ -467,6 +467,7 @@ export default function SignerDocumentPage() {
         {currentStep === 'review' ? (
           <ReviewStep
             signerData={signerData}
+            documents={documents}
             fields={allFields}
             fieldValues={fieldValues}
             standaloneSignature={standaloneSignature}
@@ -478,6 +479,7 @@ export default function SignerDocumentPage() {
             labels={{
               title: t('reviewStep.title'),
               documentTitle: t('reviewStep.documentTitle'),
+              documentsLabel: t('reviewStep.documentsLabel'),
               signerInfo: t('reviewStep.signerInfo'),
               filledFields: t('reviewStep.filledFields'),
               fieldPreviewFormat: (type: string, page: number) =>

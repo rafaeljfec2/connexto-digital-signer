@@ -572,6 +572,7 @@
     "reviewStep": {
       "title": "Revisão e assinatura",
       "documentTitle": "Documento",
+      "documentsLabel": "Documentos",
       "signerInfo": "Signatário",
       "filledFields": "Campos preenchidos",
       "fieldPreview": "{type} - Página {page}",

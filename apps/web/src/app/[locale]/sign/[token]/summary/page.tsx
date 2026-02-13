@@ -1,10 +1,11 @@
 "use client";
 
+import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle } from 'lucide-react';
 import { Card } from '@/shared/ui';
-import { useSignerSummary } from '@/features/signing/hooks';
+import { useSignerData, useSignerSummary } from '@/features/signing/hooks';
 import { getSignerPdf, getSignerSignedPdf } from '@/features/signing/api';
 import { lazyLoad } from '@/shared/utils/lazy-load';
 
@@ -19,6 +20,12 @@ export default function SignerSummaryPage() {
   const t = useTranslations('audit');
 
   const summaryQuery = useSignerSummary(token);
+  const signerQuery = useSignerData(token);
+
+  const documents = useMemo(
+    () => signerQuery.data?.documents ?? [],
+    [signerQuery.data?.documents],
+  );
 
   if (summaryQuery.isLoading) {
     return (
@@ -49,8 +56,9 @@ export default function SignerSummaryPage() {
     <div className="min-h-[100dvh] bg-[var(--th-page-bg)] px-4 py-6 text-foreground md:px-6 md:py-8">
       <DocumentAuditView
         data={summaryQuery.data}
-        onDownloadOriginal={() => getSignerPdf(token)}
-        onDownloadSigned={() => getSignerSignedPdf(token)}
+        documents={documents}
+        onDownloadOriginal={(documentId) => getSignerPdf(token, documentId)}
+        onDownloadSigned={(documentId) => getSignerSignedPdf(token, documentId)}
         labels={{
           title: t('title'),
           documentDetails: t('documentDetails'),

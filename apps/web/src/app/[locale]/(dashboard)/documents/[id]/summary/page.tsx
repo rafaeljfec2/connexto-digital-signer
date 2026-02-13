@@ -1,10 +1,11 @@
 "use client";
 
+import { useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { AlertTriangle } from 'lucide-react';
 import { Card } from '@/shared/ui';
-import { useEnvelopeAuditSummary } from '@/features/documents/hooks/use-document-wizard';
+import { useEnvelopeAuditSummary, useEnvelopeDocuments } from '@/features/documents/hooks/use-document-wizard';
 import { getDocumentFile, getDocumentSignedFile } from '@/features/documents/api';
 import { lazyLoad } from '@/shared/utils/lazy-load';
 
@@ -19,6 +20,16 @@ export default function DocumentSummaryPage() {
   const t = useTranslations('audit');
 
   const summaryQuery = useEnvelopeAuditSummary(envelopeId);
+  const docsQuery = useEnvelopeDocuments(envelopeId);
+
+  const documents = useMemo(
+    () =>
+      (docsQuery.data ?? []).map((d) => ({
+        id: d.id,
+        title: d.title,
+      })),
+    [docsQuery.data],
+  );
 
   if (summaryQuery.isLoading) {
     return (
@@ -49,8 +60,9 @@ export default function DocumentSummaryPage() {
     <div className="px-4 py-6 md:px-6 md:py-8">
       <DocumentAuditView
         data={summaryQuery.data}
-        onDownloadOriginal={() => getDocumentFile(summaryQuery.data!.document.id)}
-        onDownloadSigned={() => getDocumentSignedFile(summaryQuery.data!.document.id)}
+        documents={documents}
+        onDownloadOriginal={(documentId) => getDocumentFile(documentId ?? documents[0]?.id ?? envelopeId)}
+        onDownloadSigned={(documentId) => getDocumentSignedFile(documentId ?? documents[0]?.id ?? envelopeId)}
         labels={{
           title: t('title'),
           documentDetails: t('documentDetails'),

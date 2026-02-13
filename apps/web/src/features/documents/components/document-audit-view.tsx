@@ -32,10 +32,16 @@ function downloadBlob(blob: Blob, filename: string): void {
   URL.revokeObjectURL(url);
 }
 
+type AuditDocumentItem = Readonly<{
+  id: string;
+  title: string;
+}>;
+
 type DocumentAuditViewProps = Readonly<{
   data: DocumentAuditSummary;
-  onDownloadOriginal: () => Promise<Blob>;
-  onDownloadSigned: () => Promise<Blob | null>;
+  documents?: readonly AuditDocumentItem[];
+  onDownloadOriginal: (documentId?: string) => Promise<Blob>;
+  onDownloadSigned: (documentId?: string) => Promise<Blob | null>;
   labels: Readonly<{
     title: string;
     documentDetails: string;
@@ -143,39 +149,119 @@ const TIMELINE_COLORS: Record<string, string> = {
   verified: 'bg-violet-400/20 text-violet-400',
 };
 
-export function DocumentAuditView({
-  data,
+function SingleDocDownload({
+  docTitle,
+  documentId,
+  isCompleted,
   onDownloadOriginal,
   onDownloadSigned,
   labels,
-}: DocumentAuditViewProps) {
+}: Readonly<{
+  docTitle: string;
+  documentId?: string;
+  isCompleted: boolean;
+  onDownloadOriginal: (documentId?: string) => Promise<Blob>;
+  onDownloadSigned: (documentId?: string) => Promise<Blob | null>;
+  labels: Readonly<{
+    downloadOriginal: string;
+    downloadOriginalDesc: string;
+    downloadSigned: string;
+    downloadSignedDesc: string;
+    downloadSignedUnavailable: string;
+  }>;
+}>) {
   const [downloadingOriginal, setDownloadingOriginal] = useState(false);
   const [downloadingSigned, setDownloadingSigned] = useState(false);
-
-  const { document: doc, signers, timeline } = data;
-  const isCompleted = doc.status === 'completed';
 
   const handleDownloadOriginal = useCallback(async () => {
     setDownloadingOriginal(true);
     try {
-      const blob = await onDownloadOriginal();
-      downloadBlob(blob, `${doc.title}-original.pdf`);
+      const blob = await onDownloadOriginal(documentId);
+      downloadBlob(blob, `${docTitle}-original.pdf`);
     } finally {
       setDownloadingOriginal(false);
     }
-  }, [onDownloadOriginal, doc.title]);
+  }, [onDownloadOriginal, documentId, docTitle]);
 
   const handleDownloadSigned = useCallback(async () => {
     setDownloadingSigned(true);
     try {
-      const blob = await onDownloadSigned();
+      const blob = await onDownloadSigned(documentId);
       if (blob) {
-        downloadBlob(blob, `${doc.title}-signed.pdf`);
+        downloadBlob(blob, `${docTitle}-signed.pdf`);
       }
     } finally {
       setDownloadingSigned(false);
     }
-  }, [onDownloadSigned, doc.title]);
+  }, [onDownloadSigned, documentId, docTitle]);
+
+  return (
+    <div className="space-y-3">
+      <button
+        type="button"
+        onClick={handleDownloadOriginal}
+        disabled={downloadingOriginal}
+        className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
+      >
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/20">
+          <FileText className="h-5 w-5 text-primary" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">{labels.downloadOriginal}</p>
+          <p className="text-xs text-foreground-muted">{labels.downloadOriginalDesc}</p>
+        </div>
+        {downloadingOriginal ? (
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
+        ) : (
+          <Download className="h-4 w-4 shrink-0 text-foreground-subtle" />
+        )}
+      </button>
+
+      <button
+        type="button"
+        onClick={handleDownloadSigned}
+        disabled={downloadingSigned || !isCompleted}
+        className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
+      >
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
+            isCompleted ? 'bg-success/20' : 'bg-th-icon-bg'
+          }`}
+        >
+          <FileBadge
+            className={`h-5 w-5 ${isCompleted ? 'text-success' : 'text-foreground-subtle'}`}
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-medium">{labels.downloadSigned}</p>
+          <p className="text-xs text-foreground-muted">
+            {isCompleted ? labels.downloadSignedDesc : labels.downloadSignedUnavailable}
+          </p>
+        </div>
+        {downloadingSigned ? (
+          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
+        ) : (
+          <Download
+            className={`h-4 w-4 shrink-0 ${
+              isCompleted ? 'text-foreground-subtle' : 'text-foreground-subtle/50'
+            }`}
+          />
+        )}
+      </button>
+    </div>
+  );
+}
+
+export function DocumentAuditView({
+  data,
+  documents,
+  onDownloadOriginal,
+  onDownloadSigned,
+  labels,
+}: DocumentAuditViewProps) {
+  const { document: doc, signers, timeline } = data;
+  const isCompleted = doc.status === 'completed';
+  const hasMultipleDocuments = (documents?.length ?? 0) > 1;
 
   const statusBadgeVariant = doc.status === 'completed' ? ('success' as const) : ('info' as const);
 
@@ -404,59 +490,34 @@ export function DocumentAuditView({
         <h2 className="text-sm font-medium uppercase tracking-wider text-foreground-muted">
           {labels.downloads}
         </h2>
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={handleDownloadOriginal}
-            disabled={downloadingOriginal}
-            className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
-          >
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/20">
-              <FileText className="h-5 w-5 text-primary" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{labels.downloadOriginal}</p>
-              <p className="text-xs text-foreground-muted">{labels.downloadOriginalDesc}</p>
-            </div>
-            {downloadingOriginal ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
-            ) : (
-              <Download className="h-4 w-4 shrink-0 text-foreground-subtle" />
-            )}
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDownloadSigned}
-            disabled={downloadingSigned || !isCompleted}
-            className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
-          >
-            <div
-              className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-                isCompleted ? 'bg-success/20' : 'bg-th-icon-bg'
-              }`}
-            >
-              <FileBadge
-                className={`h-5 w-5 ${isCompleted ? 'text-success' : 'text-foreground-subtle'}`}
-              />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">{labels.downloadSigned}</p>
-              <p className="text-xs text-foreground-muted">
-                {isCompleted ? labels.downloadSignedDesc : labels.downloadSignedUnavailable}
-              </p>
-            </div>
-            {downloadingSigned ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
-            ) : (
-              <Download
-                className={`h-4 w-4 shrink-0 ${
-                  isCompleted ? 'text-foreground-subtle' : 'text-foreground-subtle/50'
-                }`}
-              />
-            )}
-          </button>
-        </div>
+        {hasMultipleDocuments && documents ? (
+          <div className="space-y-5">
+            {documents.map((docItem) => (
+              <div key={docItem.id}>
+                <p className="mb-2 flex items-center gap-1.5 text-xs font-medium text-foreground-muted">
+                  <FileText className="h-3.5 w-3.5" />
+                  {docItem.title}
+                </p>
+                <SingleDocDownload
+                  docTitle={docItem.title}
+                  documentId={docItem.id}
+                  isCompleted={isCompleted}
+                  onDownloadOriginal={onDownloadOriginal}
+                  onDownloadSigned={onDownloadSigned}
+                  labels={labels}
+                />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <SingleDocDownload
+            docTitle={doc.title}
+            isCompleted={isCompleted}
+            onDownloadOriginal={onDownloadOriginal}
+            onDownloadSigned={onDownloadSigned}
+            labels={labels}
+          />
+        )}
       </Card>
 
       <div className="flex items-center justify-center gap-2 pb-4 text-xs text-foreground-subtle">

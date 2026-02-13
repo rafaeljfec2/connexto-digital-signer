@@ -572,6 +572,7 @@
     "reviewStep": {
       "title": "Review and sign",
       "documentTitle": "Document",
+      "documentsLabel": "Documents",
       "signerInfo": "Signer",
       "filledFields": "Filled fields",
       "fieldPreview": "{type} - Page {page}",

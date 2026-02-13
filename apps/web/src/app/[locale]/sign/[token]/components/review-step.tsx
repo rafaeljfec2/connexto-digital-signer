@@ -17,8 +17,14 @@ import {
 import { Avatar, Badge, Button, Card } from '@/shared/ui';
 import type { SignerField, SignerWithEnvelope } from '@/features/signing/api';
 
+type DocumentItem = Readonly<{
+  id: string;
+  title: string;
+}>;
+
 type ReviewStepProps = Readonly<{
   signerData: SignerWithEnvelope;
+  documents: readonly DocumentItem[];
   fields: ReadonlyArray<SignerField>;
   fieldValues: Readonly<Record<string, string>>;
   standaloneSignature: string | null;
@@ -30,6 +36,7 @@ type ReviewStepProps = Readonly<{
   labels: Readonly<{
     title: string;
     documentTitle: string;
+    documentsLabel: string;
     signerInfo: string;
     filledFields: string;
     fieldPreviewFormat: (type: string, page: number) => string;
@@ -55,6 +62,7 @@ const FIELD_ICONS: Record<string, typeof PenTool> = {
 
 export function ReviewStep({
   signerData,
+  documents,
   fields,
   fieldValues,
   standaloneSignature,
@@ -90,17 +98,28 @@ export function ReviewStep({
             </div>
             <div className="flex-1">
               <p className="text-[10px] font-normal uppercase tracking-widest text-foreground-subtle">
-                {labels.documentTitle}
+                {documents.length > 1 ? labels.documentsLabel : labels.documentTitle}
               </p>
-              <p className="text-sm font-medium">
-                {signerData.envelope.title}
-              </p>
+              {documents.length > 1 ? (
+                <div className="space-y-1 pt-0.5">
+                  {documents.map((doc) => (
+                    <p key={doc.id} className="flex items-center gap-1.5 text-sm font-medium">
+                      <FileText className="h-3.5 w-3.5 shrink-0 text-foreground-muted" />
+                      {doc.title}
+                    </p>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm font-medium">
+                  {signerData.envelope.title}
+                </p>
+              )}
             </div>
             <Button
               type="button"
               variant="ghost"
               onClick={onViewDocument}
-              className="gap-1.5 text-xs text-primary hover:text-primary/80"
+              className="gap-1.5 self-start text-xs text-primary hover:text-primary/80"
             >
               <Eye className="h-3.5 w-3.5" />
               {labels.viewDocument}
