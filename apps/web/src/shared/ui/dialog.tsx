@@ -2,6 +2,7 @@
 
 import type { ReactNode } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { X } from 'lucide-react';
 
 export type DialogProps = Readonly<{
   open: boolean;
@@ -40,7 +41,16 @@ export function Dialog({
             exit={{ opacity: 0, scale: 0.95 }}
             transition={{ type: 'spring', stiffness: 400, damping: 30 }}
           >
-            {title ? <h3 className="text-lg font-medium">{title}</h3> : null}
+            <div className="flex items-start justify-between gap-4">
+              {title ? <h3 className="text-lg font-medium">{title}</h3> : null}
+              <button
+                type="button"
+                onClick={onClose}
+                className="shrink-0 rounded-lg p-1 text-foreground-muted transition-colors hover:bg-th-hover hover:text-foreground"
+              >
+                <X className="h-4.5 w-4.5" />
+              </button>
+            </div>
             <div className="mt-3 text-sm text-foreground-muted">{children}</div>
             {footer ? <div className="mt-5 flex justify-end gap-2">{footer}</div> : null}
           </motion.div>

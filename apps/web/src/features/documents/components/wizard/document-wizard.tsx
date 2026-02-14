@@ -29,9 +29,10 @@ export type DocumentWizardProps = Readonly<{
   documentId: string;
   hasFile: boolean;
   onCancel: () => void;
+  onSendSuccess?: (envelopeId: string) => void;
 }>;
 
-export function DocumentWizard({ envelopeId, documentId, hasFile, onCancel }: DocumentWizardProps) {
+export function DocumentWizard({ envelopeId, documentId, hasFile, onCancel, onSendSuccess }: DocumentWizardProps) {
   const tWizard = useTranslations('wizard');
   const documentsQuery = useEnvelopeDocuments(envelopeId);
   const documents = useMemo(() => documentsQuery.data ?? [], [documentsQuery.data]);
@@ -147,6 +148,7 @@ export function DocumentWizard({ envelopeId, documentId, hasFile, onCancel }: Do
             onBack={() => setStep('settings')}
             onRestart={() => setStep('upload')}
             onCancel={onCancel}
+            onSendSuccess={onSendSuccess}
           />
         ) : null}
       </StepTransition>

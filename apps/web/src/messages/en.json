@@ -510,6 +510,12 @@
     "status": {
       "ok": "OK",
       "pending": "Pending"
+    },
+    "success": {
+      "title": "Document sent!",
+      "subtitle": "Your document has been sent to the signers. You will be notified as soon as they sign.",
+      "newDocument": "New document",
+      "trackSignature": "Track signatures"
     }
   },
   "signer": {

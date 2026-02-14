@@ -1,8 +1,9 @@
 "use client";
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { usePersistedView } from '@/shared/hooks/use-persisted-view';
 import { useLocale, useTranslations } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
 import { EmptyState } from '@/features/documents/components/empty-state';
@@ -14,8 +15,7 @@ import { useFolderTree, useMoveEnvelopeToFolder } from '@/features/documents/hoo
 import { getDocumentFile, getDocumentSignedFile, getEnvelopeAuditSummary } from '@/features/documents/api';
 import type { DocumentStatus, EnvelopeSummary, FolderTreeNode } from '@/features/documents/api';
 import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
-import { Button, Card, ConfirmDialog, Pagination, Select, Skeleton } from '@/shared/ui';
-import { Sheet } from '@/shared/ui/sheet';
+import { Button, Card, ConfirmDialog, Dialog, Pagination, Select, Skeleton } from '@/shared/ui';
 import { FadeIn, PageTransition } from '@/shared/animations';
 import { useRouter } from '@/i18n/navigation';
 import { LayoutGrid, List, Plus } from 'lucide-react';
@@ -78,8 +78,17 @@ export default function DocumentsPage() {
   const [deleteTarget, setDeleteTarget] = useState<EnvelopeSummary | null>(null);
   const [gridMenuOpenId, setGridMenuOpenId] = useState<string | null>(null);
   const [moveTarget, setMoveTarget] = useState<EnvelopeSummary | null>(null);
-  const [trackingTarget, setTrackingTarget] = useState<EnvelopeSummary | null>(null);
+  const [trackingId, setTrackingId] = useState<string | null>(null);
+  const searchParams = useSearchParams();
   const limit = 10;
+
+  useEffect(() => {
+    const trackParam = searchParams.get('track');
+    if (trackParam) {
+      setTrackingId(trackParam);
+      router.replace('/documents', { scroll: false });
+    }
+  }, [searchParams, router]);
 
   const folderTreeQuery = useFolderTree();
   const folderTree = folderTreeQuery.data ?? [];
@@ -184,7 +193,7 @@ export default function DocumentsPage() {
               formatDate={formatDate} actionLabels={actionLabels} folderNameMap={folderNameMap}
               onDocumentClick={handleDocumentClick} onDeleteDocument={setDeleteTarget}
               onDownloadOriginal={handleDownloadOriginal} onDownloadSigned={handleDownloadSigned}
-              onViewSummary={handleViewSummary} onMoveToFolder={setMoveTarget} onTrackDocument={setTrackingTarget} deletingId={deletingId}
+              onViewSummary={handleViewSummary} onMoveToFolder={setMoveTarget} onTrackDocument={(env) => setTrackingId(env.id)} deletingId={deletingId}
             />
           </motion.div>
         ) : (
@@ -207,7 +216,7 @@ export default function DocumentsPage() {
                     onToggleMenu={(open) => setGridMenuOpenId(open ? doc.id : null)}
                     onDocumentClick={handleDocumentClick} onDeleteDocument={setDeleteTarget}
                     onDownloadOriginal={handleDownloadOriginal} onDownloadSigned={handleDownloadSigned}
-                    onViewSummary={handleViewSummary} onMoveToFolder={setMoveTarget} onTrackDocument={setTrackingTarget}
+                    onViewSummary={handleViewSummary} onMoveToFolder={setMoveTarget} onTrackDocument={(env) => setTrackingId(env.id)}
                   />
                 ))}
             {!query.isLoading && envelopes.length === 0 ? (
@@ -229,11 +238,11 @@ export default function DocumentsPage() {
         labels={{ title: t('folders.moveTitle'), selectFolder: t('folders.selectFolder'), rootFolder: t('folders.rootFolder'), confirm: t('folders.move'), cancel: t('actions.cancel') }}
       />
 
-      <Sheet open={trackingTarget !== null} title={tTracking('title')} onClose={() => setTrackingTarget(null)}>
-        {trackingTarget === null ? null : (
-          <SignerTrackingPanel envelopeId={trackingTarget.id} />
+      <Dialog open={trackingId !== null} title={tTracking('title')} onClose={() => setTrackingId(null)}>
+        {trackingId === null ? null : (
+          <SignerTrackingPanel envelopeId={trackingId} />
         )}
-      </Sheet>
+      </Dialog>
     </PageTransition>
   );
 }

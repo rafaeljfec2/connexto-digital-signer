@@ -61,6 +61,10 @@ export default function DocumentWizardPage() {
     return <div className="text-sm text-muted">{tWizard('notFound')}</div>;
   }
 
+  const handleSendSuccess = (sentEnvelopeId: string) => {
+    router.push(`/documents?track=${sentEnvelopeId}`);
+  };
+
   return (
     <>
       <DocumentWizard
@@ -68,6 +72,7 @@ export default function DocumentWizardPage() {
         documentId={primaryDocument.id}
         hasFile={hasFile}
         onCancel={handleCancel}
+        onSendSuccess={handleSendSuccess}
       />
       <ConfirmDialog
         open={confirmOpen}

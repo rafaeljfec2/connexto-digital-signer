@@ -21,6 +21,7 @@ import {
   X,
 } from 'lucide-react';
 import { Button, Card, Dialog } from '@/shared/ui';
+import { SendSuccessScreen } from './send-success-screen';
 
 export type ReviewStepProps = {
   readonly envelopeId: string;
@@ -28,6 +29,7 @@ export type ReviewStepProps = {
   readonly onBack: () => void;
   readonly onRestart: () => void;
   readonly onCancel: () => void;
+  readonly onSendSuccess?: (envelopeId: string) => void;
 };
 
 export function ReviewStep({
@@ -36,6 +38,7 @@ export function ReviewStep({
   onBack,
   onRestart,
   onCancel,
+  onSendSuccess,
 }: Readonly<ReviewStepProps>) {
   const tReview = useTranslations('review');
   const tWizard = useTranslations('wizard');
@@ -50,6 +53,7 @@ export function ReviewStep({
   const previewMutation = useEmailPreview(envelopeId);
   const sendMutation = useSendEnvelope(envelopeId);
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [sent, setSent] = useState(false);
 
   const checklist = useMemo(() => {
     const signersOk = (signersQuery.data ?? []).length > 0;
@@ -66,7 +70,17 @@ export function ReviewStep({
 
   const handleSend = async () => {
     await sendMutation.mutateAsync({});
+    setSent(true);
   };
+
+  if (sent) {
+    return (
+      <SendSuccessScreen
+        envelopeId={envelopeId}
+        onTrack={() => onSendSuccess?.(envelopeId)}
+      />
+    );
+  }
 
   return (
     <Card variant="glass" className="w-full p-6 md:p-8">
