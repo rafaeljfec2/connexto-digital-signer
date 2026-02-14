@@ -20,6 +20,7 @@
       "home": "Dashboard",
       "documents": "Documentos",
       "folders": "Pastas",
+      "signDocuments": "Assinar",
       "signers": "Contatos",
       "settings": "Configurações"
     },
@@ -715,6 +716,23 @@
     "loading": "Carregando resumo...",
     "error": "Erro ao carregar resumo",
     "errorSubtitle": "Não foi possível carregar os dados do documento."
+  },
+  "signDocuments": {
+    "title": "Assinar documentos",
+    "subtitle": "Busque documentos pendentes de assinatura por email, CPF ou telefone",
+    "searchPlaceholder": "Digite email, CPF ou telefone...",
+    "searchHint": "Mínimo 3 caracteres para buscar",
+    "empty": "Nenhum documento pendente encontrado",
+    "emptyDescription": "Verifique os dados informados e tente novamente.",
+    "sign": "Assinar",
+    "columns": {
+      "document": "Documento",
+      "signer": "Signatário",
+      "email": "Email",
+      "date": "Enviado em",
+      "expires": "Prazo",
+      "action": "Ação"
+    }
   },
   "tracking": {
     "title": "Progresso de assinatura",

@@ -20,6 +20,7 @@
       "home": "Home",
       "documents": "Documents",
       "folders": "Folders",
+      "signDocuments": "Sign",
       "signers": "Contacts",
       "settings": "Settings"
     },
@@ -715,6 +716,23 @@
     "loading": "Loading summary...",
     "error": "Error loading summary",
     "errorSubtitle": "Could not load document data."
+  },
+  "signDocuments": {
+    "title": "Sign documents",
+    "subtitle": "Search for pending documents by email, CPF, or phone number",
+    "searchPlaceholder": "Enter email, CPF, or phone...",
+    "searchHint": "Minimum 3 characters to search",
+    "empty": "No pending documents found",
+    "emptyDescription": "Check the information provided and try again.",
+    "sign": "Sign",
+    "columns": {
+      "document": "Document",
+      "signer": "Signer",
+      "email": "Email",
+      "date": "Sent on",
+      "expires": "Deadline",
+      "action": "Action"
+    }
   },
   "tracking": {
     "title": "Signing progress",

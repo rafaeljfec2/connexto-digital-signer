@@ -8,6 +8,7 @@ import {
   Home,
   FileText,
   Folder,
+  PenTool,
   Settings,
   LogOut,
   Search,
@@ -24,6 +25,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   home: Home,
   documents: FileText,
   folders: Folder,
+  signDocuments: PenTool,
   settings: Settings,
 };
 

@@ -234,6 +234,7 @@ export default function DashboardPage() {
             }}
             onSendDocument={() => router.push('/documents/new')}
             onViewAll={() => router.push('/documents')}
+            onSignDocuments={() => router.push('/sign-documents')}
           />
           </StaggerItem>
 

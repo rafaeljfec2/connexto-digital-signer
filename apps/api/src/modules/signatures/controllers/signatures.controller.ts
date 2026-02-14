@@ -22,6 +22,7 @@ import { SignatureFieldsService } from '../services/signature-fields.service';
 import { VerificationService } from '../services/verification.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
 import { ListSignersQueryDto } from '../dto/list-signers-query.dto';
+import { SearchSignerDocumentsDto } from '../dto/search-signer-documents.dto';
 import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { AcceptSignatureDto } from '../dto/accept-signature.dto';
 import { IdentifySignerDto } from '../dto/identify-signer.dto';
@@ -56,6 +57,14 @@ export class SignersListController {
     @Query() query: ListSignersQueryDto,
   ) {
     return this.signaturesService.findByTenant(tenantId, query);
+  }
+
+  @Get('search-documents')
+  searchDocuments(
+    @TenantId() tenantId: string,
+    @Query() query: SearchSignerDocumentsDto,
+  ) {
+    return this.signaturesService.searchPendingDocuments(tenantId, query.q);
   }
 }
 

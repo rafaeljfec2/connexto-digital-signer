@@ -540,6 +540,30 @@ export const listAllSigners = async (
   return response.data;
 };
 
+export type SignerDocumentResult = Readonly<{
+  signerId: string;
+  signerName: string;
+  signerEmail: string;
+  signerCpf: string | null;
+  signerPhone: string | null;
+  signerStatus: 'pending' | 'signed';
+  accessToken: string;
+  envelopeId: string;
+  envelopeTitle: string;
+  envelopeCreatedAt: string;
+  envelopeExpiresAt: string | null;
+}>;
+
+export const searchSignerDocuments = async (
+  q: string,
+): Promise<SignerDocumentResult[]> => {
+  const response = await apiClient.get<SignerDocumentResult[]>(
+    '/signers/search-documents',
+    { params: { q } },
+  );
+  return response.data;
+};
+
 export type TenantSigner = {
   readonly id: string;
   readonly tenantId: string;

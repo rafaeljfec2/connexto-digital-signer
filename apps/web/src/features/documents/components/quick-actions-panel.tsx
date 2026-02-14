@@ -13,12 +13,14 @@ export type QuickActionsPanelProps = {
   }>;
   readonly onSendDocument: () => void;
   readonly onViewAll: () => void;
+  readonly onSignDocuments?: () => void;
 };
 
 export function QuickActionsPanel({
   labels,
   onSendDocument,
   onViewAll,
+  onSignDocuments,
 }: Readonly<QuickActionsPanelProps>) {
   return (
     <div className="space-y-3">
@@ -47,7 +49,11 @@ export function QuickActionsPanel({
         </button>
       </Card>
 
-      <Card variant="glass" className="p-5">
+      <Card
+        variant="glass"
+        className="cursor-pointer p-5 transition-colors hover:bg-th-hover"
+        onClick={onSignDocuments}
+      >
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/15">
             <PenTool className="h-5 w-5 text-primary" />

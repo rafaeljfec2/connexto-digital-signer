@@ -141,6 +141,56 @@ export class SignaturesService {
     };
   }
 
+  async searchPendingDocuments(
+    tenantId: string,
+    query: string,
+  ): Promise<
+    Array<{
+      signerId: string;
+      signerName: string;
+      signerEmail: string;
+      signerCpf: string | null;
+      signerPhone: string | null;
+      signerStatus: SignerStatus;
+      accessToken: string;
+      envelopeId: string;
+      envelopeTitle: string;
+      envelopeCreatedAt: Date;
+      envelopeExpiresAt: Date | null;
+    }>
+  > {
+    const results = await this.signerRepository
+      .createQueryBuilder('signer')
+      .innerJoin('envelopes', 'envelope', 'envelope.id = signer.envelope_id')
+      .select([
+        'signer.id AS "signerId"',
+        'signer.name AS "signerName"',
+        'signer.email AS "signerEmail"',
+        'signer.cpf AS "signerCpf"',
+        'signer.phone AS "signerPhone"',
+        'signer.status AS "signerStatus"',
+        'signer.access_token AS "accessToken"',
+        'envelope.id AS "envelopeId"',
+        'envelope.title AS "envelopeTitle"',
+        'envelope.created_at AS "envelopeCreatedAt"',
+        'envelope.expires_at AS "envelopeExpiresAt"',
+      ])
+      .where('signer.tenant_id = :tenantId', { tenantId })
+      .andWhere('signer.status = :signerStatus', { signerStatus: SignerStatus.PENDING })
+      .andWhere('envelope.status = :envelopeStatus', {
+        envelopeStatus: EnvelopeStatus.PENDING_SIGNATURES,
+      })
+      .andWhere(
+        '(signer.email ILIKE :q OR signer.cpf ILIKE :q OR signer.phone ILIKE :q)',
+        { q: `%${query}%` },
+      )
+      .orderBy('envelope.created_at', 'DESC')
+      .limit(50)
+      .getRawMany();
+
+    return results;
+  }
+
   async findByTenant(
     tenantId: string,
     query: ListSignersQueryDto,
