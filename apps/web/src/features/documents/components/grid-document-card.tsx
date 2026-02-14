@@ -18,6 +18,8 @@ import { Badge, Card } from '@/shared/ui';
 import type { DocumentStatus, EnvelopeSummary } from '../api';
 import type { DocumentActionLabels } from './documents-table';
 
+const TRACKABLE_STATUSES = new Set<DocumentStatus>(['pending_signatures', 'completed']);
+
 const GRID_ICON_CLASS: Record<string, string> = {
   completed: 'bg-success/15 text-success',
   pending_signatures: 'bg-info/15 text-info',
@@ -166,17 +168,29 @@ export function GridDocumentCard({
             {formatDate(doc.createdAt)}
           </p>
         </div>
-        <div className="relative">
-          <button
-            type="button"
-            className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground-subtle transition-colors hover:bg-th-hover hover:text-foreground"
-            onClick={(e) => { e.stopPropagation(); onToggleMenu(!isMenuOpen); }}
-          >
-            <MoreVertical className="h-4 w-4" />
-          </button>
-          {isMenuOpen ? (
-            <GridDropdown actions={actions} onClose={() => onToggleMenu(false)} />
+        <div className="flex items-center gap-0.5">
+          {TRACKABLE_STATUSES.has(doc.status) && onTrackDocument ? (
+            <button
+              type="button"
+              title={actionLabels.track}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-primary/60 transition-colors hover:bg-primary/10 hover:text-primary"
+              onClick={(e) => { e.stopPropagation(); onTrackDocument(doc); }}
+            >
+              <Activity className="h-4 w-4" />
+            </button>
           ) : null}
+          <div className="relative">
+            <button
+              type="button"
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-foreground-subtle transition-colors hover:bg-th-hover hover:text-foreground"
+              onClick={(e) => { e.stopPropagation(); onToggleMenu(!isMenuOpen); }}
+            >
+              <MoreVertical className="h-4 w-4" />
+            </button>
+            {isMenuOpen ? (
+              <GridDropdown actions={actions} onClose={() => onToggleMenu(false)} />
+            ) : null}
+          </div>
         </div>
       </div>
       <div className="flex flex-wrap items-center gap-2">

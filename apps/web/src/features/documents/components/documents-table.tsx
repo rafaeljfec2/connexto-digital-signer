@@ -128,6 +128,8 @@ export type DocumentsTableProps = Readonly<{
   folderNameMap?: Map<string, string>;
 }>;
 
+const TRACKABLE_STATUSES = new Set<DocumentStatus>(['pending_signatures', 'completed']);
+
 const STATUS_VARIANT: Record<
   DocumentStatus,
   'default' | 'success' | 'warning' | 'danger' | 'info'
@@ -470,6 +472,19 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
       </p>
 
       <div className="flex w-20 items-center justify-end gap-1">
+        {TRACKABLE_STATUSES.has(doc.status) && handlers.onTrackDocument ? (
+          <button
+            type="button"
+            title={actionLabels.track}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-primary/60 transition-colors hover:bg-primary/10 hover:text-primary"
+            onClick={(e) => {
+              e.stopPropagation();
+              handlers.onTrackDocument?.(doc);
+            }}
+          >
+            <Activity className="h-4 w-4" />
+          </button>
+        ) : null}
         <ActionsDropdown actions={actions} />
         <ChevronRight className="hidden h-4 w-4 text-foreground-subtle transition-colors group-hover:text-foreground-muted sm:block" />
       </div>
