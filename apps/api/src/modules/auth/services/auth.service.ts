@@ -81,6 +81,11 @@ export class AuthService {
     return { accessToken, expiresIn };
   }
 
+  async checkEmailExists(email: string): Promise<{ exists: boolean }> {
+    const user = await this.usersService.findByEmail(email);
+    return { exists: user?.isActive === true };
+  }
+
   async loginWithEmail(
     email: string,
     password: string,

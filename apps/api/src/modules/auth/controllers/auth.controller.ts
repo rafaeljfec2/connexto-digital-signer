@@ -5,6 +5,7 @@ import { CurrentUser, Public, JwtPayload } from '@connexto/shared';
 import { AuthService, LoginResult } from '../services/auth.service';
 import { throttleConfig } from '../../../common/config/throttle.config';
 import { LoginDto } from '../dto/login.dto';
+import { CheckEmailDto } from '../dto/check-email.dto';
 import type { Request, Response } from 'express';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 import { EventEmitter2 } from '@nestjs/event-emitter';
@@ -49,6 +50,15 @@ export class AuthController {
     @Body('apiKey') apiKey: string
   ): Promise<Omit<LoginResult, 'refreshToken'>> {
     return this.authService.loginWithApiKey(apiKey);
+  }
+
+  @Public()
+  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Post('check-email')
+  async checkEmail(
+    @Body() body: CheckEmailDto
+  ): Promise<{ exists: boolean }> {
+    return this.authService.checkEmailExists(body.email);
   }
 
   @Public()

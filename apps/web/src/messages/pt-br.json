@@ -159,7 +159,10 @@
     "emailPlaceholder": "voce@empresa.com",
     "passwordPlaceholder": "Sua senha",
     "emailInvalid": "Email inválido",
+    "emailNotFound": "Não foi possível encontrar sua conta",
     "passwordRequired": "Senha obrigatória",
+    "continue": "Continuar",
+    "back": "Voltar",
     "signInCta": "Entrar",
     "companyNameLabel": "Nome da empresa",
     "companyNamePlaceholder": "Acme Corp",
@@ -595,7 +598,7 @@
     },
     "consent": {
       "label": "Li e concordo com os termos do documento e reconheço a validade jurídica desta assinatura eletrônica.",
-      "required": "Voce deve aceitar os termos para assinar."
+      "required": "Você deve aceitar os termos para assinar."
     },
     "signaturePad": {
       "title": "Sua assinatura",
