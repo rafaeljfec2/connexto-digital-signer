@@ -1,6 +1,6 @@
 {
   "common": {
-    "appName": "Connexto",
+    "appName": "Nexosign",
     "accessAccount": "Access your account",
     "createAccount": "Create your account",
     "alreadyHaveAccount": "Already have an account?",
@@ -281,7 +281,7 @@
       "deleting": "Deleting...",
       "cancel": "Cancel",
       "moveToFolder": "Move to folder",
-    "track": "Track"
+      "track": "Track"
     },
     "status": {
       "draft": "Draft",
@@ -774,7 +774,7 @@
       "multiLangDescription": "Signing screen in Portuguese or English. For international teams and clients."
     },
     "differentials": {
-      "headline": "Why Connexto?",
+      "headline": "Why Nexosign?",
       "brazilTitle": "Built for Brazil",
       "brazilDescription": "Compliant with MP 2.200-2/2001 and Law 14.063/2020. Portuguese interface, CPF support, and local workflows.",
       "uxTitle": "UX that signers appreciate",
@@ -790,7 +790,7 @@
       "metric2Label": "active companies",
       "metric3Value": "99.9%",
       "metric3Label": "uptime",
-      "testimonialQuote": "Connexto simplified our contract signing process. What used to take days now takes minutes, with full legal traceability.",
+      "testimonialQuote": "Nexosign simplified our contract signing process. What used to take days now takes minutes, with full legal traceability.",
       "testimonialName": "Ana Silva",
       "testimonialRole": "Legal Director",
       "testimonialCompany": "TechCorp Brasil"
@@ -811,7 +811,7 @@
       "legal": "Legal",
       "privacy": "Privacy Policy",
       "terms": "Terms of Service",
-      "copyright": "Connexto. All rights reserved.",
+      "copyright": "Nexosign. All rights reserved.",
       "badge": "Compliant with MP 2.200-2/2001 & Law 14.063/2020"
     }
   }

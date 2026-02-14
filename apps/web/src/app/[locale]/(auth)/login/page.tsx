@@ -15,7 +15,9 @@ export default async function LoginPage() {
           {tCommon('appName')}
         </p>
       </div>
-      <LoginForm />
+      <div className="rounded-2xl border border-th-border bg-th-card p-6 shadow-sm sm:p-8">
+        <LoginForm />
+      </div>
       <p className="text-center text-xs text-foreground-muted">
         {tCommon('newHere')}{' '}
         <Link className="text-primary font-medium hover:underline" href="/signup">

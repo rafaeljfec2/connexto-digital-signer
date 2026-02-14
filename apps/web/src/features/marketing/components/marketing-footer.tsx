@@ -1,6 +1,6 @@
-import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { ShieldCheck } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 export function MarketingFooter() {
   const t = useTranslations('landing.footer');
@@ -11,7 +11,7 @@ export function MarketingFooter() {
         <div className="grid grid-cols-2 gap-8 md:grid-cols-4">
           <div className="col-span-2 md:col-span-1">
             <Link href="/" className="text-lg font-semibold tracking-tight text-white">
-              Connexto
+              Nexosign
             </Link>
             <div className="mt-4 flex items-center gap-2 text-xs text-white/40">
               <ShieldCheck className="h-4 w-4 text-accent-400/60" />
@@ -25,7 +25,10 @@ export function MarketingFooter() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <a href="#features" className="text-sm text-white/60 transition-colors hover:text-white">
+                <a
+                  href="#features"
+                  className="text-sm text-white/60 transition-colors hover:text-white"
+                >
                   {t('features')}
                 </a>
               </li>

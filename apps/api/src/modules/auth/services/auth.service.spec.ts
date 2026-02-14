@@ -151,6 +151,7 @@ describe('AuthService', () => {
         email: user.email,
         role: user.role,
         tenantId: user.tenantId,
+        tenantName: 'Acme',
       });
       expect(refreshTokenRepository.create).toHaveBeenCalled();
       expect(refreshTokenRepository.save).toHaveBeenCalled();
@@ -234,6 +235,7 @@ describe('AuthService', () => {
         email: 'owner@acme.com',
         role: UserRole.OWNER,
         tenantId: 'tenant-1',
+        tenantName: 'Acme',
       });
       expect(refreshTokenRepository.save).toHaveBeenCalledWith(
         expect.objectContaining({ revokedAt: expect.any(Date) })

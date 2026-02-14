@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
 import { Link } from '@/i18n/navigation';
 import { Menu, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import { useState } from 'react';
 
 export function MarketingHeader() {
   const t = useTranslations('landing.header');
@@ -13,14 +13,11 @@ export function MarketingHeader() {
     <header className="fixed top-0 right-0 left-0 z-50 border-b border-white/10 bg-brand-900/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 md:px-6 lg:px-8">
         <Link href="/" className="text-lg font-semibold tracking-tight text-white">
-          Connexto
+          Nexosign
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          <a
-            href="#features"
-            className="text-sm text-white/60 transition-colors hover:text-white"
-          >
+          <a href="#features" className="text-sm text-white/60 transition-colors hover:text-white">
             {t('features')}
           </a>
           <a

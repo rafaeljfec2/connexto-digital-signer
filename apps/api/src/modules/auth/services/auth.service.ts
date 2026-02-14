@@ -30,6 +30,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   tenantId: string;
+  tenantName: string;
 }
 
 export interface LoginMetadata {
@@ -137,6 +138,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         tenantId: user.tenantId,
+        tenantName: tenant.name,
       },
     };
   }
@@ -184,6 +186,7 @@ export class AuthService {
         email: user.email,
         role: user.role,
         tenantId: stored.tenantId,
+        tenantName: tenant.name,
       },
     };
   }

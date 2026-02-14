@@ -22,7 +22,7 @@ const configureOpenApi = (app: Awaited<ReturnType<typeof NestFactory.create>>): 
   if (process.env['NODE_ENV'] === 'production') return;
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Digital Signer API')
-    .setDescription('Connexto Digital Signer API')
+    .setDescription('Nexosign Digital Signer API')
     .setVersion('v1')
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);

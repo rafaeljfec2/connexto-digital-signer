@@ -100,6 +100,7 @@ export function AppShell({
   };
 
   const displayName = isMounted ? (user?.name ?? appName) : appName;
+  const tenantDisplayName = isMounted ? (user?.tenantName ?? tenantLabel) : tenantLabel;
   const initials = isMounted ? (user?.name ?? tenantLabel) : tenantLabel;
 
   const sidebarGroups: SidebarGroup[] = useMemo(() => {
@@ -129,10 +130,10 @@ export function AppShell({
       <Avatar name={initials} size="sm" statusColor="#14B8A6" />
       <div className="min-w-0 flex-1">
         <p className="truncate text-xs font-medium text-foreground">{displayName}</p>
-        <p className="truncate text-[10px] text-foreground-subtle">{tenantLabel}</p>
+        <p className="truncate text-[10px] text-foreground-subtle">{tenantDisplayName}</p>
       </div>
     </div>
-  ), [initials, displayName, tenantLabel]);
+  ), [initials, displayName, tenantDisplayName]);
 
   return (
     <div className="h-screen text-foreground">
@@ -244,7 +245,7 @@ export function AppShell({
               <div className="hidden items-center gap-2.5 sm:flex">
                 <div className="text-right">
                   <p className="text-xs font-medium text-foreground">{displayName}</p>
-                  <p className="text-[10px] text-foreground-subtle">{tenantLabel}</p>
+                  <p className="text-[10px] text-foreground-subtle">{tenantDisplayName}</p>
                 </div>
               </div>
 
