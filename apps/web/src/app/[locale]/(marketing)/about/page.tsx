@@ -67,13 +67,13 @@ export default function AboutPage() {
 
           <div className="mt-12 grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
             {VALUES.map(({ key, Icon }, index) => (
-              <AnimateOnScroll key={key} variant="scale" stagger={index + 1}>
-                <div className="landing-card group rounded-2xl border border-white/5 bg-white/[0.03] p-6 hover:border-accent-400/20 hover:bg-white/[0.06]">
-                  <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-xl bg-accent-400/10 transition-all group-hover:bg-accent-400/20 group-hover:scale-110">
+              <AnimateOnScroll key={key} variant="scale" stagger={index + 1} className="h-full">
+                <div className="landing-card group flex h-full flex-col rounded-2xl border border-white/5 bg-white/[0.03] p-6 hover:border-accent-400/20 hover:bg-white/[0.06]">
+                  <div className="mb-4 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent-400/10 transition-all group-hover:bg-accent-400/20 group-hover:scale-110">
                     <Icon className="h-5 w-5 text-accent-400" />
                   </div>
                   <h3 className="text-base font-semibold text-white">{t(`${key}Title`)}</h3>
-                  <p className="mt-2 text-sm leading-relaxed text-white/50">{t(`${key}Description`)}</p>
+                  <p className="mt-2 flex-1 text-sm leading-relaxed text-white/50">{t(`${key}Description`)}</p>
                 </div>
               </AnimateOnScroll>
             ))}

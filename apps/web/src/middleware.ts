@@ -25,12 +25,18 @@ export function middleware(request: NextRequest) {
 
   const isLandingPage = pathWithoutLocale === '/';
 
+  const isMarketingPage = ['/pricing', '/about', '/contact', '/privacy', '/terms'].includes(
+    pathWithoutLocale,
+  );
+
   const isOpenPage =
     pathWithoutLocale.startsWith('/sign/') || pathWithoutLocale === '/success';
 
+  const isPublicPage = isAuthPage || isOpenPage || isLandingPage || isMarketingPage;
+
   const token = request.cookies.get('auth_token')?.value;
 
-  if (!token && !isAuthPage && !isOpenPage && !isLandingPage) {
+  if (!token && !isPublicPage) {
     const url = request.nextUrl.clone();
     url.pathname = `/${locale}/login`;
     return NextResponse.redirect(url);

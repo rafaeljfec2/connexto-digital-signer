@@ -29,13 +29,13 @@ export default function ContactPage() {
 
         <div className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-6 md:mt-16 md:grid-cols-3">
           {CHANNELS.map(({ key, Icon }, index) => (
-            <AnimateOnScroll key={key} variant="scale" stagger={index + 1}>
-              <div className="landing-card group flex flex-col items-center rounded-2xl border border-white/5 bg-white/[0.03] p-6 text-center hover:border-accent-400/20 hover:bg-white/[0.06]">
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-accent-400/10 transition-all group-hover:bg-accent-400/20 group-hover:scale-110">
+            <AnimateOnScroll key={key} variant="scale" stagger={index + 1} className="h-full">
+              <div className="landing-card group flex h-full flex-col items-center rounded-2xl border border-white/5 bg-white/[0.03] p-6 text-center hover:border-accent-400/20 hover:bg-white/[0.06]">
+                <div className="mb-4 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent-400/10 transition-all group-hover:bg-accent-400/20 group-hover:scale-110">
                   <Icon className="h-6 w-6 text-accent-400" />
                 </div>
                 <h3 className="text-base font-semibold text-white">{t(`${key}Title`)}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-white/50">{t(`${key}Description`)}</p>
+                <p className="mt-2 flex-1 text-sm leading-relaxed text-white/50">{t(`${key}Description`)}</p>
               </div>
             </AnimateOnScroll>
           ))}
