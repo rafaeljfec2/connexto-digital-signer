@@ -184,7 +184,13 @@
     "ownerEmailRequired": "Valid email is required",
     "ownerPasswordRequired": "Password is required",
     "ownerPasswordConfirmError": "Passwords must match",
-    "createAccountCta": "Create account"
+    "createAccountCta": "Create account",
+    "companySectionTitle": "Company",
+    "companySectionDescription": "Information about your organization",
+    "ownerSectionTitle": "Your account",
+    "ownerSectionDescription": "Credentials for the account administrator",
+    "securitySectionTitle": "Security",
+    "securitySectionDescription": "Set a strong password for your account"
   },
   "dashboard": {
     "title": "Dashboard",

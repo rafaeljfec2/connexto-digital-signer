@@ -48,7 +48,7 @@ export default function AuthLayout({ children }: Readonly<{ children: ReactNode 
           <ThemeToggle />
         </div>
         <FadeIn direction="up" duration={0.5} delay={0.15}>
-          <div className="w-full max-w-md">
+          <div className="w-full max-w-lg">
             {children}
           </div>
         </FadeIn>
