@@ -101,7 +101,9 @@
       "logoChange": "Trocar logo",
       "save": "Salvar alterações",
       "saving": "Salvando...",
-      "success": "Perfil atualizado com sucesso"
+      "success": "Perfil atualizado com sucesso",
+      "logoUploadError": "Falha ao enviar logo. Tente novamente.",
+      "saveError": "Falha ao salvar alterações. Tente novamente."
     },
     "defaults": {
       "title": "Padrões de Assinatura",

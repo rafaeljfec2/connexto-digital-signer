@@ -101,7 +101,9 @@
       "logoChange": "Change logo",
       "save": "Save changes",
       "saving": "Saving...",
-      "success": "Profile updated successfully"
+      "success": "Profile updated successfully",
+      "logoUploadError": "Failed to upload logo. Please try again.",
+      "saveError": "Failed to save changes. Please try again."
     },
     "defaults": {
       "title": "Signing Defaults",

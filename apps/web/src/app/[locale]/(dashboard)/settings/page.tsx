@@ -2,6 +2,7 @@
 
 import { useCallback, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import {
   ShieldCheck,
   Upload,
@@ -108,16 +109,26 @@ function BrandingSection() {
   }
 
   const handleSave = useCallback(async () => {
-    await updateMutation.mutateAsync({ name: companyName, primaryColor });
-  }, [companyName, primaryColor, updateMutation]);
+    try {
+      await updateMutation.mutateAsync({ name: companyName, primaryColor });
+      toast.success(t('success'));
+    } catch {
+      toast.error(t('saveError'));
+    }
+  }, [companyName, primaryColor, updateMutation, t]);
 
   const handleLogoChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
       if (!file) return;
-      await logoMutation.mutateAsync(file);
+      try {
+        await logoMutation.mutateAsync(file);
+        toast.success(t('success'));
+      } catch {
+        toast.error(t('logoUploadError'));
+      }
     },
-    [logoMutation],
+    [logoMutation, t],
   );
 
   return (
