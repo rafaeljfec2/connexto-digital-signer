@@ -150,6 +150,7 @@ export type ListEnvelopesParams = {
   readonly limit?: number;
   readonly status?: EnvelopeStatus;
   readonly folderId?: string;
+  readonly search?: string;
 };
 
 export type CreateEnvelopeInput = {

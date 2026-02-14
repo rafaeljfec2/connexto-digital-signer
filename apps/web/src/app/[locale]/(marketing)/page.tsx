@@ -5,6 +5,7 @@ import { TrustBar } from '@/features/marketing/components/trust-bar';
 import { PainSection } from '@/features/marketing/components/pain-section';
 import { HowItWorks } from '@/features/marketing/components/how-it-works';
 import { FeaturesGrid } from '@/features/marketing/components/features-grid';
+import { PricingSection } from '@/features/marketing/components/pricing-section';
 import { Differentials } from '@/features/marketing/components/differentials';
 import { SocialProof } from '@/features/marketing/components/social-proof';
 import { FinalCta } from '@/features/marketing/components/final-cta';
@@ -17,6 +18,7 @@ export default function LandingPage() {
       <PainSection />
       <HowItWorks />
       <FeaturesGrid />
+      <PricingSection />
       <Differentials />
       <SocialProof />
       <FinalCta />

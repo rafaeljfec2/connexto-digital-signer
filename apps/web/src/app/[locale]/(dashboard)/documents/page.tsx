@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useDebounce } from '@/shared/hooks/use-debounce';
 import { usePersistedView } from '@/shared/hooks/use-persisted-view';
 import { useLocale, useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
@@ -18,7 +19,7 @@ import type { DocumentActionLabels } from '@/features/documents/components/docum
 import { Button, Card, ConfirmDialog, Dialog, Pagination, Select, Skeleton } from '@/shared/ui';
 import { FadeIn, PageTransition } from '@/shared/animations';
 import { useRouter } from '@/i18n/navigation';
-import { LayoutGrid, List, Plus } from 'lucide-react';
+import { LayoutGrid, List, Plus, Search } from 'lucide-react';
 
 function downloadBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -79,6 +80,7 @@ export default function DocumentsPage() {
   const [gridMenuOpenId, setGridMenuOpenId] = useState<string | null>(null);
   const [moveTarget, setMoveTarget] = useState<EnvelopeSummary | null>(null);
   const [trackingId, setTrackingId] = useState<string | null>(null);
+  const [search, setSearch] = useState('');
   const searchParams = useSearchParams();
   const limit = 10;
 
@@ -88,13 +90,29 @@ export default function DocumentsPage() {
       setTrackingId(trackParam);
       router.replace('/documents', { scroll: false });
     }
+    const searchParam = searchParams.get('search');
+    if (searchParam) {
+      setSearch(searchParam);
+      router.replace('/documents', { scroll: false });
+    }
   }, [searchParams, router]);
+
+  const debouncedSearch = useDebounce(search, 400);
+
+  useEffect(() => {
+    setPage(1);
+  }, [debouncedSearch]);
 
   const folderTreeQuery = useFolderTree();
   const folderTree = folderTreeQuery.data ?? [];
   const folderNameMap = useMemo(() => buildFolderNameMap(folderTree), [folderTree]);
 
-  const query = useEnvelopesList({ page, limit, status: status === 'all' ? undefined : status });
+  const query = useEnvelopesList({
+    page,
+    limit,
+    status: status === 'all' ? undefined : status,
+    search: debouncedSearch || undefined,
+  });
   const deleteMutation = useDeleteEnvelope();
   const moveMutation = useMoveEnvelopeToFolder();
   const deletingId = deleteMutation.isPending ? (deleteMutation.variables ?? null) : null;
@@ -169,6 +187,16 @@ export default function DocumentsPage() {
           </Button>
         </div>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+              placeholder={t('filters.search')}
+              className="h-9 w-full rounded-xl border border-th-border bg-th-input pl-9 pr-4 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
+            />
+          </div>
           <div className="flex flex-wrap items-center gap-3 text-sm text-foreground-muted">
             <span>{t('filters.status')}</span>
             <Select className="min-w-[200px]" value={status} onChange={(e) => { setStatus(e.target.value as DocumentStatus | 'all'); setPage(1); }}>

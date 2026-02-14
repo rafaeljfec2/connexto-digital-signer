@@ -25,18 +25,20 @@ export function MarketingFooter() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#features"
+                <Link
+                  href="/#features"
                   className="text-sm text-white/60 transition-colors hover:text-white"
                 >
                   {t('features')}
-                </a>
+                </Link>
               </li>
               <li>
-                <span className="text-sm text-white/30">{t('pricing')}</span>
-              </li>
-              <li>
-                <span className="text-sm text-white/30">{t('docs')}</span>
+                <Link
+                  href="/pricing"
+                  className="text-sm text-white/60 transition-colors hover:text-white"
+                >
+                  {t('pricing')}
+                </Link>
               </li>
             </ul>
           </div>
@@ -47,10 +49,20 @@ export function MarketingFooter() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <span className="text-sm text-white/30">{t('about')}</span>
+                <Link
+                  href="/about"
+                  className="text-sm text-white/60 transition-colors hover:text-white"
+                >
+                  {t('about')}
+                </Link>
               </li>
               <li>
-                <span className="text-sm text-white/30">{t('contact')}</span>
+                <Link
+                  href="/contact"
+                  className="text-sm text-white/60 transition-colors hover:text-white"
+                >
+                  {t('contact')}
+                </Link>
               </li>
             </ul>
           </div>
@@ -61,10 +73,20 @@ export function MarketingFooter() {
             </h4>
             <ul className="space-y-2">
               <li>
-                <span className="text-sm text-white/30">{t('privacy')}</span>
+                <Link
+                  href="/privacy"
+                  className="text-sm text-white/60 transition-colors hover:text-white"
+                >
+                  {t('privacy')}
+                </Link>
               </li>
               <li>
-                <span className="text-sm text-white/30">{t('terms')}</span>
+                <Link
+                  href="/terms"
+                  className="text-sm text-white/60 transition-colors hover:text-white"
+                >
+                  {t('terms')}
+                </Link>
               </li>
             </ul>
           </div>

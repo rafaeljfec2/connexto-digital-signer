@@ -83,6 +83,9 @@ export class EnvelopesService {
     if (query.folderId) {
       qb.andWhere('envelope.folderId = :folderId', { folderId: query.folderId });
     }
+    if (query.search) {
+      qb.andWhere('envelope.title ILIKE :search', { search: `%${query.search}%` });
+    }
 
     const total = await qb.getCount();
 

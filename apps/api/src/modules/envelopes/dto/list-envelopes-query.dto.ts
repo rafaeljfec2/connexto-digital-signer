@@ -1,6 +1,6 @@
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
-import { IsEnum, IsInt, IsOptional, IsUUID, Max, Min } from 'class-validator';
+import { IsEnum, IsInt, IsOptional, IsString, IsUUID, Max, MaxLength, Min } from 'class-validator';
 import { EnvelopeStatus } from '../entities/envelope.entity';
 
 export class ListEnvelopesQueryDto {
@@ -28,4 +28,10 @@ export class ListEnvelopesQueryDto {
   @IsUUID()
   @ApiPropertyOptional({ description: 'Filter by folder' })
   readonly folderId?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  @ApiPropertyOptional({ description: 'Search by title' })
+  readonly search?: string;
 }

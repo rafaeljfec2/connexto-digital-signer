@@ -190,16 +190,27 @@ export function AppShell({
               <Menu className="h-5 w-5" />
             </Button>
 
-            <div className="relative hidden sm:block sm:max-w-md sm:flex-1">
+            <form
+              className="relative hidden sm:block sm:max-w-md sm:flex-1"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const input = e.currentTarget.querySelector('input');
+                const value = input?.value.trim() ?? '';
+                if (value) {
+                  router.push(`/documents?search=${encodeURIComponent(value)}`);
+                  input?.blur();
+                } else {
+                  router.push('/documents');
+                }
+              }}
+            >
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground-subtle" />
               <input
                 type="text"
                 placeholder={searchPlaceholder}
                 className="h-9 w-full rounded-xl border border-th-border bg-th-input pl-9 pr-4 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
-                onFocus={() => router.push('/documents')}
-                readOnly
               />
-            </div>
+            </form>
 
             <div className="flex-1" />
 

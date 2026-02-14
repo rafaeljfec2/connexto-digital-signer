@@ -17,15 +17,21 @@ export function MarketingHeader() {
         </Link>
 
         <nav className="hidden items-center gap-8 md:flex">
-          <a href="#features" className="text-sm text-white/60 transition-colors hover:text-white">
+          <Link href="/#features" className="text-sm text-white/60 transition-colors hover:text-white">
             {t('features')}
-          </a>
-          <a
-            href="#how-it-works"
+          </Link>
+          <Link
+            href="/#how-it-works"
             className="text-sm text-white/60 transition-colors hover:text-white"
           >
             {t('howItWorks')}
-          </a>
+          </Link>
+          <Link
+            href="/pricing"
+            className="text-sm text-white/60 transition-colors hover:text-white"
+          >
+            {t('pricing')}
+          </Link>
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
@@ -56,20 +62,27 @@ export function MarketingHeader() {
       {isMenuOpen ? (
         <div className="border-t border-white/10 bg-brand-900/95 backdrop-blur-xl md:hidden">
           <div className="flex flex-col gap-1 px-4 py-4">
-            <a
-              href="#features"
+            <Link
+              href="/#features"
               onClick={() => setIsMenuOpen(false)}
               className="rounded-lg px-3 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
             >
               {t('features')}
-            </a>
-            <a
-              href="#how-it-works"
+            </Link>
+            <Link
+              href="/#how-it-works"
               onClick={() => setIsMenuOpen(false)}
               className="rounded-lg px-3 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
             >
               {t('howItWorks')}
-            </a>
+            </Link>
+            <Link
+              href="/pricing"
+              onClick={() => setIsMenuOpen(false)}
+              className="rounded-lg px-3 py-2.5 text-sm text-white/70 transition-colors hover:bg-white/5 hover:text-white"
+            >
+              {t('pricing')}
+            </Link>
             <div className="my-2 border-t border-white/10" />
             <Link
               href="/login"

@@ -48,12 +48,12 @@ export function HeroSection() {
               {t('ctaPrimary')}
               <ArrowRight className="h-4 w-4" />
             </Link>
-            <a
-              href="#how-it-works"
+            <Link
+              href="/#how-it-works"
               className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/20 px-6 py-3 text-sm font-medium text-white/80 transition-all hover:border-white/40 hover:bg-white/5 hover:text-white sm:w-auto"
             >
               {t('ctaSecondary')}
-            </a>
+            </Link>
           </div>
         </div>
       </div>
