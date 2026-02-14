@@ -1,10 +1,10 @@
-"use client";
+'use client';
 
-import type { ReactNode } from 'react';
-import { useTranslations } from 'next-intl';
-import { ShieldCheck } from 'lucide-react';
 import { FadeIn } from '@/shared/animations';
 import { ThemeToggle } from '@/shared/ui/theme-toggle';
+import { ShieldCheck } from 'lucide-react';
+import { useTranslations } from 'next-intl';
+import type { ReactNode } from 'react';
 
 function BrandingPanel() {
   const t = useTranslations('landing.hero');
@@ -15,9 +15,7 @@ function BrandingPanel() {
         <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">
           <ShieldCheck className="h-7 w-7 text-white" />
         </div>
-        <span className="text-2xl font-bold tracking-tight text-white lg:text-3xl">
-          Connexto
-        </span>
+        <span className="text-2xl font-bold tracking-tight text-white lg:text-3xl">Nexosign</span>
       </div>
       <p className="max-w-xs text-center text-sm leading-relaxed text-white/60 lg:max-w-sm lg:text-left lg:text-base">
         {t('headline')}
@@ -48,9 +46,7 @@ export default function AuthLayout({ children }: Readonly<{ children: ReactNode 
           <ThemeToggle />
         </div>
         <FadeIn direction="up" duration={0.5} delay={0.15}>
-          <div className="w-full max-w-lg">
-            {children}
-          </div>
+          <div className="w-full max-w-xl">{children}</div>
         </FadeIn>
       </div>
     </div>

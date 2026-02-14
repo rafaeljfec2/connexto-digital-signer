@@ -154,12 +154,14 @@
     "themeDark": "Tema escuro"
   },
   "auth": {
-    "emailLabel": "Email",
-    "passwordLabel": "Senha",
+    "emailLabel": "Digite seu email",
+    "passwordLabel": "Digite sua senha",
     "emailPlaceholder": "voce@empresa.com",
     "passwordPlaceholder": "Sua senha",
     "emailInvalid": "Email inválido",
     "emailNotFound": "Não foi possível encontrar sua conta",
+    "welcomeBack": "Olá, {name} bem vindo de volta!",
+    "invalidCredentials": "Senha incorreta. Tente novamente.",
     "passwordRequired": "Senha obrigatória",
     "continue": "Continuar",
     "back": "Voltar",

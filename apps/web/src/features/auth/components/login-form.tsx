@@ -35,7 +35,9 @@ export function LoginForm() {
   const [direction, setDirection] = useState<1 | -1>(1);
   const [checkingEmail, setCheckingEmail] = useState(false);
   const [emailError, setEmailError] = useState<string | null>(null);
+  const [loginError, setLoginError] = useState<string | null>(null);
   const emailRef = useRef('');
+  const firstNameRef = useRef('');
   const passwordInputRef = useRef<HTMLInputElement | null>(null);
 
   const emailForm = useForm<EmailData>({
@@ -56,6 +58,7 @@ export function LoginForm() {
         return;
       }
       emailRef.current = data.email;
+      firstNameRef.current = result.firstName ?? '';
       setDirection(1);
       setStep('password');
       setTimeout(() => passwordInputRef.current?.focus(), 350);
@@ -73,9 +76,14 @@ export function LoginForm() {
   }, [passwordForm]);
 
   const handlePasswordSubmit = useCallback(async (data: PasswordData) => {
-    await login({ email: emailRef.current, password: data.password });
-    router.replace(`/${locale}`);
-  }, [login, router, locale]);
+    setLoginError(null);
+    try {
+      await login({ email: emailRef.current, password: data.password });
+      router.replace(`/${locale}`);
+    } catch {
+      setLoginError(tAuth('invalidCredentials'));
+    }
+  }, [login, router, locale, tAuth]);
 
   return (
     <StepTransition stepKey={step} direction={direction}>
@@ -116,6 +124,12 @@ export function LoginForm() {
             {tAuth('back')}
           </button>
 
+          {firstNameRef.current ? (
+            <p className="text-base font-medium text-foreground">
+              {tAuth('welcomeBack', { name: firstNameRef.current })}
+            </p>
+          ) : null}
+
           <div className="flex items-center gap-2.5 rounded-lg border border-th-border bg-th-hover/50 px-3 py-2">
             <Mail className="h-4 w-4 shrink-0 text-foreground-subtle" />
             <span className="truncate text-sm text-foreground">{emailRef.current}</span>
@@ -130,7 +144,9 @@ export function LoginForm() {
               type="password"
               autoFocus
               placeholder={tAuth('passwordPlaceholder')}
-              {...passwordForm.register('password')}
+              {...passwordForm.register('password', {
+                onChange: () => setLoginError(null),
+              })}
               ref={(el) => {
                 passwordForm.register('password').ref(el);
                 passwordInputRef.current = el;
@@ -139,6 +155,9 @@ export function LoginForm() {
             {passwordForm.formState.errors.password ? (
               <p className="text-xs text-error">{tAuth('passwordRequired')}</p>
             ) : null}
+            {loginError === null ? null : (
+              <p className="text-xs text-error">{loginError}</p>
+            )}
           </div>
 
           <Button className="w-full" type="submit" disabled={loginStatus === 'pending'}>

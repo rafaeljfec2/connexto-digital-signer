@@ -32,8 +32,13 @@ export interface SignUpResponse {
   readonly slug: string;
 }
 
-export const checkEmail = async (email: string): Promise<{ exists: boolean }> => {
-  const { data } = await apiClient.post<{ exists: boolean }>('/auth/check-email', { email });
+export interface CheckEmailResponse {
+  readonly exists: boolean;
+  readonly firstName?: string;
+}
+
+export const checkEmail = async (email: string): Promise<CheckEmailResponse> => {
+  const { data } = await apiClient.post<CheckEmailResponse>('/auth/check-email', { email });
   return data;
 };
 

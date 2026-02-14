@@ -15,7 +15,7 @@ export default async function SignUpPage() {
           {tCommon('appName')}
         </p>
       </div>
-      <div className="rounded-2xl border border-th-border bg-th-card p-6 shadow-sm sm:p-8">
+      <div className="rounded-2xl border border-th-border bg-th-card p-8 shadow-sm sm:p-10">
         <SignUpForm />
       </div>
       <p className="text-center text-xs text-foreground-muted">

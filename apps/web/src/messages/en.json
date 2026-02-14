@@ -160,6 +160,8 @@
     "passwordPlaceholder": "Your password",
     "emailInvalid": "Invalid email",
     "emailNotFound": "Could not find your account",
+    "welcomeBack": "Welcome back, {name}!",
+    "invalidCredentials": "Incorrect password. Please try again.",
     "passwordRequired": "Password is required",
     "continue": "Continue",
     "back": "Back",
