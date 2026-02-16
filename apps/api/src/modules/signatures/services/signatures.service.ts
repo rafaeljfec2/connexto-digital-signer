@@ -24,6 +24,7 @@ import type {
   DocumentAuditSummary,
   SigningContext,
 } from '../interfaces/audit.interface';
+import type { SignerPendingDocument } from '../interfaces/signer-document.interface';
 import { SignatureFieldsService } from './signature-fields.service';
 import { TenantSignerService } from './tenant-signer.service';
 
@@ -144,22 +145,8 @@ export class SignaturesService {
   async searchPendingDocuments(
     tenantId: string,
     query: string,
-  ): Promise<
-    Array<{
-      signerId: string;
-      signerName: string;
-      signerEmail: string;
-      signerCpf: string | null;
-      signerPhone: string | null;
-      signerStatus: SignerStatus;
-      accessToken: string;
-      envelopeId: string;
-      envelopeTitle: string;
-      envelopeCreatedAt: Date;
-      envelopeExpiresAt: Date | null;
-    }>
-  > {
-    const results = await this.signerRepository
+  ): Promise<SignerPendingDocument[]> {
+    return this.signerRepository
       .createQueryBuilder('signer')
       .innerJoin('envelopes', 'envelope', 'envelope.id = signer.envelope_id')
       .select([
@@ -187,8 +174,6 @@ export class SignaturesService {
       .orderBy('envelope.created_at', 'DESC')
       .limit(50)
       .getRawMany();
-
-    return results;
   }
 
   async findByTenant(

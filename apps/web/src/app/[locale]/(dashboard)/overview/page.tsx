@@ -17,6 +17,7 @@ import {
 import { useRouter } from '@/i18n/navigation';
 import { ConfirmDialog } from '@/shared/ui';
 import { FadeIn, PageTransition, StaggerChildren, StaggerItem } from '@/shared/animations';
+import { formatMediumDate, formatRelativeDate } from '@/shared/utils/date';
 import { ArrowRight } from 'lucide-react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
@@ -26,29 +27,6 @@ function getGreetingKey(): 'morning' | 'afternoon' | 'evening' {
   if (hour < 12) return 'morning';
   if (hour < 18) return 'afternoon';
   return 'evening';
-}
-
-function formatRelativeDate(dateStr: string, locale: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMin = Math.floor(diffMs / 60000);
-  const diffHours = Math.floor(diffMs / 3600000);
-  const diffDays = Math.floor(diffMs / 86400000);
-
-  if (locale.startsWith('pt')) {
-    if (diffMin < 1) return 'agora mesmo';
-    if (diffMin < 60) return `ha ${String(diffMin)} min`;
-    if (diffHours < 24) return `ha ${String(diffHours)}h`;
-    if (diffDays === 1) return 'ontem';
-    return `ha ${String(diffDays)} dias`;
-  }
-
-  if (diffMin < 1) return 'just now';
-  if (diffMin < 60) return `${String(diffMin)}m ago`;
-  if (diffHours < 24) return `${String(diffHours)}h ago`;
-  if (diffDays === 1) return 'yesterday';
-  return `${String(diffDays)}d ago`;
 }
 
 export default function DashboardPage() {
@@ -69,9 +47,8 @@ export default function DashboardPage() {
   const deleteMutation = useDeleteEnvelope();
 
   const formatDate = useCallback(
-    (value: string) =>
-      new Intl.DateTimeFormat(locale, { dateStyle: 'medium' }).format(new Date(value)),
-    [locale]
+    (value: string) => formatMediumDate(value, locale),
+    [locale],
   );
 
   const statusLabels = useMemo(
