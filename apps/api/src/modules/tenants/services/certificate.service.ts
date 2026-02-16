@@ -4,8 +4,8 @@ import { Repository } from 'typeorm';
 import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import * as forge from 'node-forge';
 import { SignPdf } from '@signpdf/signpdf';
-import { P12Signer } from '@signpdf/signer-p12';
 import { pdflibAddPlaceholder } from '@signpdf/placeholder-pdf-lib';
+import { PadesSigner } from '../../../shared/pdf/pades-signer';
 import { PDFDocument } from 'pdf-lib';
 import { Tenant } from '../entities/tenant.entity';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
@@ -198,7 +198,7 @@ export class CertificateService {
 
       const pdfWithPlaceholder = Buffer.from(await pdfDoc.save({ useObjectStreams: false }));
 
-      const signer = new P12Signer(p12Buffer, { passphrase: password });
+      const signer = new PadesSigner(p12Buffer, { passphrase: password });
       const signPdf = new SignPdf();
       const signedPdf = await signPdf.sign(pdfWithPlaceholder, signer);
 
