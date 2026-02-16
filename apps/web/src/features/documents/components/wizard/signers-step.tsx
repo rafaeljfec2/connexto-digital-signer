@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
 import { Pencil, Plus, X, Search } from 'lucide-react';
-import type { Signer, TenantSigner } from '@/features/documents/api';
+import type { Signer, SignerRole, TenantSigner } from '@/features/documents/api';
 import {
   useAddSigner,
   useEnvelope,
@@ -49,6 +49,7 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
   const [requestCpf, setRequestCpf] = useState(false);
   const [requestPhone, setRequestPhone] = useState(false);
   const [authMethod, setAuthMethod] = useState('email');
+  const [role, setRole] = useState<SignerRole>('signer');
   const [order, setOrder] = useState('');
   const [isMounted, setIsMounted] = useState(false);
 
@@ -105,6 +106,7 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
     setRequestCpf(false);
     setRequestPhone(false);
     setAuthMethod('email');
+    setRole('signer');
     setOrder('');
     setEditingSigner(null);
     setShowDropdown(false);
@@ -127,6 +129,7 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
     setRequestCpf(signer.requestCpf);
     setRequestPhone(signer.requestPhone);
     setAuthMethod(signer.authMethod);
+    setRole(signer.role ?? 'signer');
     setOrder(signer.order ? String(signer.order) : '');
     setModalOpen(true);
   };
@@ -150,6 +153,7 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
       requestCpf,
       requestPhone,
       authMethod,
+      role,
       order: signingMode === 'sequential' && order ? Number(order) : undefined,
     };
 
@@ -394,6 +398,25 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
             >
               <option value="email">{tSigners('authMethodEmail')}</option>
               <option value="none">{tSigners('authMethodNone')}</option>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-sm font-normal text-foreground-muted">
+              {tSigners('roleLabel')}
+            </label>
+            <Select
+              value={role}
+              onChange={(event) => setRole(event.target.value as SignerRole)}
+            >
+              <option value="signer">{tSigners('roleSigner')}</option>
+              <option value="witness">{tSigners('roleWitness')}</option>
+              <option value="approver">{tSigners('roleApprover')}</option>
+              <option value="party">{tSigners('roleParty')}</option>
+              <option value="intervening">{tSigners('roleIntervening')}</option>
+              <option value="guarantor">{tSigners('roleGuarantor')}</option>
+              <option value="endorser">{tSigners('roleEndorser')}</option>
+              <option value="legal_representative">{tSigners('roleLegalRepresentative')}</option>
+              <option value="attorney">{tSigners('roleAttorney')}</option>
             </Select>
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 md:col-span-2">

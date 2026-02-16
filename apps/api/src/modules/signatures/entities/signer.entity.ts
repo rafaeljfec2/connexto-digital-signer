@@ -12,6 +12,18 @@ export enum SignerStatus {
   SIGNED = 'signed',
 }
 
+export enum SignerRole {
+  SIGNER = 'signer',
+  WITNESS = 'witness',
+  APPROVER = 'approver',
+  PARTY = 'party',
+  INTERVENING = 'intervening',
+  GUARANTOR = 'guarantor',
+  ENDORSER = 'endorser',
+  LEGAL_REPRESENTATIVE = 'legal_representative',
+  ATTORNEY = 'attorney',
+}
+
 @Entity('signers')
 @Index(['tenantId', 'envelopeId'])
 export class Signer {
@@ -63,6 +75,9 @@ export class Signer {
 
   @Column({ name: 'auth_method', type: 'varchar', length: 50, default: 'email' })
   authMethod!: string;
+
+  @Column({ type: 'varchar', length: 30, default: SignerRole.SIGNER })
+  role!: SignerRole;
 
   @Column({ name: 'order', type: 'int', nullable: true })
   order!: number | null;

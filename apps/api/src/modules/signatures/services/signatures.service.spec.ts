@@ -2,7 +2,7 @@ import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { SignaturesService } from './signatures.service';
-import { Signer, SignerStatus } from '../entities/signer.entity';
+import { Signer, SignerRole, SignerStatus } from '../entities/signer.entity';
 import { Document, DocumentStatus } from '../../documents/entities/document.entity';
 import { Envelope, EnvelopeStatus, SigningMode } from '../../envelopes/entities/envelope.entity';
 import { DocumentsService } from '../../documents/services/documents.service';
@@ -31,6 +31,7 @@ const buildSigner = (overrides?: Partial<Signer>): Signer => ({
   requestCpf: false,
   requestPhone: false,
   authMethod: 'email',
+  role: SignerRole.SIGNER,
   reminderCount: 0,
   order: null,
   notifiedAt: null,

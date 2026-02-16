@@ -69,6 +69,17 @@ export type DocumentDetail = DocumentSummary & {
   readonly updatedAt: string;
 };
 
+export type SignerRole =
+  | 'signer'
+  | 'witness'
+  | 'approver'
+  | 'party'
+  | 'intervening'
+  | 'guarantor'
+  | 'endorser'
+  | 'legal_representative'
+  | 'attorney';
+
 export type Signer = {
   readonly id: string;
   readonly name: string;
@@ -80,6 +91,7 @@ export type Signer = {
   readonly requestCpf: boolean;
   readonly requestPhone: boolean;
   readonly authMethod: string;
+  readonly role: SignerRole;
   readonly status: 'pending' | 'signed';
   readonly order: number | null;
   readonly notifiedAt: string | null;
@@ -96,6 +108,7 @@ export type CreateSignerInput = {
   readonly requestCpf?: boolean;
   readonly requestPhone?: boolean;
   readonly authMethod?: string;
+  readonly role?: SignerRole;
   readonly order?: number;
 };
 

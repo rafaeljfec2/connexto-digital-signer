@@ -15,6 +15,7 @@ interface ImageRect {
 export interface SignerEvidence {
   readonly name: string;
   readonly email: string;
+  readonly role: string;
   readonly signedAt: string;
   readonly ipAddress: string | null;
   readonly userAgent: string | null;
@@ -49,12 +50,14 @@ interface EvidenceLabels {
   readonly certStatus: string;
   readonly certStatusActive: string;
   readonly signers: string;
+  readonly signedAs: string;
   readonly signedAt: string;
   readonly ipAddress: string;
   readonly userAgent: string;
   readonly signed: string;
   readonly footer1: string;
   readonly footer2: string;
+  readonly roles: Readonly<Record<string, string>>;
 }
 
 interface EvidenceColors {
@@ -105,6 +108,7 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     certStatus: 'Status',
     certStatusActive: 'Active - Digitally signed',
     signers: 'SIGNERS',
+    signedAs: 'Signed as',
     signedAt: 'Signed at',
     ipAddress: 'IP Address',
     userAgent: 'User-Agent',
@@ -112,6 +116,17 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     footer1: 'This document was digitally signed using Connexto Digital Signer.',
     footer2:
       'All signature evidence is cryptographically secured and can be independently verified.',
+    roles: {
+      signer: 'Signer',
+      witness: 'Witness',
+      approver: 'Approver',
+      party: 'Party',
+      intervening: 'Intervening party',
+      guarantor: 'Guarantor',
+      endorser: 'Endorser',
+      legal_representative: 'Legal representative',
+      attorney: 'Attorney',
+    },
   },
   'pt-br': {
     title: 'EVIDÊNCIA DE ASSINATURA',
@@ -126,6 +141,7 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     certStatus: 'Status',
     certStatusActive: 'Ativo - Assinado digitalmente',
     signers: 'SIGNATÁRIOS',
+    signedAs: 'Assinou como',
     signedAt: 'Assinado em',
     ipAddress: 'Endereço IP',
     userAgent: 'Navegador',
@@ -133,6 +149,17 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
     footer1: 'Este documento foi assinado digitalmente usando o Connexto Digital Signer.',
     footer2:
       'Todas as evidências de assinatura são criptograficamente protegidas e podem ser verificadas de forma independente.',
+    roles: {
+      signer: 'Signatário',
+      witness: 'Testemunha',
+      approver: 'Aprovador',
+      party: 'Parte',
+      intervening: 'Interveniente',
+      guarantor: 'Fiador',
+      endorser: 'Avalista',
+      legal_representative: 'Representante legal',
+      attorney: 'Procurador',
+    },
   },
 };
 
@@ -649,8 +676,17 @@ export class PdfService {
       color: colors.secondary,
     });
 
-    this.drawHorizontalLine(ctx, ctx.y - 42);
-    let detailY = ctx.y - 58;
+    const roleLabel = labels.roles[signer.role] ?? signer.role;
+    currentPage.drawText(`${labels.signedAs}: ${roleLabel}`, {
+      x: margin + 30,
+      y: ctx.y - 43,
+      size: 8,
+      font: fonts.bold,
+      color: colors.accent,
+    });
+
+    this.drawHorizontalLine(ctx, ctx.y - 55);
+    let detailY = ctx.y - 71;
 
     const formattedSignedAt = signer.signedAt ? formatEvidenceDate(signer.signedAt, locale) : '';
 
@@ -684,11 +720,11 @@ export class PdfService {
   }
 
   private calculateSignerCardHeight(signer: SignerEvidence): number {
-    let height = 82;
+    let height = 95;
     if (signer.ipAddress) height += 14;
     if (signer.userAgent) height += 14;
     if (signer.signatureData) {
-      height = Math.max(height, 82);
+      height = Math.max(height, 95);
     }
     return height;
   }

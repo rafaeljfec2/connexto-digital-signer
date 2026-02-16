@@ -4,6 +4,7 @@ import { PdfService } from './pdf.service';
 const buildSigner = (overrides?: Partial<{
   name: string;
   email: string;
+  role: string;
   signedAt: string;
   ipAddress: string | null;
   userAgent: string | null;
@@ -11,6 +12,7 @@ const buildSigner = (overrides?: Partial<{
 }>) => ({
   name: 'Jane Doe',
   email: 'jane@acme.com',
+  role: 'signer',
   signedAt: '2026-01-02T00:00:00.000Z',
   ipAddress: '127.0.0.1',
   userAgent: 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7)',

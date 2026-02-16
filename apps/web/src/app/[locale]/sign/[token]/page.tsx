@@ -334,6 +334,9 @@ export default function SignerDocumentPage() {
               <p className="truncate text-[10px] text-foreground-subtle">{signer.email}</p>
             </div>
           </div>
+          <Badge variant="default" className="shrink-0 text-[10px]">
+            {t('signingAs')}: {t(`role.${signer.role}`)}
+          </Badge>
           {env.expiresAt ? (
             <Badge variant="default" className="hidden shrink-0 text-[10px] sm:inline-flex">
               {t('deadline', {
@@ -481,6 +484,8 @@ export default function SignerDocumentPage() {
               documentTitle: t('reviewStep.documentTitle'),
               documentsLabel: t('reviewStep.documentsLabel'),
               signerInfo: t('reviewStep.signerInfo'),
+              signingAs: t('signingAs'),
+              roleLabel: t(`role.${signer.role}`),
               filledFields: t('reviewStep.filledFields'),
               fieldPreviewFormat: (type: string, page: number) =>
                 t('reviewStep.fieldPreview', { type, page }),

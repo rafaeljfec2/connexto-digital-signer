@@ -12,6 +12,7 @@ import {
   IsDateString,
 } from 'class-validator';
 import { IsCpf } from '../../../common/validators/cpf.validator';
+import { SignerRole } from '../entities/signer.entity';
 
 export class CreateSignerDto {
   @IsString()
@@ -63,6 +64,12 @@ export class CreateSignerDto {
   @IsIn(['email', 'none'])
   @ApiPropertyOptional({ example: 'email' })
   readonly authMethod?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(Object.values(SignerRole))
+  @ApiPropertyOptional({ example: SignerRole.SIGNER, enum: SignerRole })
+  readonly role?: SignerRole;
 
   @IsOptional()
   @IsInt()

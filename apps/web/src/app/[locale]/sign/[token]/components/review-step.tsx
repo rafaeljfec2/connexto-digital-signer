@@ -38,6 +38,8 @@ type ReviewStepProps = Readonly<{
     documentTitle: string;
     documentsLabel: string;
     signerInfo: string;
+    signingAs: string;
+    roleLabel: string;
     filledFields: string;
     fieldPreviewFormat: (type: string, page: number) => string;
     viewDocument: string;
@@ -130,7 +132,7 @@ export function ReviewStep({
         <Card variant="glass" className="space-y-3 p-4 md:p-6">
           <div className="flex items-center gap-3">
             <Avatar name={signerData.signer.name} size="md" />
-            <div>
+            <div className="flex-1">
               <p className="text-[10px] font-normal uppercase tracking-widest text-foreground-subtle">
                 {labels.signerInfo}
               </p>
@@ -141,6 +143,9 @@ export function ReviewStep({
                 {signerData.signer.email}
               </p>
             </div>
+            <Badge variant="info" className="shrink-0 text-xs">
+              {labels.signingAs}: {labels.roleLabel}
+            </Badge>
           </div>
         </Card>
 

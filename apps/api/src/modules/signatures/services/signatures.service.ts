@@ -652,6 +652,7 @@ export class SignaturesService {
     const evidence = signers.map((s) => ({
       name: s.name,
       email: s.email,
+      role: s.role ?? 'signer',
       signedAt: s.signedAt?.toISOString() ?? '',
       ipAddress: s.ipAddress,
       userAgent: s.userAgent,
@@ -680,6 +681,7 @@ export class SignaturesService {
     evidence: Array<{
       name: string;
       email: string;
+      role: string;
       signedAt: string;
       ipAddress: string | null;
       userAgent: string | null;

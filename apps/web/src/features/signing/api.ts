@@ -5,6 +5,17 @@ const baseURL =
 
 const publicClient = axios.create({ baseURL });
 
+export type SignerRoleType =
+  | 'signer'
+  | 'witness'
+  | 'approver'
+  | 'party'
+  | 'intervening'
+  | 'guarantor'
+  | 'endorser'
+  | 'legal_representative'
+  | 'attorney';
+
 export type SignerWithEnvelope = {
   readonly signer: {
     readonly id: string;
@@ -15,6 +26,7 @@ export type SignerWithEnvelope = {
     readonly envelopeId: string;
     readonly signedAt: string | null;
     readonly authMethod: string;
+    readonly role: SignerRoleType;
     readonly requestEmail: boolean;
     readonly requestCpf: boolean;
     readonly requestPhone: boolean;
