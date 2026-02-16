@@ -1,6 +1,7 @@
 {
   "name": "connexto-digital-signer",
   "private": true,
+  "license": "UNLICENSED",
   "scripts": {
     "docker:build": "cd docker && docker compose build",
     "build": "turbo run build",
