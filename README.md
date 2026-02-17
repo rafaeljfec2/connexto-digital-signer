@@ -298,6 +298,98 @@ REDIS_PASSWORD=
 
 A conexão é configurada em `apps/api/src/app.module.ts` via `BullModule.forRoot()`. O health check (`/health`) verifica a conectividade Redis via `PING/PONG` na fila `notifications`.
 
+### Fluxo de publicação e consumo
+
+#### Fila `notifications` — Emails
+
+```
+ Evento de domínio (EventEmitter2)
+        │
+        ▼
+ NotificationsService.sendEmail(payload)
+        │
+        │  queue.add('email', {
+        │    to, subject, text, html, senderName
+        │  })
+        │
+        ▼
+ ┌─────────────────────────────┐
+ │     Redis (Bull queue)      │
+ │     fila: notifications     │
+ │     job: email              │
+ │     retry: 3x exponencial   │
+ │     delay: 1s → 2s → 4s    │
+ └──────────────┬──────────────┘
+                │
+                ▼
+ EmailProcessor (@Process('email'))
+        │
+        ├── SMTP configurado? ──► Envia via nodemailer
+        └── Sem SMTP? ──► Log no console (dev)
+```
+
+**Cenários que enfileiram emails:**
+
+| Método | Quando dispara |
+|--------|----------------|
+| `sendSignatureInvite` | Documento enviado para assinatura |
+| `sendSignatureReminder` | Lembrete periódico ao signatário |
+| `sendDocumentCompleted` | Todos os signatários assinaram |
+| `sendWelcome` | Novo tenant criado |
+| `sendVerificationCode` | Signatário solicita código OTP |
+
+#### Fila `webhooks` — Entregas HTTP
+
+```
+ Evento de domínio (EventEmitter2)
+        │
+        ▼
+ WebhookEventsHandler (listener)
+        │
+        ▼
+ WebhooksService.dispatch(tenantId, event, data)
+        │
+        │  Para cada webhook inscrito no evento:
+        │  queue.add('deliver', {
+        │    webhookConfigId, payload: {
+        │      event, tenantId, timestamp, data
+        │    }
+        │  }, { attempts, backoff })
+        │
+        ▼
+ ┌─────────────────────────────┐
+ │     Redis (Bull queue)      │
+ │     fila: webhooks          │
+ │     job: deliver            │
+ │     retry: configurável     │
+ │     (default: 3x, 1s exp.) │
+ └──────────────┬──────────────┘
+                │
+                ▼
+ WebhookProcessor (@Process('deliver'))
+        │
+        ├── Busca config do webhook (URL, secret)
+        ├── JSON.stringify(payload)
+        ├── Assina com HMAC-SHA256 (secret)
+        ├── POST para config.url
+        │     Headers:
+        │       Content-Type: application/json
+        │       X-Webhook-Signature: sha256=<hmac>
+        │       X-Webhook-Event: <event>
+        │
+        ├── 2xx? ──► Job concluído
+        └── Erro? ──► throw Error ──► Bull faz retry
+```
+
+**Eventos que disparam webhooks:**
+
+| Evento | Dados enviados |
+|--------|----------------|
+| `document.created` | `documentId`, `title`, `createdAt` |
+| `document.completed` | `documentId`, `completedAt` |
+| `document.expired` | `documentId`, `expiredAt` |
+| `signature.signed` | `documentId`, `signerId`, `signedAt` |
+
 ### Pacotes relacionados
 
 - `@nestjs/bull` — integração NestJS + Bull
