@@ -60,6 +60,28 @@ connexto-digital-signer/
 4. **Storage:** Interface em `@connexto/shared`, implementação S3 em `apps/api` (MinIO em dev).
 5. **Guards:** Autenticação global (JWT ou API Key) com decorator `@Public()` para rotas abertas (criar tenant, login, página de assinatura).
 
+### Por que Redis + Bull e não RabbitMQ?
+
+O sistema utiliza Redis + Bull para filas assíncronas ao invés de RabbitMQ por uma decisão pragmática baseada nos seguintes critérios:
+
+**Infraestrutura reutilizada** — Redis já é dependência do stack. Bull reutiliza esse componente sem introduzir um serviço adicional para operar e monitorar. RabbitMQ adicionaria mais um container (~150MB), configuração de vhosts, exchanges, bindings e políticas de DLQ.
+
+**Simplicidade operacional** — `redis:7-alpine` (~30MB) sobe em segundos com zero configuração. Para o cenário atual de 2 filas (emails e webhooks), RabbitMQ seria over-engineering.
+
+**Integração nativa com NestJS** — `@nestjs/bull` é first-class citizen no ecossistema NestJS com decorators (`@Process`, `@OnQueueCompleted`), injeção de dependência e zero boilerplate. A integração com RabbitMQ exige mais configuração manual.
+
+**Bull resolve o problema** — O sistema precisa de: enfileirar jobs, retry com backoff exponencial, concorrência controlada e persistência. Bull atende nativamente. RabbitMQ é uma solução de messaging (pub/sub, routing, fanout, topics) — patterns que o sistema não utiliza hoje.
+
+**Quando migrar para RabbitMQ** — A migração faria sentido quando houver múltiplos serviços consumindo os mesmos eventos, routing complexo (exchanges, topics, fanout), backpressure e acknowledgement distribuído, ou comunicação inter-serviços assíncrona. A seção "Evolução para microserviços" já contempla essa transição.
+
+| Critério | Redis + Bull | RabbitMQ |
+|----------|-------------|----------|
+| Complexidade operacional | Baixa (Redis já existia) | Média (novo serviço) |
+| Integração NestJS | Nativa (`@nestjs/bull`) | Manual ou `@nestjs/microservices` |
+| Caso de uso | Job queues com retry | Messaging distribuído |
+| Adequação ao cenário atual | Perfeita (2 filas simples) | Excesso para o cenário |
+| Escalabilidade futura | Limitada a job queues | Messaging completo |
+
 ## Como rodar
 
 ### Pré-requisitos
@@ -154,6 +176,133 @@ A API estará em `http://localhost:3000`.
 6. **Assinatura:** Link `/sign/:token` (público) → `POST /sign/:token/accept` com consent → registro de IP, User-Agent, timestamp; quando todos assinam, geração do PDF final com página de evidências e evento `document.completed`.
 7. **Audit / Webhooks:** Listeners dos eventos gravam audit e disparam webhooks (HMAC) configurados por tenant.
 
+### Diagrama de fluxo
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        TENANT (Empresa)                             │
+│                                                                     │
+│  1. Cadastro ──► POST /tenants ──► API Key (sk_...)                │
+│  2. Login    ──► POST /auth/login ──► JWT Token                    │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    CRIAÇÃO DO DOCUMENTO                              │
+│                                                                     │
+│  3. Upload PDF ──► POST /envelopes/:id/documents                   │
+│  4. Adicionar signatários (nome, email, papel)                     │
+│  5. Posicionar campos de assinatura no PDF                         │
+│  6. Enviar para assinatura ──► POST /envelopes/:id/send            │
+│                                                                     │
+│         ┌──────────────┐                                            │
+│         │ EventEmitter  │                                           │
+│         └──────┬───────┘                                            │
+│                │                                                    │
+│       ┌────────┴────────┐                                           │
+│       ▼                 ▼                                           │
+│  ┌─────────┐    ┌────────────┐                                     │
+│  │  Audit  │    │   Redis    │                                     │
+│  │ (JSONB) │    │  (Bull)    │                                     │
+│  └─────────┘    └─────┬──────┘                                     │
+│                       │                                             │
+│              ┌────────┴────────┐                                    │
+│              ▼                 ▼                                    │
+│     ┌──────────────┐  ┌────────────┐                               │
+│     │ Notification │  │  Webhook   │                               │
+│     │  (Email)     │  │  (HMAC)    │                               │
+│     └──────┬───────┘  └────────────┘                               │
+│            │                                                        │
+└────────────┼────────────────────────────────────────────────────────┘
+             │
+             ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                    ASSINATURA (Signatário)                           │
+│                                                                     │
+│  7. Recebe email com link ──► /sign/:token                         │
+│                                                                     │
+│  ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌─────────────┐  │
+│  │Identificar│──►│Visualizar │──►│ Preencher  │──►│  Validar    │  │
+│  │ (email/   │   │ documento │   │  campos    │   │(código OTP) │  │
+│  │  cpf/tel) │   │  (PDF)    │   │(assinatura)│   │             │  │
+│  └───────────┘   └───────────┘   └───────────┘   └──────┬──────┘  │
+│                                                          │         │
+│                                                          ▼         │
+│                                                   ┌─────────────┐  │
+│                                                   │   Revisar   │  │
+│                                                   │  e Assinar  │  │
+│                                                   └──────┬──────┘  │
+│                                                          │         │
+│                  POST /sign/:token/accept ◄──────────────┘         │
+│                  (consent, IP, User-Agent, timestamp)               │
+│                                                                     │
+└──────────────────────────┬──────────────────────────────────────────┘
+                           │
+                           ▼ (quando todos assinam)
+┌─────────────────────────────────────────────────────────────────────┐
+│                       FINALIZAÇÃO                                   │
+│                                                                     │
+│  8. Embutir assinaturas no PDF (pdf-lib)                           │
+│  9. Gerar página de evidências (signatários, IP, hash)             │
+│ 10. Assinar digitalmente com certificado ICP-Brasil (PAdES)        │
+│ 11. Upload do PDF final para S3                                    │
+│ 12. Evento document.completed ──► Audit + Webhook + Email          │
+│                                                                     │
+│  ┌────────────────────────────────────────────────────────┐        │
+│  │                 PDF Final                               │        │
+│  │  ┌──────────┐ ┌──────────┐ ┌────────────────────────┐ │        │
+│  │  │ Documento│ │Assinatura│ │  Evidência de           │ │        │
+│  │  │ Original │ │ Campos   │ │  Assinatura (hashes,    │ │        │
+│  │  │          │ │ Embutidos│ │  certificado, IP, data, │ │        │
+│  │  │          │ │          │ │  papel do signatário)   │ │        │
+│  │  └──────────┘ └──────────┘ └────────────────────────┘ │        │
+│  └────────────────────────────────────────────────────────┘        │
+│                                                                     │
+│  Assinatura digital PAdES/CAdES-BES (ICP-Brasil)                   │
+│  ├── SHA-256 + RSA-PKCS1-V1_5                                      │
+│  ├── signing-certificate-v2 (ESSCertIDv2)                          │
+│  └── Sem signing-time nos atributos assinados                      │
+│                                                                     │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+## Redis
+
+O Redis é utilizado exclusivamente como backend para filas de jobs assíncronos via Bull.
+
+### Filas
+
+| Fila | Módulo | Propósito |
+|------|--------|-----------|
+| `notifications` | NotificationsModule | Envio de emails (convites de assinatura, lembretes, documento finalizado, boas-vindas, códigos de verificação) |
+| `webhooks` | WebhooksModule | Entrega de webhooks com retries e backoff exponencial |
+
+### O que NÃO usa Redis
+
+| Funcionalidade | Implementação atual |
+|----------------|---------------------|
+| Cache | In-memory (`Map`) |
+| Rate limiting | In-memory (`@nestjs/throttler`) |
+| Sessões | JWT (sem sessão server-side) |
+| Pub/Sub | Não utilizado |
+
+### Configuração
+
+Variáveis de ambiente (`apps/api/.env`):
+
+```env
+REDIS_HOST=localhost
+REDIS_PORT=6379
+REDIS_PASSWORD=
+```
+
+A conexão é configurada em `apps/api/src/app.module.ts` via `BullModule.forRoot()`. O health check (`/health`) verifica a conectividade Redis via `PING/PONG` na fila `notifications`.
+
+### Pacotes relacionados
+
+- `@nestjs/bull` — integração NestJS + Bull
+- `bull` — implementação de filas baseada em Redis
+
 ## Evolução para microserviços
 
 - Cada módulo em `apps/api/src/modules/*` já é um bounded context com entidades, serviços e eventos próprios.
@@ -167,4 +316,4 @@ A API estará em `http://localhost:3000`.
 
 ## Licença
 
-CC0 1.0 Universal (ver LICENSE).
+Proprietary Software License — Copyright (c) 2025-2026 Rafael de Jesus. Todos os direitos reservados. Consulte o arquivo LICENSE para detalhes.
