@@ -1,5 +1,6 @@
 import {
   BadRequestException,
+  ClassSerializerInterceptor,
   Controller,
   Delete,
   Get,
@@ -21,16 +22,19 @@ import { DocumentsService } from '../services/documents.service';
 import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
-import { validateFile } from '../../../shared/storage/file-validator';
+import { MAX_SIZE_BYTES } from '../../../shared/storage/file-validator';
+
+const UPLOAD_MAX_BYTES = Math.max(...Object.values(MAX_SIZE_BYTES));
 
 @ApiTags('Documents')
 @RequireAuthMethod('jwt')
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('documents')
 export class DocumentsController {
   constructor(private readonly documentsService: DocumentsService) {}
 
   @Post()
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: UPLOAD_MAX_BYTES } }))
   async create(
     @TenantId() tenantId: string,
     @Body() createDocumentDto: CreateDocumentDto,
@@ -40,7 +44,6 @@ export class DocumentsController {
       if (!Buffer.isBuffer(file.buffer)) {
         throw new BadRequestException('Invalid file');
       }
-      validateFile(file.buffer);
       return this.documentsService.create(tenantId, createDocumentDto, file.buffer);
     }
     return this.documentsService.create(tenantId, createDocumentDto);
@@ -77,7 +80,7 @@ export class DocumentsController {
   }
 
   @Post(':id/file')
-  @UseInterceptors(FileInterceptor('file'))
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: UPLOAD_MAX_BYTES } }))
   async uploadFile(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: string,
@@ -86,7 +89,6 @@ export class DocumentsController {
     if (file === undefined || !Buffer.isBuffer(file.buffer)) {
       throw new BadRequestException('File is required');
     }
-    validateFile(file.buffer);
     return this.documentsService.updateOriginalFile(id, tenantId, file.buffer);
   }
 

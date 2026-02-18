@@ -163,6 +163,69 @@ describe('DocumentsService', () => {
       expect(result.mimeType).toBe('application/pdf');
       expect(result.status).toBe(DocumentStatus.DRAFT);
     });
+
+    test('should delete orphaned S3 key when extension changes', async () => {
+      const document = buildDocument({
+        originalFileKey: 'tenants/tenant-1/documents/doc-1/original.jpg',
+      });
+      jest.spyOn(service, 'findOne').mockResolvedValue(document);
+
+      const pdfHeader = Buffer.from([0x25, 0x50, 0x44, 0x46]);
+      const buffer = Buffer.concat([pdfHeader, Buffer.from('-new')]);
+      const expectedKey = 'tenants/tenant-1/documents/doc-1/original.pdf';
+
+      (documentRepository.save as jest.Mock).mockResolvedValue({
+        ...document,
+        originalFileKey: expectedKey,
+        mimeType: 'application/pdf',
+        size: buffer.length,
+      });
+
+      await service.updateOriginalFile('doc-1', 'tenant-1', buffer);
+
+      expect(storage.delete).toHaveBeenCalledWith(
+        'tenants/tenant-1/documents/doc-1/original.jpg',
+      );
+    });
+
+    test('should not delete S3 key when extension stays the same', async () => {
+      const document = buildDocument({
+        originalFileKey: 'tenants/tenant-1/documents/doc-1/original.pdf',
+      });
+      jest.spyOn(service, 'findOne').mockResolvedValue(document);
+
+      const pdfHeader = Buffer.from([0x25, 0x50, 0x44, 0x46]);
+      const buffer = Buffer.concat([pdfHeader, Buffer.from('-same')]);
+
+      (documentRepository.save as jest.Mock).mockResolvedValue({
+        ...document,
+        originalFileKey: 'tenants/tenant-1/documents/doc-1/original.pdf',
+      });
+
+      await service.updateOriginalFile('doc-1', 'tenant-1', buffer);
+
+      expect(storage.delete).not.toHaveBeenCalled();
+    });
+
+    test('should not fail when orphan deletion throws', async () => {
+      const document = buildDocument({
+        originalFileKey: 'tenants/tenant-1/documents/doc-1/original.jpg',
+      });
+      jest.spyOn(service, 'findOne').mockResolvedValue(document);
+      storage.delete.mockRejectedValue(new Error('S3 error'));
+
+      const pdfHeader = Buffer.from([0x25, 0x50, 0x44, 0x46]);
+      const buffer = Buffer.concat([pdfHeader, Buffer.from('-new')]);
+
+      (documentRepository.save as jest.Mock).mockResolvedValue({
+        ...document,
+        originalFileKey: 'tenants/tenant-1/documents/doc-1/original.pdf',
+      });
+
+      await expect(
+        service.updateOriginalFile('doc-1', 'tenant-1', buffer),
+      ).resolves.toBeDefined();
+    });
   });
 
   describe('findOne', () => {
@@ -223,7 +286,7 @@ describe('DocumentsService', () => {
       const result = await service.setFinalPdf('doc-1', 'tenant-1', buffer);
 
       const expectedKey = `tenants/tenant-1/documents/doc-1/signed.pdf`;
-      expect(storage.put).toHaveBeenCalledWith(expectedKey, buffer);
+      expect(storage.put).toHaveBeenCalledWith(expectedKey, buffer, 'application/pdf');
       expect(result.status).toBe(DocumentStatus.COMPLETED);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         EVENT_DOCUMENT_COMPLETED,
@@ -292,7 +355,7 @@ describe('DocumentsService', () => {
   });
 
   describe('getOriginalFileUrl', () => {
-    test('should return presigned URL with mimeType', async () => {
+    test('should return presigned URL with mimeType and attachment disposition', async () => {
       const document = buildDocument({ originalFileKey: 'origin.pdf', mimeType: 'application/pdf' });
       storage.getSignedUrl.mockResolvedValue('https://s3.example.com/presigned');
 
@@ -301,7 +364,7 @@ describe('DocumentsService', () => {
       expect(result.url).toBe('https://s3.example.com/presigned');
       expect(result.mimeType).toBe('application/pdf');
       expect(result.expiresIn).toBe(300);
-      expect(storage.getSignedUrl).toHaveBeenCalledWith('origin.pdf', 300);
+      expect(storage.getSignedUrl).toHaveBeenCalledWith('origin.pdf', 300, { disposition: 'attachment' });
     });
 
     test('should throw NotFoundException when originalFileKey is null', async () => {
@@ -316,7 +379,7 @@ describe('DocumentsService', () => {
       await expect(service.getFinalFileUrl(document)).resolves.toBeNull();
     });
 
-    test('should return presigned URL when finalFileKey exists', async () => {
+    test('should return presigned URL with attachment disposition when finalFileKey exists', async () => {
       const document = buildDocument({ finalFileKey: 'signed.pdf' });
       storage.getSignedUrl.mockResolvedValue('https://s3.example.com/signed');
 
@@ -325,7 +388,7 @@ describe('DocumentsService', () => {
       expect(result).not.toBeNull();
       expect(result!.url).toBe('https://s3.example.com/signed');
       expect(result!.expiresIn).toBe(300);
-      expect(storage.getSignedUrl).toHaveBeenCalledWith('signed.pdf', 300);
+      expect(storage.getSignedUrl).toHaveBeenCalledWith('signed.pdf', 300, { disposition: 'attachment' });
     });
   });
 });

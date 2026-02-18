@@ -101,6 +101,9 @@ export class DocumentsService {
     const validated = validateFile(file);
     const hash = sha256(file);
     const key = `tenants/${tenantId}/documents/${id}/original.${validated.extension}`;
+
+    const previousKey = document.originalFileKey;
+
     try {
       await this.storage.put(key, file, validated.mimeType);
     } catch (error) {
@@ -109,6 +112,16 @@ export class DocumentsService {
       this.logger.error(`Failed to upload file: ${message}`, stack);
       throw error;
     }
+
+    if (previousKey && previousKey !== key) {
+      try {
+        await this.storage.delete(previousKey);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        this.logger.warn(`Failed to delete orphaned S3 key: ${message}`);
+      }
+    }
+
     document.originalFileKey = key;
     document.originalHash = hash;
     document.mimeType = validated.mimeType;
@@ -182,7 +195,7 @@ export class DocumentsService {
     const document = await this.findOne(id, tenantId);
     const finalHash = sha256(finalPdfBuffer);
     const key = `tenants/${tenantId}/documents/${id}/signed.pdf`;
-    await this.storage.put(key, finalPdfBuffer);
+    await this.storage.put(key, finalPdfBuffer, 'application/pdf');
     document.finalFileKey = key;
     document.finalHash = finalHash;
     document.status = DocumentStatus.COMPLETED;
@@ -270,6 +283,7 @@ export class DocumentsService {
     const url = await this.storage.getSignedUrl(
       document.originalFileKey,
       PRESIGNED_URL_EXPIRY_SECONDS,
+      { disposition: 'attachment' },
     );
     return { url, mimeType: document.mimeType, expiresIn: PRESIGNED_URL_EXPIRY_SECONDS };
   }
@@ -281,6 +295,7 @@ export class DocumentsService {
     const url = await this.storage.getSignedUrl(
       document.finalFileKey,
       PRESIGNED_URL_EXPIRY_SECONDS,
+      { disposition: 'attachment' },
     );
     return { url, expiresIn: PRESIGNED_URL_EXPIRY_SECONDS };
   }

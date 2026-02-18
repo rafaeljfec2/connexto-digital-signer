@@ -1,4 +1,5 @@
 import {
+  ClassSerializerInterceptor,
   Controller,
   Get,
   Post,
@@ -10,6 +11,7 @@ import {
   Query,
   HttpCode,
   HttpStatus,
+  UseInterceptors,
 } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 import { TenantId } from '@connexto/shared';
@@ -22,6 +24,7 @@ import { ListEnvelopesQueryDto } from '../dto/list-envelopes-query.dto';
 
 @ApiTags('Envelopes')
 @RequireAuthMethod('jwt')
+@UseInterceptors(ClassSerializerInterceptor)
 @Controller('envelopes')
 export class EnvelopesController {
   constructor(

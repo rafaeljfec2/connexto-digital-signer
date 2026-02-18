@@ -8,18 +8,21 @@ import {
   CreateBucketCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import type { SignedUrlOptions } from '@connexto/shared';
 import { IStorageService, PutObjectResult } from '@connexto/shared';
 
 @Injectable()
 export class S3StorageService implements IStorageService {
   private readonly client: S3Client;
   private readonly bucket: string;
+  private readonly isProduction: boolean;
   private bucketReady: Promise<void> | null = null;
 
   constructor() {
     const region = process.env['S3_REGION'] ?? 'us-east-1';
     const endpoint = process.env['S3_ENDPOINT'];
     this.bucket = process.env['S3_BUCKET'] ?? 'documents';
+    this.isProduction = process.env['NODE_ENV'] === 'production';
     this.client = new S3Client({
       region,
       ...(endpoint && { endpoint, forcePathStyle: true }),
@@ -35,13 +38,12 @@ export class S3StorageService implements IStorageService {
 
   async put(key: string, body: Buffer, contentType?: string): Promise<PutObjectResult> {
     await this.ensureBucket();
-    const isProduction = process.env['NODE_ENV'] === 'production';
     const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
       Body: body,
       ContentType: contentType ?? 'application/pdf',
-      ...(isProduction && { ServerSideEncryption: 'AES256' }),
+      ...(this.isProduction && { ServerSideEncryption: 'AES256' }),
     });
     const result = await this.client.send(command);
     return { key, etag: result.ETag ?? undefined };
@@ -64,16 +66,25 @@ export class S3StorageService implements IStorageService {
     await this.client.send(command);
   }
 
-  async getSignedUrl(key: string, expiresInSeconds = 300): Promise<string> {
-    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
+  async getSignedUrl(
+    key: string,
+    expiresInSeconds = 300,
+    options?: SignedUrlOptions,
+  ): Promise<string> {
+    const command = new GetObjectCommand({
+      Bucket: this.bucket,
+      Key: key,
+      ...(options?.disposition && {
+        ResponseContentDisposition: options.disposition,
+      }),
+    });
     return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
   }
 
   private ensureBucket(): Promise<void> {
     if (this.bucketReady) return this.bucketReady;
 
-    const isProduction = process.env['NODE_ENV'] === 'production';
-    if (isProduction) {
+    if (this.isProduction) {
       this.bucketReady = this.client
         .send(new HeadBucketCommand({ Bucket: this.bucket }))
         .then(() => undefined);

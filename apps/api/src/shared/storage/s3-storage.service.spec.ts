@@ -126,6 +126,25 @@ describe('S3StorageService', () => {
     expect(result).toBe('signed-url');
   });
 
+  test('should get signed url with disposition attachment', async () => {
+    const service = new S3StorageService();
+    (getSignedUrl as jest.Mock).mockResolvedValue('signed-url-attachment');
+
+    const result = await service.getSignedUrl('key', 300, { disposition: 'attachment' });
+
+    expect(GetObjectCommand).toHaveBeenCalledWith({
+      Bucket: 'documents',
+      Key: 'key',
+      ResponseContentDisposition: 'attachment',
+    });
+    expect(getSignedUrl).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(Object),
+      { expiresIn: 300 }
+    );
+    expect(result).toBe('signed-url-attachment');
+  });
+
   test('should use defaults without endpoint or credentials', async () => {
     setEnv({
       S3_ENDPOINT: undefined,

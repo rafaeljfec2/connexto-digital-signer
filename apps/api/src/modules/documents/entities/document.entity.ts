@@ -6,6 +6,7 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 
 export enum DocumentStatus {
   DRAFT = 'draft',
@@ -31,9 +32,11 @@ export class Document {
   @Column({ type: 'varchar', length: 500 })
   title!: string;
 
+  @Exclude()
   @Column({ name: 'original_file_key', type: 'varchar', length: 512, nullable: true })
   originalFileKey!: string | null;
 
+  @Exclude()
   @Column({ name: 'final_file_key', type: 'varchar', length: 512, nullable: true })
   finalFileKey!: string | null;
 
@@ -46,7 +49,14 @@ export class Document {
   @Column({ name: 'mime_type', type: 'varchar', length: 50, nullable: true })
   mimeType!: string | null;
 
-  @Column({ type: 'bigint', nullable: true })
+  @Column({
+    type: 'bigint',
+    nullable: true,
+    transformer: {
+      to: (value: number | null) => value,
+      from: (value: string | null) => (value === null ? null : Number(value)),
+    },
+  })
   size!: number | null;
 
   @Column({
