@@ -2,6 +2,15 @@
 
 import { Dropzone, Button } from '@/shared/ui';
 
+const ACCEPTED_TYPES = 'application/pdf,image/png,image/jpeg,image/webp';
+
+const MIME_LABELS: Readonly<Record<string, string>> = {
+  'application/pdf': 'PDF',
+  'image/png': 'PNG',
+  'image/jpeg': 'JPEG',
+  'image/webp': 'WEBP',
+};
+
 export type UploadDropzoneProps = {
   readonly file: File | null;
   readonly onFileChange: (file: File | null) => void;
@@ -22,11 +31,12 @@ export function UploadDropzone({
   maxSizeMb,
 }: Readonly<UploadDropzoneProps>) {
   const formatSize = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+  const fileTypeLabel = file ? (MIME_LABELS[file.type] ?? file.type.split('/')[1]?.toUpperCase() ?? '') : '';
 
   return (
     <div className="space-y-3">
       <Dropzone
-        accept="application/pdf"
+        accept={ACCEPTED_TYPES}
         onFiles={(files) => onFileChange(files[0] ?? null)}
         label={label}
         helperText={helperText}
@@ -36,7 +46,7 @@ export function UploadDropzone({
           <div className="space-y-1">
             <p className="font-normal">{file.name}</p>
             <p className="text-foreground-muted">
-              {formatSize(file.size)} • PDF • {maxSizeMb}MB max
+              {formatSize(file.size)} • {fileTypeLabel} • {maxSizeMb}MB max
             </p>
           </div>
           <Button type="button" variant="ghost" onClick={() => onFileChange(null)}>

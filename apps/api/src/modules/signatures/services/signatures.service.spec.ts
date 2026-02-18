@@ -74,6 +74,8 @@ const buildDocument = (overrides?: Partial<Document>): Document => ({
   finalFileKey: null,
   originalHash: 'hash-original',
   finalHash: null,
+  mimeType: 'application/pdf',
+  size: 1024,
   status: DocumentStatus.PENDING_SIGNATURES,
   version: 1,
   position: 0,
@@ -105,6 +107,8 @@ describe('SignaturesService', () => {
       findOne: jest.fn(),
       findByEnvelope: jest.fn().mockResolvedValue([buildDocument()]),
       getOriginalFile: jest.fn(),
+      getOriginalFileUrl: jest.fn().mockResolvedValue({ url: 'https://s3.example.com/file', mimeType: 'application/pdf', expiresIn: 300 }),
+      getFinalFileUrl: jest.fn().mockResolvedValue({ url: 'https://s3.example.com/signed', expiresIn: 300 }),
       setFinalPdf: jest.fn(),
       setStatus: jest.fn(),
     } as unknown as jest.Mocked<DocumentsService>;

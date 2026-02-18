@@ -35,11 +35,13 @@ export class S3StorageService implements IStorageService {
 
   async put(key: string, body: Buffer, contentType?: string): Promise<PutObjectResult> {
     await this.ensureBucket();
+    const isProduction = process.env['NODE_ENV'] === 'production';
     const command = new PutObjectCommand({
       Bucket: this.bucket,
       Key: key,
       Body: body,
       ContentType: contentType ?? 'application/pdf',
+      ...(isProduction && { ServerSideEncryption: 'AES256' }),
     });
     const result = await this.client.send(command);
     return { key, etag: result.ETag ?? undefined };
@@ -62,13 +64,22 @@ export class S3StorageService implements IStorageService {
     await this.client.send(command);
   }
 
-  async getSignedUrl(key: string, expiresInSeconds = 3600): Promise<string> {
+  async getSignedUrl(key: string, expiresInSeconds = 300): Promise<string> {
     const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
     return getSignedUrl(this.client, command, { expiresIn: expiresInSeconds });
   }
 
   private ensureBucket(): Promise<void> {
     if (this.bucketReady) return this.bucketReady;
+
+    const isProduction = process.env['NODE_ENV'] === 'production';
+    if (isProduction) {
+      this.bucketReady = this.client
+        .send(new HeadBucketCommand({ Bucket: this.bucket }))
+        .then(() => undefined);
+      return this.bucketReady;
+    }
+
     this.bucketReady = (async () => {
       try {
         await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));

@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { AlertTriangle } from 'lucide-react';
 import { Card } from '@/shared/ui';
 import { useSignerData, useSignerSummary } from '@/features/signing/hooks';
-import { getSignerPdf, getSignerSignedPdf } from '@/features/signing/api';
+import { getSignerPdfUrl, getSignerSignedPdfUrl } from '@/features/signing/api';
 import { lazyLoad } from '@/shared/utils/lazy-load';
 
 const DocumentAuditView = lazyLoad(
@@ -57,8 +57,8 @@ export default function SignerSummaryPage() {
       <DocumentAuditView
         data={summaryQuery.data}
         documents={documents}
-        onDownloadOriginal={(documentId) => getSignerPdf(token, documentId)}
-        onDownloadSigned={(documentId) => getSignerSignedPdf(token, documentId)}
+        onDownloadOriginal={(documentId) => getSignerPdfUrl(token, documentId)}
+        onDownloadSigned={(documentId) => getSignerSignedPdfUrl(token, documentId)}
         labels={{
           title: t('title'),
           documentDetails: t('documentDetails'),

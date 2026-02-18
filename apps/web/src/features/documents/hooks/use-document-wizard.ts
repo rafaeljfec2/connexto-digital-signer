@@ -5,7 +5,7 @@ import {
   createDocument,
   deleteDocument,
   getDocument,
-  getDocumentFile,
+  getDocumentFileUrl,
   getEnvelope,
   getEnvelopeAuditSummary,
   listDocumentsByEnvelope,
@@ -42,10 +42,10 @@ export const useEnvelope = (id: string) =>
     enabled: id.length > 0,
   });
 
-export const useDocumentFile = (id: string) =>
+export const useDocumentFileUrl = (id: string) =>
   useQuery({
-    queryKey: ['documents', 'file', id],
-    queryFn: () => getDocumentFile(id),
+    queryKey: ['documents', 'file-url', id],
+    queryFn: () => getDocumentFileUrl(id),
     enabled: id.length > 0,
   });
 

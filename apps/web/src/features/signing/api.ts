@@ -92,13 +92,27 @@ export const getSignerByToken = async (
   return response.data;
 };
 
-export const getSignerPdf = async (token: string, documentId?: string): Promise<Blob> => {
+export type PresignedFileResponse = Readonly<{
+  url: string;
+  mimeType: string | null;
+  expiresIn: number;
+}>;
+
+export type PresignedSignedFileResponse = Readonly<{
+  url: string;
+  expiresIn: number;
+}>;
+
+export const getSignerPdfUrl = async (
+  token: string,
+  documentId?: string,
+): Promise<PresignedFileResponse> => {
   const params = documentId ? { documentId } : {};
-  const response = await publicClient.get(`/sign/${token}/pdf`, {
-    responseType: 'blob',
-    params,
-  });
-  return response.data as Blob;
+  const response = await publicClient.get<PresignedFileResponse>(
+    `/sign/${token}/pdf`,
+    { params },
+  );
+  return response.data;
 };
 
 export const getSignerFields = async (
@@ -120,14 +134,17 @@ export const acceptSignature = async (
   await publicClient.post(`/sign/${token}/accept`, input);
 };
 
-export const getSignerSignedPdf = async (token: string, documentId?: string): Promise<Blob | null> => {
+export const getSignerSignedPdfUrl = async (
+  token: string,
+  documentId?: string,
+): Promise<PresignedSignedFileResponse | null> => {
   try {
     const params = documentId ? { documentId } : {};
-    const response = await publicClient.get(`/sign/${token}/signed-pdf`, {
-      responseType: 'blob',
-      params,
-    });
-    return response.data as Blob;
+    const response = await publicClient.get<PresignedSignedFileResponse>(
+      `/sign/${token}/signed-pdf`,
+      { params },
+    );
+    return response.data;
   } catch {
     return null;
   }

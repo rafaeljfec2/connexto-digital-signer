@@ -5,18 +5,15 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  NotFoundException,
   Post,
   Body,
   Patch,
   Param,
-  Res,
   ParseUUIDPipe,
   UseInterceptors,
   UploadedFile,
-  StreamableFile,
-  Header,
 } from '@nestjs/common';
-import type { Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TenantId } from '@connexto/shared';
@@ -24,6 +21,7 @@ import { DocumentsService } from '../services/documents.service';
 import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
+import { validateFile } from '../../../shared/storage/file-validator';
 
 @ApiTags('Documents')
 @RequireAuthMethod('jwt')
@@ -42,14 +40,7 @@ export class DocumentsController {
       if (!Buffer.isBuffer(file.buffer)) {
         throw new BadRequestException('Invalid file');
       }
-      if (file.mimetype !== 'application/pdf') {
-        throw new BadRequestException('Only PDF files are allowed');
-      }
-      const maxSizeMb = Number.parseInt(process.env['MAX_UPLOAD_SIZE_MB'] ?? '10', 10);
-      const maxBytes = maxSizeMb * 1024 * 1024;
-      if (file.size > maxBytes) {
-        throw new BadRequestException(`File size exceeds ${maxSizeMb}MB`);
-      }
+      validateFile(file.buffer);
       return this.documentsService.create(tenantId, createDocumentDto, file.buffer);
     }
     return this.documentsService.create(tenantId, createDocumentDto);
@@ -64,35 +55,25 @@ export class DocumentsController {
   }
 
   @Get(':id/file')
-  @Header('Content-Type', 'application/pdf')
   async getFile(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: string
   ) {
     const document = await this.documentsService.findOne(id, tenantId);
-    const buffer = await this.documentsService.getOriginalFile(document);
-    return new StreamableFile(buffer);
+    return this.documentsService.getOriginalFileUrl(document);
   }
 
   @Get(':id/signed-file')
   async getSignedFile(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: string,
-    @Res() res: Response,
   ) {
     const document = await this.documentsService.findOne(id, tenantId);
-    const buffer = await this.documentsService.getFinalFile(document);
-    if (buffer === null) {
-      res.status(404).json({ message: 'Signed document is not available yet' });
-      return;
+    const result = await this.documentsService.getFinalFileUrl(document);
+    if (result === null) {
+      throw new NotFoundException('Signed document is not available yet');
     }
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Length': buffer.length,
-      'Content-Disposition': `attachment; filename="${document.title}-signed.pdf"`,
-      'Cache-Control': 'private, max-age=300',
-    });
-    res.end(buffer);
+    return result;
   }
 
   @Post(':id/file')
@@ -105,14 +86,7 @@ export class DocumentsController {
     if (file === undefined || !Buffer.isBuffer(file.buffer)) {
       throw new BadRequestException('File is required');
     }
-    if (file.mimetype !== 'application/pdf') {
-      throw new BadRequestException('Only PDF files are allowed');
-    }
-    const maxSizeMb = Number.parseInt(process.env['MAX_UPLOAD_SIZE_MB'] ?? '10', 10);
-    const maxBytes = maxSizeMb * 1024 * 1024;
-    if (file.size > maxBytes) {
-      throw new BadRequestException(`File size exceeds ${maxSizeMb}MB`);
-    }
+    validateFile(file.buffer);
     return this.documentsService.updateOriginalFile(id, tenantId, file.buffer);
   }
 

@@ -1,7 +1,7 @@
 import { useQuery, useMutation } from '@tanstack/react-query';
 import {
   getSignerByToken,
-  getSignerPdf,
+  getSignerPdfUrl,
   getSignerFields,
   acceptSignature,
   identifySigner,
@@ -19,10 +19,10 @@ export const useSignerData = (token: string) =>
     retry: false,
   });
 
-export const useSignerPdf = (token: string, documentId?: string) =>
+export const useSignerPdfUrl = (token: string, documentId?: string) =>
   useQuery({
-    queryKey: ['signer-pdf', token, documentId],
-    queryFn: () => getSignerPdf(token, documentId),
+    queryKey: ['signer-pdf-url', token, documentId],
+    queryFn: () => getSignerPdfUrl(token, documentId),
     enabled: token.length > 0 && (documentId === undefined || documentId.length > 0),
     retry: false,
   });

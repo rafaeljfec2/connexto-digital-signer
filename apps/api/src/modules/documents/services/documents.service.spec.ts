@@ -25,6 +25,8 @@ const buildDocument = (overrides?: Partial<Document>): Document => ({
   finalFileKey: null,
   originalHash: 'hash-original',
   finalHash: null,
+  mimeType: 'application/pdf',
+  size: 1024,
   status: DocumentStatus.DRAFT,
   version: 1,
   position: 0,
@@ -56,20 +58,21 @@ describe('DocumentsService', () => {
   });
 
   describe('create', () => {
-    test('should store file, save document, and emit event', async () => {
-      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1700000000000);
-      const file = Buffer.from('pdf-content');
+    test('should validate file, store, save document, and emit event', async () => {
+      const pdfHeader = Buffer.from([0x25, 0x50, 0x44, 0x46]);
+      const file = Buffer.concat([pdfHeader, Buffer.from('-content')]);
       const hash = sha256(file);
-      const key = `tenants/tenant-1/documents/1700000000000-${hash.slice(0, 16)}.pdf`;
       const created = buildDocument({
-        originalFileKey: key,
         originalHash: hash,
+        mimeType: 'application/pdf',
+        size: file.length,
         status: DocumentStatus.DRAFT,
       });
       const saved = buildDocument({
         id: 'doc-2',
-        originalFileKey: key,
         originalHash: hash,
+        mimeType: 'application/pdf',
+        size: file.length,
         status: DocumentStatus.DRAFT,
       });
       (documentRepository.create as jest.Mock).mockReturnValue(created);
@@ -81,7 +84,11 @@ describe('DocumentsService', () => {
         file
       );
 
-      expect(storage.put).toHaveBeenCalledWith(key, file);
+      expect(storage.put).toHaveBeenCalledWith(
+        expect.stringMatching(/^tenants\/tenant-1\/documents\/[\w-]+\/original\.pdf$/),
+        file,
+        'application/pdf',
+      );
       expect(documentRepository.save).toHaveBeenCalledWith(created);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
         EVENT_DOCUMENT_CREATED,
@@ -93,7 +100,6 @@ describe('DocumentsService', () => {
         }) as DocumentCreatedEvent
       );
       expect(result).toEqual(saved);
-      nowSpy.mockRestore();
     });
 
     test('should create draft without file when no file provided', async () => {
@@ -131,17 +137,19 @@ describe('DocumentsService', () => {
   });
 
   describe('updateOriginalFile', () => {
-    test('should store file and update document metadata', async () => {
-      const nowSpy = jest.spyOn(Date, 'now').mockReturnValue(1700000000000);
+    test('should validate, store file and update document metadata', async () => {
       const document = buildDocument();
       jest.spyOn(service, 'findOne').mockResolvedValue(document);
-      const buffer = Buffer.from('updated');
+      const pdfHeader = Buffer.from([0x25, 0x50, 0x44, 0x46]);
+      const buffer = Buffer.concat([pdfHeader, Buffer.from('-updated')]);
       const hash = sha256(buffer);
-      const key = `tenants/tenant-1/documents/doc-1/original-1700000000000-${hash.slice(0, 16)}.pdf`;
+      const expectedKey = 'tenants/tenant-1/documents/doc-1/original.pdf';
       (documentRepository.save as jest.Mock).mockResolvedValue({
         ...document,
-        originalFileKey: key,
+        originalFileKey: expectedKey,
         originalHash: hash,
+        mimeType: 'application/pdf',
+        size: buffer.length,
         finalFileKey: null,
         finalHash: null,
         status: DocumentStatus.DRAFT,
@@ -149,11 +157,11 @@ describe('DocumentsService', () => {
 
       const result = await service.updateOriginalFile('doc-1', 'tenant-1', buffer);
 
-      expect(storage.put).toHaveBeenCalledWith(key, buffer);
-      expect(result.originalFileKey).toBe(key);
+      expect(storage.put).toHaveBeenCalledWith(expectedKey, buffer, 'application/pdf');
+      expect(result.originalFileKey).toBe(expectedKey);
       expect(result.originalHash).toBe(hash);
+      expect(result.mimeType).toBe('application/pdf');
       expect(result.status).toBe(DocumentStatus.DRAFT);
-      nowSpy.mockRestore();
     });
   });
 
@@ -214,7 +222,7 @@ describe('DocumentsService', () => {
 
       const result = await service.setFinalPdf('doc-1', 'tenant-1', buffer);
 
-      const expectedKey = `tenants/tenant-1/documents/doc-1/final-v2.pdf`;
+      const expectedKey = `tenants/tenant-1/documents/doc-1/signed.pdf`;
       expect(storage.put).toHaveBeenCalledWith(expectedKey, buffer);
       expect(result.status).toBe(DocumentStatus.COMPLETED);
       expect(eventEmitter.emit).toHaveBeenCalledWith(
@@ -280,6 +288,44 @@ describe('DocumentsService', () => {
 
       await expect(service.getFinalFile(document)).resolves.toEqual(buffer);
       expect(storage.get).toHaveBeenCalledWith('final.pdf');
+    });
+  });
+
+  describe('getOriginalFileUrl', () => {
+    test('should return presigned URL with mimeType', async () => {
+      const document = buildDocument({ originalFileKey: 'origin.pdf', mimeType: 'application/pdf' });
+      storage.getSignedUrl.mockResolvedValue('https://s3.example.com/presigned');
+
+      const result = await service.getOriginalFileUrl(document);
+
+      expect(result.url).toBe('https://s3.example.com/presigned');
+      expect(result.mimeType).toBe('application/pdf');
+      expect(result.expiresIn).toBe(300);
+      expect(storage.getSignedUrl).toHaveBeenCalledWith('origin.pdf', 300);
+    });
+
+    test('should throw NotFoundException when originalFileKey is null', async () => {
+      const document = buildDocument({ originalFileKey: null });
+      await expect(service.getOriginalFileUrl(document)).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getFinalFileUrl', () => {
+    test('should return null when finalFileKey is null', async () => {
+      const document = buildDocument({ finalFileKey: null });
+      await expect(service.getFinalFileUrl(document)).resolves.toBeNull();
+    });
+
+    test('should return presigned URL when finalFileKey exists', async () => {
+      const document = buildDocument({ finalFileKey: 'signed.pdf' });
+      storage.getSignedUrl.mockResolvedValue('https://s3.example.com/signed');
+
+      const result = await service.getFinalFileUrl(document);
+
+      expect(result).not.toBeNull();
+      expect(result!.url).toBe('https://s3.example.com/signed');
+      expect(result!.expiresIn).toBe(300);
+      expect(storage.getSignedUrl).toHaveBeenCalledWith('signed.pdf', 300);
     });
   });
 });

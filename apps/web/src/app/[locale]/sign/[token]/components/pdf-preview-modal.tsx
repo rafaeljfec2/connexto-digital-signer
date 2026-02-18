@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { X } from 'lucide-react';
 import type { SignerField } from '@/features/signing/api';
-import { useSignerPdf } from '@/features/signing/hooks';
+import { useSignerPdfUrl } from '@/features/signing/hooks';
 import { DocumentTabs } from '@/shared/ui';
 import { lazyLoad } from '@/shared/utils/lazy-load';
 
@@ -51,21 +51,12 @@ export function PdfPreviewModal({
     }
   }, [open, documents, selectedDocId]);
 
-  const pdfQuery = useSignerPdf(
+  const pdfQuery = useSignerPdfUrl(
     open ? token : '',
     selectedDocId,
   );
 
-  const fileUrl = useMemo(() => {
-    if (!pdfQuery.data) return '';
-    return URL.createObjectURL(pdfQuery.data);
-  }, [pdfQuery.data]);
-
-  useEffect(() => {
-    return () => {
-      if (fileUrl) URL.revokeObjectURL(fileUrl);
-    };
-  }, [fileUrl]);
+  const fileUrl = pdfQuery.data?.url ?? '';
 
   const selectedFields = useMemo(
     () =>

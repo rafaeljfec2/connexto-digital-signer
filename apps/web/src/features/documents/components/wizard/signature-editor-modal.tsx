@@ -8,7 +8,7 @@ import type { DragEndEvent } from '@dnd-kit/core';
 import { DndContext } from '@dnd-kit/core';
 import {
   useBatchUpdateFields,
-  useDocumentFile,
+  useDocumentFileUrl,
   useSignatureFields,
   useSigners,
   useSuggestFields,
@@ -56,7 +56,7 @@ export function SignatureEditorModal({ envelopeId, documentId, documents, onClos
   const fieldsQuery = useSignatureFields(activeDocumentId);
   const batchUpdate = useBatchUpdateFields(activeDocumentId);
   const suggestFieldsMutation = useSuggestFields(activeDocumentId);
-  const fileQuery = useDocumentFile(activeDocumentId);
+  const fileQuery = useDocumentFileUrl(activeDocumentId);
   const [activeSignerId, setActiveSignerId] = useState<string>('');
   const [activeFieldType, setActiveFieldType] = useState<SignatureFieldType>('signature');
   const pageRefs = useRef<Map<number, HTMLDivElement | null>>(new Map());
@@ -80,16 +80,7 @@ export function SignatureEditorModal({ envelopeId, documentId, documents, onClos
     };
   }, []);
 
-  const fileUrl = useMemo(() => {
-    if (!fileQuery.data) return '';
-    return URL.createObjectURL(fileQuery.data);
-  }, [fileQuery.data]);
-
-  useEffect(() => {
-    return () => {
-      if (fileUrl) URL.revokeObjectURL(fileUrl);
-    };
-  }, [fileUrl]);
+  const fileUrl = fileQuery.data?.url ?? '';
 
   const signerColors = useMemo(() => {
     const palette = ['#2563EB', '#16A34A', '#F97316', '#7C3AED', '#DC2626', '#0EA5E9'];

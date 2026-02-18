@@ -6,7 +6,7 @@ import {
   useSendVerificationCode,
   useSignerData,
   useSignerFields,
-  useSignerPdf,
+  useSignerPdfUrl,
   useVerifyCode,
 } from '@/features/signing/hooks';
 import { useRouter } from '@/i18n/navigation';
@@ -82,7 +82,7 @@ export default function SignerDocumentPage() {
     }
   }, [documents, selectedDocumentId]);
 
-  const pdfQuery = useSignerPdf(token, selectedDocumentId);
+  const pdfQuery = useSignerPdfUrl(token, selectedDocumentId);
 
   const [fieldValues, setFieldValues] = useState<Record<string, string>>({});
   const [activeFieldId, setActiveFieldId] = useState<string | null>(null);
@@ -132,16 +132,7 @@ export default function SignerDocumentPage() {
     setStepInitialized(true);
   }, [signerData, requiresIdentify, stepInitialized]);
 
-  const fileUrl = useMemo(() => {
-    if (!pdfQuery.data) return '';
-    return URL.createObjectURL(pdfQuery.data);
-  }, [pdfQuery.data]);
-
-  useEffect(() => {
-    return () => {
-      if (fileUrl) URL.revokeObjectURL(fileUrl);
-    };
-  }, [fileUrl]);
+  const fileUrl = pdfQuery.data?.url ?? '';
 
   const handleFieldClick = useCallback(
     (fieldId: string) => {

@@ -65,6 +65,8 @@ export type DocumentDetail = DocumentSummary & {
   readonly originalHash: string | null;
   readonly finalFileKey: string | null;
   readonly finalHash: string | null;
+  readonly mimeType: string | null;
+  readonly size: number | null;
   readonly version: number;
   readonly updatedAt: string;
 };
@@ -203,6 +205,17 @@ export type UpdateDocumentInput = {
   readonly position?: number;
 };
 
+export type PresignedFileUrl = Readonly<{
+  url: string;
+  mimeType: string | null;
+  expiresIn: number;
+}>;
+
+export type PresignedSignedFileUrl = Readonly<{
+  url: string;
+  expiresIn: number;
+}>;
+
 export type AuditTimelineEvent = Readonly<{
   type: 'sent' | 'signed' | 'completed' | 'verified';
   actorName: string;
@@ -326,11 +339,9 @@ export const getDocument = async (id: string): Promise<DocumentDetail> => {
   return response.data;
 };
 
-export const getDocumentFile = async (id: string): Promise<Blob> => {
-  const response = await apiClient.get(`/documents/${id}/file`, {
-    responseType: 'blob',
-  });
-  return response.data as Blob;
+export const getDocumentFileUrl = async (id: string): Promise<PresignedFileUrl> => {
+  const response = await apiClient.get<PresignedFileUrl>(`/documents/${id}/file`);
+  return response.data;
 };
 
 export const uploadDocumentFile = async (
@@ -357,12 +368,14 @@ export const deleteDocument = async (documentId: string): Promise<void> => {
   await apiClient.delete(`/documents/${documentId}`);
 };
 
-export const getDocumentSignedFile = async (documentId: string): Promise<Blob | null> => {
+export const getDocumentSignedFileUrl = async (
+  documentId: string,
+): Promise<PresignedSignedFileUrl | null> => {
   try {
-    const response = await apiClient.get(`/documents/${documentId}/signed-file`, {
-      responseType: 'blob',
-    });
-    return response.data as Blob;
+    const response = await apiClient.get<PresignedSignedFileUrl>(
+      `/documents/${documentId}/signed-file`,
+    );
+    return response.data;
   } catch {
     return null;
   }

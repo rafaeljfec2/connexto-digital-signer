@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { randomUUID } from 'node:crypto';
 import { In, Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Document, DocumentStatus } from '../entities/document.entity';
@@ -17,6 +18,9 @@ import type {
   DocumentCreatedEvent,
 } from '@connexto/events';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
+import { validateFile } from '../../../shared/storage/file-validator';
+
+const PRESIGNED_URL_EXPIRY_SECONDS = 300;
 
 @Injectable()
 export class DocumentsService {
@@ -33,14 +37,20 @@ export class DocumentsService {
     dto: CreateDocumentDto,
     file?: Buffer
   ): Promise<Document> {
+    const documentId = randomUUID();
     let key: string | null = null;
     let hash: string | null = null;
+    let mimeType: string | null = null;
+    let size: number | null = null;
 
     if (file) {
+      const validated = validateFile(file);
       hash = sha256(file);
-      key = `tenants/${tenantId}/documents/${Date.now()}-${hash.slice(0, 16)}.pdf`;
+      mimeType = validated.mimeType;
+      size = file.length;
+      key = `tenants/${tenantId}/documents/${documentId}/original.${validated.extension}`;
       try {
-        await this.storage.put(key, file);
+        await this.storage.put(key, file, mimeType);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         const stack = error instanceof Error ? error.stack : undefined;
@@ -50,12 +60,15 @@ export class DocumentsService {
     }
 
     const document = this.documentRepository.create({
+      id: documentId,
       title: dto.title,
       envelopeId: dto.envelopeId,
       position: dto.position ?? 0,
       tenantId,
       originalFileKey: key,
       originalHash: hash,
+      mimeType,
+      size,
       status: DocumentStatus.DRAFT,
     });
 
@@ -85,10 +98,11 @@ export class DocumentsService {
     file: Buffer
   ): Promise<Document> {
     const document = await this.findOne(id, tenantId);
+    const validated = validateFile(file);
     const hash = sha256(file);
-    const key = `tenants/${tenantId}/documents/${id}/original-${Date.now()}-${hash.slice(0, 16)}.pdf`;
+    const key = `tenants/${tenantId}/documents/${id}/original.${validated.extension}`;
     try {
-      await this.storage.put(key, file);
+      await this.storage.put(key, file, validated.mimeType);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const stack = error instanceof Error ? error.stack : undefined;
@@ -97,6 +111,8 @@ export class DocumentsService {
     }
     document.originalFileKey = key;
     document.originalHash = hash;
+    document.mimeType = validated.mimeType;
+    document.size = file.length;
     document.finalFileKey = null;
     document.finalHash = null;
     document.status = DocumentStatus.DRAFT;
@@ -165,7 +181,7 @@ export class DocumentsService {
   ): Promise<Document> {
     const document = await this.findOne(id, tenantId);
     const finalHash = sha256(finalPdfBuffer);
-    const key = `tenants/${tenantId}/documents/${id}/final-v${document.version}.pdf`;
+    const key = `tenants/${tenantId}/documents/${id}/signed.pdf`;
     await this.storage.put(key, finalPdfBuffer);
     document.finalFileKey = key;
     document.finalHash = finalHash;
@@ -243,5 +259,29 @@ export class DocumentsService {
   async getFinalFile(document: Document): Promise<Buffer | null> {
     if (document.finalFileKey === null) return null;
     return this.storage.get(document.finalFileKey);
+  }
+
+  async getOriginalFileUrl(
+    document: Document,
+  ): Promise<{ url: string; mimeType: string | null; expiresIn: number }> {
+    if (document.originalFileKey === null) {
+      throw new NotFoundException('Document has no file uploaded yet');
+    }
+    const url = await this.storage.getSignedUrl(
+      document.originalFileKey,
+      PRESIGNED_URL_EXPIRY_SECONDS,
+    );
+    return { url, mimeType: document.mimeType, expiresIn: PRESIGNED_URL_EXPIRY_SECONDS };
+  }
+
+  async getFinalFileUrl(
+    document: Document,
+  ): Promise<{ url: string; expiresIn: number } | null> {
+    if (document.finalFileKey === null) return null;
+    const url = await this.storage.getSignedUrl(
+      document.finalFileKey,
+      PRESIGNED_URL_EXPIRY_SECONDS,
+    );
+    return { url, expiresIn: PRESIGNED_URL_EXPIRY_SECONDS };
   }
 }

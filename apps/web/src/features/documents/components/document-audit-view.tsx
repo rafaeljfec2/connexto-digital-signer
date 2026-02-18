@@ -21,15 +21,8 @@ import {
 import { useCallback, useState } from 'react';
 import type { DocumentAuditSummary } from '../api';
 
-function downloadBlob(blob: Blob, filename: string): void {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+function openDownloadUrl(url: string): void {
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 type AuditDocumentItem = Readonly<{
@@ -40,8 +33,8 @@ type AuditDocumentItem = Readonly<{
 type DocumentAuditViewProps = Readonly<{
   data: DocumentAuditSummary;
   documents?: readonly AuditDocumentItem[];
-  onDownloadOriginal: (documentId?: string) => Promise<Blob>;
-  onDownloadSigned: (documentId?: string) => Promise<Blob | null>;
+  onDownloadOriginal: (documentId?: string) => Promise<{ url: string }>;
+  onDownloadSigned: (documentId?: string) => Promise<{ url: string } | null>;
   labels: Readonly<{
     title: string;
     documentDetails: string;
@@ -160,8 +153,8 @@ function SingleDocDownload({
   docTitle: string;
   documentId?: string;
   isCompleted: boolean;
-  onDownloadOriginal: (documentId?: string) => Promise<Blob>;
-  onDownloadSigned: (documentId?: string) => Promise<Blob | null>;
+  onDownloadOriginal: (documentId?: string) => Promise<{ url: string }>;
+  onDownloadSigned: (documentId?: string) => Promise<{ url: string } | null>;
   labels: Readonly<{
     downloadOriginal: string;
     downloadOriginalDesc: string;
@@ -176,24 +169,24 @@ function SingleDocDownload({
   const handleDownloadOriginal = useCallback(async () => {
     setDownloadingOriginal(true);
     try {
-      const blob = await onDownloadOriginal(documentId);
-      downloadBlob(blob, `${docTitle}-original.pdf`);
+      const result = await onDownloadOriginal(documentId);
+      openDownloadUrl(result.url);
     } finally {
       setDownloadingOriginal(false);
     }
-  }, [onDownloadOriginal, documentId, docTitle]);
+  }, [onDownloadOriginal, documentId]);
 
   const handleDownloadSigned = useCallback(async () => {
     setDownloadingSigned(true);
     try {
-      const blob = await onDownloadSigned(documentId);
-      if (blob) {
-        downloadBlob(blob, `${docTitle}-signed.pdf`);
+      const result = await onDownloadSigned(documentId);
+      if (result) {
+        openDownloadUrl(result.url);
       }
     } finally {
       setDownloadingSigned(false);
     }
-  }, [onDownloadSigned, documentId, docTitle]);
+  }, [onDownloadSigned, documentId]);
 
   return (
     <div className="space-y-3">

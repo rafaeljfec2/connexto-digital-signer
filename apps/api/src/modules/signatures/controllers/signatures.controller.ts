@@ -6,13 +6,12 @@ import {
   Body,
   Param,
   Req,
-  Res,
   Put,
   Delete,
+  NotFoundException,
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import type { Response } from 'express';
 import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { RequestWithHeaders } from '@connexto/shared';
@@ -188,15 +187,8 @@ export class SignController {
   async getSignerPdf(
     @Param('token') token: string,
     @Query('documentId') documentId: string | undefined,
-    @Res() res: Response
   ) {
-    const buffer = await this.signaturesService.getSignerPdf(token, documentId);
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Length': buffer.length,
-      'Cache-Control': 'private, max-age=300',
-    });
-    res.end(buffer);
+    return this.signaturesService.getSignerPdfUrl(token, documentId);
   }
 
   @Public()
@@ -205,20 +197,12 @@ export class SignController {
   async getSignerSignedPdf(
     @Param('token') token: string,
     @Query('documentId') documentId: string | undefined,
-    @Res() res: Response
   ) {
-    const buffer = await this.signaturesService.getSignerSignedPdf(token, documentId);
-    if (buffer === null) {
-      res.status(404).json({ message: 'Signed document is not available yet' });
-      return;
+    const result = await this.signaturesService.getSignerSignedPdfUrl(token, documentId);
+    if (result === null) {
+      throw new NotFoundException('Signed document is not available yet');
     }
-    res.set({
-      'Content-Type': 'application/pdf',
-      'Content-Length': buffer.length,
-      'Content-Disposition': 'attachment; filename="signed-document.pdf"',
-      'Cache-Control': 'private, max-age=300',
-    });
-    res.end(buffer);
+    return result;
   }
 
   @Public()

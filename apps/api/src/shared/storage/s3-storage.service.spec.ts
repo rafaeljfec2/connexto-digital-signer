@@ -14,6 +14,8 @@ jest.mock('@aws-sdk/client-s3', () => ({
   PutObjectCommand: jest.fn().mockImplementation((input) => ({ input })),
   GetObjectCommand: jest.fn().mockImplementation((input) => ({ input })),
   DeleteObjectCommand: jest.fn().mockImplementation((input) => ({ input })),
+  HeadBucketCommand: jest.fn().mockImplementation((input) => ({ input })),
+  CreateBucketCommand: jest.fn().mockImplementation((input) => ({ input })),
 }));
 
 jest.mock('@aws-sdk/s3-request-presigner', () => ({
@@ -150,7 +152,7 @@ describe('S3StorageService', () => {
     expect(getSignedUrl).toHaveBeenCalledWith(
       expect.any(Object),
       expect.objectContaining({ input: { Bucket: 'documents', Key: 'key' } }),
-      { expiresIn: 3600 }
+      { expiresIn: 300 }
     );
   });
 });

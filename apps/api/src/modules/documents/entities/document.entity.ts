@@ -43,6 +43,12 @@ export class Document {
   @Column({ name: 'final_hash', type: 'varchar', length: 64, nullable: true })
   finalHash!: string | null;
 
+  @Column({ name: 'mime_type', type: 'varchar', length: 50, nullable: true })
+  mimeType!: string | null;
+
+  @Column({ type: 'bigint', nullable: true })
+  size!: number | null;
+
   @Column({
     type: 'enum',
     enum: DocumentStatus,

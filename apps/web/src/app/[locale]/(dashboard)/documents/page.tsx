@@ -13,7 +13,7 @@ import { GridDocumentCard } from '@/features/documents/components/grid-document-
 import { SignerTrackingPanel } from '@/features/documents/components/signer-tracking-panel';
 import { useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/use-documents';
 import { useFolderTree, useMoveEnvelopeToFolder } from '@/features/documents/hooks/use-folders';
-import { getDocumentFile, getDocumentSignedFile, getEnvelopeAuditSummary } from '@/features/documents/api';
+import { getDocumentFileUrl, getDocumentSignedFileUrl, getEnvelopeAuditSummary } from '@/features/documents/api';
 import type { DocumentStatus, EnvelopeSummary, FolderTreeNode } from '@/features/documents/api';
 import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
 import { Button, Card, ConfirmDialog, Dialog, Pagination, Select, Skeleton } from '@/shared/ui';
@@ -21,15 +21,8 @@ import { FadeIn, PageTransition } from '@/shared/animations';
 import { useRouter } from '@/i18n/navigation';
 import { LayoutGrid, List, Plus, Search } from 'lucide-react';
 
-function downloadBlob(blob: Blob, filename: string) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
+function openDownloadUrl(url: string) {
+  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 function buildFolderNameMap(tree: readonly FolderTreeNode[]): Map<string, string> {
@@ -150,14 +143,14 @@ export default function DocumentsPage() {
 
   const handleDownloadOriginal = useCallback(async (env: EnvelopeSummary) => {
     const summary = await getEnvelopeAuditSummary(env.id);
-    const blob = await getDocumentFile(summary.document.id);
-    downloadBlob(blob, `${env.title}.pdf`);
+    const result = await getDocumentFileUrl(summary.document.id);
+    openDownloadUrl(result.url);
   }, []);
 
   const handleDownloadSigned = useCallback(async (env: EnvelopeSummary) => {
     const summary = await getEnvelopeAuditSummary(env.id);
-    const blob = await getDocumentSignedFile(summary.document.id);
-    if (blob) downloadBlob(blob, `${env.title}-signed.pdf`);
+    const result = await getDocumentSignedFileUrl(summary.document.id);
+    if (result) openDownloadUrl(result.url);
   }, []);
 
   const handleConfirmDelete = useCallback(() => {
