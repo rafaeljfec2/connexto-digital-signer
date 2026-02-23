@@ -56,7 +56,10 @@ export function Dropzone({
         accept={accept}
         multiple={multiple}
         disabled={disabled}
-        onChange={(event) => handleFiles(event.target.files)}
+        onChange={(event) => {
+          handleFiles(event.target.files);
+          event.target.value = '';
+        }}
       />
       {label ? <span className="font-medium text-foreground">{label}</span> : null}
       {helperText ? <span className="mt-2 text-foreground-muted">{helperText}</span> : null}

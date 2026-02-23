@@ -435,6 +435,8 @@ export class SignaturesService {
     signer.signedAt = new Date();
     signer.ipAddress = context.ipAddress;
     signer.userAgent = context.userAgent;
+    signer.latitude = context.latitude ?? null;
+    signer.longitude = context.longitude ?? null;
     signer.signatureData = dto.signatureData ?? null;
     const saved = await this.signerRepository.save(signer);
 
@@ -443,6 +445,10 @@ export class SignaturesService {
       tenantId: signer.tenantId,
       signerId: saved.id,
       signedAt: saved.signedAt ?? new Date(),
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+      latitude: context.latitude,
+      longitude: context.longitude,
     };
     this.eventEmitter.emit(EVENT_SIGNATURE_COMPLETED, payload);
 
@@ -560,6 +566,8 @@ export class SignaturesService {
         signedAt: s.signedAt,
         ipAddress: s.ipAddress,
         userAgent: s.userAgent,
+        latitude: s.latitude,
+        longitude: s.longitude,
         verifiedAt: s.verifiedAt,
         signatureData: s.signatureData,
       })),

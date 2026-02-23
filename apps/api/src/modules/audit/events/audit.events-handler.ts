@@ -34,6 +34,12 @@ export class AuditEventsHandler {
       metadata: {
         documentId: payload.documentId,
         signedAt: payload.signedAt.toISOString(),
+        ipAddress: payload.ipAddress,
+        userAgent: payload.userAgent,
+        ...(payload.latitude != null && payload.longitude != null && {
+          latitude: payload.latitude,
+          longitude: payload.longitude,
+        }),
       },
     });
   }

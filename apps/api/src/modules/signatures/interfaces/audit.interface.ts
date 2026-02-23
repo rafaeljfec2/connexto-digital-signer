@@ -1,6 +1,8 @@
 export interface SigningContext {
   readonly ipAddress: string;
   readonly userAgent: string;
+  readonly latitude?: number;
+  readonly longitude?: number;
 }
 
 export interface AuditTimelineEvent {
@@ -20,6 +22,8 @@ export interface AuditSignerInfo {
   readonly signedAt: Date | null;
   readonly ipAddress: string | null;
   readonly userAgent: string | null;
+  readonly latitude: number | null;
+  readonly longitude: number | null;
   readonly verifiedAt: Date | null;
   readonly signatureData: string | null;
 }

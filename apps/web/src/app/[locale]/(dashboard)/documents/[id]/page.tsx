@@ -23,7 +23,7 @@ export default function DocumentWizardPage() {
     [documentsQuery.data],
   );
 
-  const hasFile = Boolean(primaryDocument?.originalFileKey);
+  const hasFile = Boolean(primaryDocument?.mimeType);
 
   const handleCancel = () => {
     setConfirmOpen(true);

@@ -8,6 +8,17 @@ import { Button, Input } from '@/shared/ui';
 import { UploadDropzone } from './upload-dropzone';
 import { toast } from 'sonner';
 
+const ACCEPTED_MIMES = new Set([
+  'application/pdf',
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+]);
+
+function getMaxSizeMb(mime: string): number {
+  return mime === 'application/pdf' ? 5 : 3;
+}
+
 export function UploadForm() {
   const tDocuments = useTranslations('documents');
   const router = useRouter();
@@ -15,8 +26,8 @@ export function UploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState<string | null>(null);
   const uploadMutation = useUploadDocument();
-  const maxSizeMb = 10;
-  const maxSizeBytes = maxSizeMb * 1024 * 1024;
+
+  const maxSizeMb = file ? getMaxSizeMb(file.type) : 5;
 
   const validate = (): boolean => {
     if (!title.trim()) {
@@ -27,12 +38,13 @@ export function UploadForm() {
       setError(tDocuments('upload.errors.fileRequired'));
       return false;
     }
-    if (file.type !== 'application/pdf') {
-      setError(tDocuments('upload.errors.onlyPdf'));
+    if (!ACCEPTED_MIMES.has(file.type)) {
+      setError(tDocuments('upload.errors.unsupportedType', { name: file.name }));
       return false;
     }
-    if (file.size > maxSizeBytes) {
-      setError(tDocuments('upload.errors.tooLarge', { max: maxSizeMb }));
+    const limit = getMaxSizeMb(file.type);
+    if (file.size > limit * 1024 * 1024) {
+      setError(tDocuments('upload.errors.tooLarge', { name: file.name, max: limit }));
       return false;
     }
     setError(null);

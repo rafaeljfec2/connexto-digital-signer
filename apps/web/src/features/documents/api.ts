@@ -61,9 +61,7 @@ export type DocumentSummary = {
 
 export type DocumentDetail = DocumentSummary & {
   readonly tenantId: string;
-  readonly originalFileKey: string | null;
   readonly originalHash: string | null;
-  readonly finalFileKey: string | null;
   readonly finalHash: string | null;
   readonly mimeType: string | null;
   readonly size: number | null;
@@ -233,6 +231,8 @@ export type AuditSignerInfo = Readonly<{
   signedAt: string | null;
   ipAddress: string | null;
   userAgent: string | null;
+  latitude: number | null;
+  longitude: number | null;
   verifiedAt: string | null;
   signatureData: string | null;
 }>;

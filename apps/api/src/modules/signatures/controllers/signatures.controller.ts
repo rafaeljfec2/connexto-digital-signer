@@ -229,6 +229,8 @@ export class SignController {
       {
         ipAddress: getClientIp(req),
         userAgent: (req.headers['user-agent'] as string) ?? '',
+        latitude: dto.geolocation?.latitude,
+        longitude: dto.geolocation?.longitude,
       }
     );
   }

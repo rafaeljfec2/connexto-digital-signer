@@ -66,6 +66,10 @@ export type AcceptSignatureInput = {
     readonly value: string;
   }>;
   readonly signatureData?: string;
+  readonly geolocation?: {
+    readonly latitude: number;
+    readonly longitude: number;
+  };
 };
 
 export type IdentifySignerInput = {

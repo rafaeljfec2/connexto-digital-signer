@@ -335,8 +335,8 @@
       "subtitle": "Upload your PDFs and set a title for the envelope",
       "titleLabel": "Envelope title",
       "titlePlaceholder": "Sales contract - February",
-      "dropzoneLabel": "Drag and drop your PDFs here",
-      "dropzoneHelper": "PDF only, up to 10MB each. You can add multiple files.",
+      "dropzoneLabel": "Drag and drop your files here",
+      "dropzoneHelper": "PDF (up to 5MB), PNG, JPEG, WEBP (up to 3MB). Multiple files.",
       "fileLoaded": "PDF loaded",
       "replaceFile": "Replace PDF",
       "defaultTitle": "New document",
@@ -351,8 +351,8 @@
       "removeDocumentConfirm": "Are you sure you want to remove \"{name}\"?",
       "errors": {
         "titleRequired": "Title is required",
-        "fileRequired": "At least one PDF file is required",
-        "onlyPdf": "Only PDF files are allowed",
+        "fileRequired": "At least one file is required",
+        "unsupportedType": "Unsupported file type: {name}. Accepted: PDF, PNG, JPEG, WEBP",
         "tooLarge": "File \"{name}\" exceeds {max}MB",
         "failed": "Upload failed",
         "duplicateFile": "File \"{name}\" is already added"

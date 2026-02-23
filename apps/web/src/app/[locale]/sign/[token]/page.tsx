@@ -2,6 +2,7 @@
 
 import {
   useAcceptSignature,
+  useGeolocation,
   useIdentifySigner,
   useSendVerificationCode,
   useSignerData,
@@ -68,6 +69,7 @@ export default function SignerDocumentPage() {
   const identifyMutation = useIdentifySigner(token);
   const sendCodeMutation = useSendVerificationCode(token);
   const verifyCodeMutation = useVerifyCode(token);
+  const geolocation = useGeolocation();
 
   const documents = useMemo(
     () => signerQuery.data?.documents ?? [],
@@ -198,6 +200,7 @@ export default function SignerDocumentPage() {
       consent: t('consent.label'),
       fields: fieldPayload,
       signatureData: signaturePayload,
+      ...(geolocation && { geolocation }),
     });
 
     router.push(`/success?token=${token}`);

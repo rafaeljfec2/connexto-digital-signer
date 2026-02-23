@@ -39,6 +39,8 @@ const buildSigner = (overrides?: Partial<Signer>): Signer => ({
   signedAt: null,
   ipAddress: null,
   userAgent: null,
+  latitude: null,
+  longitude: null,
   verificationCode: null,
   verificationExpiresAt: null,
   verificationAttempts: 0,
@@ -295,6 +297,65 @@ describe('SignaturesService', () => {
       });
 
       expect(finalizeSpy).toHaveBeenCalledWith('env-1', 'tenant-1');
+    });
+
+    test('should save geolocation when provided in context', async () => {
+      const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
+      jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
+      envelopesService.findOne.mockResolvedValue(buildEnvelope());
+      (signerRepository.save as jest.Mock).mockImplementation((s: Signer) => Promise.resolve(s));
+      jest.spyOn(service, 'areAllSignersSigned').mockResolvedValue(false);
+      jest.spyOn(
+        service as unknown as { finalizeEnvelope: (envelopeId: string, tenantId: string) => Promise<void> },
+        'finalizeEnvelope'
+      ).mockResolvedValue();
+
+      await service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
+        ipAddress: '127.0.0.1',
+        userAgent: 'jest',
+        latitude: -23.5505199,
+        longitude: -46.6333094,
+      });
+
+      expect(signerRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: -23.5505199,
+          longitude: -46.6333094,
+        })
+      );
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        EVENT_SIGNATURE_COMPLETED,
+        expect.objectContaining({
+          latitude: -23.5505199,
+          longitude: -46.6333094,
+          ipAddress: '127.0.0.1',
+          userAgent: 'jest',
+        })
+      );
+    });
+
+    test('should save null geolocation when not provided in context', async () => {
+      const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
+      jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
+      envelopesService.findOne.mockResolvedValue(buildEnvelope());
+      (signerRepository.save as jest.Mock).mockImplementation((s: Signer) => Promise.resolve(s));
+      jest.spyOn(service, 'areAllSignersSigned').mockResolvedValue(false);
+      jest.spyOn(
+        service as unknown as { finalizeEnvelope: (envelopeId: string, tenantId: string) => Promise<void> },
+        'finalizeEnvelope'
+      ).mockResolvedValue();
+
+      await service.acceptSignature('token-1', { consent: 'ok', fields: [] }, {
+        ipAddress: '127.0.0.1',
+        userAgent: 'jest',
+      });
+
+      expect(signerRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          latitude: null,
+          longitude: null,
+        })
+      );
     });
   });
 

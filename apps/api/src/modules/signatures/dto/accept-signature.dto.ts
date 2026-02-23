@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsArray, IsOptional, IsString, IsUUID, ValidateNested } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString, IsUUID, Max, Min, ValidateNested } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class FieldValueDto {
@@ -10,6 +10,20 @@ export class FieldValueDto {
   @IsString()
   @ApiProperty({ example: 'data:image/png;base64,...' })
   readonly value!: string;
+}
+
+export class GeolocationDto {
+  @IsNumber()
+  @Min(-90)
+  @Max(90)
+  @ApiProperty({ example: -23.5505199 })
+  readonly latitude!: number;
+
+  @IsNumber()
+  @Min(-180)
+  @Max(180)
+  @ApiProperty({ example: -46.6333094 })
+  readonly longitude!: number;
 }
 
 export class AcceptSignatureDto {
@@ -27,4 +41,10 @@ export class AcceptSignatureDto {
   @IsString()
   @ApiPropertyOptional({ example: 'data:image/png;base64,...' })
   readonly signatureData?: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => GeolocationDto)
+  @ApiPropertyOptional({ type: GeolocationDto })
+  readonly geolocation?: GeolocationDto;
 }

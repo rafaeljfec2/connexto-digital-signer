@@ -335,8 +335,8 @@
       "subtitle": "Envie seus PDFs e defina um título para o envelope",
       "titleLabel": "Título do envelope",
       "titlePlaceholder": "Contrato de vendas - Fevereiro",
-      "dropzoneLabel": "Arraste e solte seus PDFs aqui",
-      "dropzoneHelper": "Apenas PDF, até 10MB cada. Você pode adicionar múltiplos arquivos.",
+      "dropzoneLabel": "Arraste e solte seus arquivos aqui",
+      "dropzoneHelper": "PDF (até 5MB), PNG, JPEG, WEBP (até 3MB). Múltiplos arquivos.",
       "fileLoaded": "PDF carregado",
       "replaceFile": "Trocar PDF",
       "defaultTitle": "Novo documento",
@@ -351,8 +351,8 @@
       "removeDocumentConfirm": "Tem certeza que deseja remover \"{name}\"?",
       "errors": {
         "titleRequired": "Título obrigatório",
-        "fileRequired": "É necessário pelo menos um arquivo PDF",
-        "onlyPdf": "Apenas arquivos PDF são permitidos",
+        "fileRequired": "É necessário pelo menos um arquivo",
+        "unsupportedType": "Tipo de arquivo não suportado: {name}. Aceitos: PDF, PNG, JPEG, WEBP",
         "tooLarge": "Arquivo \"{name}\" excede {max}MB",
         "failed": "Falha no envio",
         "duplicateFile": "O arquivo \"{name}\" já foi adicionado"

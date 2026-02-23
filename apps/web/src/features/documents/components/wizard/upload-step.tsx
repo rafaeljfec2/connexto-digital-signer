@@ -12,7 +12,7 @@ import {
 } from '@/features/documents/hooks/use-document-wizard';
 import { Button, Card, Dropzone, Input } from '@/shared/ui';
 import { useQueryClient } from '@tanstack/react-query';
-import { FileText, Loader2, Trash2, X } from 'lucide-react';
+import { FileText, Image as ImageIcon, Loader2, Trash2, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { toast } from 'sonner';
@@ -27,8 +27,28 @@ export type UploadStepProps = {
   readonly onNext: () => void;
 };
 
-const MAX_SIZE_MB = 10;
-const MAX_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
+const ACCEPTED_TYPES = 'application/pdf,image/png,image/jpeg,image/webp';
+
+const ACCEPTED_MIME_SET = new Set([
+  'application/pdf',
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+]);
+
+const MIME_LABELS: Readonly<Record<string, string>> = {
+  'application/pdf': 'PDF',
+  'image/png': 'PNG',
+  'image/jpeg': 'JPEG',
+  'image/webp': 'WEBP',
+};
+
+const PDF_MAX_SIZE_MB = 5;
+const IMAGE_MAX_SIZE_MB = 3;
+
+function getMaxSizeForMime(mime: string): number {
+  return mime === 'application/pdf' ? PDF_MAX_SIZE_MB : IMAGE_MAX_SIZE_MB;
+}
 
 function formatFileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
@@ -42,13 +62,22 @@ type DocumentItemProps = {
   readonly removeLabel: string;
 };
 
+function getFileIcon(mimeType: string | null) {
+  if (mimeType?.startsWith('image/')) {
+    return <ImageIcon className="h-5 w-5 shrink-0 text-primary" />;
+  }
+  return <FileText className="h-5 w-5 shrink-0 text-primary" />;
+}
+
 function DocumentItem({ doc, isRemoving, canRemove, onRemove, removeLabel }: DocumentItemProps) {
+  const typeLabel = doc.mimeType ? (MIME_LABELS[doc.mimeType] ?? doc.mimeType) : 'PDF';
+
   return (
     <div className="flex items-center gap-3 rounded-xl border border-th-border bg-th-hover px-4 py-3">
-      <FileText className="h-5 w-5 shrink-0 text-primary" />
+      {getFileIcon(doc.mimeType)}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-normal">{doc.title}</p>
-        <p className="text-xs text-foreground-muted">PDF</p>
+        <p className="text-xs text-foreground-muted">{typeLabel}</p>
       </div>
       {canRemove ? (
         <button
@@ -84,13 +113,15 @@ function PendingFileItem({
   removeLabel,
   uploadingLabel,
 }: PendingFileItemProps) {
+  const typeLabel = MIME_LABELS[file.type] ?? file.type.split('/')[1]?.toUpperCase() ?? '';
+
   return (
     <div className="flex items-center gap-3 rounded-xl border border-dashed border-th-border bg-th-input px-4 py-3">
-      <FileText className="h-5 w-5 shrink-0 text-foreground-subtle" />
+      {getFileIcon(file.type)}
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-normal">{file.name}</p>
         <p className="text-xs text-foreground-muted">
-          {isUploading ? uploadingLabel : formatFileSize(file.size)}
+          {isUploading ? uploadingLabel : `${formatFileSize(file.size)} • ${typeLabel}`}
         </p>
       </div>
       {isUploading ? (
@@ -138,7 +169,7 @@ export function UploadStep({
   const [removingDocId, setRemovingDocId] = useState<string | null>(null);
 
   const uploadedDocuments = useMemo(
-    () => (envelopeDocumentsQuery.data ?? []).filter((d) => d.originalFileKey !== null),
+    () => (envelopeDocumentsQuery.data ?? []).filter((d) => d.mimeType !== null),
     [envelopeDocumentsQuery.data]
   );
 
@@ -160,18 +191,21 @@ export function UploadStep({
     (files: File[]): File[] => {
       const validFiles: File[] = [];
       const existingNames = new Set(uploadedDocuments.map((d) => d.title));
-      const pendingNames = new Set(pendingFiles.map((f) => f.name.replace(/\.pdf$/i, '')));
+      const pendingNames = new Set(
+        pendingFiles.map((f) => f.name.replace(/\.[^.]+$/, ''))
+      );
 
       for (const file of files) {
-        if (file.type !== 'application/pdf') {
-          toast.error(t('upload.errors.onlyPdf'));
+        if (!ACCEPTED_MIME_SET.has(file.type)) {
+          toast.error(t('upload.errors.unsupportedType', { name: file.name }));
           continue;
         }
-        if (file.size > MAX_SIZE_BYTES) {
-          toast.error(t('upload.errors.tooLarge', { name: file.name, max: MAX_SIZE_MB }));
+        const maxMb = getMaxSizeForMime(file.type);
+        if (file.size > maxMb * 1024 * 1024) {
+          toast.error(t('upload.errors.tooLarge', { name: file.name, max: maxMb }));
           continue;
         }
-        const baseName = file.name.replace(/\.pdf$/i, '');
+        const baseName = file.name.replace(/\.[^.]+$/, '');
         if (existingNames.has(baseName) || pendingNames.has(baseName)) {
           toast.error(t('upload.errors.duplicateFile', { name: file.name }));
           continue;
@@ -237,7 +271,7 @@ export function UploadStep({
       for (let i = 0; i < pendingFiles.length; i++) {
         const file = pendingFiles[i];
         if (i === 0 && !primaryDocHasFile) {
-          const fileName = file.name.replace(/\.pdf$/i, '');
+          const fileName = file.name.replace(/\.[^.]+$/, '');
           await updateDocumentMutation.mutateAsync({ title: fileName });
           await uploadFileMutation.mutateAsync(file);
           await queryClient.invalidateQueries({ queryKey: ['documents', 'detail', documentId] });
@@ -274,7 +308,7 @@ export function UploadStep({
         </div>
 
         <Dropzone
-          accept="application/pdf"
+          accept={ACCEPTED_TYPES}
           multiple
           onFiles={handleFilesSelected}
           label={totalDocuments > 0 ? t('upload.addMore') : t('upload.dropzoneLabel')}

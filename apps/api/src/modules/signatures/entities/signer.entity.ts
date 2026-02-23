@@ -100,6 +100,12 @@ export class Signer {
   @Column({ name: 'user_agent', type: 'text', nullable: true })
   userAgent!: string | null;
 
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true, transformer: { to: (v: number | null) => v, from: (v: string | null) => (v === null ? null : Number(v)) } })
+  latitude!: number | null;
+
+  @Column({ type: 'decimal', precision: 10, scale: 7, nullable: true, transformer: { to: (v: number | null) => v, from: (v: string | null) => (v === null ? null : Number(v)) } })
+  longitude!: number | null;
+
   @Column({ name: 'verification_code', type: 'varchar', length: 128, nullable: true })
   verificationCode!: string | null;
 

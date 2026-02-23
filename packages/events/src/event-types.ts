@@ -3,6 +3,10 @@ export interface SignatureCompletedEvent {
   tenantId: string;
   signerId: string;
   signedAt: Date;
+  ipAddress?: string;
+  userAgent?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface DocumentCompletedEvent {
