@@ -11,7 +11,7 @@ const PLANS = [
     priceKey: 'starterPrice' as const,
     periodKey: 'starterPeriod' as const,
     descriptionKey: 'starterDescription' as const,
-    features: ['starterFeature1', 'starterFeature2', 'starterFeature3', 'starterFeature4'] as const,
+    features: ['starterFeature1', 'starterFeature2', 'starterFeature3', 'starterFeature4', 'starterFeature5'] as const,
     ctaKey: 'starterCta' as const,
     highlighted: false,
   },
