@@ -1098,6 +1098,12 @@
     "builder": {
       "title": "Create template",
       "editTitle": "Edit template",
+      "progress": "Progress",
+      "back": "Back",
+      "next": "Next",
+      "saving": "Saving...",
+      "finish": "Finish",
+      "save": "Save",
       "steps": {
         "info": "Information",
         "documents": "Documents",
@@ -1106,11 +1112,17 @@
         "variables": "Variables",
         "review": "Review"
       },
+      "stepDescriptions": {
+        "info": "Define the name, description and category of the template",
+        "documents": "Add the documents that will be part of the template",
+        "signers": "Configure signer slots and their roles",
+        "variables": "Create dynamic variables to personalize the template"
+      },
       "signerSlot": {
         "label": "Slot identifier",
         "labelPlaceholder": "E.g. contractor",
         "role": "Role",
-        "addSigner": "Add signer slot"
+        "addSigner": "Add signer"
       },
       "variable": {
         "key": "Key",

@@ -1061,6 +1061,12 @@
     "builder": {
       "title": "Criar template",
       "editTitle": "Editar template",
+      "progress": "Progresso",
+      "back": "Voltar",
+      "next": "Próximo",
+      "saving": "Salvando...",
+      "finish": "Concluir",
+      "save": "Salvar",
       "steps": {
         "info": "Informações",
         "documents": "Documentos",
@@ -1069,11 +1075,17 @@
         "variables": "Variáveis",
         "review": "Revisão"
       },
+      "stepDescriptions": {
+        "info": "Defina o nome, descrição e categoria do template",
+        "documents": "Adicione os documentos que farão parte do template",
+        "signers": "Configure os slots de signatários e seus papéis",
+        "variables": "Crie variáveis dinâmicas para personalizar o template"
+      },
       "signerSlot": {
         "label": "Identificador do slot",
         "labelPlaceholder": "Ex: contractor",
         "role": "Papel",
-        "addSigner": "Adicionar slot de signatário"
+        "addSigner": "Adicionar signatário"
       },
       "variable": {
         "key": "Chave",
