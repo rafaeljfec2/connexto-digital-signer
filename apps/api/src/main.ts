@@ -55,11 +55,12 @@ const bootstrap = async (): Promise<void> => {
   );
   app.useGlobalFilters(new HttpExceptionFilter());
 
+  configureOpenApi(app);
+
   await app.init();
   const dataSource = app.get(DataSource);
   await dataSource.runMigrations();
 
-  configureOpenApi(app);
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port);
 
