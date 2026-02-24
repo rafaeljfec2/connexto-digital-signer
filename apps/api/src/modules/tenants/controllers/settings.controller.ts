@@ -11,7 +11,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TenantId } from '@connexto/shared';
 import { CertificateService } from '../services/certificate.service';
@@ -39,6 +39,7 @@ const MAX_CERTIFICATE_SIZE_BYTES = 5 * 1024 * 1024;
 const MAX_LOGO_SIZE_BYTES = 2 * 1024 * 1024;
 
 @ApiTags('Settings')
+@ApiBearerAuth()
 @RequireAuthMethod('jwt')
 @Controller('settings')
 export class SettingsController {
@@ -49,6 +50,10 @@ export class SettingsController {
   ) {}
 
   @Post('certificate')
+  @ApiOperation({ summary: 'Upload a digital certificate (.p12/.pfx)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiResponse({ status: 201, description: 'Certificate uploaded' })
+  @ApiResponse({ status: 400, description: 'Invalid certificate file' })
   @UseInterceptors(FileInterceptor('file'))
   async uploadCertificate(
     @TenantId() tenantId: string,
@@ -74,6 +79,8 @@ export class SettingsController {
   }
 
   @Get('certificate')
+  @ApiOperation({ summary: 'Get digital certificate status' })
+  @ApiResponse({ status: 200, description: 'Certificate status' })
   async getCertificateStatus(@TenantId() tenantId: string) {
     const status = await this.certificateService.getCertificateStatus(tenantId);
     return { configured: status !== null, ...(status ? { certificate: status } : {}) };
@@ -181,6 +188,8 @@ export class SettingsController {
   }
 
   @Get('api-key')
+  @ApiOperation({ summary: 'Get legacy API key status' })
+  @ApiResponse({ status: 200, description: 'API key status' })
   async getApiKeyStatus(@TenantId() tenantId: string) {
     const tenant = await this.tenantsService.findOne(tenantId, tenantId);
     return {
@@ -190,6 +199,8 @@ export class SettingsController {
   }
 
   @Post('api-key/regenerate')
+  @ApiOperation({ summary: 'Regenerate legacy API key' })
+  @ApiResponse({ status: 201, description: 'New API key generated' })
   async regenerateApiKey(@TenantId() tenantId: string) {
     const newKey = await this.tenantsService.regenerateApiKey(tenantId);
     return { apiKey: newKey };

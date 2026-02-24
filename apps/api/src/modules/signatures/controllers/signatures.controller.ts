@@ -12,7 +12,7 @@ import {
   ParseUUIDPipe,
   Query,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import type { RequestWithHeaders } from '@connexto/shared';
 import { TenantId, Public } from '@connexto/shared';
@@ -45,12 +45,15 @@ function getClientIp(
 }
 
 @ApiTags('Signers')
+@ApiBearerAuth()
 @RequireAuthMethod('jwt')
 @Controller('signers')
 export class SignersListController {
   constructor(private readonly signaturesService: SignaturesService) {}
 
   @Get()
+  @ApiOperation({ summary: 'List all signers for the tenant' })
+  @ApiResponse({ status: 200, description: 'List of signers' })
   listAllSigners(
     @TenantId() tenantId: string,
     @Query() query: ListSignersQueryDto,
@@ -59,6 +62,8 @@ export class SignersListController {
   }
 
   @Get('search-documents')
+  @ApiOperation({ summary: 'Search pending documents by signer identifier' })
+  @ApiResponse({ status: 200, description: 'List of pending documents' })
   searchDocuments(
     @TenantId() tenantId: string,
     @Query() query: SearchSignerDocumentsDto,
@@ -68,12 +73,16 @@ export class SignersListController {
 }
 
 @ApiTags('Signers')
+@ApiBearerAuth()
 @RequireAuthMethod('jwt')
 @Controller('envelopes/:envelopeId/signers')
 export class SignaturesController {
   constructor(private readonly signaturesService: SignaturesService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Add a signer to an envelope' })
+  @ApiParam({ name: 'envelopeId', description: 'Envelope UUID' })
+  @ApiResponse({ status: 201, description: 'Signer added' })
   addSigner(
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,
@@ -87,6 +96,9 @@ export class SignaturesController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List signers for an envelope' })
+  @ApiParam({ name: 'envelopeId', description: 'Envelope UUID' })
+  @ApiResponse({ status: 200, description: 'List of signers' })
   listSigners(
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string
@@ -95,6 +107,10 @@ export class SignaturesController {
   }
 
   @Patch(':signerId')
+  @ApiOperation({ summary: 'Update signer details' })
+  @ApiParam({ name: 'envelopeId', description: 'Envelope UUID' })
+  @ApiParam({ name: 'signerId', description: 'Signer UUID' })
+  @ApiResponse({ status: 200, description: 'Signer updated' })
   updateSigner(
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @Param('signerId', ParseUUIDPipe) signerId: string,
@@ -105,6 +121,10 @@ export class SignaturesController {
   }
 
   @Delete(':signerId')
+  @ApiOperation({ summary: 'Remove signer from envelope' })
+  @ApiParam({ name: 'envelopeId', description: 'Envelope UUID' })
+  @ApiParam({ name: 'signerId', description: 'Signer UUID' })
+  @ApiResponse({ status: 200, description: 'Signer removed' })
   removeSigner(
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @Param('signerId', ParseUUIDPipe) signerId: string,
@@ -115,12 +135,16 @@ export class SignaturesController {
 }
 
 @ApiTags('SignatureFields')
+@ApiBearerAuth()
 @RequireAuthMethod('jwt')
 @Controller('documents/:documentId/fields')
 export class SignatureFieldsController {
   constructor(private readonly fieldsService: SignatureFieldsService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a signature field on a document' })
+  @ApiParam({ name: 'documentId', description: 'Document UUID' })
+  @ApiResponse({ status: 201, description: 'Field created' })
   createField(
     @Param('documentId') documentId: string,
     @TenantId() tenantId: string,
@@ -130,6 +154,9 @@ export class SignatureFieldsController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List signature fields for a document' })
+  @ApiParam({ name: 'documentId', description: 'Document UUID' })
+  @ApiResponse({ status: 200, description: 'List of fields' })
   listFields(
     @Param('documentId') documentId: string,
     @TenantId() tenantId: string
@@ -138,6 +165,9 @@ export class SignatureFieldsController {
   }
 
   @Put('batch')
+  @ApiOperation({ summary: 'Replace all signature fields for a document' })
+  @ApiParam({ name: 'documentId', description: 'Document UUID' })
+  @ApiResponse({ status: 200, description: 'Fields replaced' })
   replaceFields(
     @Param('documentId') documentId: string,
     @TenantId() tenantId: string,
@@ -147,6 +177,10 @@ export class SignatureFieldsController {
   }
 
   @Put(':fieldId')
+  @ApiOperation({ summary: 'Update a signature field' })
+  @ApiParam({ name: 'documentId', description: 'Document UUID' })
+  @ApiParam({ name: 'fieldId', description: 'Field UUID' })
+  @ApiResponse({ status: 200, description: 'Field updated' })
   updateField(
     @Param('documentId') documentId: string,
     @Param('fieldId', ParseUUIDPipe) fieldId: string,
@@ -157,6 +191,10 @@ export class SignatureFieldsController {
   }
 
   @Delete(':fieldId')
+  @ApiOperation({ summary: 'Remove a signature field' })
+  @ApiParam({ name: 'documentId', description: 'Document UUID' })
+  @ApiParam({ name: 'fieldId', description: 'Field UUID' })
+  @ApiResponse({ status: 200, description: 'Field removed' })
   removeField(
     @Param('documentId') documentId: string,
     @Param('fieldId', ParseUUIDPipe) fieldId: string,
@@ -177,6 +215,9 @@ export class SignController {
   @Public()
   @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Get(':token')
+  @ApiOperation({ summary: 'Get signer info by signing token' })
+  @ApiParam({ name: 'token', description: 'Signing token' })
+  @ApiResponse({ status: 200, description: 'Signer details with envelope' })
   getSignerByToken(@Param('token') token: string) {
     return this.signaturesService.findByTokenWithEnvelope(token);
   }
@@ -218,6 +259,9 @@ export class SignController {
   @Public()
   @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
   @Post(':token/accept')
+  @ApiOperation({ summary: 'Accept and sign the document' })
+  @ApiParam({ name: 'token', description: 'Signing token' })
+  @ApiResponse({ status: 201, description: 'Signature accepted' })
   accept(
     @Param('token') token: string,
     @Body() dto: AcceptSignatureDto,
@@ -271,12 +315,16 @@ export class SignController {
 }
 
 @ApiTags('Envelopes')
+@ApiBearerAuth()
 @RequireAuthMethod('jwt')
 @Controller('envelopes/:envelopeId')
 export class DocumentSendController {
   constructor(private readonly signaturesService: SignaturesService) {}
 
   @Get('summary')
+  @ApiOperation({ summary: 'Get envelope audit summary' })
+  @ApiParam({ name: 'envelopeId', description: 'Envelope UUID' })
+  @ApiResponse({ status: 200, description: 'Audit summary' })
   getEnvelopeSummary(
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,
@@ -285,6 +333,9 @@ export class DocumentSendController {
   }
 
   @Get('tracking')
+  @ApiOperation({ summary: 'Get signer tracking status for the envelope' })
+  @ApiParam({ name: 'envelopeId', description: 'Envelope UUID' })
+  @ApiResponse({ status: 200, description: 'Tracking data per signer' })
   getEnvelopeTracking(
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,
@@ -302,6 +353,9 @@ export class DocumentSendController {
   }
 
   @Post('send')
+  @ApiOperation({ summary: 'Send the envelope for signing' })
+  @ApiParam({ name: 'envelopeId', description: 'Envelope UUID' })
+  @ApiResponse({ status: 201, description: 'Envelope sent' })
   sendEnvelope(
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,

@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { BullModule } from '@nestjs/bull';
 import { WebhookConfig } from './entities/webhook-config.entity';
+import { WebhookDeliveryLog } from './entities/webhook-delivery-log.entity';
 import { WebhooksController } from './controllers/webhooks.controller';
 import { WebhooksService } from './services/webhooks.service';
 import { WebhookProcessor } from './processors/webhook.processor';
@@ -9,7 +10,7 @@ import { WebhookEventsHandler } from './events/webhook.events-handler';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([WebhookConfig]),
+    TypeOrmModule.forFeature([WebhookConfig, WebhookDeliveryLog]),
     BullModule.registerQueue({
       name: 'webhooks',
       defaultJobOptions: {

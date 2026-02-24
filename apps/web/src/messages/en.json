@@ -23,10 +23,16 @@
       "templates": "Templates",
       "signDocuments": "Sign",
       "signers": "Contacts",
-      "settings": "Settings"
+      "settings": "Settings",
+      "developers": "Developers",
+      "apiKeys": "API Keys",
+      "webhooks": "Webhooks",
+      "apiLogs": "API Logs",
+      "apiDocs": "Documentation"
     },
     "navGroups": {
       "main": "Main",
+      "developers": "Developers",
       "management": "Management"
     },
     "newDocument": "New document",
@@ -1242,6 +1248,82 @@
       "finance": "Finance",
       "sales": "Sales",
       "other": "Other"
+    }
+  },
+  "developers": {
+    "apiKeys": {
+      "title": "API Keys",
+      "description": "Manage your API keys for programmatic integration.",
+      "create": "Create API Key",
+      "createTitle": "New API Key",
+      "name": "Name",
+      "namePlaceholder": "e.g. Production Backend",
+      "scopes": "Permissions",
+      "creating": "Creating...",
+      "createBtn": "Create key",
+      "cancel": "Cancel",
+      "createdWarning": "Copy the key below. It will not be shown again.",
+      "copied": "Copied!",
+      "copy": "Copy",
+      "dismiss": "Dismiss",
+      "requests": "{count} requests",
+      "lastUsed": "Last used: {date}",
+      "empty": "No API keys created yet.",
+      "revokeTitle": "Revoke API Key",
+      "revokeDescription": "This action is irreversible. The key will be deactivated immediately.",
+      "revokeConfirm": "Revoke"
+    },
+    "webhooks": {
+      "title": "Webhooks",
+      "description": "Configure endpoints to receive real-time events.",
+      "create": "Create Webhook",
+      "createTitle": "New Webhook",
+      "url": "Endpoint URL",
+      "secret": "Secret",
+      "events": "Events",
+      "creating": "Creating...",
+      "createBtn": "Create webhook",
+      "cancel": "Cancel",
+      "active": "Active",
+      "inactive": "Inactive",
+      "deliveryHistory": "Delivery history",
+      "noDeliveries": "No deliveries recorded yet.",
+      "empty": "No webhooks configured.",
+      "deleteTitle": "Remove Webhook",
+      "deleteDescription": "The webhook will be deactivated and will no longer receive events.",
+      "deleteConfirm": "Remove"
+    },
+    "logs": {
+      "title": "API Logs",
+      "description": "Monitor all requests made to your API.",
+      "totalRequests": "Total requests",
+      "successCount": "Success",
+      "errorCount": "Errors",
+      "avgDuration": "Avg latency",
+      "topEndpoints": "Top endpoints",
+      "allMethods": "All methods",
+      "filterPath": "Filter by path...",
+      "empty": "No API request logs yet."
+    },
+    "docs": {
+      "title": "API Documentation",
+      "description": "Complete interactive REST API reference."
+    },
+    "quickStart": {
+      "title": "Developer Portal",
+      "description": "Everything you need to integrate with Nexosign.",
+      "apiKeyStatus": "API Key",
+      "webhookStatus": "Webhook",
+      "configured": "Configured",
+      "notConfigured": "Not configured",
+      "viewLogs": "View API logs",
+      "viewDocs": "View documentation",
+      "step1Title": "Create a document via API",
+      "step1Description": "Use your API key to create documents programmatically.",
+      "step2Title": "Integrate with Node.js",
+      "step2Description": "Example using native Node.js fetch.",
+      "step3Title": "Configure a webhook",
+      "step3Description": "Receive notifications when signatures are completed."
     }
   }
 }

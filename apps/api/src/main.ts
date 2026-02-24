@@ -22,8 +22,10 @@ const configureOpenApi = (app: Awaited<ReturnType<typeof NestFactory.create>>): 
   if (process.env['NODE_ENV'] === 'production') return;
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Digital Signer API')
-    .setDescription('Nexosign Digital Signer API')
+    .setDescription('Nexosign Digital Signer API — multi-tenant e-signature platform with REST API, Webhooks and Templates.')
     .setVersion('v1')
+    .addBearerAuth({ type: 'http', scheme: 'bearer', bearerFormat: 'JWT' })
+    .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'api-key')
     .build();
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup(`${apiPrefix}/swagger`, app, swaggerDocument);

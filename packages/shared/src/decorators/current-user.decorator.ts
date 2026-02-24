@@ -6,6 +6,8 @@ export interface JwtPayload {
   tenantId: string;
   role: string;
   authMethod: 'jwt' | 'api_key';
+  apiKeyId?: string;
+  apiKeyScopes?: string[];
 }
 
 export const CURRENT_USER_KEY = 'user';

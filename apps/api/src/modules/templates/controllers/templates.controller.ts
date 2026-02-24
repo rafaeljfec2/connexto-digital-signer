@@ -16,7 +16,7 @@ import {
   UploadedFile,
   UseInterceptors,
 } from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TenantId } from '@connexto/shared';
 import { TemplatesService } from '../services/templates.service';
@@ -35,12 +35,15 @@ import { MAX_SIZE_BYTES } from '../../../shared/storage/file-validator';
 const UPLOAD_MAX_BYTES = Math.max(...Object.values(MAX_SIZE_BYTES));
 
 @ApiTags('Templates')
+@ApiBearerAuth()
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('templates')
 export class TemplatesController {
   constructor(private readonly templatesService: TemplatesService) {}
 
   @Post()
+  @ApiOperation({ summary: 'Create a new template' })
+  @ApiResponse({ status: 201, description: 'Template created' })
   create(
     @TenantId() tenantId: string,
     @Body() dto: CreateTemplateDto,
@@ -49,6 +52,8 @@ export class TemplatesController {
   }
 
   @Get()
+  @ApiOperation({ summary: 'List templates with filters' })
+  @ApiResponse({ status: 200, description: 'Paginated templates' })
   findAll(
     @TenantId() tenantId: string,
     @Query() query: ListTemplatesQueryDto,
@@ -57,6 +62,10 @@ export class TemplatesController {
   }
 
   @Get(':id')
+  @ApiOperation({ summary: 'Get template details' })
+  @ApiParam({ name: 'id', description: 'Template UUID' })
+  @ApiResponse({ status: 200, description: 'Template details' })
+  @ApiResponse({ status: 404, description: 'Template not found' })
   findOne(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: string,
@@ -65,6 +74,9 @@ export class TemplatesController {
   }
 
   @Patch(':id')
+  @ApiOperation({ summary: 'Update a template' })
+  @ApiParam({ name: 'id', description: 'Template UUID' })
+  @ApiResponse({ status: 200, description: 'Template updated' })
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: string,
@@ -75,6 +87,9 @@ export class TemplatesController {
 
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
+  @ApiOperation({ summary: 'Delete a template' })
+  @ApiParam({ name: 'id', description: 'Template UUID' })
+  @ApiResponse({ status: 204, description: 'Template deleted' })
   async remove(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: string,
@@ -83,6 +98,10 @@ export class TemplatesController {
   }
 
   @Post(':id/documents')
+  @ApiOperation({ summary: 'Add a document to the template' })
+  @ApiConsumes('multipart/form-data')
+  @ApiParam({ name: 'id', description: 'Template UUID' })
+  @ApiResponse({ status: 201, description: 'Document added' })
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: UPLOAD_MAX_BYTES } }))
   addDocument(
     @Param('id', ParseUUIDPipe) id: string,
@@ -155,6 +174,9 @@ export class TemplatesController {
   }
 
   @Post(':id/envelopes')
+  @ApiOperation({ summary: 'Create an envelope from a template' })
+  @ApiParam({ name: 'id', description: 'Template UUID' })
+  @ApiResponse({ status: 201, description: 'Envelope created from template' })
   createEnvelopeFromTemplate(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: string,
@@ -165,11 +187,15 @@ export class TemplatesController {
 }
 
 @ApiTags('Envelopes')
+@ApiBearerAuth()
 @Controller('envelopes')
 export class EnvelopeTemplateController {
   constructor(private readonly templatesService: TemplatesService) {}
 
   @Post(':id/template')
+  @ApiOperation({ summary: 'Create a template from an existing envelope' })
+  @ApiParam({ name: 'id', description: 'Envelope UUID' })
+  @ApiResponse({ status: 201, description: 'Template created from envelope' })
   createTemplateFromEnvelope(
     @Param('id', ParseUUIDPipe) id: string,
     @TenantId() tenantId: string,

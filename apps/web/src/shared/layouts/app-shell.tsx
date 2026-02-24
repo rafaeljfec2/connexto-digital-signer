@@ -17,6 +17,11 @@ import {
   X,
   LayoutTemplate,
   Users,
+  Code2,
+  Key,
+  Webhook,
+  Activity,
+  BookOpen,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Avatar, Button, Sidebar, ThemeToggle } from '@/shared/ui';
@@ -31,6 +36,11 @@ const ICON_MAP: Record<string, LucideIcon> = {
   signDocuments: PenTool,
   signers: Users,
   settings: Settings,
+  developers: Code2,
+  apiKeys: Key,
+  webhooks: Webhook,
+  apiLogs: Activity,
+  apiDocs: BookOpen,
 };
 
 export type AppShellNavItem = {
