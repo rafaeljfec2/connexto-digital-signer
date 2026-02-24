@@ -11,6 +11,7 @@ export type LabelWithTooltipProps = {
   readonly tooltipPosition?: TooltipProps['position'];
   readonly htmlFor?: string;
   readonly size?: 'sm' | 'xs';
+  readonly muted?: boolean;
   readonly className?: string;
 };
 
@@ -22,14 +23,16 @@ export function LabelWithTooltip({
   tooltipPosition = 'top',
   htmlFor,
   size = 'sm',
+  muted = false,
   className = '',
 }: Readonly<LabelWithTooltipProps>) {
   const textSize = size === 'xs' ? 'text-xs' : 'text-sm';
+  const textColor = muted ? 'text-foreground-muted' : 'text-foreground';
 
   return (
     <label
       htmlFor={htmlFor}
-      className={`flex items-center gap-2 ${textSize} font-medium text-foreground ${className}`}
+      className={`flex items-center gap-2 ${textSize} font-medium ${textColor} ${className}`}
     >
       {icon}
       {label}

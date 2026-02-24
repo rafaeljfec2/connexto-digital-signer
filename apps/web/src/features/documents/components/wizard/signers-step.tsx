@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { Pencil, Plus, X, Search } from 'lucide-react';
+import { HelpCircle, Pencil, Plus, X, Search } from 'lucide-react';
 import type { Signer, SignerRole, TenantSigner } from '@/features/documents/api';
 import {
   useAddSigner,
@@ -13,7 +13,7 @@ import {
   useUpdateSigner,
 } from '@/features/documents/hooks/use-document-wizard';
 import { useSearchTenantSigners } from '@/features/documents/hooks/use-search-tenant-signers';
-import { Avatar, Badge, Button, Card, Dialog, Input, Select } from '@/shared/ui';
+import { Avatar, Badge, Button, Card, Dialog, Input, LabelWithTooltip, Select, Tooltip } from '@/shared/ui';
 import { formatCpf, isValidCpf } from '@/shared/utils/cpf';
 
 export type SignersStepProps = {
@@ -389,9 +389,11 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
             )}
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-normal text-foreground-muted">
-              {tSigners('authMethodLabel')}
-            </label>
+            <LabelWithTooltip
+              label={tSigners('authMethodLabel')}
+              tooltip={tWizard('tooltips.authMethod')}
+              muted
+            />
             <Select
               value={authMethod}
               onChange={(event) => setAuthMethod(event.target.value)}
@@ -401,9 +403,11 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
             </Select>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-normal text-foreground-muted">
-              {tSigners('roleLabel')}
-            </label>
+            <LabelWithTooltip
+              label={tSigners('roleLabel')}
+              tooltip={tWizard('tooltips.role')}
+              muted
+            />
             <Select
               value={role}
               onChange={(event) => setRole(event.target.value as SignerRole)}
@@ -420,38 +424,55 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
             </Select>
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2 md:col-span-2">
-            <label className="flex items-center gap-2.5 text-sm text-foreground">
-              <input
-                type="checkbox"
-                checked={requestEmail}
-                onChange={(event) => setRequestEmail(event.target.checked)}
-                className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
-              />
-              {tSigners('requestEmailLabel')}
-            </label>
-            <label className="flex items-center gap-2.5 text-sm text-foreground">
-              <input
-                type="checkbox"
-                checked={requestCpf}
-                onChange={(event) => setRequestCpf(event.target.checked)}
-                className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
-              />
-              {tSigners('requestCpfLabel')}
-            </label>
-            <label className="flex items-center gap-2.5 text-sm text-foreground">
-              <input
-                type="checkbox"
-                checked={requestPhone}
-                onChange={(event) => setRequestPhone(event.target.checked)}
-                className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
-              />
-              {tSigners('requestPhoneLabel')}
-            </label>
+            <div className="flex items-center gap-2.5">
+              <label className="flex items-center gap-2.5 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={requestEmail}
+                  onChange={(event) => setRequestEmail(event.target.checked)}
+                  className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
+                />
+                {tSigners('requestEmailLabel')}
+              </label>
+              <Tooltip content={tWizard('tooltips.requestEmail')} position="top">
+                <HelpCircle className="h-3.5 w-3.5 text-foreground-muted" />
+              </Tooltip>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <label className="flex items-center gap-2.5 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={requestCpf}
+                  onChange={(event) => setRequestCpf(event.target.checked)}
+                  className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
+                />
+                {tSigners('requestCpfLabel')}
+              </label>
+              <Tooltip content={tWizard('tooltips.requestCpf')} position="top">
+                <HelpCircle className="h-3.5 w-3.5 text-foreground-muted" />
+              </Tooltip>
+            </div>
+            <div className="flex items-center gap-2.5">
+              <label className="flex items-center gap-2.5 text-sm text-foreground">
+                <input
+                  type="checkbox"
+                  checked={requestPhone}
+                  onChange={(event) => setRequestPhone(event.target.checked)}
+                  className="h-4 w-4 rounded border-th-input-border bg-th-input text-primary focus:ring-primary"
+                />
+                {tSigners('requestPhoneLabel')}
+              </label>
+              <Tooltip content={tWizard('tooltips.requestPhone')} position="top">
+                <HelpCircle className="h-3.5 w-3.5 text-foreground-muted" />
+              </Tooltip>
+            </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-sm font-normal text-foreground-muted">
-              {tSigners('mode')}
-            </label>
+            <LabelWithTooltip
+              label={tSigners('mode')}
+              tooltip={tWizard('tooltips.signingMode')}
+              muted
+            />
             <Select
               value={signingMode}
               onChange={(event) =>
@@ -464,9 +485,11 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
           </div>
           {signingMode === 'sequential' ? (
             <div className="space-y-1.5">
-              <label className="text-sm font-normal text-foreground-muted">
-                {tSigners('orderLabel')}
-              </label>
+              <LabelWithTooltip
+                label={tSigners('orderLabel')}
+                tooltip={tWizard('tooltips.signerOrder')}
+                muted
+              />
               <Input
                 value={order}
                 onChange={(event) => setOrder(event.target.value)}

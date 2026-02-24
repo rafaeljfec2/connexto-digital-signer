@@ -382,7 +382,22 @@
     "cancelCancelButton": "Go back",
     "cancelSuccess": "Draft deleted successfully",
     "cancelError": "Failed to delete draft",
-    "notFound": "Document not found"
+    "notFound": "Document not found",
+    "tooltips": {
+      "authMethod": "Defines how the signer will be authenticated: via email token or without additional authentication.",
+      "role": "Signer signs the document, Witness validates, Approver authorizes, Party is involved in the agreement.",
+      "signingMode": "Parallel: everyone signs at the same time. Sequential: sign in the defined order.",
+      "signerOrder": "Number that defines the position in the signing queue (sequential mode).",
+      "requestEmail": "Requests email confirmation from the signer before signing.",
+      "requestCpf": "Requests the signer's CPF for identity validation.",
+      "requestPhone": "Requests the signer's phone number for contact or verification.",
+      "deadline": "After this date, the envelope expires and can no longer be signed.",
+      "reminder": "Sends automatic email reminders to signers who have not yet signed.",
+      "signingLanguage": "Language displayed on the signing screen for signers.",
+      "closureMode": "Automatic: closes when everyone signs. Manual: you decide when to finalize.",
+      "positionSignatures": "Define where each signer should sign or initial on the document.",
+      "suggestWithAi": "AI analyzes the document and automatically suggests signature fields."
+    }
   },
   "signers": {
     "title": "Define signers",
@@ -503,7 +518,17 @@
     "closureAutomaticDesc": "The document will be closed automatically when all signers have signed.",
     "closureManual": "Manual",
     "closureManualDesc": "The document will only be closed when you decide. Useful for documents with flexible deadlines.",
-    "closureNote": "Regardless of the selected mode, if the deadline is reached, the document will be finalized (with existing signatures) or cancelled (without signatures)."
+    "closureNote": "Regardless of the selected mode, if the deadline is reached, the document will be finalized (with existing signatures) or cancelled (without signatures).",
+    "tooltips": {
+      "primaryColor": "Color applied to invitation emails and the signing screen for signers.",
+      "logo": "Logo displayed in emails sent to signers and on the signing screen.",
+      "defaultLanguage": "Default language for the signing screen of new envelopes.",
+      "defaultReminder": "Default automatic reminder interval for new envelopes.",
+      "defaultClosure": "Default closure mode for new envelopes.",
+      "senderName": "Name displayed as the sender in signing invitation emails.",
+      "certificateUpload": "A1 digital certificate (.p12 or .pfx) used to electronically sign documents.",
+      "certificatePassword": "Password defined when exporting the digital certificate. Required for use."
+    }
   },
   "review": {
     "title": "Review and send",

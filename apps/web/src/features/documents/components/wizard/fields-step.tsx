@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import { useTranslations } from 'next-intl';
-import { PenTool, ArrowRight, CheckCircle, X, Sparkles, Loader2 } from 'lucide-react';
+import { HelpCircle, PenTool, ArrowRight, CheckCircle, X, Sparkles, Loader2 } from 'lucide-react';
 import {
   useSignatureFields,
   useSigners,
@@ -10,7 +10,7 @@ import {
   useBatchUpdateFields,
 } from '@/features/documents/hooks/use-document-wizard';
 import type { DocumentDetail, SignatureFieldInput } from '@/features/documents/api';
-import { Button, Card, DocumentTabs } from '@/shared/ui';
+import { Button, Card, DocumentTabs, Tooltip } from '@/shared/ui';
 import { lazyLoad } from '@/shared/utils/lazy-load';
 
 const SignatureEditorModal = lazyLoad(
@@ -139,9 +139,14 @@ export function FieldsStep({
         </div>
 
         <div className="space-y-2">
-          <h2 className="text-xl font-medium text-foreground">
-            {tFields('decisionTitle')}
-          </h2>
+          <div className="flex items-center justify-center gap-2">
+            <h2 className="text-xl font-medium text-foreground">
+              {tFields('decisionTitle')}
+            </h2>
+            <Tooltip content={tWizard('tooltips.positionSignatures')} position="top" maxWidth={280}>
+              <HelpCircle className="h-4 w-4 text-foreground-muted" />
+            </Tooltip>
+          </div>
           <p className="text-sm text-foreground-muted">
             {tFields('decisionDescription')}
           </p>
@@ -159,20 +164,22 @@ export function FieldsStep({
             <p className="text-center text-xs text-foreground-muted">{aiMessage}</p>
           ) : null}
 
-          <Button
-            type="button"
-            variant="secondary"
-            className="gap-2 border-primary/30 bg-primary/5 hover:bg-primary/10"
-            onClick={handleSuggestWithAi}
-            disabled={isAiLoading || !hasSigners}
-          >
-            {isAiLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Sparkles className="h-4 w-4 text-primary" />
-            )}
-            {isAiLoading ? tFields('aiSuggesting') : tFields('suggestWithAiAction')}
-          </Button>
+          <Tooltip content={tWizard('tooltips.suggestWithAi')} position="top" maxWidth={260}>
+            <Button
+              type="button"
+              variant="secondary"
+              className="gap-2 border-primary/30 bg-primary/5 hover:bg-primary/10"
+              onClick={handleSuggestWithAi}
+              disabled={isAiLoading || !hasSigners}
+            >
+              {isAiLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Sparkles className="h-4 w-4 text-primary" />
+              )}
+              {isAiLoading ? tFields('aiSuggesting') : tFields('suggestWithAiAction')}
+            </Button>
+          </Tooltip>
 
           <Button type="button" onClick={() => setEditorOpen(true)}>
             <PenTool className="mr-2 h-4 w-4" />

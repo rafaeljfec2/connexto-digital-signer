@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
-import { Button, Dialog } from '@/shared/ui';
+import { Button, Dialog, LabelWithTooltip } from '@/shared/ui';
 import { useCreateTemplateFromEnvelope } from '../hooks';
 
 type SaveAsTemplateDialogProps = {
@@ -51,9 +51,12 @@ export function SaveAsTemplateDialog({
         <p className="text-sm text-foreground-muted">{t('saveAsTemplate.description')}</p>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">
-            {t('saveAsTemplate.nameLabel')} *
-          </label>
+          <LabelWithTooltip
+            label={t('saveAsTemplate.nameLabel')}
+            tooltip={t('tooltips.templateName')}
+            required
+            className="mb-1"
+          />
           <input
             type="text"
             value={name}
@@ -64,9 +67,11 @@ export function SaveAsTemplateDialog({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">
-            {t('saveAsTemplate.descriptionLabel')}
-          </label>
+          <LabelWithTooltip
+            label={t('saveAsTemplate.descriptionLabel')}
+            tooltip={t('tooltips.templateDescription')}
+            className="mb-1"
+          />
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -76,9 +81,11 @@ export function SaveAsTemplateDialog({
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-foreground">
-            {t('saveAsTemplate.categoryLabel')}
-          </label>
+          <LabelWithTooltip
+            label={t('saveAsTemplate.categoryLabel')}
+            tooltip={t('tooltips.templateCategory')}
+            className="mb-1"
+          />
           <input
             type="text"
             value={category}

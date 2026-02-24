@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, RotateCcw, ArrowRight, Info, X } from 'lucide-react';
+import { ArrowLeft, ArrowRight, HelpCircle, Info, RotateCcw, X } from 'lucide-react';
 import type { ClosureMode, ReminderInterval, SigningLanguage } from '@/features/documents/api';
 import {
   useEnvelope,
   useUpdateEnvelope,
 } from '@/features/documents/hooks/use-document-wizard';
-import { Button, Card, Input, Select } from '@/shared/ui';
+import { Button, Card, Input, LabelWithTooltip, Select, Tooltip } from '@/shared/ui';
 
 export type SettingsStepProps = {
   readonly envelopeId: string;
@@ -64,9 +64,12 @@ export function SettingsStep({ envelopeId, onBack, onRestart, onCancel, onNext }
 
       <div className="grid gap-6 md:grid-cols-3">
         <div>
-          <label className="mb-1.5 block text-sm font-normal text-foreground-muted">
-            {tSettings('deadlineLabel')}
-          </label>
+          <LabelWithTooltip
+            label={tSettings('deadlineLabel')}
+            tooltip={tWizard('tooltips.deadline')}
+            className="mb-1.5"
+            muted
+          />
           <Input
             type="date"
             value={deadline}
@@ -83,9 +86,12 @@ export function SettingsStep({ envelopeId, onBack, onRestart, onCancel, onNext }
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-normal text-foreground-muted">
-            {tSettings('reminderLabel')}
-          </label>
+          <LabelWithTooltip
+            label={tSettings('reminderLabel')}
+            tooltip={tWizard('tooltips.reminder')}
+            className="mb-1.5"
+            muted
+          />
           <Select
             value={reminderInterval}
             onChange={(e) => setReminderInterval(e.target.value as ReminderInterval)}
@@ -100,9 +106,12 @@ export function SettingsStep({ envelopeId, onBack, onRestart, onCancel, onNext }
         </div>
 
         <div>
-          <label className="mb-1.5 block text-sm font-normal text-foreground-muted">
-            {tSettings('languageLabel')}
-          </label>
+          <LabelWithTooltip
+            label={tSettings('languageLabel')}
+            tooltip={tWizard('tooltips.signingLanguage')}
+            className="mb-1.5"
+            muted
+          />
           <Select
             value={signingLanguage}
             onChange={(e) => setSigningLanguage(e.target.value as SigningLanguage)}
@@ -116,7 +125,12 @@ export function SettingsStep({ envelopeId, onBack, onRestart, onCancel, onNext }
       <hr className="my-6 border-th-border" />
 
       <div>
-        <h3 className="mb-4 text-base font-medium text-foreground">{tSettings('closureTitle')}</h3>
+        <div className="mb-4 flex items-center gap-2">
+          <h3 className="text-base font-medium text-foreground">{tSettings('closureTitle')}</h3>
+          <Tooltip content={tWizard('tooltips.closureMode')} position="top" maxWidth={260}>
+            <HelpCircle className="h-4 w-4 text-foreground-muted" />
+          </Tooltip>
+        </div>
 
         <div className="flex flex-col gap-3">
           <label

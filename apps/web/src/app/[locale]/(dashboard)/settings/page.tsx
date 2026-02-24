@@ -18,7 +18,7 @@ import {
   Check,
   RefreshCw,
 } from 'lucide-react';
-import { Badge, Button, Card, ConfirmDialog, Input, Select } from '@/shared/ui';
+import { Badge, Button, Card, ConfirmDialog, Input, LabelWithTooltip, Select } from '@/shared/ui';
 import { FadeIn, PageTransition, StaggerChildren, StaggerItem } from '@/shared/animations';
 import {
   useCertificateStatus,
@@ -94,6 +94,7 @@ function FieldSkeleton() {
 
 function BrandingSection() {
   const t = useTranslations('common.branding');
+  const tTooltips = useTranslations('settings.tooltips');
   const { data, isLoading } = useBranding();
   const updateMutation = useUpdateBranding();
   const logoMutation = useUploadLogo();
@@ -155,7 +156,12 @@ function BrandingSection() {
               />
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground-muted">{t('primaryColorLabel')}</label>
+              <LabelWithTooltip
+                label={t('primaryColorLabel')}
+                tooltip={tTooltips('primaryColor')}
+                size="xs"
+                muted
+              />
               <div className="flex items-center gap-2">
                 <input
                   type="color"
@@ -173,7 +179,12 @@ function BrandingSection() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground-muted">{t('logoLabel')}</label>
+            <LabelWithTooltip
+              label={t('logoLabel')}
+              tooltip={tTooltips('logo')}
+              size="xs"
+              muted
+            />
             <div className="flex items-center gap-3">
               {data?.logoUrl ? (
                 <div className="flex h-12 w-12 items-center justify-center rounded-lg border border-th-input-border bg-th-input">
@@ -216,6 +227,7 @@ function BrandingSection() {
 
 function DefaultsSection() {
   const t = useTranslations('common.defaults');
+  const tTooltips = useTranslations('settings.tooltips');
   const { data, isLoading } = useDefaults();
   const updateMutation = useUpdateDefaults();
   const [language, setLanguage] = useState('pt-br');
@@ -255,7 +267,12 @@ function DefaultsSection() {
         <div className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground-muted">{t('languageLabel')}</label>
+              <LabelWithTooltip
+                label={t('languageLabel')}
+                tooltip={tTooltips('defaultLanguage')}
+                size="xs"
+                muted
+              />
               <Select
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
@@ -265,7 +282,12 @@ function DefaultsSection() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground-muted">{t('reminderLabel')}</label>
+              <LabelWithTooltip
+                label={t('reminderLabel')}
+                tooltip={tTooltips('defaultReminder')}
+                size="xs"
+                muted
+              />
               <Select
                 value={reminder}
                 onChange={(e) => setReminder(e.target.value)}
@@ -278,7 +300,12 @@ function DefaultsSection() {
               </Select>
             </div>
             <div className="space-y-1.5">
-              <label className="text-xs font-medium text-foreground-muted">{t('closureLabel')}</label>
+              <LabelWithTooltip
+                label={t('closureLabel')}
+                tooltip={tTooltips('defaultClosure')}
+                size="xs"
+                muted
+              />
               <Select
                 value={closure}
                 onChange={(e) => setClosure(e.target.value)}
@@ -304,6 +331,7 @@ function DefaultsSection() {
 
 function NotificationsSection() {
   const t = useTranslations('common.notifications');
+  const tTooltips = useTranslations('settings.tooltips');
   const { data, isLoading } = useNotifications();
   const updateMutation = useUpdateNotifications();
   const [senderName, setSenderName] = useState('');
@@ -330,7 +358,12 @@ function NotificationsSection() {
       ) : (
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground-muted">{t('senderNameLabel')}</label>
+            <LabelWithTooltip
+              label={t('senderNameLabel')}
+              tooltip={tTooltips('senderName')}
+              size="xs"
+              muted
+            />
             <Input
               value={senderName}
               onChange={(e) => setSenderName(e.target.value)}
@@ -473,6 +506,7 @@ function ApiKeySection() {
 
 function CertificateUploadForm() {
   const t = useTranslations('common.certificate');
+  const tTooltips = useTranslations('settings.tooltips');
   const [file, setFile] = useState<File | null>(null);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
@@ -531,7 +565,12 @@ function CertificateUploadForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-foreground-muted">{t('uploadLabel')}</label>
+        <LabelWithTooltip
+          label={t('uploadLabel')}
+          tooltip={tTooltips('certificateUpload')}
+          size="xs"
+          muted
+        />
         <button
           type="button"
           onClick={() => fileInputRef.current?.click()}
@@ -552,7 +591,12 @@ function CertificateUploadForm() {
         <input ref={fileInputRef} type="file" accept=".p12,.pfx" className="hidden" onChange={handleFileChange} />
       </div>
       <div className="space-y-1.5">
-        <label className="text-xs font-medium text-foreground-muted">{t('passwordLabel')}</label>
+        <LabelWithTooltip
+          label={t('passwordLabel')}
+          tooltip={tTooltips('certificatePassword')}
+          size="xs"
+          muted
+        />
         <Input type="password" placeholder={t('passwordPlaceholder')} value={password} onChange={(e) => setPassword(e.target.value)} autoComplete="off" />
       </div>
       {error && <p className="text-xs text-error">{error}</p>}

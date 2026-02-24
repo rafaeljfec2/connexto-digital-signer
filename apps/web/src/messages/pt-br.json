@@ -382,7 +382,22 @@
     "cancelCancelButton": "Voltar",
     "cancelSuccess": "Rascunho excluído com sucesso",
     "cancelError": "Falha ao excluir o Rascunho",
-    "notFound": "Documento não encontrado"
+    "notFound": "Documento não encontrado",
+    "tooltips": {
+      "authMethod": "Define como o signatário será autenticado: por token via email ou sem autenticação adicional.",
+      "role": "Signatário assina o documento, Testemunha valida, Aprovador autoriza, Parte é envolvida no acordo.",
+      "signingMode": "Paralelo: todos assinam ao mesmo tempo. Sequencial: assinam na ordem definida.",
+      "signerOrder": "Número que define a posição na fila de assinatura (modo sequencial).",
+      "requestEmail": "Solicita confirmação de email ao signatário antes de assinar.",
+      "requestCpf": "Solicita CPF ao signatário para validação de identidade.",
+      "requestPhone": "Solicita telefone ao signatário para contato ou verificação.",
+      "deadline": "Após essa data, o envelope expira e não poderá mais ser assinado.",
+      "reminder": "Envia lembretes automáticos por email aos signatários que ainda não assinaram.",
+      "signingLanguage": "Idioma exibido na tela de assinatura para os signatários.",
+      "closureMode": "Automático: fecha quando todos assinarem. Manual: você decide quando finalizar.",
+      "positionSignatures": "Defina onde cada signatário deve assinar ou rubricar no documento.",
+      "suggestWithAi": "A IA analisa o documento e sugere automaticamente os campos de assinatura."
+    }
   },
   "signers": {
     "title": "Definir signatários",
@@ -503,7 +518,17 @@
     "closureAutomaticDesc": "O documento será encerrado automaticamente quando todos os signatários assinarem.",
     "closureManual": "Manual",
     "closureManualDesc": "O documento só será encerrado quando você decidir. Útil para documentos com prazo flexível.",
-    "closureNote": "Independente do modo selecionado, se a data limite for atingida, o documento será finalizado (com assinaturas existentes) ou cancelado (sem assinaturas)."
+    "closureNote": "Independente do modo selecionado, se a data limite for atingida, o documento será finalizado (com assinaturas existentes) ou cancelado (sem assinaturas).",
+    "tooltips": {
+      "primaryColor": "Cor aplicada nos emails de convite e na tela de assinatura dos signatários.",
+      "logo": "Logo exibido nos emails enviados aos signatários e na tela de assinatura.",
+      "defaultLanguage": "Idioma padrão para a tela de assinatura de novos envelopes.",
+      "defaultReminder": "Intervalo padrão de lembretes automáticos para novos envelopes.",
+      "defaultClosure": "Modo de fechamento padrão para novos envelopes.",
+      "senderName": "Nome exibido como remetente nos emails de convite de assinatura.",
+      "certificateUpload": "Certificado digital A1 (.p12 ou .pfx) utilizado para assinar documentos eletronicamente.",
+      "certificatePassword": "Senha definida ao exportar o certificado digital. Necessária para uso."
+    }
   },
   "review": {
     "title": "Revisão e envio para assinatura",
