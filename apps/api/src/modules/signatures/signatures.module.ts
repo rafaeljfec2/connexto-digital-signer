@@ -42,6 +42,6 @@ import { VerificationService } from './services/verification.service';
     TenantSignerService,
     VerificationService,
   ],
-  exports: [SignaturesService, TenantSignerService],
+  exports: [SignaturesService, SignatureFieldsService, TenantSignerService],
 })
 export class SignaturesModule {}

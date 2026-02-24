@@ -94,6 +94,20 @@ export interface AiUsageLimitReachedEvent {
   periodMonth: number;
 }
 
+export interface TemplateCreatedEvent {
+  templateId: string;
+  tenantId: string;
+  name: string;
+  createdAt: Date;
+}
+
+export interface TemplateUsedEvent {
+  templateId: string;
+  tenantId: string;
+  envelopeId: string;
+  usedAt: Date;
+}
+
 export type DomainEvent =
   | { type: 'signature.completed'; payload: SignatureCompletedEvent }
   | { type: 'document.completed'; payload: DocumentCompletedEvent }
@@ -106,4 +120,6 @@ export type DomainEvent =
   | { type: 'user.logout'; payload: UserLogoutEvent }
   | { type: 'tenant.created'; payload: TenantCreatedEvent }
   | { type: 'ai.fields.suggested'; payload: AiFieldsSuggestedEvent }
-  | { type: 'ai.usage.limit_reached'; payload: AiUsageLimitReachedEvent };
+  | { type: 'ai.usage.limit_reached'; payload: AiUsageLimitReachedEvent }
+  | { type: 'template.created'; payload: TemplateCreatedEvent }
+  | { type: 'template.used'; payload: TemplateUsedEvent };

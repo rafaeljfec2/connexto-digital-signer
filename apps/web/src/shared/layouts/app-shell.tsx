@@ -14,7 +14,9 @@ import {
   Search,
   Bell,
   User,
-  X
+  X,
+  LayoutTemplate,
+  Users,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Avatar, Button, Sidebar, ThemeToggle } from '@/shared/ui';
@@ -25,7 +27,9 @@ const ICON_MAP: Record<string, LucideIcon> = {
   home: Home,
   documents: FileText,
   folders: Folder,
+  templates: LayoutTemplate,
   signDocuments: PenTool,
+  signers: Users,
   settings: Settings,
 };
 

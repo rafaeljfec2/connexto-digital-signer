@@ -22,6 +22,7 @@ import { WebhooksModule } from './modules/webhooks/webhooks.module';
 import { BillingModule } from './modules/billing/billing.module';
 import { AiCoreModule } from './modules/ai-core/ai-core.module';
 import { AiFieldsModule } from './modules/ai-fields/ai-fields.module';
+import { TemplatesModule } from './modules/templates/templates.module';
 import { CompositeAuthGuard } from './common/guards/composite-auth.guard';
 import { getLoggerConfig } from './common/config/logger.config';
 import { HealthModule } from './modules/health/health.module';
@@ -83,6 +84,7 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
     WebhooksModule,
     BillingModule,
     AiFieldsModule,
+    TemplatesModule,
   ],
   providers: [
     {

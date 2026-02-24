@@ -12,5 +12,6 @@ export interface IStorageService {
   put(key: string, body: Buffer, contentType?: string): Promise<PutObjectResult>;
   get(key: string): Promise<Buffer>;
   delete(key: string): Promise<void>;
+  copy(sourceKey: string, destinationKey: string): Promise<PutObjectResult>;
   getSignedUrl(key: string, expiresInSeconds?: number, options?: SignedUrlOptions): Promise<string>;
 }

@@ -20,6 +20,7 @@
       "home": "Dashboard",
       "documents": "Documentos",
       "folders": "Pastas",
+      "templates": "Templates",
       "signDocuments": "Assinar",
       "signers": "Contatos",
       "settings": "Configurações"
@@ -1032,5 +1033,116 @@
     "governingText": "Estes termos são regidos pelas leis da República Federativa do Brasil. Qualquer disputa será resolvida no foro da comarca de São Paulo, SP.",
     "contactTitle": "Contato",
     "contactText": "Para dúvidas sobre estes termos, entre em contato: juridico@nexosign.com.br"
+  },
+  "templates": {
+    "title": "Templates",
+    "subtitle": "Crie e gerencie templates reutilizáveis para seus documentos",
+    "empty": {
+      "title": "Nenhum template ainda",
+      "description": "Crie seu primeiro template para agilizar o envio de documentos recorrentes.",
+      "cta": "Criar template"
+    },
+    "actions": {
+      "create": "Novo template",
+      "edit": "Editar",
+      "delete": "Excluir",
+      "use": "Usar template",
+      "duplicate": "Duplicar",
+      "saveAsTemplate": "Salvar como template"
+    },
+    "form": {
+      "nameLabel": "Nome do template",
+      "namePlaceholder": "Ex: NDA Padrão",
+      "descriptionLabel": "Descrição",
+      "descriptionPlaceholder": "Descreva o propósito deste template",
+      "categoryLabel": "Categoria",
+      "categoryPlaceholder": "Ex: legal, rh, financeiro"
+    },
+    "builder": {
+      "title": "Criar template",
+      "editTitle": "Editar template",
+      "steps": {
+        "info": "Informações",
+        "documents": "Documentos",
+        "signers": "Signatários",
+        "fields": "Campos",
+        "variables": "Variáveis",
+        "review": "Revisão"
+      },
+      "signerSlot": {
+        "label": "Identificador do slot",
+        "labelPlaceholder": "Ex: contractor",
+        "role": "Papel",
+        "addSigner": "Adicionar slot de signatário"
+      },
+      "variable": {
+        "key": "Chave",
+        "keyPlaceholder": "Ex: company_name",
+        "label": "Rótulo",
+        "labelPlaceholder": "Ex: Nome da Empresa",
+        "type": "Tipo",
+        "required": "Obrigatória",
+        "defaultValue": "Valor padrão",
+        "addVariable": "Adicionar variável"
+      }
+    },
+    "use": {
+      "title": "Usar template",
+      "steps": {
+        "variables": "Variáveis",
+        "signers": "Signatários",
+        "review": "Revisar e enviar"
+      },
+      "variablesDescription": "Preencha as variáveis do template",
+      "signersDescription": "Atribua pessoas reais aos slots de signatários",
+      "folderLabel": "Pasta de destino",
+      "titleLabel": "Título do envelope",
+      "titlePlaceholder": "Opcional - usa o nome do template se vazio",
+      "autoSend": "Enviar automaticamente após criar",
+      "messageLabel": "Mensagem personalizada (opcional)",
+      "messagePlaceholder": "Mensagem para os signatários",
+      "submit": "Criar envelope",
+      "submitting": "Criando...",
+      "success": "Envelope criado com sucesso!",
+      "successSent": "Envelope criado e enviado com sucesso!"
+    },
+    "detail": {
+      "documents": "Documentos",
+      "signers": "Slots de signatários",
+      "fields": "Campos configurados",
+      "variables": "Variáveis",
+      "usage": "Usos",
+      "status": "Status",
+      "active": "Ativo",
+      "inactive": "Inativo",
+      "noDocuments": "Nenhum documento adicionado",
+      "noSigners": "Nenhum slot de signatário",
+      "noVariables": "Nenhuma variável definida"
+    },
+    "deleteConfirm": {
+      "title": "Excluir template?",
+      "description": "Esta ação é irreversível. O template e todos os seus documentos serão excluídos permanentemente.",
+      "confirm": "Excluir",
+      "cancel": "Cancelar"
+    },
+    "saveAsTemplate": {
+      "title": "Salvar como template",
+      "description": "Crie um template reutilizável a partir deste envelope",
+      "nameLabel": "Nome do template",
+      "namePlaceholder": "Ex: NDA Padrão",
+      "descriptionLabel": "Descrição (opcional)",
+      "categoryLabel": "Categoria (opcional)",
+      "submit": "Salvar",
+      "submitting": "Salvando...",
+      "success": "Template criado com sucesso!"
+    },
+    "categories": {
+      "all": "Todas",
+      "legal": "Jurídico",
+      "hr": "RH",
+      "finance": "Financeiro",
+      "sales": "Vendas",
+      "other": "Outros"
+    }
   }
 }

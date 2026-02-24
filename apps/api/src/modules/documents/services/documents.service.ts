@@ -92,6 +92,44 @@ export class DocumentsService {
     return saved;
   }
 
+  async createFromTemplate(
+    tenantId: string,
+    params: {
+      readonly id: string;
+      readonly title: string;
+      readonly envelopeId: string;
+      readonly position: number;
+      readonly originalFileKey: string;
+      readonly originalHash: string;
+      readonly mimeType: string;
+      readonly size: number;
+    },
+  ): Promise<Document> {
+    const document = this.documentRepository.create({
+      id: params.id,
+      title: params.title,
+      envelopeId: params.envelopeId,
+      position: params.position,
+      tenantId,
+      originalFileKey: params.originalFileKey,
+      originalHash: params.originalHash,
+      mimeType: params.mimeType,
+      size: params.size,
+      status: DocumentStatus.DRAFT,
+    });
+
+    const saved = await this.documentRepository.save(document);
+
+    const createdPayload: DocumentCreatedEvent = {
+      documentId: saved.id,
+      tenantId,
+      title: saved.title,
+      createdAt: saved.createdAt,
+    };
+    this.eventEmitter.emit(EVENT_DOCUMENT_CREATED, createdPayload);
+    return saved;
+  }
+
   async updateOriginalFile(
     id: string,
     tenantId: string,

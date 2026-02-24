@@ -20,6 +20,7 @@
       "home": "Home",
       "documents": "Documents",
       "folders": "Folders",
+      "templates": "Templates",
       "signDocuments": "Sign",
       "signers": "Contacts",
       "settings": "Settings"
@@ -1069,5 +1070,116 @@
     "governingText": "These terms are governed by the laws of the Federative Republic of Brazil. Any dispute shall be resolved in the courts of Sao Paulo, SP.",
     "contactTitle": "Contact",
     "contactText": "For questions about these terms, contact us at: legal@nexosign.com.br"
+  },
+  "templates": {
+    "title": "Templates",
+    "subtitle": "Create and manage reusable templates for your documents",
+    "empty": {
+      "title": "No templates yet",
+      "description": "Create your first template to streamline sending recurring documents.",
+      "cta": "Create template"
+    },
+    "actions": {
+      "create": "New template",
+      "edit": "Edit",
+      "delete": "Delete",
+      "use": "Use template",
+      "duplicate": "Duplicate",
+      "saveAsTemplate": "Save as template"
+    },
+    "form": {
+      "nameLabel": "Template name",
+      "namePlaceholder": "E.g. Standard NDA",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Describe the purpose of this template",
+      "categoryLabel": "Category",
+      "categoryPlaceholder": "E.g. legal, hr, finance"
+    },
+    "builder": {
+      "title": "Create template",
+      "editTitle": "Edit template",
+      "steps": {
+        "info": "Information",
+        "documents": "Documents",
+        "signers": "Signers",
+        "fields": "Fields",
+        "variables": "Variables",
+        "review": "Review"
+      },
+      "signerSlot": {
+        "label": "Slot identifier",
+        "labelPlaceholder": "E.g. contractor",
+        "role": "Role",
+        "addSigner": "Add signer slot"
+      },
+      "variable": {
+        "key": "Key",
+        "keyPlaceholder": "E.g. company_name",
+        "label": "Label",
+        "labelPlaceholder": "E.g. Company Name",
+        "type": "Type",
+        "required": "Required",
+        "defaultValue": "Default value",
+        "addVariable": "Add variable"
+      }
+    },
+    "use": {
+      "title": "Use template",
+      "steps": {
+        "variables": "Variables",
+        "signers": "Signers",
+        "review": "Review and send"
+      },
+      "variablesDescription": "Fill in the template variables",
+      "signersDescription": "Assign real people to signer slots",
+      "folderLabel": "Destination folder",
+      "titleLabel": "Envelope title",
+      "titlePlaceholder": "Optional - uses template name if empty",
+      "autoSend": "Send automatically after creation",
+      "messageLabel": "Custom message (optional)",
+      "messagePlaceholder": "Message for signers",
+      "submit": "Create envelope",
+      "submitting": "Creating...",
+      "success": "Envelope created successfully!",
+      "successSent": "Envelope created and sent successfully!"
+    },
+    "detail": {
+      "documents": "Documents",
+      "signers": "Signer slots",
+      "fields": "Configured fields",
+      "variables": "Variables",
+      "usage": "Uses",
+      "status": "Status",
+      "active": "Active",
+      "inactive": "Inactive",
+      "noDocuments": "No documents added",
+      "noSigners": "No signer slots",
+      "noVariables": "No variables defined"
+    },
+    "deleteConfirm": {
+      "title": "Delete template?",
+      "description": "This action is irreversible. The template and all its documents will be permanently deleted.",
+      "confirm": "Delete",
+      "cancel": "Cancel"
+    },
+    "saveAsTemplate": {
+      "title": "Save as template",
+      "description": "Create a reusable template from this envelope",
+      "nameLabel": "Template name",
+      "namePlaceholder": "E.g. Standard NDA",
+      "descriptionLabel": "Description (optional)",
+      "categoryLabel": "Category (optional)",
+      "submit": "Save",
+      "submitting": "Saving...",
+      "success": "Template created successfully!"
+    },
+    "categories": {
+      "all": "All",
+      "legal": "Legal",
+      "hr": "HR",
+      "finance": "Finance",
+      "sales": "Sales",
+      "other": "Other"
+    }
   }
 }

@@ -4,6 +4,7 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  CopyObjectCommand,
   HeadBucketCommand,
   CreateBucketCommand,
 } from '@aws-sdk/client-s3';
@@ -64,6 +65,18 @@ export class S3StorageService implements IStorageService {
   async delete(key: string): Promise<void> {
     const command = new DeleteObjectCommand({ Bucket: this.bucket, Key: key });
     await this.client.send(command);
+  }
+
+  async copy(sourceKey: string, destinationKey: string): Promise<PutObjectResult> {
+    await this.ensureBucket();
+    const command = new CopyObjectCommand({
+      Bucket: this.bucket,
+      CopySource: `${this.bucket}/${sourceKey}`,
+      Key: destinationKey,
+      ...(this.isProduction && { ServerSideEncryption: 'AES256' }),
+    });
+    const result = await this.client.send(command);
+    return { key: destinationKey, etag: result.CopyObjectResult?.ETag ?? undefined };
   }
 
   async getSignedUrl(

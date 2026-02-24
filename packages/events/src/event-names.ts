@@ -11,3 +11,6 @@ export const EVENT_TENANT_CREATED = 'tenant.created';
 
 export const EVENT_AI_FIELDS_SUGGESTED = 'ai.fields.suggested';
 export const EVENT_AI_USAGE_LIMIT_REACHED = 'ai.usage.limit_reached';
+
+export const EVENT_TEMPLATE_CREATED = 'template.created';
+export const EVENT_TEMPLATE_USED = 'template.used';

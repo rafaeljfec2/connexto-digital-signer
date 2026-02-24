@@ -1,13 +1,14 @@
 "use client";
 
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useParams } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { AlertTriangle } from 'lucide-react';
-import { Card } from '@/shared/ui';
+import { AlertTriangle, LayoutTemplate } from 'lucide-react';
+import { Button, Card } from '@/shared/ui';
 import { useEnvelopeAuditSummary, useEnvelopeDocuments } from '@/features/documents/hooks/use-document-wizard';
 import { getDocumentFileUrl, getDocumentSignedFileUrl } from '@/features/documents/api';
 import { lazyLoad } from '@/shared/utils/lazy-load';
+import { SaveAsTemplateDialog } from '@/features/templates/components/save-as-template-dialog';
 
 const DocumentAuditView = lazyLoad(
   () => import('@/features/documents/components/document-audit-view'),
@@ -18,6 +19,8 @@ export default function DocumentSummaryPage() {
   const params = useParams<{ id: string }>();
   const envelopeId = params.id;
   const t = useTranslations('audit');
+  const tTemplates = useTranslations('templates');
+  const [saveAsTemplateOpen, setSaveAsTemplateOpen] = useState(false);
 
   const summaryQuery = useEnvelopeAuditSummary(envelopeId);
   const docsQuery = useEnvelopeDocuments(envelopeId);
@@ -58,6 +61,17 @@ export default function DocumentSummaryPage() {
 
   return (
     <div className="px-4 py-6 md:px-6 md:py-8">
+      <div className="mb-4 flex justify-end">
+        <Button
+          type="button"
+          variant="ghost"
+          className="gap-2 text-sm"
+          onClick={() => setSaveAsTemplateOpen(true)}
+        >
+          <LayoutTemplate className="h-4 w-4" />
+          {tTemplates('actions.saveAsTemplate')}
+        </Button>
+      </div>
       <DocumentAuditView
         data={summaryQuery.data}
         documents={documents}
@@ -113,6 +127,11 @@ export default function DocumentSummaryPage() {
           downloadSignedUnavailable: t('downloadSignedUnavailable'),
           downloading: t('downloading'),
         }}
+      />
+      <SaveAsTemplateDialog
+        open={saveAsTemplateOpen}
+        envelopeId={envelopeId}
+        onClose={() => setSaveAsTemplateOpen(false)}
       />
     </div>
   );
