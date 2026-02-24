@@ -1,17 +1,25 @@
 'use client';
 
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { useRouter } from '@/i18n/navigation';
-import { ArrowLeft, ArrowRight, Check, Send } from 'lucide-react';
-import { Button, Card } from '@/shared/ui';
-import { PageTransition, FadeIn } from '@/shared/animations';
+import { ArrowLeft, ArrowRight, Check, Loader2, Send, Variable, Users, FileCheck } from 'lucide-react';
+import { Button, Stepper } from '@/shared/ui';
+import type { StepperItem } from '@/shared/ui/stepper';
+import { PageTransition, StepTransition } from '@/shared/animations';
 import { useTemplate, useCreateEnvelopeFromTemplate } from '../../hooks';
 import { useFolderTree } from '@/features/documents/hooks/use-folders';
 import type { SignerAssignment, CreateEnvelopeFromTemplateInput, TemplateDetail } from '../../api';
 import type { FolderTreeNode } from '@/features/documents/api';
 
 const STEPS = ['variables', 'signers', 'review'] as const;
+
+const STEP_ICONS = [
+  <Variable key="vars" className="h-5 w-5" />,
+  <Users key="signers" className="h-5 w-5" />,
+  <FileCheck key="review" className="h-5 w-5" />,
+];
 
 type FlatFolder = { readonly id: string; readonly name: string; readonly depth: number };
 
@@ -25,6 +33,12 @@ function flattenFolders(
   ]);
 }
 
+function stepStatus(index: number, current: number): 'completed' | 'active' | 'pending' {
+  if (index < current) return 'completed';
+  if (index === current) return 'active';
+  return 'pending';
+}
+
 function computeWizardCanProceed(
   step: number,
   allVariablesFilled: boolean,
@@ -36,50 +50,10 @@ function computeWizardCanProceed(
   return folderId.trim().length > 0;
 }
 
-function wizardStepButtonClass(index: number, currentStep: number): string {
-  if (index === currentStep) return 'bg-primary text-white';
-  if (index < currentStep) return 'bg-primary/10 text-primary cursor-pointer';
-  return 'bg-th-hover text-foreground-muted';
-}
-
 function variableInputType(type: string): string {
   if (type === 'number') return 'number';
   if (type === 'date') return 'date';
   return 'text';
-}
-
-type WizardStepContentProps = {
-  readonly currentStep: (typeof STEPS)[number];
-  readonly template: TemplateDetail;
-  readonly variables: Record<string, string>;
-  readonly signers: Record<string, SignerAssignment>;
-  readonly folderId: string;
-  readonly title: string;
-  readonly message: string;
-  readonly autoSend: boolean;
-  readonly flatFolders: ReadonlyArray<FlatFolder>;
-  readonly onUpdateVariable: (key: string, value: string) => void;
-  readonly onUpdateSigner: (label: string, field: keyof SignerAssignment, value: string) => void;
-  readonly onSetFolderId: (value: string) => void;
-  readonly onSetTitle: (value: string) => void;
-  readonly onSetMessage: (value: string) => void;
-  readonly onSetAutoSend: (value: boolean) => void;
-  readonly t: ReturnType<typeof useTranslations<'templates'>>;
-};
-
-function WizardStepContent(props: WizardStepContentProps) {
-  const { currentStep, template, t } = props;
-
-  switch (currentStep) {
-    case 'variables':
-      return <VariablesStepContent {...props} />;
-    case 'signers':
-      return <SignersStepContent template={template} signers={props.signers} onUpdateSigner={props.onUpdateSigner} t={t} />;
-    case 'review':
-      return <ReviewStepContent {...props} />;
-    default:
-      return null;
-  }
 }
 
 function VariablesStepContent({
@@ -87,7 +61,12 @@ function VariablesStepContent({
   variables,
   onUpdateVariable,
   t,
-}: Pick<WizardStepContentProps, 'template' | 'variables' | 'onUpdateVariable' | 't'>) {
+}: {
+  readonly template: TemplateDetail;
+  readonly variables: Record<string, string>;
+  readonly onUpdateVariable: (key: string, value: string) => void;
+  readonly t: ReturnType<typeof useTranslations<'templates'>>;
+}) {
   return (
     <div className="space-y-4">
       <p className="text-sm text-foreground-muted">{t('use.variablesDescription')}</p>
@@ -144,14 +123,14 @@ function SignersStepContent({
               type="text"
               value={signers[slot.label]?.name ?? ''}
               onChange={(e) => onUpdateSigner(slot.label, 'name', e.target.value)}
-              placeholder="Name *"
+              placeholder={t('use.signerNamePlaceholder')}
               className="h-9 w-full rounded-lg border border-th-border bg-th-card px-3 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none"
             />
             <input
               type="email"
               value={signers[slot.label]?.email ?? ''}
               onChange={(e) => onUpdateSigner(slot.label, 'email', e.target.value)}
-              placeholder="Email *"
+              placeholder={t('use.signerEmailPlaceholder')}
               className="h-9 w-full rounded-lg border border-th-border bg-th-card px-3 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none"
             />
           </div>
@@ -172,12 +151,23 @@ function ReviewStepContent({
   onSetMessage,
   onSetAutoSend,
   t,
-}: Pick<WizardStepContentProps, 'folderId' | 'title' | 'message' | 'autoSend' | 'flatFolders' | 'onSetFolderId' | 'onSetTitle' | 'onSetMessage' | 'onSetAutoSend' | 't'>) {
+}: {
+  readonly folderId: string;
+  readonly title: string;
+  readonly message: string;
+  readonly autoSend: boolean;
+  readonly flatFolders: ReadonlyArray<FlatFolder>;
+  readonly onSetFolderId: (value: string) => void;
+  readonly onSetTitle: (value: string) => void;
+  readonly onSetMessage: (value: string) => void;
+  readonly onSetAutoSend: (value: boolean) => void;
+  readonly t: ReturnType<typeof useTranslations<'templates'>>;
+}) {
   return (
     <div className="space-y-4">
       <div>
         <label className="mb-1 block text-sm font-medium text-foreground">
-          {t('use.folderLabel')} *
+          {t('use.folderLabel')} <span className="text-error">*</span>
         </label>
         <select
           value={folderId}
@@ -213,7 +203,7 @@ function ReviewStepContent({
           onChange={(e) => onSetMessage(e.target.value)}
           placeholder={t('use.messagePlaceholder')}
           rows={3}
-          className="w-full rounded-xl border border-th-border bg-th-input px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
+          className="w-full resize-none rounded-xl border border-th-border bg-th-input px-3 py-2 text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none focus:ring-1 focus:ring-primary/20"
         />
       </div>
       <label className="flex items-center gap-2 text-sm text-foreground">
@@ -221,7 +211,7 @@ function ReviewStepContent({
           type="checkbox"
           checked={autoSend}
           onChange={(e) => onSetAutoSend(e.target.checked)}
-          className="rounded border-th-border"
+          className="rounded border-th-border accent-primary"
         />
         {t('use.autoSend')}
       </label>
@@ -248,6 +238,13 @@ export function UseTemplateWizard({ templateId }: UseTemplateWizardProps) {
   );
 
   const [step, setStep] = useState(0);
+  const directionRef = useRef<1 | -1>(1);
+
+  const goToStep = useCallback((target: number) => {
+    directionRef.current = target > step ? 1 : -1;
+    setStep(target);
+  }, [step]);
+
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [signers, setSigners] = useState<Record<string, SignerAssignment>>({});
   const [folderId, setFolderId] = useState('');
@@ -255,16 +252,16 @@ export function UseTemplateWizard({ templateId }: UseTemplateWizardProps) {
   const [autoSend, setAutoSend] = useState(false);
   const [message, setMessage] = useState('');
 
-  const updateVariable = (key: string, value: string) => {
+  const updateVariable = useCallback((key: string, value: string) => {
     setVariables((prev) => ({ ...prev, [key]: value }));
-  };
+  }, []);
 
-  const updateSigner = (label: string, field: keyof SignerAssignment, value: string) => {
+  const updateSigner = useCallback((label: string, field: keyof SignerAssignment, value: string) => {
     setSigners((prev) => ({
       ...prev,
       [label]: { ...prev[label], slotLabel: label, [field]: value } as SignerAssignment,
     }));
-  };
+  }, []);
 
   const allVariablesFilled = useMemo(() => {
     if (!template) return false;
@@ -304,15 +301,30 @@ export function UseTemplateWizard({ templateId }: UseTemplateWizardProps) {
       message: message.trim() || undefined,
     };
 
-    const result = await createMutation.mutateAsync(input);
-    router.push(`/documents/${result.envelopeId}`);
-  }, [template, folderId, title, variables, signers, autoSend, message, createMutation, router]);
+    try {
+      const result = await createMutation.mutateAsync(input);
+      toast.success(autoSend ? t('use.successSent') : t('use.success'));
+      router.push(`/documents/${result.envelopeId}`);
+    } catch {
+      toast.error(t('use.submitError'));
+    }
+  }, [template, folderId, title, variables, signers, autoSend, message, createMutation, router, t]);
+
+  const stepperItems: StepperItem[] = useMemo(
+    () =>
+      STEPS.map((s, i) => ({
+        label: t(`use.steps.${s}`),
+        icon: i < step ? <Check className="h-5 w-5" /> : STEP_ICONS[i],
+        status: stepStatus(i, step),
+      })),
+    [step, t],
+  );
 
   if (templateQuery.isLoading) {
     return (
-      <PageTransition className="mx-auto max-w-3xl">
-        <Card variant="glass" className="animate-pulse p-12" />
-      </PageTransition>
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
     );
   }
 
@@ -323,79 +335,81 @@ export function UseTemplateWizard({ templateId }: UseTemplateWizardProps) {
   const currentStep = STEPS[step];
 
   return (
-    <PageTransition className="mx-auto max-w-3xl space-y-6">
-      <FadeIn>
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-medium text-foreground">{t('use.title')}</h1>
-            <p className="text-sm text-foreground-muted">{template.name}</p>
-          </div>
-          <Button type="button" variant="ghost" onClick={() => router.push('/templates')}>
-            <ArrowLeft className="mr-1.5 h-4 w-4" />
-            {t('title')}
-          </Button>
+    <PageTransition className="mx-auto max-w-3xl space-y-6 pb-8">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold text-foreground">{t('use.title')}</h1>
+          <p className="text-sm text-foreground-muted">{template.name}</p>
         </div>
-
-        <div className="flex items-center gap-2">
-          {STEPS.map((s, i) => {
-            const isDone = i < step;
-            return (
-              <div key={s} className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => { if (isDone) setStep(i); }}
-                  className={`flex h-8 items-center gap-1.5 rounded-full px-3 text-xs font-medium transition-colors ${wizardStepButtonClass(i, step)}`}
-                >
-                  {isDone ? <Check className="h-3 w-3" /> : null}
-                  {t(`use.steps.${s}`)}
-                </button>
-                {i < STEPS.length - 1 ? <div className="h-px w-4 bg-th-border" /> : null}
-              </div>
-            );
-          })}
-        </div>
-      </FadeIn>
-
-      <div className="glass-card rounded-2xl p-6">
-        <WizardStepContent
-          currentStep={currentStep}
-          template={template}
-          variables={variables}
-          signers={signers}
-          folderId={folderId}
-          title={title}
-          message={message}
-          autoSend={autoSend}
-          flatFolders={flatFolders}
-          onUpdateVariable={updateVariable}
-          onUpdateSigner={updateSigner}
-          onSetFolderId={setFolderId}
-          onSetTitle={setTitle}
-          onSetMessage={setMessage}
-          onSetAutoSend={setAutoSend}
-          t={t}
-        />
+        <Button type="button" variant="ghost" onClick={() => router.push('/templates')} className="gap-2">
+          <ArrowLeft className="h-4 w-4" />
+          {t('title')}
+        </Button>
       </div>
 
-      <div className="flex items-center justify-between">
+      <Stepper
+        steps={stepperItems}
+        progressLabel={t('use.progress')}
+        counterLabel={`${step + 1} / ${STEPS.length}`}
+        onStepClick={(i) => { if (i < step) goToStep(i); }}
+      />
+
+      <StepTransition stepKey={currentStep} direction={directionRef.current}>
+        <div className="glass-card space-y-6 rounded-2xl p-6">
+          {currentStep === 'variables' && (
+            <VariablesStepContent
+              template={template}
+              variables={variables}
+              onUpdateVariable={updateVariable}
+              t={t}
+            />
+          )}
+          {currentStep === 'signers' && (
+            <SignersStepContent
+              template={template}
+              signers={signers}
+              onUpdateSigner={updateSigner}
+              t={t}
+            />
+          )}
+          {currentStep === 'review' && (
+            <ReviewStepContent
+              folderId={folderId}
+              title={title}
+              message={message}
+              autoSend={autoSend}
+              flatFolders={flatFolders}
+              onSetFolderId={setFolderId}
+              onSetTitle={setTitle}
+              onSetMessage={setMessage}
+              onSetAutoSend={setAutoSend}
+              t={t}
+            />
+          )}
+        </div>
+      </StepTransition>
+
+      <div className="flex items-center justify-between rounded-2xl border border-th-border bg-th-card/50 p-4">
         <Button
           type="button"
           variant="ghost"
           disabled={step === 0}
-          onClick={() => setStep(step - 1)}
+          onClick={() => goToStep(step - 1)}
+          className="gap-2"
         >
-          <ArrowLeft className="mr-1.5 h-4 w-4" />
-          Back
+          <ArrowLeft className="h-4 w-4" />
+          {t('builder.back')}
         </Button>
         {step < STEPS.length - 1 ? (
           <Button
             type="button"
             variant="primary"
             disabled={!canProceed}
-            onClick={() => setStep(step + 1)}
+            onClick={() => goToStep(step + 1)}
+            className="gap-2"
           >
-            Next
-            <ArrowRight className="ml-1.5 h-4 w-4" />
+            {t('builder.next')}
+            <ArrowRight className="h-4 w-4" />
           </Button>
         ) : (
           <Button
@@ -403,12 +417,16 @@ export function UseTemplateWizard({ templateId }: UseTemplateWizardProps) {
             variant="primary"
             disabled={!canProceed || createMutation.isPending}
             onClick={handleSubmit}
+            className="gap-2"
           >
             {createMutation.isPending ? (
-              t('use.submitting')
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                {t('use.submitting')}
+              </>
             ) : (
               <>
-                <Send className="mr-1.5 h-4 w-4" />
+                <Send className="h-4 w-4" />
                 {t('use.submit')}
               </>
             )}

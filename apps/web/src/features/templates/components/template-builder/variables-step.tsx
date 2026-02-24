@@ -1,8 +1,8 @@
 'use client';
 
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Trash2, Variable, Save, Braces } from 'lucide-react';
+import { Plus, Trash2, Variable, Save, Braces, Check, AlertTriangle } from 'lucide-react';
 import { Button } from '@/shared/ui';
 import { StaggerChildren, StaggerItem } from '@/shared/animations';
 import type { TemplateVariableInput, TemplateVariable, TemplateVariableType } from '../../api';
@@ -20,7 +20,7 @@ const createStableId = (): string => `var-${String(++nextStableId)}`;
 
 type VariablesStepProps = {
   readonly variables: ReadonlyArray<TemplateVariable>;
-  readonly onSave: (variables: ReadonlyArray<TemplateVariableInput>) => void;
+  readonly onSave: (variables: ReadonlyArray<TemplateVariableInput>) => Promise<void> | void;
   readonly isSaving: boolean;
 };
 
@@ -50,12 +50,43 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
     setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
   }, []);
 
-  const handleSave = useCallback(() => {
+  const [saved, setSaved] = useState(false);
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    };
+  }, []);
+
+  const duplicateKeys = useMemo(() => {
+    const keys = items.map((i) => i.key.trim().toLowerCase()).filter(Boolean);
+    const seen = new Set<string>();
+    const duplicates = new Set<string>();
+    for (const key of keys) {
+      if (seen.has(key)) {
+        duplicates.add(key);
+      }
+      seen.add(key);
+    }
+    return duplicates;
+  }, [items]);
+
+  const hasDuplicates = duplicateKeys.size > 0;
+
+  const handleSave = useCallback(async () => {
+    if (hasDuplicates) return;
     const valid = items
       .filter((i) => i.key.trim() && i.label.trim())
       .map(({ _stableId: _, ...rest }) => rest);
-    onSave(valid);
-  }, [items, onSave]);
+    try {
+      await onSave(valid);
+      setSaved(true);
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setSaved(false);
+    }
+  }, [items, onSave, hasDuplicates]);
 
   return (
     <div className="space-y-5">
@@ -93,8 +124,18 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
                               })
                             }
                             placeholder={t('builder.variable.keyPlaceholder')}
-                            className="h-9 w-full rounded-lg border border-th-border bg-th-input px-3 font-mono text-sm text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
+                            className={`h-9 w-full rounded-lg border bg-th-input px-3 font-mono text-sm text-foreground placeholder:text-foreground-subtle focus:outline-none focus:ring-2 transition-shadow ${
+                              item.key && duplicateKeys.has(item.key.trim().toLowerCase())
+                                ? 'border-error focus:border-error/40 focus:ring-error/20'
+                                : 'border-th-border focus:border-primary/40 focus:ring-primary/20'
+                            }`}
                           />
+                          {item.key && duplicateKeys.has(item.key.trim().toLowerCase()) ? (
+                            <p className="mt-1 flex items-center gap-1 text-xs text-error">
+                              <AlertTriangle className="h-3 w-3" />
+                              {t('builder.variable.duplicateKey')}
+                            </p>
+                          ) : null}
                         </div>
                         <div>
                           <label className="mb-1 block text-xs font-medium text-foreground-muted">
@@ -150,14 +191,13 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
                         </p>
                       ) : null}
                     </div>
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
-                      className="h-8 w-8 shrink-0 p-0 text-foreground-subtle opacity-0 transition-opacity hover:text-error group-hover:opacity-100"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground-muted transition-colors hover:bg-error/10 hover:text-error"
                       onClick={() => removeItem(index)}
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </StaggerItem>
@@ -188,13 +228,19 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
         {items.length > 0 ? (
           <Button
             type="button"
-            variant="primary"
-            className="ml-auto gap-2"
-            disabled={isSaving}
+            variant={saved ? 'ghost' : 'primary'}
+            className={`ml-auto gap-2 transition-all ${saved ? 'border-green-500 bg-green-500/10 text-green-500' : ''}`}
+            disabled={isSaving || hasDuplicates}
             onClick={handleSave}
           >
-            <Save className="h-4 w-4" />
-            {isSaving ? '...' : t('builder.save')}
+            {saved ? (
+              <Check className="h-4 w-4" />
+            ) : (
+              <Save className="h-4 w-4" />
+            )}
+            {isSaving && '...'}
+            {!isSaving && saved && t('builder.variablesSaved')}
+            {!isSaving && !saved && t('builder.save')}
           </Button>
         ) : null}
       </div>

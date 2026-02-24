@@ -191,8 +191,9 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
     try {
       await updateVarsMutation.mutateAsync([...variables]);
       toast.success(t('builder.variablesSaved'));
-    } catch {
+    } catch (error) {
       toast.error(t('builder.variablesSaveError'));
+      throw error;
     }
   };
 
@@ -322,7 +323,7 @@ type StepContentProps = {
   readonly onAddSigner: (input: AddTemplateSignerInput) => void;
   readonly onRemoveSigner: (signerId: string) => void;
   readonly isAddingSigner: boolean;
-  readonly onSaveVariables: (variables: ReadonlyArray<TemplateVariableInput>) => void;
+  readonly onSaveVariables: (variables: ReadonlyArray<TemplateVariableInput>) => Promise<void> | void;
   readonly isSavingVariables: boolean;
 };
 

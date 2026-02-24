@@ -1097,7 +1097,8 @@
         "type": "Tipo",
         "required": "Obrigatória",
         "defaultValue": "Valor padrão",
-        "addVariable": "Adicionar variável"
+        "addVariable": "Adicionar variável",
+        "duplicateKey": "Chave duplicada"
       }
     },
     "use": {
@@ -1115,8 +1116,12 @@
       "autoSend": "Enviar automaticamente após criar",
       "messageLabel": "Mensagem personalizada (opcional)",
       "messagePlaceholder": "Mensagem para os signatários",
+      "signerNamePlaceholder": "Nome completo *",
+      "signerEmailPlaceholder": "Email *",
+      "progress": "Progresso",
       "submit": "Criar envelope",
       "submitting": "Criando...",
+      "submitError": "Falha ao criar envelope. Tente novamente.",
       "success": "Envelope criado com sucesso!",
       "successSent": "Envelope criado e enviado com sucesso!"
     },
