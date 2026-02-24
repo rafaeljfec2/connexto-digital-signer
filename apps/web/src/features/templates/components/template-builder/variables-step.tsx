@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Plus, Trash2, Variable, Save, Braces, Check, AlertTriangle } from 'lucide-react';
-import { Button } from '@/shared/ui';
+import { Plus, Trash2, Variable, Save, Braces, Check, AlertTriangle, HelpCircle } from 'lucide-react';
+import { Button, LabelWithTooltip, Tooltip } from '@/shared/ui';
 import { StaggerChildren, StaggerItem } from '@/shared/animations';
 import type { TemplateVariableInput, TemplateVariable, TemplateVariableType } from '../../api';
 
@@ -112,9 +112,12 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
                     <div className="flex-1 space-y-3">
                       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                         <div>
-                          <label className="mb-1 block text-xs font-medium text-foreground-muted">
-                            {t('builder.variable.key')}
-                          </label>
+                          <LabelWithTooltip
+                            label={t('builder.variable.key')}
+                            tooltip={t('tooltips.variableKey')}
+                            size="xs"
+                            className="mb-1 text-foreground-muted"
+                          />
                           <input
                             type="text"
                             value={item.key}
@@ -138,9 +141,12 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
                           ) : null}
                         </div>
                         <div>
-                          <label className="mb-1 block text-xs font-medium text-foreground-muted">
-                            {t('builder.variable.label')}
-                          </label>
+                          <LabelWithTooltip
+                            label={t('builder.variable.label')}
+                            tooltip={t('tooltips.variableLabel')}
+                            size="xs"
+                            className="mb-1 text-foreground-muted"
+                          />
                           <input
                             type="text"
                             value={item.label}
@@ -176,14 +182,22 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
                             className="rounded border-th-border accent-primary"
                           />
                           {t('builder.variable.required')}
+                          <Tooltip content={t('tooltips.variableRequired')}>
+                            <HelpCircle className="h-3 w-3 cursor-help text-foreground-subtle transition-colors hover:text-primary" />
+                          </Tooltip>
                         </label>
-                        <input
-                          type="text"
-                          value={item.defaultValue ?? ''}
-                          onChange={(e) => updateItem(index, { defaultValue: e.target.value || undefined })}
-                          placeholder={t('builder.variable.defaultValue')}
-                          className="h-8 flex-1 min-w-[120px] rounded-lg border border-th-border bg-th-input px-3 text-xs text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
-                        />
+                        <div className="flex flex-1 min-w-[120px] items-center gap-1">
+                          <input
+                            type="text"
+                            value={item.defaultValue ?? ''}
+                            onChange={(e) => updateItem(index, { defaultValue: e.target.value || undefined })}
+                            placeholder={t('builder.variable.defaultValue')}
+                            className="h-8 flex-1 rounded-lg border border-th-border bg-th-input px-3 text-xs text-foreground placeholder:text-foreground-subtle focus:border-primary/40 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
+                          />
+                          <Tooltip content={t('tooltips.variableDefault')}>
+                            <HelpCircle className="h-3.5 w-3.5 shrink-0 cursor-help text-foreground-subtle transition-colors hover:text-primary" />
+                          </Tooltip>
+                        </div>
                       </div>
                       {item.key ? (
                         <p className="rounded-lg bg-th-hover px-3 py-1.5 font-mono text-xs text-foreground-muted">

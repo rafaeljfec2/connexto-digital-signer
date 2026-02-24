@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Trash2, Users } from 'lucide-react';
-import { Button } from '@/shared/ui';
+import { Button, LabelWithTooltip } from '@/shared/ui';
 import { StaggerChildren, StaggerItem } from '@/shared/animations';
 import type { TemplateSigner, AddTemplateSignerInput } from '../../api';
 import type { SignerRole } from '@/features/documents/api';
@@ -62,9 +62,12 @@ export function SignersStep({ signers, onAdd, onRemove, isAdding }: SignersStepP
         </p>
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <div className="flex-1">
-            <label className="mb-1 block text-xs font-medium text-foreground">
-              {t('builder.signerSlot.label')}
-            </label>
+            <LabelWithTooltip
+              label={t('builder.signerSlot.label')}
+              tooltip={t('tooltips.signerSlotLabel')}
+              size="xs"
+              className="mb-1"
+            />
             <input
               type="text"
               value={label}
@@ -75,9 +78,12 @@ export function SignersStep({ signers, onAdd, onRemove, isAdding }: SignersStepP
             />
           </div>
           <div className="w-full sm:w-44">
-            <label className="mb-1 block text-xs font-medium text-foreground">
-              {t('builder.signerSlot.role')}
-            </label>
+            <LabelWithTooltip
+              label={t('builder.signerSlot.role')}
+              tooltip={t('tooltips.signerRole')}
+              size="xs"
+              className="mb-1"
+            />
             <select
               value={role}
               onChange={(e) => setRole(e.target.value as SignerRole)}

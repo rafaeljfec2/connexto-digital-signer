@@ -4,8 +4,8 @@ import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { toast } from 'sonner';
 import { useRouter } from '@/i18n/navigation';
-import { ArrowLeft, ArrowRight, Check, Loader2, Send, Variable, Users, FileCheck } from 'lucide-react';
-import { Button, Stepper } from '@/shared/ui';
+import { ArrowLeft, ArrowRight, Check, HelpCircle, Loader2, Send, Variable, Users, FileCheck } from 'lucide-react';
+import { Button, LabelWithTooltip, Stepper, Tooltip } from '@/shared/ui';
 import type { StepperItem } from '@/shared/ui/stepper';
 import { PageTransition, StepTransition } from '@/shared/animations';
 import { useTemplate, useCreateEnvelopeFromTemplate } from '../../hooks';
@@ -166,9 +166,12 @@ function ReviewStepContent({
   return (
     <div className="space-y-4">
       <div>
-        <label className="mb-1 block text-sm font-medium text-foreground">
-          {t('use.folderLabel')} <span className="text-error">*</span>
-        </label>
+        <LabelWithTooltip
+          label={t('use.folderLabel')}
+          tooltip={t('tooltips.wizardFolder')}
+          required
+          className="mb-1"
+        />
         <select
           value={folderId}
           onChange={(e) => onSetFolderId(e.target.value)}
@@ -183,9 +186,11 @@ function ReviewStepContent({
         </select>
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-foreground">
-          {t('use.titleLabel')}
-        </label>
+        <LabelWithTooltip
+          label={t('use.titleLabel')}
+          tooltip={t('tooltips.wizardTitle')}
+          className="mb-1"
+        />
         <input
           type="text"
           value={title}
@@ -195,9 +200,11 @@ function ReviewStepContent({
         />
       </div>
       <div>
-        <label className="mb-1 block text-sm font-medium text-foreground">
-          {t('use.messageLabel')}
-        </label>
+        <LabelWithTooltip
+          label={t('use.messageLabel')}
+          tooltip={t('tooltips.wizardMessage')}
+          className="mb-1"
+        />
         <textarea
           value={message}
           onChange={(e) => onSetMessage(e.target.value)}
@@ -214,6 +221,9 @@ function ReviewStepContent({
           className="rounded border-th-border accent-primary"
         />
         {t('use.autoSend')}
+        <Tooltip content={t('tooltips.wizardAutoSend')}>
+          <HelpCircle className="h-3.5 w-3.5 cursor-help text-foreground-subtle transition-colors hover:text-primary" />
+        </Tooltip>
       </label>
     </div>
   );

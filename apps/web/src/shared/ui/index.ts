@@ -12,6 +12,7 @@ export * from './dialog';
 export * from './confirm-dialog';
 export * from './select';
 export * from './tooltip';
+export * from './label-with-tooltip';
 export * from './sidebar';
 export * from './theme-toggle';
 export * from './lazy-spinner';

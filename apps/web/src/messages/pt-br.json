@@ -1138,6 +1138,22 @@
       "noSigners": "Nenhum slot de signatário",
       "noVariables": "Nenhuma variável definida"
     },
+    "tooltips": {
+      "templateName": "Nome que identifica o template na listagem. Será usado como título padrão do envelope.",
+      "templateDescription": "Descrição interna para organizar seus templates. Não aparece para os signatários.",
+      "templateCategory": "Categoria para filtrar e organizar seus templates na listagem.",
+      "documents": "Os documentos adicionados aqui serão copiados para cada envelope criado a partir deste template.",
+      "signerSlotLabel": "Nome que identifica a posição do signatário (ex: 'Contratante'). Ao usar o template, você atribuirá uma pessoa real a este slot.",
+      "signerRole": "Define o tipo de participação: Signatário assina, Testemunha valida, Aprovador autoriza.",
+      "variableKey": "Identificador técnico (ex: nome_empresa). Use no título como '{{nome_empresa}}' para substituição automática.",
+      "variableLabel": "Nome amigável exibido ao usuário quando preencher o template.",
+      "variableRequired": "Se marcado, o usuário deverá preencher esta variável ao usar o template.",
+      "variableDefault": "Valor pré-preenchido. O usuário pode alterar ao usar o template.",
+      "wizardFolder": "Pasta onde o envelope criado será armazenado.",
+      "wizardTitle": "Opcional. Se vazio, usa o nome do template. Suporta variáveis como '{{nome_empresa}}'.",
+      "wizardMessage": "Mensagem incluída no email de convite enviado aos signatários.",
+      "wizardAutoSend": "Se marcado, o envelope será enviado imediatamente após a criação. Caso contrário, ficará como rascunho."
+    },
     "deleteConfirm": {
       "title": "Excluir template?",
       "description": "Esta ação é irreversível. O template e todos os seus documentos serão excluídos permanentemente.",

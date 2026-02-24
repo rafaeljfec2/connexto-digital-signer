@@ -2,6 +2,7 @@
 
 import { useTranslations } from 'next-intl';
 import { FileSignature, AlignLeft, Tag } from 'lucide-react';
+import { LabelWithTooltip } from '@/shared/ui';
 import type { CreateTemplateInput } from '../../api';
 
 const CATEGORIES = ['legal', 'hr', 'finance', 'sales', 'other'] as const;
@@ -17,10 +18,12 @@ export function InfoStep({ data, onChange }: InfoStepProps) {
   return (
     <div className="space-y-5">
       <div className="space-y-1.5">
-        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <FileSignature className="h-4 w-4 text-primary" />
-          {t('form.nameLabel')} <span className="text-error">*</span>
-        </label>
+        <LabelWithTooltip
+          label={t('form.nameLabel')}
+          tooltip={t('tooltips.templateName')}
+          icon={<FileSignature className="h-4 w-4 text-primary" />}
+          required
+        />
         <input
           type="text"
           value={data.name}
@@ -32,10 +35,11 @@ export function InfoStep({ data, onChange }: InfoStepProps) {
       </div>
 
       <div className="space-y-1.5">
-        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <AlignLeft className="h-4 w-4 text-primary" />
-          {t('form.descriptionLabel')}
-        </label>
+        <LabelWithTooltip
+          label={t('form.descriptionLabel')}
+          tooltip={t('tooltips.templateDescription')}
+          icon={<AlignLeft className="h-4 w-4 text-primary" />}
+        />
         <textarea
           value={data.description ?? ''}
           onChange={(e) => onChange({ ...data, description: e.target.value || undefined })}
@@ -46,10 +50,11 @@ export function InfoStep({ data, onChange }: InfoStepProps) {
       </div>
 
       <div className="space-y-1.5">
-        <label className="flex items-center gap-2 text-sm font-medium text-foreground">
-          <Tag className="h-4 w-4 text-primary" />
-          {t('form.categoryLabel')}
-        </label>
+        <LabelWithTooltip
+          label={t('form.categoryLabel')}
+          tooltip={t('tooltips.templateCategory')}
+          icon={<Tag className="h-4 w-4 text-primary" />}
+        />
         <div className="flex flex-wrap gap-2">
           {CATEGORIES.map((cat) => {
             const isSelected = data.category === cat;

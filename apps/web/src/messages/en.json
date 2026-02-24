@@ -1175,6 +1175,22 @@
       "noSigners": "No signer slots",
       "noVariables": "No variables defined"
     },
+    "tooltips": {
+      "templateName": "Name that identifies the template in the listing. It will be used as the default envelope title.",
+      "templateDescription": "Internal description to organize your templates. It is not shown to signers.",
+      "templateCategory": "Category to filter and organize your templates in the listing.",
+      "documents": "Documents added here will be copied to each envelope created from this template.",
+      "signerSlotLabel": "Name that identifies the signer position (e.g. 'Contractor'). When using the template, you will assign a real person to this slot.",
+      "signerRole": "Defines the type of participation: Signer signs, Witness validates, Approver authorizes.",
+      "variableKey": "Technical identifier (e.g. company_name). Use in the title as '{{company_name}}' for automatic substitution.",
+      "variableLabel": "User-friendly name displayed when filling in the template.",
+      "variableRequired": "If checked, the user must fill in this variable when using the template.",
+      "variableDefault": "Pre-filled value. The user can change it when using the template.",
+      "wizardFolder": "Folder where the created envelope will be stored.",
+      "wizardTitle": "Optional. If empty, uses the template name. Supports variables like '{{company_name}}'.",
+      "wizardMessage": "Message included in the invitation email sent to signers.",
+      "wizardAutoSend": "If checked, the envelope will be sent immediately after creation. Otherwise, it will remain as a draft."
+    },
     "deleteConfirm": {
       "title": "Delete template?",
       "description": "This action is irreversible. The template and all its documents will be permanently deleted.",

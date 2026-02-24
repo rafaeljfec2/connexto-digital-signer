@@ -1,8 +1,9 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { FileText, ImageIcon, Trash2, Upload, FileUp } from 'lucide-react';
+import { FileText, HelpCircle, ImageIcon, Trash2, Upload, FileUp } from 'lucide-react';
 import { Dropzone } from '@/shared/ui/dropzone';
+import { Tooltip } from '@/shared/ui';
 import { StaggerChildren, StaggerItem } from '@/shared/animations';
 import type { TemplateDocument } from '../../api';
 
@@ -54,9 +55,12 @@ export function DocumentsStep({
       {totalCount > 0 ? (
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <p className="text-sm font-medium text-foreground">
+            <span className="flex items-center gap-2 text-sm font-medium text-foreground">
               {t('detail.documents')}
-            </p>
+              <Tooltip content={t('tooltips.documents')}>
+                <HelpCircle className="h-3.5 w-3.5 cursor-help text-foreground-subtle transition-colors hover:text-primary" />
+              </Tooltip>
+            </span>
             <span className="rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-medium text-primary">
               {totalCount}
             </span>
