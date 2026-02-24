@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { Plus, Trash2, Variable, Save, Braces } from 'lucide-react';
 import { Button } from '@/shared/ui';
@@ -13,6 +13,11 @@ const VARIABLE_TYPES: ReadonlyArray<{ readonly value: TemplateVariableType; read
   { value: 'number', label: 'Número', icon: '#' },
 ];
 
+type VariableItem = TemplateVariableInput & { readonly _stableId: string };
+
+let nextStableId = 0;
+const createStableId = (): string => `var-${String(++nextStableId)}`;
+
 type VariablesStepProps = {
   readonly variables: ReadonlyArray<TemplateVariable>;
   readonly onSave: (variables: ReadonlyArray<TemplateVariableInput>) => void;
@@ -22,8 +27,9 @@ type VariablesStepProps = {
 export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProps) {
   const t = useTranslations('templates');
 
-  const [items, setItems] = useState<TemplateVariableInput[]>(() =>
+  const [items, setItems] = useState<VariableItem[]>(() =>
     variables.map((v) => ({
+      _stableId: createStableId(),
       key: v.key,
       label: v.label,
       type: v.type,
@@ -32,22 +38,24 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
     })),
   );
 
-  const addItem = () => {
-    setItems([...items, { key: '', label: '', type: 'text', required: true }]);
-  };
+  const addItem = useCallback(() => {
+    setItems((prev) => [...prev, { _stableId: createStableId(), key: '', label: '', type: 'text', required: true }]);
+  }, []);
 
-  const removeItem = (index: number) => {
-    setItems(items.filter((_, i) => i !== index));
-  };
+  const removeItem = useCallback((index: number) => {
+    setItems((prev) => prev.filter((_, i) => i !== index));
+  }, []);
 
-  const updateItem = (index: number, patch: Partial<TemplateVariableInput>) => {
-    setItems(items.map((item, i) => (i === index ? { ...item, ...patch } : item)));
-  };
+  const updateItem = useCallback((index: number, patch: Partial<TemplateVariableInput>) => {
+    setItems((prev) => prev.map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  }, []);
 
-  const handleSave = () => {
-    const valid = items.filter((i) => i.key.trim() && i.label.trim());
+  const handleSave = useCallback(() => {
+    const valid = items
+      .filter((i) => i.key.trim() && i.label.trim())
+      .map(({ _stableId: _, ...rest }) => rest);
     onSave(valid);
-  };
+  }, [items, onSave]);
 
   return (
     <div className="space-y-5">
@@ -64,7 +72,7 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
 
           <StaggerChildren className="space-y-3">
             {items.map((item, index) => (
-              <StaggerItem key={`var-${String(index)}-${item.key}`}>
+              <StaggerItem key={item._stableId}>
                 <div className="group rounded-xl border border-th-border bg-th-card p-4 transition-colors hover:border-primary/20">
                   <div className="flex items-start gap-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">

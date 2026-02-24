@@ -1,7 +1,8 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
+import { toast } from 'sonner';
 import { useRouter } from '@/i18n/navigation';
 import {
   ArrowLeft,
@@ -9,6 +10,7 @@ import {
   Check,
   FileText,
   Info,
+  Loader2,
   Users,
   Variable,
 } from 'lucide-react';
@@ -104,6 +106,21 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
 
   const template = templateQuery.data;
 
+  const hasSyncedRef = useRef(false);
+  useEffect(() => {
+    if (!template || hasSyncedRef.current) return;
+    hasSyncedRef.current = true;
+    setFormData({
+      name: template.name,
+      description: template.description ?? undefined,
+      category: template.category ?? undefined,
+      signingMode: template.signingMode,
+      signingLanguage: template.signingLanguage,
+      reminderInterval: template.reminderInterval,
+      closureMode: template.closureMode,
+    });
+  }, [template]);
+
   const goToStep = useCallback((next: number) => {
     prevStepRef.current = step;
     setStep(next);
@@ -170,8 +187,13 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
     removeSignerMutation.mutate(signerId);
   };
 
-  const handleSaveVariables = (variables: ReadonlyArray<TemplateVariableInput>) => {
-    updateVarsMutation.mutate([...variables]);
+  const handleSaveVariables = async (variables: ReadonlyArray<TemplateVariableInput>) => {
+    try {
+      await updateVarsMutation.mutateAsync([...variables]);
+      toast.success(t('builder.variablesSaved'));
+    } catch {
+      toast.error(t('builder.variablesSaveError'));
+    }
   };
 
   const canProceed = computeCanProceed(step, formData, template, pendingFiles);
@@ -203,6 +225,14 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
     [t],
   );
 
+  if (isEdit && templateQuery.isLoading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <PageTransition className="mx-auto max-w-3xl space-y-6 pb-8">
       <div className="flex items-center justify-between">
@@ -224,7 +254,7 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
         steps={stepperItems}
         progressLabel={t('builder.progress')}
         counterLabel={`${step + 1} / ${STEPS.length}`}
-        onStepClick={(i) => { if (i < step) goToStep(i); }}
+        onStepClick={(i) => { if (i < step || isEdit) goToStep(i); }}
       />
 
       <StepTransition stepKey={currentStep} direction={direction}>

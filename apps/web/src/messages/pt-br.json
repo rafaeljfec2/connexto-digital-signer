@@ -1087,6 +1087,8 @@
         "role": "Papel",
         "addSigner": "Adicionar signatário"
       },
+      "variablesSaved": "Variáveis salvas com sucesso",
+      "variablesSaveError": "Falha ao salvar variáveis. Tente novamente.",
       "variable": {
         "key": "Chave",
         "keyPlaceholder": "Ex: company_name",

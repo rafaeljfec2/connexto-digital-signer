@@ -1124,6 +1124,8 @@
         "role": "Role",
         "addSigner": "Add signer"
       },
+      "variablesSaved": "Variables saved successfully",
+      "variablesSaveError": "Failed to save variables. Please try again.",
       "variable": {
         "key": "Key",
         "keyPlaceholder": "E.g. company_name",
