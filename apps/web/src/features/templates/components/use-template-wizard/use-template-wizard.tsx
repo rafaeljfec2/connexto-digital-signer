@@ -304,7 +304,12 @@ export function UseTemplateWizard({ templateId }: UseTemplateWizardProps) {
     try {
       const result = await createMutation.mutateAsync(input);
       toast.success(autoSend ? t('use.successSent') : t('use.success'));
-      router.push(`/documents/${result.envelopeId}`);
+
+      if (autoSend) {
+        router.push(`/documents/${result.envelopeId}/summary`);
+      } else {
+        router.push(`/documents/${result.envelopeId}`);
+      }
     } catch {
       toast.error(t('use.submitError'));
     }
