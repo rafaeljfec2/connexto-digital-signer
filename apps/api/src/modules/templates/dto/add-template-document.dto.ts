@@ -1,4 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import { IsString, IsOptional, MaxLength, IsInt, Min } from 'class-validator';
 
 export class AddTemplateDocumentDto {
@@ -8,6 +9,7 @@ export class AddTemplateDocumentDto {
   readonly title!: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(0)
   @ApiPropertyOptional({ example: 0 })
