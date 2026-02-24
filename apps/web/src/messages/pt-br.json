@@ -1142,7 +1142,9 @@
       "title": "Excluir template?",
       "description": "Esta ação é irreversível. O template e todos os seus documentos serão excluídos permanentemente.",
       "confirm": "Excluir",
-      "cancel": "Cancelar"
+      "cancel": "Cancelar",
+      "success": "Template excluído com sucesso",
+      "error": "Falha ao excluir template. Tente novamente."
     },
     "saveAsTemplate": {
       "title": "Salvar como template",

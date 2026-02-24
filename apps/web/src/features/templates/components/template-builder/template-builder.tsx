@@ -11,16 +11,18 @@ import {
   FileText,
   Info,
   Loader2,
+  Trash2,
   Users,
   Variable,
 } from 'lucide-react';
-import { Button, Stepper } from '@/shared/ui';
+import { Button, ConfirmDialog, Stepper } from '@/shared/ui';
 import type { StepperItem } from '@/shared/ui/stepper';
 import { PageTransition, StepTransition } from '@/shared/animations';
 import {
   useCreateTemplate,
   useTemplate,
   useUpdateTemplate,
+  useDeleteTemplate,
   useAddTemplateDocument,
   useRemoveTemplateDocument,
   useAddTemplateSigner,
@@ -95,9 +97,12 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
   const [pendingFiles, setPendingFiles] = useState<PendingFile[]>([]);
   const [createdId, setCreatedId] = useState<string | null>(templateId ?? null);
 
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
   const templateQuery = useTemplate(createdId ?? '');
   const createMutation = useCreateTemplate();
   const updateMutation = useUpdateTemplate(createdId ?? '');
+  const deleteMutation = useDeleteTemplate();
   const addDocMutation = useAddTemplateDocument(createdId ?? '');
   const removeDocMutation = useRemoveTemplateDocument(createdId ?? '');
   const addSignerMutation = useAddTemplateSigner(createdId ?? '');
@@ -170,6 +175,19 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
   const handleFinish = () => {
     router.push('/templates');
   };
+
+  const handleDelete = useCallback(async () => {
+    if (!createdId) return;
+    try {
+      await deleteMutation.mutateAsync(createdId);
+      toast.success(t('deleteConfirm.success'));
+      router.push('/templates');
+    } catch {
+      toast.error(t('deleteConfirm.error'));
+    } finally {
+      setDeleteConfirmOpen(false);
+    }
+  }, [createdId, deleteMutation, router, t]);
 
   const handleAddFiles = (files: File[]) => {
     const newPending = files.map((f) => ({
@@ -245,10 +263,23 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
             {stepDescriptions[currentStep]}
           </p>
         </div>
-        <Button type="button" variant="ghost" onClick={handleFinish} className="gap-2">
-          <ArrowLeft className="h-4 w-4" />
-          {t('title')}
-        </Button>
+        <div className="flex items-center gap-2">
+          {isEdit && (
+            <Button
+              type="button"
+              variant="ghost"
+              onClick={() => setDeleteConfirmOpen(true)}
+              className="gap-2 text-error hover:bg-error/10 hover:text-error"
+            >
+              <Trash2 className="h-4 w-4" />
+              {t('actions.delete')}
+            </Button>
+          )}
+          <Button type="button" variant="ghost" onClick={handleFinish} className="gap-2">
+            <ArrowLeft className="h-4 w-4" />
+            {t('title')}
+          </Button>
+        </div>
       </div>
 
       <Stepper
@@ -307,6 +338,20 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
           </Button>
         )}
       </div>
+
+      {isEdit && (
+        <ConfirmDialog
+          open={deleteConfirmOpen}
+          title={t('deleteConfirm.title')}
+          description={t('deleteConfirm.description')}
+          confirmLabel={t('deleteConfirm.confirm')}
+          cancelLabel={t('deleteConfirm.cancel')}
+          isLoading={deleteMutation.isPending}
+          variant="danger"
+          onConfirm={handleDelete}
+          onCancel={() => setDeleteConfirmOpen(false)}
+        />
+      )}
     </PageTransition>
   );
 }

@@ -1179,7 +1179,9 @@
       "title": "Delete template?",
       "description": "This action is irreversible. The template and all its documents will be permanently deleted.",
       "confirm": "Delete",
-      "cancel": "Cancel"
+      "cancel": "Cancel",
+      "success": "Template deleted successfully",
+      "error": "Failed to delete template. Please try again."
     },
     "saveAsTemplate": {
       "title": "Save as template",

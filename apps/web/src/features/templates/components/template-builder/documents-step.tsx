@@ -3,7 +3,6 @@
 import { useTranslations } from 'next-intl';
 import { FileText, ImageIcon, Trash2, Upload, FileUp } from 'lucide-react';
 import { Dropzone } from '@/shared/ui/dropzone';
-import { Button } from '@/shared/ui';
 import { StaggerChildren, StaggerItem } from '@/shared/animations';
 import type { TemplateDocument } from '../../api';
 
@@ -76,14 +75,13 @@ export function DocumentsStep({
                       <p className="truncate text-sm font-medium text-foreground">{doc.title}</p>
                       <p className="text-xs text-foreground-muted">{formatSize(doc.size)}</p>
                     </div>
-                    <Button
+                    <button
                       type="button"
-                      variant="ghost"
-                      className="h-8 w-8 p-0 text-foreground-subtle opacity-0 transition-opacity hover:text-error group-hover:opacity-100"
+                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground-muted transition-colors hover:bg-error/10 hover:text-error"
                       onClick={() => onRemoveDocument(doc.id)}
                     >
                       <Trash2 className="h-4 w-4" />
-                    </Button>
+                    </button>
                   </div>
                 </StaggerItem>
               );
@@ -98,14 +96,13 @@ export function DocumentsStep({
                     <p className="truncate text-sm font-medium text-foreground">{pf.title}</p>
                     <p className="text-xs text-foreground-muted">{formatSize(pf.file.size)}</p>
                   </div>
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 text-foreground-subtle opacity-0 transition-opacity hover:text-error group-hover:opacity-100"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground-muted transition-colors hover:bg-error/10 hover:text-error"
                     onClick={() => onRemovePending(i)}
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </button>
                 </div>
               </StaggerItem>
             ))}

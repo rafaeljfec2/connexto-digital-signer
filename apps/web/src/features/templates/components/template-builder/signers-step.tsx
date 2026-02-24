@@ -125,14 +125,13 @@ export function SignersStep({ signers, onAdd, onRemove, isAdding }: SignersStepP
                       {getRoleLabel(s.role)}
                     </span>
                   </div>
-                  <Button
+                  <button
                     type="button"
-                    variant="ghost"
-                    className="h-8 w-8 p-0 text-foreground-subtle opacity-0 transition-opacity hover:text-error group-hover:opacity-100"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground-muted transition-colors hover:bg-error/10 hover:text-error"
                     onClick={() => onRemove(s.id)}
                   >
                     <Trash2 className="h-4 w-4" />
-                  </Button>
+                  </button>
                 </div>
               </StaggerItem>
             ))}
