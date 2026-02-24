@@ -57,12 +57,11 @@ const bootstrap = async (): Promise<void> => {
 
   configureOpenApi(app);
 
-  await app.init();
-  const dataSource = app.get(DataSource);
-  await dataSource.runMigrations();
-
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port);
+
+  const dataSource = app.get(DataSource);
+  await dataSource.runMigrations();
 
   const shutdown = async (signal: string) => {
     app.get(Logger).log(`Received ${signal}, shutting down gracefully...`);
