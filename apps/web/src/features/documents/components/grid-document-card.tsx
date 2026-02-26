@@ -7,6 +7,7 @@ import {
   Calendar,
   MoreVertical,
   Download,
+  FileSignature,
   Eye,
   Trash2,
   Pencil,
@@ -50,6 +51,7 @@ type GridActionHandlers = Readonly<{
   onDeleteDocument: (doc: EnvelopeSummary) => void;
   onDownloadOriginal: (doc: EnvelopeSummary) => void;
   onDownloadSigned: (doc: EnvelopeSummary) => void;
+  onDownloadP7s?: (doc: EnvelopeSummary) => void;
   onViewSummary: (doc: EnvelopeSummary) => void;
   onMoveToFolder: (doc: EnvelopeSummary) => void;
   onTrackDocument?: (doc: EnvelopeSummary) => void;
@@ -93,6 +95,9 @@ function buildGridActions(
         ...track,
         { key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary(doc) },
         { key: 'download-signed', label: labels.downloadSigned, icon: FileDown, onClick: () => handlers.onDownloadSigned(doc) },
+        ...(handlers.onDownloadP7s && labels.downloadP7s
+          ? [{ key: 'download-p7s', label: labels.downloadP7s, icon: FileSignature, onClick: () => handlers.onDownloadP7s?.(doc) }]
+          : []),
         { key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal(doc) },
         move,
       ];
@@ -120,6 +125,7 @@ export type GridDocumentCardProps = Readonly<{
   onDeleteDocument: (doc: EnvelopeSummary) => void;
   onDownloadOriginal: (doc: EnvelopeSummary) => void;
   onDownloadSigned: (doc: EnvelopeSummary) => void;
+  onDownloadP7s?: (doc: EnvelopeSummary) => void;
   onViewSummary: (doc: EnvelopeSummary) => void;
   onMoveToFolder: (doc: EnvelopeSummary) => void;
   onTrackDocument?: (doc: EnvelopeSummary) => void;
@@ -137,13 +143,14 @@ export function GridDocumentCard({
   onDeleteDocument,
   onDownloadOriginal,
   onDownloadSigned,
+  onDownloadP7s,
   onViewSummary,
   onMoveToFolder,
   onTrackDocument,
 }: GridDocumentCardProps) {
   const handlers: GridActionHandlers = useMemo(
-    () => ({ onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder, onTrackDocument }),
-    [onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder, onTrackDocument],
+    () => ({ onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onDownloadP7s, onViewSummary, onMoveToFolder, onTrackDocument }),
+    [onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onDownloadP7s, onViewSummary, onMoveToFolder, onTrackDocument],
   );
 
   const actions = useMemo(

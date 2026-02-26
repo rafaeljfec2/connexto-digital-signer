@@ -74,6 +74,7 @@ const buildDocument = (overrides?: Partial<Document>): Document => ({
   title: 'Agreement',
   originalFileKey: 'original.pdf',
   finalFileKey: null,
+  p7sFileKey: null,
   originalHash: 'hash-original',
   finalHash: null,
   mimeType: 'application/pdf',
@@ -137,6 +138,7 @@ describe('SignaturesService', () => {
     certificateService = {
       hasCertificate: jest.fn().mockResolvedValue(false),
       signPdf: jest.fn(),
+      generateP7s: jest.fn(),
       uploadCertificate: jest.fn(),
       getCertificateStatus: jest.fn(),
       removeCertificate: jest.fn(),
@@ -417,6 +419,126 @@ describe('SignaturesService', () => {
           signingMode: SigningMode.SEQUENTIAL,
         })
       );
+    });
+  });
+
+  describe('finalizeDocument', () => {
+    test('should generate .p7s and store it together with final pdf when certificate is valid', async () => {
+      const originalBuffer = Buffer.from('original');
+      const withSignatures = Buffer.from('with-signatures');
+      const evidencePdf = Buffer.from('evidence-pdf');
+      const signedPdf = Buffer.from('signed-pdf');
+      const p7sBuffer = Buffer.from('p7s-signature');
+
+      documentsService.findOne.mockResolvedValue(buildDocument());
+      documentsService.getOriginalFile.mockResolvedValue(originalBuffer);
+      fieldsService.findByDocument.mockResolvedValue([]);
+      pdfService.embedSignatures.mockResolvedValue(withSignatures);
+      pdfService.computeHash.mockImplementation((buffer: Buffer) =>
+        buffer === originalBuffer ? 'hash-original' : 'hash-signed',
+      );
+      pdfService.appendEvidencePage.mockResolvedValue(evidencePdf);
+      certificateService.signPdf.mockResolvedValue(signedPdf);
+      certificateService.generateP7s.mockResolvedValue(p7sBuffer);
+
+      await (
+        service as unknown as {
+          finalizeDocument: (
+            documentId: string,
+            tenantId: string,
+            envelope: Envelope,
+            evidence: Array<{
+              name: string;
+              email: string;
+              role: string;
+              signedAt: string;
+              ipAddress: string | null;
+              userAgent: string | null;
+              signatureData: string | null;
+            }>,
+            certificateStatus: {
+              subject: string;
+              issuer: string;
+              expiresAt: string;
+              configuredAt: string;
+              isExpired: boolean;
+            } | null,
+          ) => Promise<void>;
+        }
+      ).finalizeDocument(
+        'doc-1',
+        'tenant-1',
+        buildEnvelope(),
+        [],
+        {
+          subject: 'Tenant Certificate',
+          issuer: 'AC',
+          expiresAt: '2030-01-01T00:00:00.000Z',
+          configuredAt: '2026-01-01T00:00:00.000Z',
+          isExpired: false,
+        },
+      );
+
+      expect(certificateService.signPdf).toHaveBeenCalledWith('tenant-1', evidencePdf);
+      expect(certificateService.generateP7s).toHaveBeenCalledWith('tenant-1', signedPdf);
+      expect(documentsService.setFinalPdf).toHaveBeenCalledWith('doc-1', 'tenant-1', signedPdf, p7sBuffer);
+    });
+
+    test('should finalize without .p7s when certificate is expired', async () => {
+      const originalBuffer = Buffer.from('original');
+      const withSignatures = Buffer.from('with-signatures');
+      const evidencePdf = Buffer.from('evidence-pdf');
+
+      documentsService.findOne.mockResolvedValue(buildDocument());
+      documentsService.getOriginalFile.mockResolvedValue(originalBuffer);
+      fieldsService.findByDocument.mockResolvedValue([]);
+      pdfService.embedSignatures.mockResolvedValue(withSignatures);
+      pdfService.computeHash.mockImplementation((buffer: Buffer) =>
+        buffer === originalBuffer ? 'hash-original' : 'hash-signed',
+      );
+      pdfService.appendEvidencePage.mockResolvedValue(evidencePdf);
+
+      await (
+        service as unknown as {
+          finalizeDocument: (
+            documentId: string,
+            tenantId: string,
+            envelope: Envelope,
+            evidence: Array<{
+              name: string;
+              email: string;
+              role: string;
+              signedAt: string;
+              ipAddress: string | null;
+              userAgent: string | null;
+              signatureData: string | null;
+            }>,
+            certificateStatus: {
+              subject: string;
+              issuer: string;
+              expiresAt: string;
+              configuredAt: string;
+              isExpired: boolean;
+            } | null,
+          ) => Promise<void>;
+        }
+      ).finalizeDocument(
+        'doc-1',
+        'tenant-1',
+        buildEnvelope(),
+        [],
+        {
+          subject: 'Tenant Certificate',
+          issuer: 'AC',
+          expiresAt: '2020-01-01T00:00:00.000Z',
+          configuredAt: '2026-01-01T00:00:00.000Z',
+          isExpired: true,
+        },
+      );
+
+      expect(certificateService.signPdf).not.toHaveBeenCalled();
+      expect(certificateService.generateP7s).not.toHaveBeenCalled();
+      expect(documentsService.setFinalPdf).toHaveBeenCalledWith('doc-1', 'tenant-1', evidencePdf, null);
     });
   });
 });

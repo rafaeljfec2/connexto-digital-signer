@@ -285,6 +285,7 @@
       "viewSummary": "View summary",
       "downloadOriginal": "Download original PDF",
       "downloadSigned": "Download signed PDF",
+      "downloadP7s": "Download .p7s signature",
       "downloading": "Downloading...",
       "delete": "Delete",
       "deleteTitle": "Delete draft",

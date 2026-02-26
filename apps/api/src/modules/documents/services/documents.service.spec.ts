@@ -23,6 +23,7 @@ const buildDocument = (overrides?: Partial<Document>): Document => ({
   title: 'Agreement',
   originalFileKey: 'original.pdf',
   finalFileKey: null,
+  p7sFileKey: null,
   originalHash: 'hash-original',
   finalHash: null,
   mimeType: 'application/pdf',
@@ -297,6 +298,26 @@ describe('DocumentsService', () => {
         }) as DocumentCompletedEvent
       );
     });
+
+    test('should store .p7s file and persist p7s key when provided', async () => {
+      const document = buildDocument({ version: 2 });
+      jest.spyOn(service, 'findOne').mockResolvedValue(document);
+      const finalBuffer = Buffer.from('final');
+      const p7sBuffer = Buffer.from('p7s');
+      const expectedP7sKey = 'tenants/tenant-1/documents/doc-1/signature.p7s';
+      (documentRepository.save as jest.Mock).mockResolvedValue({
+        ...document,
+        finalFileKey: 'tenants/tenant-1/documents/doc-1/signed.pdf',
+        p7sFileKey: expectedP7sKey,
+        finalHash: sha256(finalBuffer),
+        status: DocumentStatus.COMPLETED,
+      });
+
+      const result = await service.setFinalPdf('doc-1', 'tenant-1', finalBuffer, p7sBuffer);
+
+      expect(storage.put).toHaveBeenCalledWith(expectedP7sKey, p7sBuffer, 'application/pkcs7-signature');
+      expect(result.p7sFileKey).toBe(expectedP7sKey);
+    });
   });
 
   describe('markExpired', () => {
@@ -389,6 +410,25 @@ describe('DocumentsService', () => {
       expect(result!.url).toBe('https://s3.example.com/signed');
       expect(result!.expiresIn).toBe(300);
       expect(storage.getSignedUrl).toHaveBeenCalledWith('signed.pdf', 300, { disposition: 'attachment' });
+    });
+  });
+
+  describe('getP7sFileUrl', () => {
+    test('should return null when p7sFileKey is null', async () => {
+      const document = buildDocument({ p7sFileKey: null });
+      await expect(service.getP7sFileUrl(document)).resolves.toBeNull();
+    });
+
+    test('should return presigned URL when p7s file exists', async () => {
+      const document = buildDocument({ p7sFileKey: 'signature.p7s' });
+      storage.getSignedUrl.mockResolvedValue('https://s3.example.com/signature.p7s');
+
+      const result = await service.getP7sFileUrl(document);
+
+      expect(result).not.toBeNull();
+      expect(result!.url).toBe('https://s3.example.com/signature.p7s');
+      expect(result!.expiresIn).toBe(300);
+      expect(storage.getSignedUrl).toHaveBeenCalledWith('signature.p7s', 300, { disposition: 'attachment' });
     });
   });
 });

@@ -46,6 +46,10 @@ export class Document {
   @Column({ name: 'final_hash', type: 'varchar', length: 64, nullable: true })
   finalHash!: string | null;
 
+  @Exclude()
+  @Column({ name: 'p7s_file_key', type: 'varchar', length: 512, nullable: true })
+  p7sFileKey!: string | null;
+
   @Column({ name: 'mime_type', type: 'varchar', length: 50, nullable: true })
   mimeType!: string | null;
 

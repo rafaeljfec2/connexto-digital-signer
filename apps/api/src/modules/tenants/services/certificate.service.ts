@@ -6,6 +6,7 @@ import * as forge from 'node-forge';
 import { SignPdf } from '@signpdf/signpdf';
 import { pdflibAddPlaceholder } from '@signpdf/placeholder-pdf-lib';
 import { PadesSigner } from '../../../shared/pdf/pades-signer';
+import { CadesSigner } from '../../../shared/pdf/cades-signer';
 import { PDFDocument } from 'pdf-lib';
 import { Tenant } from '../entities/tenant.entity';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
@@ -208,6 +209,30 @@ export class CertificateService {
       const message = error instanceof Error ? error.message : String(error);
       this.logger.error(`Failed to digitally sign PDF for tenant ${tenantId}: ${message}`);
       throw new Error(`Failed to digitally sign PDF: ${message}`);
+    }
+  }
+
+  async generateP7s(tenantId: string, pdfBuffer: Buffer): Promise<Buffer | null> {
+    const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
+
+    if (!tenant?.certificateFileKey || !tenant.certificatePasswordEnc) {
+      this.logger.warn(`No certificate configured for tenant ${tenantId}, skipping .p7s generation`);
+      return null;
+    }
+
+    try {
+      const p12Buffer = await this.storageService.get(tenant.certificateFileKey);
+      const password = decryptPassword(tenant.certificatePasswordEnc);
+
+      const signer = new CadesSigner(p12Buffer, password);
+      const p7sBuffer = signer.signDetached(pdfBuffer);
+
+      this.logger.log(`CAdES-BES .p7s generated for tenant ${tenantId}`);
+      return p7sBuffer;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Failed to generate .p7s for tenant ${tenantId}: ${message}`);
+      return null;
     }
   }
 

@@ -13,7 +13,12 @@ import { GridDocumentCard } from '@/features/documents/components/grid-document-
 import { SignerTrackingPanel } from '@/features/documents/components/signer-tracking-panel';
 import { useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/use-documents';
 import { useFolderTree, useMoveEnvelopeToFolder } from '@/features/documents/hooks/use-folders';
-import { getDocumentFileUrl, getDocumentSignedFileUrl, getEnvelopeAuditSummary } from '@/features/documents/api';
+import {
+  getDocumentFileUrl,
+  getDocumentP7sFileUrl,
+  getDocumentSignedFileUrl,
+  listDocumentsByEnvelope,
+} from '@/features/documents/api';
 import type { DocumentStatus, EnvelopeSummary, FolderTreeNode } from '@/features/documents/api';
 import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
 import { Button, Card, ConfirmDialog, Dialog, Pagination, Select, Skeleton } from '@/shared/ui';
@@ -127,6 +132,7 @@ export default function DocumentsPage() {
     viewSummary: t('actions.viewSummary'),
     downloadOriginal: t('actions.downloadOriginal'),
     downloadSigned: t('actions.downloadSigned'),
+    downloadP7s: t('actions.downloadP7s'),
     delete: t('actions.delete'),
     moveToFolder: t('actions.moveToFolder'),
     track: t('actions.track'),
@@ -142,14 +148,26 @@ export default function DocumentsPage() {
   );
 
   const handleDownloadOriginal = useCallback(async (env: EnvelopeSummary) => {
-    const summary = await getEnvelopeAuditSummary(env.id);
-    const result = await getDocumentFileUrl(summary.document.id);
+    const documents = await listDocumentsByEnvelope(env.id);
+    const firstDocument = documents[0];
+    if (!firstDocument) return;
+    const result = await getDocumentFileUrl(firstDocument.id);
     openDownloadUrl(result.url);
   }, []);
 
   const handleDownloadSigned = useCallback(async (env: EnvelopeSummary) => {
-    const summary = await getEnvelopeAuditSummary(env.id);
-    const result = await getDocumentSignedFileUrl(summary.document.id);
+    const documents = await listDocumentsByEnvelope(env.id);
+    const firstDocument = documents[0];
+    if (!firstDocument) return;
+    const result = await getDocumentSignedFileUrl(firstDocument.id);
+    if (result) openDownloadUrl(result.url);
+  }, []);
+
+  const handleDownloadP7s = useCallback(async (env: EnvelopeSummary) => {
+    const documents = await listDocumentsByEnvelope(env.id);
+    const firstDocument = documents[0];
+    if (!firstDocument) return;
+    const result = await getDocumentP7sFileUrl(firstDocument.id);
     if (result) openDownloadUrl(result.url);
   }, []);
 
@@ -214,6 +232,7 @@ export default function DocumentsPage() {
               formatDate={formatDate} actionLabels={actionLabels} folderNameMap={folderNameMap}
               onDocumentClick={handleDocumentClick} onDeleteDocument={setDeleteTarget}
               onDownloadOriginal={handleDownloadOriginal} onDownloadSigned={handleDownloadSigned}
+              onDownloadP7s={handleDownloadP7s}
               onViewSummary={handleViewSummary} onMoveToFolder={setMoveTarget} onTrackDocument={(env) => setTrackingId(env.id)} deletingId={deletingId}
             />
           </motion.div>
@@ -237,6 +256,7 @@ export default function DocumentsPage() {
                     onToggleMenu={(open) => setGridMenuOpenId(open ? doc.id : null)}
                     onDocumentClick={handleDocumentClick} onDeleteDocument={setDeleteTarget}
                     onDownloadOriginal={handleDownloadOriginal} onDownloadSigned={handleDownloadSigned}
+                    onDownloadP7s={handleDownloadP7s}
                     onViewSummary={handleViewSummary} onMoveToFolder={setMoveTarget} onTrackDocument={(env) => setTrackingId(env.id)}
                   />
                 ))}

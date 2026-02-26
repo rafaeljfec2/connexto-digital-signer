@@ -6,6 +6,7 @@ export type TooltipProps = {
   readonly content: string;
   readonly position?: TooltipPosition;
   readonly maxWidth?: number;
+  readonly fullWidth?: boolean;
   readonly children: ReactNode;
 };
 
@@ -20,10 +21,11 @@ export function Tooltip({
   content,
   position = 'top',
   maxWidth = 260,
+  fullWidth = false,
   children,
 }: Readonly<TooltipProps>) {
   return (
-    <span className="group/tip relative inline-flex">
+    <span className={`group/tip relative ${fullWidth ? 'flex w-full' : 'inline-flex'}`}>
       {children}
       <span
         className={`pointer-events-none absolute z-50 w-max rounded-md border border-th-border bg-th-dialog px-2.5 py-1.5 text-[11px] font-medium leading-relaxed text-foreground opacity-0 shadow-lg transition-opacity group-hover/tip:opacity-100 ${positionClass[position]}`}

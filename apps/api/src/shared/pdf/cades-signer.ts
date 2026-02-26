@@ -1,4 +1,3 @@
-import { Signer } from '@signpdf/signpdf';
 import * as forge from 'node-forge';
 import {
   CMS_OID,
@@ -6,42 +5,30 @@ import {
   asn1Oid,
   asn1Seq,
   asn1Set,
+  asn1UtcTime,
   buildCmsContentInfo,
   buildSigningCertificateV2Attr,
   extractP12Credentials,
   sha256Digest,
 } from './asn1-helpers';
 
-interface PadesSignerOptions {
-  readonly passphrase?: string;
-  readonly asn1StrictParsing?: boolean;
-}
-
-export class PadesSigner extends Signer {
+export class CadesSigner {
   private readonly p12Buffer: Buffer;
   private readonly passphrase: string;
-  private readonly asn1StrictParsing: boolean;
 
-  constructor(p12Buffer: Buffer, options: PadesSignerOptions = {}) {
-    super();
+  constructor(p12Buffer: Buffer, passphrase: string) {
     this.p12Buffer = p12Buffer;
-    this.passphrase = options.passphrase ?? '';
-    this.asn1StrictParsing = options.asn1StrictParsing ?? false;
+    this.passphrase = passphrase;
   }
 
-  override async sign(pdfBuffer: Buffer): Promise<Buffer> {
-    if (!(pdfBuffer instanceof Buffer)) {
-      throw new TypeError('PDF expected as Buffer.');
-    }
-
+  signDetached(contentBuffer: Buffer): Buffer {
     const { privateKey, certificate, allCerts } = extractP12Credentials(
       this.p12Buffer,
-      this.passphrase,
-      this.asn1StrictParsing
+      this.passphrase
     );
 
-    const contentDigest = sha256Digest(pdfBuffer.toString('binary'));
-    const signedAttrs = this.buildSignedAttributes(contentDigest, certificate);
+    const contentDigest = sha256Digest(contentBuffer.toString('binary'));
+    const signedAttrs = this.buildCadesSignedAttributes(contentDigest, certificate);
 
     const signedAttrsSetForSigning = asn1Set([...signedAttrs]);
     const signedAttrsBytes = forge.asn1.toDer(signedAttrsSetForSigning).getBytes();
@@ -53,13 +40,18 @@ export class PadesSigner extends Signer {
     return buildCmsContentInfo(certificate, allCerts, signedAttrs, signature);
   }
 
-  private buildSignedAttributes(
+  private buildCadesSignedAttributes(
     contentDigest: string,
     certificate: forge.pki.Certificate
   ): forge.asn1.Asn1[] {
     const contentTypeAttr = asn1Seq([
       asn1Oid(CMS_OID.CONTENT_TYPE),
       asn1Set([asn1Oid(CMS_OID.DATA)]),
+    ]);
+
+    const signingTimeAttr = asn1Seq([
+      asn1Oid(CMS_OID.SIGNING_TIME),
+      asn1Set([asn1UtcTime(new Date())]),
     ]);
 
     const messageDigestAttr = asn1Seq([
@@ -69,6 +61,6 @@ export class PadesSigner extends Signer {
 
     const signingCertV2Attr = buildSigningCertificateV2Attr(certificate);
 
-    return [contentTypeAttr, messageDigestAttr, signingCertV2Attr];
+    return [contentTypeAttr, signingTimeAttr, messageDigestAttr, signingCertV2Attr];
   }
 }

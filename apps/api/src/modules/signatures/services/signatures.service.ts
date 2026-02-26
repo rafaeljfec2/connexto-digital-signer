@@ -770,9 +770,11 @@ export class SignaturesService {
       },
     );
 
+    let p7sBuffer: Buffer | null = null;
     if (certificateStatus && !certificateStatus.isExpired) {
       try {
         finalBuffer = await this.certificateService.signPdf(tenantId, finalBuffer);
+        p7sBuffer = await this.certificateService.generateP7s(tenantId, finalBuffer);
         this.logger.log(`Document ${documentId} digitally signed with tenant certificate`);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
@@ -780,7 +782,7 @@ export class SignaturesService {
       }
     }
 
-    await this.documentsService.setFinalPdf(documentId, tenantId, finalBuffer);
+    await this.documentsService.setFinalPdf(documentId, tenantId, finalBuffer, p7sBuffer);
   }
 
   private buildAuditTimeline(

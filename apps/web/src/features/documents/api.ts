@@ -214,6 +214,11 @@ export type PresignedSignedFileUrl = Readonly<{
   expiresIn: number;
 }>;
 
+export type PresignedP7sFileUrl = Readonly<{
+  url: string;
+  expiresIn: number;
+}>;
+
 export type AuditTimelineEvent = Readonly<{
   type: 'sent' | 'signed' | 'completed' | 'verified';
   actorName: string;
@@ -374,6 +379,19 @@ export const getDocumentSignedFileUrl = async (
   try {
     const response = await apiClient.get<PresignedSignedFileUrl>(
       `/documents/${documentId}/signed-file`,
+    );
+    return response.data;
+  } catch {
+    return null;
+  }
+};
+
+export const getDocumentP7sFileUrl = async (
+  documentId: string,
+): Promise<PresignedP7sFileUrl | null> => {
+  try {
+    const response = await apiClient.get<PresignedP7sFileUrl>(
+      `/documents/${documentId}/p7s`,
     );
     return response.data;
   } catch {

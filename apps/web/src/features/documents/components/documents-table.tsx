@@ -11,6 +11,7 @@ import {
   ChevronsUpDown,
   MoreVertical,
   Download,
+  FileSignature,
   Eye,
   Trash2,
   Pencil,
@@ -96,6 +97,7 @@ export type DocumentActionLabels = Readonly<{
   viewSummary: string;
   downloadOriginal: string;
   downloadSigned: string;
+  downloadP7s?: string;
   delete: string;
   moveToFolder?: string;
   track?: string;
@@ -121,6 +123,7 @@ export type DocumentsTableProps = Readonly<{
   onDeleteDocument?: (doc: EnvelopeSummary) => void;
   onDownloadOriginal?: (doc: EnvelopeSummary) => void;
   onDownloadSigned?: (doc: EnvelopeSummary) => void;
+  onDownloadP7s?: (doc: EnvelopeSummary) => void;
   onViewSummary?: (doc: EnvelopeSummary) => void;
   onMoveToFolder?: (doc: EnvelopeSummary) => void;
   onTrackDocument?: (doc: EnvelopeSummary) => void;
@@ -169,6 +172,7 @@ type ActionHandlers = Readonly<{
   onDeleteDocument?: (doc: EnvelopeSummary) => void;
   onDownloadOriginal?: (doc: EnvelopeSummary) => void;
   onDownloadSigned?: (doc: EnvelopeSummary) => void;
+  onDownloadP7s?: (doc: EnvelopeSummary) => void;
   onViewSummary?: (doc: EnvelopeSummary) => void;
   onMoveToFolder?: (doc: EnvelopeSummary) => void;
   onTrackDocument?: (doc: EnvelopeSummary) => void;
@@ -202,6 +206,9 @@ function buildViewableActions(doc: EnvelopeSummary, labels: DocumentActionLabels
       : []),
     ...(includeSigned && handlers.onDownloadSigned
       ? [{ key: 'download-signed', label: labels.downloadSigned, icon: FileDown, onClick: () => handlers.onDownloadSigned?.(doc) }]
+      : []),
+    ...(includeSigned && handlers.onDownloadP7s && labels.downloadP7s
+      ? [{ key: 'download-p7s', label: labels.downloadP7s, icon: FileSignature, onClick: () => handlers.onDownloadP7s?.(doc) }]
       : []),
     ...(handlers.onDownloadOriginal
       ? [{ key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal?.(doc) }]
@@ -306,13 +313,14 @@ export function DocumentsTable({
   onDeleteDocument,
   onDownloadOriginal,
   onDownloadSigned,
+  onDownloadP7s,
   onViewSummary,
   onMoveToFolder,
   onTrackDocument,
   deletingId = null,
   folderNameMap,
 }: DocumentsTableProps) {
-  const handlers = { onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder, onTrackDocument };
+  const handlers = { onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onDownloadP7s, onViewSummary, onMoveToFolder, onTrackDocument };
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
   const sortedDocuments = useMemo(
@@ -396,6 +404,7 @@ type DocumentRowProps = Readonly<{
     onDeleteDocument?: (doc: EnvelopeSummary) => void;
     onDownloadOriginal?: (doc: EnvelopeSummary) => void;
     onDownloadSigned?: (doc: EnvelopeSummary) => void;
+    onDownloadP7s?: (doc: EnvelopeSummary) => void;
     onViewSummary?: (doc: EnvelopeSummary) => void;
     onMoveToFolder?: (doc: EnvelopeSummary) => void;
     onTrackDocument?: (doc: EnvelopeSummary) => void;

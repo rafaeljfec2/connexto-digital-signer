@@ -285,6 +285,7 @@
       "viewSummary": "Ver resumo",
       "downloadOriginal": "Baixar PDF original",
       "downloadSigned": "Baixar PDF assinado",
+      "downloadP7s": "Baixar assinatura .p7s",
       "downloading": "Baixando...",
       "delete": "Excluir",
       "deleteTitle": "Excluir rascunho",

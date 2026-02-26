@@ -96,6 +96,23 @@ export class DocumentsController {
     return result;
   }
 
+  @Get(':id/p7s')
+  @ApiOperation({ summary: 'Get presigned URL for the detached .p7s signature file' })
+  @ApiParam({ name: 'id', description: 'Document UUID' })
+  @ApiResponse({ status: 200, description: 'Presigned URL for .p7s file' })
+  @ApiResponse({ status: 404, description: '.p7s signature file is not available' })
+  async getP7sFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string,
+  ) {
+    const document = await this.documentsService.findOne(id, tenantId);
+    const result = await this.documentsService.getP7sFileUrl(document);
+    if (result === null) {
+      throw new NotFoundException('.p7s signature file is not available yet');
+    }
+    return result;
+  }
+
   @Post(':id/file')
   @ApiOperation({ summary: 'Upload or replace the document file' })
   @ApiConsumes('multipart/form-data')

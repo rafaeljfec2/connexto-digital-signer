@@ -228,12 +228,28 @@ export class DocumentsService {
   async setFinalPdf(
     id: string,
     tenantId: string,
-    finalPdfBuffer: Buffer
+    finalPdfBuffer: Buffer,
+    p7sBuffer?: Buffer | null,
   ): Promise<Document> {
     const document = await this.findOne(id, tenantId);
     const finalHash = sha256(finalPdfBuffer);
     const key = `tenants/${tenantId}/documents/${id}/signed.pdf`;
     await this.storage.put(key, finalPdfBuffer, 'application/pdf');
+    if (p7sBuffer && p7sBuffer.length > 0) {
+      const p7sKey = `tenants/${tenantId}/documents/${id}/signature.p7s`;
+      await this.storage.put(p7sKey, p7sBuffer, 'application/pkcs7-signature');
+      document.p7sFileKey = p7sKey;
+    } else {
+      if (document.p7sFileKey) {
+        try {
+          await this.storage.delete(document.p7sFileKey);
+        } catch (error) {
+          const message = error instanceof Error ? error.message : String(error);
+          this.logger.warn(`Failed to delete stale .p7s file from storage: ${message}`);
+        }
+      }
+      document.p7sFileKey = null;
+    }
     document.finalFileKey = key;
     document.finalHash = finalHash;
     document.status = DocumentStatus.COMPLETED;
@@ -332,6 +348,18 @@ export class DocumentsService {
     if (document.finalFileKey === null) return null;
     const url = await this.storage.getSignedUrl(
       document.finalFileKey,
+      PRESIGNED_URL_EXPIRY_SECONDS,
+      { disposition: 'attachment' },
+    );
+    return { url, expiresIn: PRESIGNED_URL_EXPIRY_SECONDS };
+  }
+
+  async getP7sFileUrl(
+    document: Document,
+  ): Promise<{ url: string; expiresIn: number } | null> {
+    if (document.p7sFileKey === null) return null;
+    const url = await this.storage.getSignedUrl(
+      document.p7sFileKey,
       PRESIGNED_URL_EXPIRY_SECONDS,
       { disposition: 'attachment' },
     );

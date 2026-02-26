@@ -164,11 +164,11 @@ export function FieldsStep({
             <p className="text-center text-xs text-foreground-muted">{aiMessage}</p>
           ) : null}
 
-          <Tooltip content={tWizard('tooltips.suggestWithAi')} position="top" maxWidth={260}>
+          <Tooltip content={tWizard('tooltips.suggestWithAi')} position="top" maxWidth={260} fullWidth>
             <Button
               type="button"
               variant="secondary"
-              className="gap-2 border-primary/30 bg-primary/5 hover:bg-primary/10"
+              className="w-full gap-2 border-primary/30 bg-primary/5 hover:bg-primary/10"
               onClick={handleSuggestWithAi}
               disabled={isAiLoading || !hasSigners}
             >
