@@ -9,6 +9,7 @@ import {
   Copy,
   Download,
   FileBadge,
+  FileSignature,
   FileText,
   Globe,
   Loader2,
@@ -18,6 +19,7 @@ import {
   ShieldCheck,
   UserCheck,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import type { DocumentAuditSummary } from '../api';
 
@@ -35,6 +37,7 @@ type DocumentAuditViewProps = Readonly<{
   documents?: readonly AuditDocumentItem[];
   onDownloadOriginal: (documentId?: string) => Promise<{ url: string }>;
   onDownloadSigned: (documentId?: string) => Promise<{ url: string } | null>;
+  onDownloadP7s?: (documentId?: string) => Promise<{ url: string } | null>;
   labels: Readonly<{
     title: string;
     documentDetails: string;
@@ -78,6 +81,8 @@ type DocumentAuditViewProps = Readonly<{
     downloadSigned: string;
     downloadSignedDesc: string;
     downloadSignedUnavailable: string;
+    downloadP7s: string;
+    downloadP7sDesc: string;
     downloading: string;
   }>;
 }>;
@@ -148,6 +153,7 @@ function SingleDocDownload({
   isCompleted,
   onDownloadOriginal,
   onDownloadSigned,
+  onDownloadP7s,
   labels,
 }: Readonly<{
   docTitle: string;
@@ -155,16 +161,20 @@ function SingleDocDownload({
   isCompleted: boolean;
   onDownloadOriginal: (documentId?: string) => Promise<{ url: string }>;
   onDownloadSigned: (documentId?: string) => Promise<{ url: string } | null>;
+  onDownloadP7s?: (documentId?: string) => Promise<{ url: string } | null>;
   labels: Readonly<{
     downloadOriginal: string;
     downloadOriginalDesc: string;
     downloadSigned: string;
     downloadSignedDesc: string;
     downloadSignedUnavailable: string;
+    downloadP7s: string;
+    downloadP7sDesc: string;
   }>;
 }>) {
   const [downloadingOriginal, setDownloadingOriginal] = useState(false);
   const [downloadingSigned, setDownloadingSigned] = useState(false);
+  const [downloadingP7s, setDownloadingP7s] = useState(false);
 
   const handleDownloadOriginal = useCallback(async () => {
     setDownloadingOriginal(true);
@@ -188,60 +198,114 @@ function SingleDocDownload({
     }
   }, [onDownloadSigned, documentId]);
 
+  const handleDownloadP7s = useCallback(async () => {
+    if (!onDownloadP7s) return;
+    setDownloadingP7s(true);
+    try {
+      const result = await onDownloadP7s(documentId);
+      if (result) {
+        openDownloadUrl(result.url);
+      }
+    } finally {
+      setDownloadingP7s(false);
+    }
+  }, [onDownloadP7s, documentId]);
+
+  const signedDescription = isCompleted ? labels.downloadSignedDesc : labels.downloadSignedUnavailable;
+  const signedIconClass = isCompleted ? 'text-success' : 'text-foreground-subtle';
+  const signedIconBackground = isCompleted ? 'bg-success/20' : 'bg-th-icon-bg';
+  const p7sDescription = isCompleted ? labels.downloadP7sDesc : labels.downloadSignedUnavailable;
+  const p7sIconClass = isCompleted ? 'text-primary' : 'text-foreground-subtle';
+  const p7sIconBackground = isCompleted ? 'bg-primary/20' : 'bg-th-icon-bg';
+  const downloadIconClass = (enabled: boolean) =>
+    enabled ? 'text-foreground-subtle' : 'text-foreground-subtle/50';
+
   return (
     <div className="space-y-3">
-      <button
-        type="button"
-        onClick={handleDownloadOriginal}
+      <DownloadAction
+        title={labels.downloadOriginal}
+        description={labels.downloadOriginalDesc}
+        icon={FileText}
+        iconClassName="text-primary"
+        iconBackgroundClassName="bg-primary/20"
+        loading={downloadingOriginal}
         disabled={downloadingOriginal}
-        className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
-      >
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/20">
-          <FileText className="h-5 w-5 text-primary" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">{labels.downloadOriginal}</p>
-          <p className="text-xs text-foreground-muted">{labels.downloadOriginalDesc}</p>
-        </div>
-        {downloadingOriginal ? (
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
-        ) : (
-          <Download className="h-4 w-4 shrink-0 text-foreground-subtle" />
-        )}
-      </button>
-
-      <button
-        type="button"
-        onClick={handleDownloadSigned}
+        downloadIconClassName={downloadIconClass(true)}
+        onClick={handleDownloadOriginal}
+      />
+      <DownloadAction
+        title={labels.downloadSigned}
+        description={signedDescription}
+        icon={FileBadge}
+        iconClassName={signedIconClass}
+        iconBackgroundClassName={signedIconBackground}
+        loading={downloadingSigned}
         disabled={downloadingSigned || !isCompleted}
-        className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
-      >
-        <div
-          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${
-            isCompleted ? 'bg-success/20' : 'bg-th-icon-bg'
-          }`}
-        >
-          <FileBadge
-            className={`h-5 w-5 ${isCompleted ? 'text-success' : 'text-foreground-subtle'}`}
-          />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="text-sm font-medium">{labels.downloadSigned}</p>
-          <p className="text-xs text-foreground-muted">
-            {isCompleted ? labels.downloadSignedDesc : labels.downloadSignedUnavailable}
-          </p>
-        </div>
-        {downloadingSigned ? (
-          <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
-        ) : (
-          <Download
-            className={`h-4 w-4 shrink-0 ${
-              isCompleted ? 'text-foreground-subtle' : 'text-foreground-subtle/50'
-            }`}
-          />
-        )}
-      </button>
+        downloadIconClassName={downloadIconClass(isCompleted)}
+        onClick={handleDownloadSigned}
+      />
+      {onDownloadP7s ? (
+        <DownloadAction
+          title={labels.downloadP7s}
+          description={p7sDescription}
+          icon={FileSignature}
+          iconClassName={p7sIconClass}
+          iconBackgroundClassName={p7sIconBackground}
+          loading={downloadingP7s}
+          disabled={downloadingP7s || !isCompleted}
+          downloadIconClassName={downloadIconClass(isCompleted)}
+          onClick={handleDownloadP7s}
+        />
+      ) : null}
     </div>
+  );
+}
+
+type DownloadActionProps = Readonly<{
+  title: string;
+  description: string;
+  icon: LucideIcon;
+  iconClassName: string;
+  iconBackgroundClassName: string;
+  loading: boolean;
+  disabled: boolean;
+  downloadIconClassName: string;
+  onClick: () => void;
+}>;
+
+function DownloadAction({
+  title,
+  description,
+  icon: Icon,
+  iconClassName,
+  iconBackgroundClassName,
+  loading,
+  disabled,
+  downloadIconClassName,
+  onClick,
+}: DownloadActionProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      className="flex w-full items-center gap-3 rounded-xl border border-th-border bg-th-hover p-3.5 text-left transition-all hover:border-th-card-border hover:bg-th-active disabled:opacity-50"
+    >
+      <div
+        className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-lg ${iconBackgroundClassName}`}
+      >
+        <Icon className={`h-5 w-5 ${iconClassName}`} />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="text-sm font-medium">{title}</p>
+        <p className="text-xs text-foreground-muted">{description}</p>
+      </div>
+      {loading ? (
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin text-foreground-muted" />
+      ) : (
+        <Download className={`h-4 w-4 shrink-0 ${downloadIconClassName}`} />
+      )}
+    </button>
   );
 }
 
@@ -250,6 +314,7 @@ export function DocumentAuditView({
   documents,
   onDownloadOriginal,
   onDownloadSigned,
+  onDownloadP7s,
   labels,
 }: DocumentAuditViewProps) {
   const { document: doc, signers, timeline } = data;
@@ -497,6 +562,7 @@ export function DocumentAuditView({
                   isCompleted={isCompleted}
                   onDownloadOriginal={onDownloadOriginal}
                   onDownloadSigned={onDownloadSigned}
+                  onDownloadP7s={onDownloadP7s}
                   labels={labels}
                 />
               </div>
@@ -508,6 +574,7 @@ export function DocumentAuditView({
             isCompleted={isCompleted}
             onDownloadOriginal={onDownloadOriginal}
             onDownloadSigned={onDownloadSigned}
+            onDownloadP7s={onDownloadP7s}
             labels={labels}
           />
         )}

@@ -6,7 +6,7 @@ import { useTranslations } from 'next-intl';
 import { AlertTriangle, LayoutTemplate } from 'lucide-react';
 import { Button, Card } from '@/shared/ui';
 import { useEnvelopeAuditSummary, useEnvelopeDocuments } from '@/features/documents/hooks/use-document-wizard';
-import { getDocumentFileUrl, getDocumentSignedFileUrl } from '@/features/documents/api';
+import { getDocumentFileUrl, getDocumentP7sFileUrl, getDocumentSignedFileUrl } from '@/features/documents/api';
 import { lazyLoad } from '@/shared/utils/lazy-load';
 import { SaveAsTemplateDialog } from '@/features/templates/components/save-as-template-dialog';
 
@@ -77,6 +77,7 @@ export default function DocumentSummaryPage() {
         documents={documents}
         onDownloadOriginal={(documentId) => getDocumentFileUrl(documentId ?? documents[0]?.id ?? envelopeId)}
         onDownloadSigned={(documentId) => getDocumentSignedFileUrl(documentId ?? documents[0]?.id ?? envelopeId)}
+        onDownloadP7s={(documentId) => getDocumentP7sFileUrl(documentId ?? documents[0]?.id ?? envelopeId)}
         labels={{
           title: t('title'),
           documentDetails: t('documentDetails'),
@@ -125,6 +126,8 @@ export default function DocumentSummaryPage() {
           downloadSigned: t('downloadSigned'),
           downloadSignedDesc: t('downloadSignedDesc'),
           downloadSignedUnavailable: t('downloadSignedUnavailable'),
+          downloadP7s: t('downloadP7s'),
+          downloadP7sDesc: t('downloadP7sDesc'),
           downloading: t('downloading'),
         }}
       />

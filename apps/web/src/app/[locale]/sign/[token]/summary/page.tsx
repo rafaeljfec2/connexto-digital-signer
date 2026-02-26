@@ -107,6 +107,8 @@ export default function SignerSummaryPage() {
           downloadSigned: t('downloadSigned'),
           downloadSignedDesc: t('downloadSignedDesc'),
           downloadSignedUnavailable: t('downloadSignedUnavailable'),
+          downloadP7s: t('downloadP7s'),
+          downloadP7sDesc: t('downloadP7sDesc'),
           downloading: t('downloading'),
         }}
       />
