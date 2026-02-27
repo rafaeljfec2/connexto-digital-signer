@@ -1,15 +1,15 @@
 import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
-import * as forge from 'node-forge';
-import { SignPdf } from '@signpdf/signpdf';
 import { pdflibAddPlaceholder } from '@signpdf/placeholder-pdf-lib';
-import { PadesSigner } from '../../../shared/pdf/pades-signer';
-import { CadesSigner } from '../../../shared/pdf/cades-signer';
+import { SignPdf } from '@signpdf/signpdf';
+import * as forge from 'node-forge';
+import { createCipheriv, createDecipheriv, randomBytes } from 'node:crypto';
 import { PDFDocument } from 'pdf-lib';
-import { Tenant } from '../entities/tenant.entity';
+import { Repository } from 'typeorm';
+import { CadesSigner } from '../../../shared/pdf/cades-signer';
+import { PadesSigner } from '../../../shared/pdf/pades-signer';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
+import { Tenant } from '../entities/tenant.entity';
 
 interface CertificateMetadata {
   readonly subject: string;
@@ -64,7 +64,7 @@ export class CertificateService {
   constructor(
     @InjectRepository(Tenant)
     private readonly tenantRepository: Repository<Tenant>,
-    private readonly storageService: S3StorageService,
+    private readonly storageService: S3StorageService
   ) {}
 
   validateAndExtract(buffer: Buffer, password: string): CertificateMetadata {
@@ -84,8 +84,10 @@ export class CertificateService {
         throw new BadRequestException('Invalid certificate in the .p12 file');
       }
 
-      const subject = cert.subject.getField('CN')?.value ?? cert.subject.attributes[0]?.value ?? 'Unknown';
-      const issuer = cert.issuer.getField('CN')?.value ?? cert.issuer.attributes[0]?.value ?? 'Unknown';
+      const subject =
+        cert.subject.getField('CN')?.value ?? cert.subject.attributes[0]?.value ?? 'Unknown';
+      const issuer =
+        cert.issuer.getField('CN')?.value ?? cert.issuer.attributes[0]?.value ?? 'Unknown';
       const expiresAt = cert.validity.notAfter;
 
       if (expiresAt < new Date()) {
@@ -104,7 +106,7 @@ export class CertificateService {
   async uploadCertificate(
     tenantId: string,
     fileBuffer: Buffer,
-    password: string,
+    password: string
   ): Promise<CertificateStatusDto> {
     const metadata = this.validateAndExtract(fileBuffer, password);
 
@@ -175,7 +177,9 @@ export class CertificateService {
     const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
 
     if (!tenant?.certificateFileKey || !tenant.certificatePasswordEnc) {
-      this.logger.warn(`No certificate configured for tenant ${tenantId}, skipping digital signature`);
+      this.logger.warn(
+        `No certificate configured for tenant ${tenantId}, skipping digital signature`
+      );
       return pdfBuffer;
     }
 
@@ -190,9 +194,9 @@ export class CertificateService {
       pdflibAddPlaceholder({
         pdfDoc,
         pdfPage: lastPage,
-        reason: 'Document digitally signed by Connexto Digital Signer',
+        reason: 'Document digitally signed by NexoSigner',
         contactInfo: tenant.certificateSubject ?? '',
-        name: tenant.certificateSubject ?? 'Connexto Digital Signer',
+        name: tenant.certificateSubject ?? 'NexoSigner',
         location: '',
         signatureLength: 8192,
       });
@@ -216,7 +220,9 @@ export class CertificateService {
     const tenant = await this.tenantRepository.findOne({ where: { id: tenantId } });
 
     if (!tenant?.certificateFileKey || !tenant.certificatePasswordEnc) {
-      this.logger.warn(`No certificate configured for tenant ${tenantId}, skipping .p7s generation`);
+      this.logger.warn(
+        `No certificate configured for tenant ${tenantId}, skipping .p7s generation`
+      );
       return null;
     }
 

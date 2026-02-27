@@ -26,13 +26,12 @@ export const emailMessages = {
     textBody: 'Todos os signatários assinaram o documento: {documentTitle}.\nAcesse: {documentUrl}',
   },
   welcome: {
-    subject: 'Bem-vindo ao Connexto Digital Signer',
+    subject: 'Bem-vindo ao NexoSigner',
     greeting: 'Olá {ownerName},',
     body: 'Sua conta foi criada com sucesso. Você já pode enviar documentos para assinatura digital.',
     cta: 'Acessar painel',
-    footer: 'Obrigado por escolher o Connexto Digital Signer.',
-    textBody:
-      'Bem-vindo ao Connexto Digital Signer! Sua conta foi criada com sucesso.\nAcesse: {dashboardUrl}',
+    footer: 'Obrigado por escolher o NexoSigner.',
+    textBody: 'Bem-vindo ao NexoSigner! Sua conta foi criada com sucesso.\nAcesse: {dashboardUrl}',
   },
   'verification-code': {
     subject: 'Seu codigo de verificacao: {code}',

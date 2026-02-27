@@ -57,6 +57,7 @@ export default function SignerSummaryPage() {
       <DocumentAuditView
         data={summaryQuery.data}
         documents={documents}
+        privacyMode="public"
         onDownloadOriginal={(documentId) => getSignerPdfUrl(token, documentId)}
         onDownloadSigned={(documentId) => getSignerSignedPdfUrl(token, documentId)}
         labels={{
@@ -110,6 +111,20 @@ export default function SignerSummaryPage() {
           downloadP7s: t('downloadP7s'),
           downloadP7sDesc: t('downloadP7sDesc'),
           downloading: t('downloading'),
+          validation: {
+            title: t('validation.title'),
+            timezone: t('validation.timezone'),
+            verificationLabel: t('validation.verificationLabel'),
+            legalTitle: t('validation.legalTitle'),
+            legalText: t('validation.legalText'),
+            certificate: t('validation.certificate'),
+            certificateIssuer: t('validation.certificateIssuer'),
+            certificateExpiresAt: t('validation.certificateExpiresAt'),
+            certificateStatus: t('validation.certificateStatus'),
+            certificateStatusValid: t('validation.certificateStatusValid'),
+            certificateStatusExpired: t('validation.certificateStatusExpired'),
+            unavailable: t('validation.unavailable'),
+          },
         }}
       />
     </div>

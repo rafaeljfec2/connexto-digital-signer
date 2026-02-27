@@ -28,6 +28,21 @@ export interface AuditSignerInfo {
   readonly signatureData: string | null;
 }
 
+export interface AuditDocumentHashInfo {
+  readonly id: string;
+  readonly title: string;
+  readonly status: string;
+  readonly originalHash: string | null;
+  readonly finalHash: string | null;
+}
+
+export interface AuditCertificateInfo {
+  readonly subject: string;
+  readonly issuer: string;
+  readonly expiresAt: Date | null;
+  readonly isExpired: boolean;
+}
+
 export interface DocumentAuditSummary {
   readonly document: {
     readonly id: string;
@@ -40,6 +55,9 @@ export interface DocumentAuditSummary {
     readonly originalHash: string | null;
     readonly finalHash: string | null;
   };
+  readonly documents: AuditDocumentHashInfo[];
+  readonly certificate: AuditCertificateInfo | null;
+  readonly timezone: string;
   readonly signers: AuditSignerInfo[];
   readonly timeline: AuditTimelineEvent[];
 }

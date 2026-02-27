@@ -1,4 +1,4 @@
-# Connexto Digital Signer
+# NexoSign Digital Signer
 
 Monolith modular em NestJS (Node.js + TypeScript) para assinatura digital de documentos, preparado para multi-tenant, white-label, auditabilidade e futura extração para microserviços.
 
@@ -74,13 +74,13 @@ O sistema utiliza Redis + Bull para filas assíncronas ao invés de RabbitMQ por
 
 **Quando migrar para RabbitMQ** — A migração faria sentido quando houver múltiplos serviços consumindo os mesmos eventos, routing complexo (exchanges, topics, fanout), backpressure e acknowledgement distribuído, ou comunicação inter-serviços assíncrona. A seção "Evolução para microserviços" já contempla essa transição.
 
-| Critério | Redis + Bull | RabbitMQ |
-|----------|-------------|----------|
-| Complexidade operacional | Baixa (Redis já existia) | Média (novo serviço) |
-| Integração NestJS | Nativa (`@nestjs/bull`) | Manual ou `@nestjs/microservices` |
-| Caso de uso | Job queues com retry | Messaging distribuído |
-| Adequação ao cenário atual | Perfeita (2 filas simples) | Excesso para o cenário |
-| Escalabilidade futura | Limitada a job queues | Messaging completo |
+| Critério                   | Redis + Bull               | RabbitMQ                          |
+| -------------------------- | -------------------------- | --------------------------------- |
+| Complexidade operacional   | Baixa (Redis já existia)   | Média (novo serviço)              |
+| Integração NestJS          | Nativa (`@nestjs/bull`)    | Manual ou `@nestjs/microservices` |
+| Caso de uso                | Job queues com retry       | Messaging distribuído             |
+| Adequação ao cenário atual | Perfeita (2 filas simples) | Excesso para o cenário            |
+| Escalabilidade futura      | Limitada a job queues      | Messaging completo                |
 
 ## Como rodar
 
@@ -116,16 +116,19 @@ Para trocar automaticamente em todo projeto que tiver `.nvmrc`, adicione o hook 
 ### Desenvolvimento local
 
 1. Garantir Node 24 ativo (`nvm use` ou direnv) e instalar dependências:
+
    ```bash
    pnpm install
    ```
 
 2. Subir dependências (Postgres, Redis, MinIO):
+
    ```bash
    cd docker && docker compose up -d postgres redis minio
    ```
 
 3. Criar `.env` na raiz ou em `apps/api` (ou usar `.env.example`):
+
    ```env
    DB_HOST=localhost
    DB_PORT=5432
@@ -150,11 +153,13 @@ Para trocar automaticamente em todo projeto que tiver `.nvmrc`, adicione o hook 
 ### Build e Docker
 
 - Build do monorepo:
+
   ```bash
   pnpm build
   ```
 
 - Build da API:
+
   ```bash
   pnpm build:api
   ```
@@ -272,19 +277,19 @@ O Redis é utilizado exclusivamente como backend para filas de jobs assíncronos
 
 ### Filas
 
-| Fila | Módulo | Propósito |
-|------|--------|-----------|
+| Fila            | Módulo              | Propósito                                                                                                      |
+| --------------- | ------------------- | -------------------------------------------------------------------------------------------------------------- |
 | `notifications` | NotificationsModule | Envio de emails (convites de assinatura, lembretes, documento finalizado, boas-vindas, códigos de verificação) |
-| `webhooks` | WebhooksModule | Entrega de webhooks com retries e backoff exponencial |
+| `webhooks`      | WebhooksModule      | Entrega de webhooks com retries e backoff exponencial                                                          |
 
 ### O que NÃO usa Redis
 
-| Funcionalidade | Implementação atual |
-|----------------|---------------------|
-| Cache | In-memory (`Map`) |
-| Rate limiting | In-memory (`@nestjs/throttler`) |
-| Sessões | JWT (sem sessão server-side) |
-| Pub/Sub | Não utilizado |
+| Funcionalidade | Implementação atual             |
+| -------------- | ------------------------------- |
+| Cache          | In-memory (`Map`)               |
+| Rate limiting  | In-memory (`@nestjs/throttler`) |
+| Sessões        | JWT (sem sessão server-side)    |
+| Pub/Sub        | Não utilizado                   |
 
 ### Configuração
 
@@ -330,13 +335,13 @@ A conexão é configurada em `apps/api/src/app.module.ts` via `BullModule.forRoo
 
 **Cenários que enfileiram emails:**
 
-| Método | Quando dispara |
-|--------|----------------|
-| `sendSignatureInvite` | Documento enviado para assinatura |
-| `sendSignatureReminder` | Lembrete periódico ao signatário |
-| `sendDocumentCompleted` | Todos os signatários assinaram |
-| `sendWelcome` | Novo tenant criado |
-| `sendVerificationCode` | Signatário solicita código OTP |
+| Método                  | Quando dispara                    |
+| ----------------------- | --------------------------------- |
+| `sendSignatureInvite`   | Documento enviado para assinatura |
+| `sendSignatureReminder` | Lembrete periódico ao signatário  |
+| `sendDocumentCompleted` | Todos os signatários assinaram    |
+| `sendWelcome`           | Novo tenant criado                |
+| `sendVerificationCode`  | Signatário solicita código OTP    |
 
 #### Fila `webhooks` — Entregas HTTP
 
@@ -383,12 +388,12 @@ A conexão é configurada em `apps/api/src/app.module.ts` via `BullModule.forRoo
 
 **Eventos que disparam webhooks:**
 
-| Evento | Dados enviados |
-|--------|----------------|
-| `document.created` | `documentId`, `title`, `createdAt` |
-| `document.completed` | `documentId`, `completedAt` |
-| `document.expired` | `documentId`, `expiredAt` |
-| `signature.signed` | `documentId`, `signerId`, `signedAt` |
+| Evento               | Dados enviados                       |
+| -------------------- | ------------------------------------ |
+| `document.created`   | `documentId`, `title`, `createdAt`   |
+| `document.completed` | `documentId`, `completedAt`          |
+| `document.expired`   | `documentId`, `expiredAt`            |
+| `signature.signed`   | `documentId`, `signerId`, `signedAt` |
 
 ### Pacotes relacionados
 

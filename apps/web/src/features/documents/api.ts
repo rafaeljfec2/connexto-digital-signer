@@ -254,6 +254,20 @@ export type DocumentAuditSummary = Readonly<{
     originalHash: string | null;
     finalHash: string | null;
   }>;
+  documents: ReadonlyArray<{
+    id: string;
+    title: string;
+    status: string;
+    originalHash: string | null;
+    finalHash: string | null;
+  }>;
+  certificate: Readonly<{
+    subject: string;
+    issuer: string;
+    expiresAt: string | null;
+    isExpired: boolean;
+  }> | null;
+  timezone: string;
   signers: readonly AuditSignerInfo[];
   timeline: readonly AuditTimelineEvent[];
 }>;

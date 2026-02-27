@@ -1,6 +1,7 @@
 'use client';
 
 import { Badge, Card } from '@/shared/ui';
+import Image from 'next/image';
 import {
   CalendarDays,
   Check,
@@ -35,6 +36,7 @@ type AuditDocumentItem = Readonly<{
 type DocumentAuditViewProps = Readonly<{
   data: DocumentAuditSummary;
   documents?: readonly AuditDocumentItem[];
+  privacyMode?: 'public' | 'private';
   onDownloadOriginal: (documentId?: string) => Promise<{ url: string }>;
   onDownloadSigned: (documentId?: string) => Promise<{ url: string } | null>;
   onDownloadP7s?: (documentId?: string) => Promise<{ url: string } | null>;
@@ -84,12 +86,50 @@ type DocumentAuditViewProps = Readonly<{
     downloadP7s: string;
     downloadP7sDesc: string;
     downloading: string;
+    validation: Readonly<{
+      title: string;
+      timezone: string;
+      verificationLabel: string;
+      legalTitle: string;
+      legalText: string;
+      certificate: string;
+      certificateIssuer: string;
+      certificateExpiresAt: string;
+      certificateStatus: string;
+      certificateStatusValid: string;
+      certificateStatusExpired: string;
+      unavailable: string;
+    }>;
   }>;
 }>;
 
 function formatDate(dateStr: string | null): string {
   if (!dateStr) return '—';
   return new Date(dateStr).toLocaleString();
+}
+
+function maskEmail(email: string): string {
+  const [localPart, domain] = email.split('@');
+  if (!localPart || !domain) return email;
+  if (localPart.length <= 2) return `${localPart[0] ?? '*'}***@${domain}`;
+  return `${localPart[0]}***${localPart.at(-1) ?? '*'}@${domain}`;
+}
+
+function maskIp(ipAddress: string): string {
+  const parts = ipAddress.split('.');
+  if (parts.length !== 4) return '***';
+  return `${parts[0]}.${parts[1]}.*.*`;
+}
+
+function maskUserAgent(userAgent: string): string {
+  if (userAgent.length <= 24) return userAgent;
+  return `${userAgent.slice(0, 24)}...`;
+}
+
+function getSignerUserAgent(userAgent: string, isPublic: boolean): string {
+  if (isPublic) return maskUserAgent(userAgent);
+  if (userAgent.length > 100) return `${userAgent.slice(0, 100)}...`;
+  return userAgent;
 }
 
 function CopyableHash({
@@ -148,7 +188,6 @@ const TIMELINE_COLORS: Record<string, string> = {
 };
 
 function SingleDocDownload({
-  docTitle,
   documentId,
   isCompleted,
   onDownloadOriginal,
@@ -156,7 +195,6 @@ function SingleDocDownload({
   onDownloadP7s,
   labels,
 }: Readonly<{
-  docTitle: string;
   documentId?: string;
   isCompleted: boolean;
   onDownloadOriginal: (documentId?: string) => Promise<{ url: string }>;
@@ -309,9 +347,118 @@ function DownloadAction({
   );
 }
 
+function SignerCard({
+  signer,
+  index,
+  isPublic,
+  labels,
+}: Readonly<{
+  signer: DocumentAuditSummary['signers'][number];
+  index: number;
+  isPublic: boolean;
+  labels: DocumentAuditViewProps['labels'];
+}>) {
+  const isSigned = signer.status === 'signed';
+  return (
+    <div
+      className={`rounded-xl border bg-th-hover p-4 space-y-4 ${
+        isSigned
+          ? 'border-l-4 border-l-success border-y-th-border border-r-th-border'
+          : 'border-th-border'
+      }`}
+    >
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <p className="truncate text-sm font-medium">
+            {index + 1}. {signer.name}
+          </p>
+          <p className="truncate text-xs text-foreground-muted">
+            {isPublic ? maskEmail(signer.email) : signer.email}
+          </p>
+        </div>
+        <Badge variant={isSigned ? 'success' : 'warning'} className="shrink-0 text-[10px]">
+          {isSigned ? labels.signerCard.signed : labels.signerCard.pending}
+        </Badge>
+      </div>
+
+      <div className="border-t border-th-border" />
+
+      <div className="flex gap-4">
+        <div className="grid flex-1 grid-cols-1 gap-2.5 text-xs sm:grid-cols-2">
+          {signer.signedAt ? (
+            <div className="flex items-center gap-1.5 text-foreground-muted">
+              <CheckCircle2 className="h-3 w-3 shrink-0 text-success" />
+              <span>
+                {labels.signerCard.signedAt}: {formatDate(signer.signedAt)}
+              </span>
+            </div>
+          ) : null}
+          {signer.notifiedAt ? (
+            <div className="flex items-center gap-1.5 text-foreground-muted">
+              <Send className="h-3 w-3 shrink-0" />
+              <span>
+                {labels.signerCard.notifiedAt}: {formatDate(signer.notifiedAt)}
+              </span>
+            </div>
+          ) : null}
+          {signer.verifiedAt ? (
+            <div className="flex items-center gap-1.5 text-foreground-muted">
+              <UserCheck className="h-3 w-3 shrink-0" />
+              <span>
+                {labels.signerCard.verifiedAt}: {formatDate(signer.verifiedAt)}
+              </span>
+            </div>
+          ) : null}
+          <div className="flex items-center gap-1.5 text-foreground-muted">
+            <Mail className="h-3 w-3 shrink-0" />
+            <span>
+              {labels.signerCard.authMethod}:{' '}
+              {signer.authMethod === 'email'
+                ? labels.signerCard.authMethodEmail
+                : labels.signerCard.authMethodNone}
+            </span>
+          </div>
+          {signer.ipAddress ? (
+            <div className="flex items-center gap-1.5 text-foreground-muted">
+              <Globe className="h-3 w-3 shrink-0" />
+              <span>
+                {labels.signerCard.ip}: {isPublic ? maskIp(signer.ipAddress) : signer.ipAddress}
+              </span>
+            </div>
+          ) : null}
+          {signer.userAgent ? (
+            <div className="col-span-full flex items-start gap-1.5 text-foreground-muted">
+              <Monitor className="mt-0.5 h-3 w-3 shrink-0" />
+              <span className="break-all">
+                {labels.signerCard.userAgent}: {getSignerUserAgent(signer.userAgent, isPublic)}
+              </span>
+            </div>
+          ) : null}
+        </div>
+
+        {signer.signatureData ? (
+          <div className="flex shrink-0 items-start">
+            <div className="flex h-20 w-28 items-center justify-center overflow-hidden rounded-lg border border-th-border bg-white p-2">
+              <Image
+                src={signer.signatureData}
+                alt=""
+                width={112}
+                height={80}
+                unoptimized
+                className="h-full w-full object-contain"
+              />
+            </div>
+          </div>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
 export function DocumentAuditView({
   data,
   documents,
+  privacyMode = 'private',
   onDownloadOriginal,
   onDownloadSigned,
   onDownloadP7s,
@@ -320,6 +467,8 @@ export function DocumentAuditView({
   const { document: doc, signers, timeline } = data;
   const isCompleted = doc.status === 'completed';
   const hasMultipleDocuments = (documents?.length ?? 0) > 1;
+  const hasMultipleHashes = data.documents.length > 1;
+  const isPublic = privacyMode === 'public';
 
   const statusBadgeVariant = doc.status === 'completed' ? ('success' as const) : ('info' as const);
 
@@ -390,9 +539,63 @@ export function DocumentAuditView({
         <h2 className="text-sm font-medium uppercase tracking-wider text-foreground-muted">
           {labels.hashes}
         </h2>
-        <div className="space-y-3">
-          <CopyableHash label={labels.originalHash} hash={doc.originalHash} labels={labels} />
-          <CopyableHash label={labels.signedHash} hash={doc.finalHash} labels={labels} />
+        {hasMultipleHashes ? (
+          <div className="space-y-4">
+            {data.documents.map((hashDoc) => (
+              <div key={hashDoc.id} className="space-y-3 rounded-xl border border-th-border bg-th-hover p-3">
+                <p className="text-xs font-medium text-foreground-muted">{hashDoc.title}</p>
+                <CopyableHash label={labels.originalHash} hash={hashDoc.originalHash} labels={labels} />
+                <CopyableHash label={labels.signedHash} hash={hashDoc.finalHash} labels={labels} />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <CopyableHash label={labels.originalHash} hash={doc.originalHash} labels={labels} />
+            <CopyableHash label={labels.signedHash} hash={doc.finalHash} labels={labels} />
+          </div>
+        )}
+      </Card>
+
+      <Card variant="glass" className="space-y-4 p-5 md:p-6">
+        <h2 className="text-sm font-medium uppercase tracking-wider text-foreground-muted">
+          {labels.validation.title}
+        </h2>
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          <div className="rounded-xl border border-th-border bg-th-hover p-3">
+            <p className="text-xs text-foreground-muted">{labels.validation.verificationLabel}</p>
+            <p className="break-all text-sm font-medium">{doc.id}</p>
+          </div>
+          <div className="rounded-xl border border-th-border bg-th-hover p-3">
+            <p className="text-xs text-foreground-muted">{labels.validation.timezone}</p>
+            <p className="text-sm font-medium">{data.timezone || 'UTC'}</p>
+          </div>
+        </div>
+        <div className="rounded-xl border border-th-border bg-th-hover p-3">
+          <p className="text-xs text-foreground-muted">{labels.validation.legalTitle}</p>
+          <p className="mt-1 text-xs text-foreground-muted">{labels.validation.legalText}</p>
+        </div>
+        <div className="space-y-2 rounded-xl border border-th-border bg-th-hover p-3">
+          <p className="text-xs text-foreground-muted">{labels.validation.certificate}</p>
+          {data.certificate ? (
+            <>
+              <p className="text-sm font-medium">{data.certificate.subject}</p>
+              <p className="text-xs text-foreground-muted">
+                {labels.validation.certificateIssuer}: {data.certificate.issuer}
+              </p>
+              <p className="text-xs text-foreground-muted">
+                {labels.validation.certificateExpiresAt}: {formatDate(data.certificate.expiresAt)}
+              </p>
+              <p className="text-xs font-medium">
+                {labels.validation.certificateStatus}:{' '}
+                {data.certificate.isExpired
+                  ? labels.validation.certificateStatusExpired
+                  : labels.validation.certificateStatusValid}
+              </p>
+            </>
+          ) : (
+            <p className="text-sm font-medium">{labels.validation.unavailable}</p>
+          )}
         </div>
       </Card>
 
@@ -441,106 +644,15 @@ export function DocumentAuditView({
           {labels.signers}
         </h2>
         <div className="space-y-3">
-          {signers.map((signer, idx) => {
-            const isSigned = signer.status === 'signed';
-            return (
-              <div
-                key={signer.id}
-                className={`rounded-xl border bg-th-hover p-4 space-y-4 ${
-                  isSigned
-                    ? 'border-l-4 border-l-success border-y-th-border border-r-th-border'
-                    : 'border-th-border'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">
-                      {idx + 1}. {signer.name}
-                    </p>
-                    <p className="truncate text-xs text-foreground-muted">{signer.email}</p>
-                  </div>
-                  <Badge
-                    variant={isSigned ? 'success' : 'warning'}
-                    className="shrink-0 text-[10px]"
-                  >
-                    {isSigned ? labels.signerCard.signed : labels.signerCard.pending}
-                  </Badge>
-                </div>
-
-                <div className="border-t border-th-border" />
-
-                <div className="flex gap-4">
-                  <div className="grid flex-1 grid-cols-1 gap-2.5 text-xs sm:grid-cols-2">
-                    {signer.signedAt ? (
-                      <div className="flex items-center gap-1.5 text-foreground-muted">
-                        <CheckCircle2 className="h-3 w-3 shrink-0 text-success" />
-                        <span>
-                          {labels.signerCard.signedAt}: {formatDate(signer.signedAt)}
-                        </span>
-                      </div>
-                    ) : null}
-                    {signer.notifiedAt ? (
-                      <div className="flex items-center gap-1.5 text-foreground-muted">
-                        <Send className="h-3 w-3 shrink-0" />
-                        <span>
-                          {labels.signerCard.notifiedAt}: {formatDate(signer.notifiedAt)}
-                        </span>
-                      </div>
-                    ) : null}
-                    {signer.verifiedAt ? (
-                      <div className="flex items-center gap-1.5 text-foreground-muted">
-                        <UserCheck className="h-3 w-3 shrink-0" />
-                        <span>
-                          {labels.signerCard.verifiedAt}: {formatDate(signer.verifiedAt)}
-                        </span>
-                      </div>
-                    ) : null}
-                    <div className="flex items-center gap-1.5 text-foreground-muted">
-                      <Mail className="h-3 w-3 shrink-0" />
-                      <span>
-                        {labels.signerCard.authMethod}:{' '}
-                        {signer.authMethod === 'email'
-                          ? labels.signerCard.authMethodEmail
-                          : labels.signerCard.authMethodNone}
-                      </span>
-                    </div>
-                    {signer.ipAddress ? (
-                      <div className="flex items-center gap-1.5 text-foreground-muted">
-                        <Globe className="h-3 w-3 shrink-0" />
-                        <span>
-                          {labels.signerCard.ip}: {signer.ipAddress}
-                        </span>
-                      </div>
-                    ) : null}
-                    {signer.userAgent ? (
-                      <div className="col-span-full flex items-start gap-1.5 text-foreground-muted">
-                        <Monitor className="mt-0.5 h-3 w-3 shrink-0" />
-                        <span className="break-all">
-                          {labels.signerCard.userAgent}:{' '}
-                          {signer.userAgent.length > 100
-                            ? `${signer.userAgent.slice(0, 100)}...`
-                            : signer.userAgent}
-                        </span>
-                      </div>
-                    ) : null}
-                  </div>
-
-                  {signer.signatureData ? (
-                    <div className="flex shrink-0 items-start">
-                      <div className="flex h-20 w-28 items-center justify-center overflow-hidden rounded-lg border border-th-border bg-white p-2">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={signer.signatureData}
-                          alt=""
-                          className="h-full w-full object-contain"
-                        />
-                      </div>
-                    </div>
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
+          {signers.map((signer, idx) => (
+            <SignerCard
+              key={signer.id}
+              signer={signer}
+              index={idx}
+              isPublic={isPublic}
+              labels={labels}
+            />
+          ))}
         </div>
       </Card>
 
@@ -557,7 +669,6 @@ export function DocumentAuditView({
                   {docItem.title}
                 </p>
                 <SingleDocDownload
-                  docTitle={docItem.title}
                   documentId={docItem.id}
                   isCompleted={isCompleted}
                   onDownloadOriginal={onDownloadOriginal}
@@ -570,7 +681,6 @@ export function DocumentAuditView({
           </div>
         ) : (
           <SingleDocDownload
-            docTitle={doc.title}
             isCompleted={isCompleted}
             onDownloadOriginal={onDownloadOriginal}
             onDownloadSigned={onDownloadSigned}

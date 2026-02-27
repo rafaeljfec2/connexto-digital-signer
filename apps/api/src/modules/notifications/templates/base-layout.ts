@@ -19,7 +19,7 @@ export function wrapInBaseLayout(content: string, previewText: string): string {
     </xml>
   </noscript>
   <![endif]-->
-  <title>Connexto Digital Signer</title>
+  <title>NexoSigner</title>
 </head>
 <body style="margin:0;padding:0;background-color:#f1f5f9;font-family:${FONT_FAMILY};" bgcolor="#f1f5f9">
   <!--[if !mso]><!-->
@@ -39,10 +39,10 @@ export function wrapInBaseLayout(content: string, previewText: string): string {
           <tr>
             <td align="center" bgcolor="#0e3a6e" style="background-color:#0e3a6e;border-radius:12px 12px 0 0;padding:24px 32px;">
               <h1 style="margin:0;padding:0;font-size:22px;font-weight:700;color:#ffffff;letter-spacing:0.5px;font-family:${FONT_FAMILY};">
-                Connexto
+                NexoSigner
               </h1>
               <p style="margin:4px 0 0 0;padding:0;font-size:12px;color:#7dd3fc;letter-spacing:1px;font-family:${FONT_FAMILY};">
-                DIGITAL SIGNER
+                SIGNER
               </p>
             </td>
           </tr>
@@ -58,7 +58,7 @@ export function wrapInBaseLayout(content: string, previewText: string): string {
           <tr>
             <td align="center" bgcolor="#f8fafc" style="background-color:#f8fafc;border-radius:0 0 12px 12px;padding:20px 32px;border:1px solid #e2e8f0;border-top:none;">
               <p style="margin:0;padding:0;font-size:12px;color:#94a3b8;line-height:22px;font-family:${FONT_FAMILY};">
-                &copy; ${year} Connexto Digital Signer.
+                &copy; ${year} NexoSigner.
               </p>
             </td>
           </tr>
@@ -100,9 +100,14 @@ export function paragraph(text: string, variant?: string): string {
 }
 
 function escapeHtml(str: string): string {
+  const ampEntity = '&' + 'amp;';
+  const ltEntity = '&' + 'lt;';
+  const gtEntity = '&' + 'gt;';
+  const quoteEntity = '&' + 'quot;';
+
   return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replaceAll('&', ampEntity)
+    .replaceAll('<', ltEntity)
+    .replaceAll('>', gtEntity)
+    .replaceAll('"', quoteEntity);
 }

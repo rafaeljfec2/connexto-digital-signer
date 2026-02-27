@@ -763,6 +763,20 @@
       "pending": "Pending",
       "signed": "Signed"
     },
+    "validation": {
+      "title": "Validation and legal",
+      "timezone": "Timezone",
+      "verificationLabel": "Verification reference",
+      "legalTitle": "Legal statement",
+      "legalText": "This audit trail records key evidence of the electronic signature process and supports independent verification.",
+      "certificate": "Digital certificate",
+      "certificateIssuer": "Issuer",
+      "certificateExpiresAt": "Expires at",
+      "certificateStatus": "Status",
+      "certificateStatusValid": "Valid",
+      "certificateStatusExpired": "Expired",
+      "unavailable": "Unavailable"
+    },
     "downloads": "Downloads",
     "downloadOriginal": "Original document",
     "downloadOriginalDesc": "PDF without signatures",

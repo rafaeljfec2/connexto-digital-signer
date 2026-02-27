@@ -15,8 +15,11 @@ interface ImageRect {
 export interface SignerEvidence {
   readonly name: string;
   readonly email: string;
+  readonly cpf?: string | null;
   readonly role: string;
   readonly signedAt: string;
+  readonly notifiedAt?: string | null;
+  readonly verifiedAt?: string | null;
   readonly ipAddress: string | null;
   readonly userAgent: string | null;
   readonly signatureData: string | null;
@@ -40,21 +43,31 @@ export interface CertificateInfo {
 interface EvidenceLabels {
   readonly title: string;
   readonly subtitle: string;
-  readonly document: string;
   readonly generated: string;
+  readonly timezone: string;
+  readonly version: string;
+  readonly document: string;
+  readonly documentId: string;
   readonly originalHash: string;
-  readonly certification: string;
-  readonly certSubject: string;
-  readonly certIssuer: string;
   readonly certHash: string;
-  readonly certStatus: string;
-  readonly certStatusActive: string;
-  readonly signers: string;
+  readonly signatures: string;
   readonly signedAs: string;
   readonly signedAt: string;
+  readonly certIssuer: string;
+  readonly certStatus: string;
+  readonly certStatusActive: string;
+  readonly certStatusExpired: string;
+  readonly cpf: string;
   readonly ipAddress: string;
   readonly userAgent: string;
-  readonly signed: string;
+  readonly log: string;
+  readonly eventDocumentCreated: string;
+  readonly eventSignerNotified: string;
+  readonly eventSignerVerified: string;
+  readonly eventSignerSigned: string;
+  readonly eventDocumentCompleted: string;
+  readonly validation: string;
+  readonly validationHint: string;
   readonly footer1: string;
   readonly footer2: string;
   readonly roles: Readonly<Record<string, string>>;
@@ -98,22 +111,32 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
   en: {
     title: 'SIGNATURE EVIDENCE',
     subtitle: 'Digital signature certificate',
-    document: 'DOCUMENT',
     generated: 'Generated',
+    timezone: 'Dates and times',
+    version: 'Version',
+    document: 'DOCUMENT',
+    documentId: 'Document ID',
     originalHash: 'Original Hash (SHA-256)',
-    certification: 'DIGITAL CERTIFICATION',
-    certSubject: 'Certificate',
-    certIssuer: 'Issuer',
     certHash: 'Signed Hash (SHA-256)',
-    certStatus: 'Status',
-    certStatusActive: 'Active - Digitally signed',
-    signers: 'SIGNERS',
+    signatures: 'SIGNATURES',
     signedAs: 'Signed as',
     signedAt: 'Signed at',
+    certIssuer: 'Issued by',
+    certStatus: 'Status',
+    certStatusActive: 'Active - Digitally signed',
+    certStatusExpired: 'Expired',
+    cpf: 'CPF',
     ipAddress: 'IP Address',
     userAgent: 'User-Agent',
-    signed: 'Signed',
-    footer1: 'This document was digitally signed using Connexto Digital Signer.',
+    log: 'LOG',
+    eventDocumentCreated: 'Document created',
+    eventSignerNotified: 'Signer notified',
+    eventSignerVerified: 'Signer verified',
+    eventSignerSigned: 'Signer signed',
+    eventDocumentCompleted: 'Signature process completed',
+    validation: 'Validation',
+    validationHint: 'Validate this document with the verification code and PDF.',
+    footer1: 'This document was digitally signed using NexoSigner.',
     footer2:
       'All signature evidence is cryptographically secured and can be independently verified.',
     roles: {
@@ -131,22 +154,32 @@ const EVIDENCE_LABELS: Record<string, EvidenceLabels> = {
   'pt-br': {
     title: 'EVIDÊNCIA DE ASSINATURA',
     subtitle: 'Certificado de assinatura digital',
-    document: 'DOCUMENTO',
     generated: 'Gerado em',
+    timezone: 'Datas e horários',
+    version: 'Versão',
+    document: 'DOCUMENTO',
+    documentId: 'Documento',
     originalHash: 'Hash Original (SHA-256)',
-    certification: 'CERTIFICAÇÃO DIGITAL',
-    certSubject: 'Certificado',
-    certIssuer: 'Emissor',
     certHash: 'Hash Assinado (SHA-256)',
-    certStatus: 'Status',
-    certStatusActive: 'Ativo - Assinado digitalmente',
-    signers: 'SIGNATÁRIOS',
+    signatures: 'ASSINATURAS',
     signedAs: 'Assinou como',
     signedAt: 'Assinado em',
+    certIssuer: 'Emitido por',
+    certStatus: 'Status',
+    certStatusActive: 'Ativo - Assinado digitalmente',
+    certStatusExpired: 'Expirado',
+    cpf: 'CPF',
     ipAddress: 'Endereço IP',
     userAgent: 'Navegador',
-    signed: 'Assinado',
-    footer1: 'Este documento foi assinado digitalmente usando o Connexto Digital Signer.',
+    log: 'LOG',
+    eventDocumentCreated: 'Documento criado',
+    eventSignerNotified: 'Signatário notificado',
+    eventSignerVerified: 'Signatário verificado',
+    eventSignerSigned: 'Signatário assinou',
+    eventDocumentCompleted: 'Processo de assinatura concluído',
+    validation: 'Validação',
+    validationHint: 'Valide este documento usando o código de verificação e o PDF.',
+    footer1: 'Este documento foi assinado digitalmente usando o NexoSigner.',
     footer2:
       'Todas as evidências de assinatura são criptograficamente protegidas e podem ser verificadas de forma independente.',
     roles: {
@@ -243,6 +276,9 @@ export class PdfService {
       readonly originalHash?: string;
       readonly signedHash?: string;
       readonly certificate?: CertificateInfo;
+      readonly documentId?: string;
+      readonly timezone?: string;
+      readonly version?: string;
     }
   ): Promise<Buffer> {
     const pdfDoc = await PDFDocument.load(originalPdfBuffer, {
@@ -275,12 +311,17 @@ export class PdfService {
       y: PAGE_HEIGHT - MARGIN,
     };
 
-    this.drawEvidenceHeader(ctx);
-    this.drawDocumentSection(ctx, documentTitle, options?.originalHash);
-    if (options?.certificate) {
-      this.drawCertificationSection(ctx, options.certificate, options.signedHash);
-    }
+    this.drawEvidenceHeader(ctx, options?.timezone, options?.version);
+    this.drawDocumentSection(
+      ctx,
+      documentTitle,
+      options?.documentId,
+      options?.originalHash,
+      options?.signedHash
+    );
     await this.drawSignersSection(ctx, signers);
+    this.drawLogSection(ctx, signers);
+    this.drawValidationSection(ctx);
     this.drawEvidenceFooter(ctx);
 
     const finalPdfBytes = await pdfDoc.save();
@@ -374,7 +415,7 @@ export class PdfService {
     });
   }
 
-  private drawEvidenceHeader(ctx: EvidencePageContext): void {
+  private drawEvidenceHeader(ctx: EvidencePageContext, timezone = 'UTC', version = 'v1.0.0'): void {
     const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
 
     currentPage.drawRectangle({
@@ -402,16 +443,43 @@ export class PdfService {
       color: rgb(0.7, 0.8, 0.95),
     });
 
+    currentPage.drawText(`${labels.timezone}: ${timezone}`, {
+      x: margin + contentWidth - 185,
+      y: ctx.y - 26,
+      size: 7,
+      font: fonts.regular,
+      color: rgb(0.85, 0.9, 0.98),
+    });
+    currentPage.drawText(
+      `${labels.generated}: ${formatEvidenceDate(new Date().toISOString(), ctx.locale)}`,
+      {
+        x: margin + contentWidth - 185,
+        y: ctx.y - 38,
+        size: 7,
+        font: fonts.regular,
+        color: rgb(0.85, 0.9, 0.98),
+      }
+    );
+    currentPage.drawText(`${labels.version}: ${version}`, {
+      x: margin + contentWidth - 185,
+      y: ctx.y - 50,
+      size: 7,
+      font: fonts.regular,
+      color: rgb(0.85, 0.9, 0.98),
+    });
+
     ctx.y -= 85;
   }
 
   private drawDocumentSection(
     ctx: EvidencePageContext,
     documentTitle: string,
-    originalHash?: string
+    documentId?: string,
+    originalHash?: string,
+    signedHash?: string
   ): void {
     const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
-    const boxHeight = originalHash ? 70 : 55;
+    const boxHeight = signedHash ? 84 : 70;
 
     currentPage.drawRectangle({
       x: margin,
@@ -439,8 +507,7 @@ export class PdfService {
       color: colors.primary,
     });
 
-    const generatedAt = formatEvidenceDate(new Date().toISOString(), ctx.locale);
-    currentPage.drawText(`${labels.generated}: ${generatedAt}`, {
+    currentPage.drawText(`${labels.documentId}: ${documentId ?? '-'}`, {
       x: margin + 12,
       y: ctx.y - 43,
       size: 8,
@@ -458,89 +525,17 @@ export class PdfService {
       });
     }
 
-    ctx.y -= boxHeight + 15;
-  }
-
-  private drawCertificationSection(ctx: EvidencePageContext, certificate: CertificateInfo, signedHash?: string): void {
-    const { currentPage, colors, labels, fonts, margin, contentWidth } = ctx;
-    const cardHeight = signedHash ? 80 : 65;
-
-    this.ensureSpace(ctx, cardHeight + 25);
-
-    currentPage.drawText(labels.certification, {
-      x: margin,
-      y: ctx.y,
-      size: 8,
-      font: fonts.bold,
-      color: colors.muted,
-    });
-
-    ctx.y -= 15;
-
-    currentPage.drawRectangle({
-      x: margin,
-      y: ctx.y - cardHeight,
-      width: contentWidth,
-      height: cardHeight,
-      color: colors.cardBg,
-      borderColor: colors.border,
-      borderWidth: 0.5,
-    });
-
-    currentPage.drawRectangle({
-      x: margin,
-      y: ctx.y - cardHeight,
-      width: 3,
-      height: cardHeight,
-      color: rgb(0.1, 0.6, 0.3),
-      borderWidth: 0,
-    });
-
-    let detailY = ctx.y - 16;
-
-    detailY = this.drawDetailRow(currentPage, fonts, colors, {
-      label: labels.certSubject,
-      value: certificate.subject,
-      x: margin + 14,
-      y: detailY,
-    });
-
-    detailY = this.drawDetailRow(currentPage, fonts, colors, {
-      label: labels.certIssuer,
-      value: certificate.issuer,
-      x: margin + 14,
-      y: detailY,
-    });
-
     if (signedHash) {
-      detailY = this.drawDetailRow(currentPage, fonts, colors, {
-        label: labels.certHash,
-        value: signedHash,
-        x: margin + 14,
-        y: detailY,
-        fontSize: 6.5,
+      currentPage.drawText(`${labels.certHash}: ${signedHash}`, {
+        x: margin + 12,
+        y: ctx.y - 70,
+        size: 6.5,
+        font: fonts.regular,
+        color: colors.muted,
       });
     }
 
-    currentPage.drawText(`${labels.certStatus}:`, {
-      x: margin + 14,
-      y: detailY,
-      size: 8,
-      font: fonts.bold,
-      color: colors.muted,
-    });
-
-    const statusLabelWidth = fonts.bold.widthOfTextAtSize(`${labels.certStatus}: `, 8);
-
-    currentPage.drawText(labels.certStatusActive, {
-      x: margin + 14 + statusLabelWidth,
-      y: detailY,
-      size: 8,
-      font: fonts.bold,
-      color: rgb(0.1, 0.6, 0.3),
-    });
-
-    ctx.y = ctx.y - cardHeight - 15;
+    ctx.y -= boxHeight + 15;
   }
 
   private async drawSignersSection(
@@ -549,7 +544,7 @@ export class PdfService {
   ): Promise<void> {
     const { currentPage, colors, labels, fonts, margin } = ctx;
 
-    currentPage.drawText(`${labels.signers} (${signers.length})`, {
+    currentPage.drawText(`${labels.signatures}`, {
       x: margin,
       y: ctx.y,
       size: 8,
@@ -565,6 +560,87 @@ export class PdfService {
       this.ensureSpace(ctx, cardHeight + 15);
       await this.drawSignerCard(ctx, signer, i, cardHeight);
     }
+  }
+
+  private drawLogSection(ctx: EvidencePageContext, signers: SignerEvidence[]): void {
+    const { currentPage, labels, fonts, colors, margin, contentWidth } = ctx;
+    const lines: string[] = [labels.eventDocumentCreated];
+    for (const signer of signers) {
+      if (signer.notifiedAt) lines.push(`${labels.eventSignerNotified}: ${signer.name}`);
+      if (signer.verifiedAt) lines.push(`${labels.eventSignerVerified}: ${signer.name}`);
+      lines.push(`${labels.eventSignerSigned}: ${signer.name}`);
+    }
+    lines.push(labels.eventDocumentCompleted);
+
+    const lineHeight = 13;
+    const contentTopPadding = 26;
+    const contentBottomPadding = 12;
+    const boxHeight = contentTopPadding + lines.length * lineHeight + contentBottomPadding;
+
+    this.ensureSpace(ctx, boxHeight + 20);
+    ctx.y -= 10;
+
+    currentPage.drawRectangle({
+      x: margin,
+      y: ctx.y - boxHeight,
+      width: contentWidth,
+      height: boxHeight,
+      color: colors.cardBg,
+      borderColor: colors.border,
+      borderWidth: 0.5,
+    });
+
+    currentPage.drawRectangle({
+      x: margin,
+      y: ctx.y - boxHeight,
+      width: 3,
+      height: boxHeight,
+      color: colors.accent,
+      borderWidth: 0,
+    });
+
+    currentPage.drawText(labels.log, {
+      x: margin + 12,
+      y: ctx.y - 14,
+      size: 8,
+      font: fonts.bold,
+      color: colors.muted,
+    });
+
+    let lineY = ctx.y - 30;
+    for (const line of lines) {
+      currentPage.drawText(`• ${line}`, {
+        x: margin + 12,
+        y: lineY,
+        size: 8,
+        font: fonts.regular,
+        color: colors.secondary,
+      });
+      lineY -= lineHeight;
+    }
+
+    ctx.y = ctx.y - boxHeight - 12;
+  }
+
+  private drawValidationSection(ctx: EvidencePageContext): void {
+    const { currentPage, labels, fonts, colors, margin } = ctx;
+    this.ensureSpace(ctx, 35);
+    currentPage.drawText(labels.validation, {
+      x: margin,
+      y: ctx.y,
+      size: 8,
+      font: fonts.bold,
+      color: colors.muted,
+    });
+    ctx.y -= 12;
+    currentPage.drawText(labels.validationHint, {
+      x: margin,
+      y: ctx.y,
+      size: 7.5,
+      font: fonts.regular,
+      color: colors.secondary,
+    });
+    ctx.y -= 18;
   }
 
   private drawEvidenceFooter(ctx: EvidencePageContext): void {
@@ -621,37 +697,6 @@ export class PdfService {
       borderWidth: 0,
     });
 
-    if (signer.signatureData) {
-      const sigBoxX = margin + contentWidth - SIG_BOX_W - 12;
-      const sigBoxY = ctx.y - 42 - SIG_BOX_H - 8;
-
-      currentPage.drawRectangle({
-        x: sigBoxX,
-        y: sigBoxY,
-        width: SIG_BOX_W,
-        height: SIG_BOX_H,
-        borderColor: colors.border,
-        borderWidth: 0.5,
-        color: colors.white,
-      });
-
-      await this.embedDataUrlImage(pdfDoc, currentPage, signer.signatureData, {
-        x: sigBoxX,
-        y: sigBoxY,
-        width: SIG_BOX_W,
-        height: SIG_BOX_H,
-        padding: 4,
-      });
-    } else {
-      currentPage.drawText(labels.signed, {
-        x: margin + contentWidth - 60,
-        y: ctx.y - 16,
-        size: 8,
-        font: fonts.bold,
-        color: colors.accent,
-      });
-    }
-
     currentPage.drawText(`${index + 1}.`, {
       x: margin + 14,
       y: ctx.y - 16,
@@ -676,17 +721,51 @@ export class PdfService {
       color: colors.secondary,
     });
 
+    if (signer.cpf) {
+      currentPage.drawText(`${labels.cpf}: ${signer.cpf}`, {
+        x: margin + 30,
+        y: ctx.y - 41,
+        size: 8,
+        font: fonts.regular,
+        color: colors.secondary,
+      });
+    }
+
     const roleLabel = labels.roles[signer.role] ?? signer.role;
     currentPage.drawText(`${labels.signedAs}: ${roleLabel}`, {
       x: margin + 30,
-      y: ctx.y - 43,
+      y: signer.cpf ? ctx.y - 53 : ctx.y - 43,
       size: 8,
       font: fonts.bold,
       color: colors.accent,
     });
 
-    this.drawHorizontalLine(ctx, ctx.y - 55);
-    let detailY = ctx.y - 71;
+    const detailsStartY = signer.cpf ? ctx.y - 65 : ctx.y - 55;
+    this.drawHorizontalLine(ctx, detailsStartY);
+    let detailY = detailsStartY - 16;
+
+    if (signer.signatureData) {
+      const sigBoxX = margin + contentWidth - SIG_BOX_W - 12;
+      const sigBoxY = detailsStartY - SIG_BOX_H - 10;
+
+      currentPage.drawRectangle({
+        x: sigBoxX,
+        y: sigBoxY,
+        width: SIG_BOX_W,
+        height: SIG_BOX_H,
+        borderColor: colors.border,
+        borderWidth: 0.5,
+        color: colors.white,
+      });
+
+      await this.embedDataUrlImage(pdfDoc, currentPage, signer.signatureData, {
+        x: sigBoxX,
+        y: sigBoxY,
+        width: SIG_BOX_W,
+        height: SIG_BOX_H,
+        padding: 4,
+      });
+    }
 
     const formattedSignedAt = signer.signedAt ? formatEvidenceDate(signer.signedAt, locale) : '';
 
@@ -721,10 +800,11 @@ export class PdfService {
 
   private calculateSignerCardHeight(signer: SignerEvidence): number {
     let height = 95;
+    if (signer.cpf) height += 12;
     if (signer.ipAddress) height += 14;
     if (signer.userAgent) height += 14;
     if (signer.signatureData) {
-      height = Math.max(height, 95);
+      height = Math.max(height, 138);
     }
     return height;
   }

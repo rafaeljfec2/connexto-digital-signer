@@ -763,6 +763,20 @@
       "pending": "Pendente",
       "signed": "Assinado"
     },
+    "validation": {
+      "title": "Validação e jurídico",
+      "timezone": "Fuso horário",
+      "verificationLabel": "Referência de validação",
+      "legalTitle": "Declaração legal",
+      "legalText": "Esta trilha de auditoria registra as evidências principais do processo de assinatura eletrônica e permite validação independente.",
+      "certificate": "Certificado digital",
+      "certificateIssuer": "Emissor",
+      "certificateExpiresAt": "Validade",
+      "certificateStatus": "Status",
+      "certificateStatusValid": "Válido",
+      "certificateStatusExpired": "Expirado",
+      "unavailable": "Indisponível"
+    },
     "downloads": "Downloads",
     "downloadOriginal": "Documento original",
     "downloadOriginalDesc": "PDF sem assinaturas",

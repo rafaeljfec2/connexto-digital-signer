@@ -540,9 +540,12 @@ export class SignaturesService {
     tenantId: string
   ): Promise<DocumentAuditSummary> {
     const envelope = await this.envelopesService.findOne(envelopeId, tenantId);
+    const documents = await this.documentsService.findByEnvelope(envelopeId, tenantId);
     const signers = await this.findByEnvelope(envelopeId, tenantId);
     const timeline = this.buildAuditTimeline(signers, envelope);
     const completedAt = envelope.status === EnvelopeStatus.COMPLETED ? envelope.updatedAt : null;
+    const primaryDocument = documents.length === 1 ? documents[0] : null;
+    const certificateStatus = await this.certificateService.getCertificateStatus(tenantId);
 
     return {
       document: {
@@ -553,9 +556,25 @@ export class SignaturesService {
         createdAt: envelope.createdAt,
         expiresAt: envelope.expiresAt,
         completedAt,
-        originalHash: null,
-        finalHash: null,
+        originalHash: primaryDocument?.originalHash ?? null,
+        finalHash: primaryDocument?.finalHash ?? null,
       },
+      documents: documents.map((document) => ({
+        id: document.id,
+        title: document.title,
+        status: document.status,
+        originalHash: document.originalHash,
+        finalHash: document.finalHash,
+      })),
+      certificate: certificateStatus
+        ? {
+            subject: certificateStatus.subject,
+            issuer: certificateStatus.issuer,
+            expiresAt: certificateStatus.expiresAt ? new Date(certificateStatus.expiresAt) : null,
+            isExpired: certificateStatus.isExpired,
+          }
+        : null,
+      timezone: 'UTC',
       signers: signers.map((s) => ({
         id: s.id,
         name: s.name,
@@ -696,8 +715,11 @@ export class SignaturesService {
     const evidence = signers.map((s) => ({
       name: s.name,
       email: s.email,
+      cpf: s.cpf,
       role: s.role ?? 'signer',
       signedAt: s.signedAt?.toISOString() ?? '',
+      notifiedAt: s.notifiedAt?.toISOString() ?? null,
+      verifiedAt: s.verifiedAt?.toISOString() ?? null,
       ipAddress: s.ipAddress,
       userAgent: s.userAgent,
       signatureData: s.signatureData,
@@ -725,8 +747,11 @@ export class SignaturesService {
     evidence: Array<{
       name: string;
       email: string;
+      cpf: string | null;
       role: string;
       signedAt: string;
+      notifiedAt: string | null;
+      verifiedAt: string | null;
       ipAddress: string | null;
       userAgent: string | null;
       signatureData: string | null;
@@ -759,8 +784,11 @@ export class SignaturesService {
       document.title,
       envelope.signingLanguage ?? 'en',
       {
+        documentId: document.id,
         originalHash,
         signedHash,
+        timezone: 'GMT -03:00 Brasilia',
+        version: 'v1.0.0',
         certificate: certificateStatus
           ? {
               subject: certificateStatus.subject,
