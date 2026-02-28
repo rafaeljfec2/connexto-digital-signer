@@ -22,6 +22,7 @@ import {
   Webhook,
   Activity,
   BookOpen,
+  History,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Avatar, Button, Sidebar, ThemeToggle } from '@/shared/ui';
@@ -34,6 +35,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   folders: Folder,
   templates: LayoutTemplate,
   signDocuments: PenTool,
+  historico: History,
   signers: Users,
   settings: Settings,
   developers: Code2,

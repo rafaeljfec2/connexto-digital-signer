@@ -28,7 +28,8 @@
       "apiKeys": "API Keys",
       "webhooks": "Webhooks",
       "apiLogs": "Logs de API",
-      "apiDocs": "Documentação"
+      "apiDocs": "Documentação",
+      "historico": "Histórico"
     },
     "navGroups": {
       "main": "Principal",
@@ -1307,5 +1308,13 @@
       "step3Title": "Configure um webhook",
       "step3Description": "Receba notificações quando assinaturas forem concluídas."
     }
+  },
+  "historico": {
+    "title": "Histórico",
+    "subtitle": "Acompanhe as alterações e atividades dos seus documentos",
+    "filterLabel": "Filtrar por documento",
+    "filterPlaceholder": "Buscar documento...",
+    "emptyTitle": "Nenhum histórico encontrado",
+    "emptyDescription": "Os registros de histórico aparecerão aqui conforme os documentos forem atualizados."
   }
 }

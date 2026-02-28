@@ -30,6 +30,7 @@ export default async function DashboardLayout({
         { id: 'folders', label: tCommon('nav.folders'), href: '/folders', iconKey: 'folders', group: 'main' },
         { id: 'templates', label: tCommon('nav.templates'), href: '/templates', iconKey: 'templates', group: 'main' },
         { id: 'signDocuments', label: tCommon('nav.signDocuments'), href: '/sign-documents', iconKey: 'signDocuments', group: 'main' },
+        { id: 'historico', label: tCommon('nav.historico'), href: '/historico', iconKey: 'historico', group: 'main' },
         { id: 'developers', label: tCommon('nav.developers'), href: '/developers', iconKey: 'developers', group: 'developers' },
         { id: 'apiKeys', label: tCommon('nav.apiKeys'), href: '/developers/api-keys', iconKey: 'apiKeys', group: 'developers' },
         { id: 'webhooks', label: tCommon('nav.webhooks'), href: '/developers/webhooks', iconKey: 'webhooks', group: 'developers' },

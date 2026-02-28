@@ -28,7 +28,8 @@
       "apiKeys": "API Keys",
       "webhooks": "Webhooks",
       "apiLogs": "API Logs",
-      "apiDocs": "Documentation"
+      "apiDocs": "Documentation",
+      "historico": "History"
     },
     "navGroups": {
       "main": "Main",
@@ -1344,5 +1345,13 @@
       "step3Title": "Configure a webhook",
       "step3Description": "Receive notifications when signatures are completed."
     }
+  },
+  "historico": {
+    "title": "History",
+    "subtitle": "Track changes and activity across your documents",
+    "filterLabel": "Filter by document",
+    "filterPlaceholder": "Search document...",
+    "emptyTitle": "No history found",
+    "emptyDescription": "History entries will appear here as documents are updated."
   }
 }
