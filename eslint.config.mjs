@@ -8,12 +8,13 @@ export default [
     ignores: ['**/node_modules/**', '**/dist/**', '**/coverage/**'],
   },
   {
-    files: ['**/*.ts'],
+    files: ['**/*.ts', '**/*.tsx'],
     languageOptions: {
       parserOptions: {
         ecmaVersion: 2022,
         sourceType: 'module',
-        project: true,
+        project: ['./apps/*/tsconfig.json', './packages/*/tsconfig.json'],
+        tsconfigRootDir: process.cwd(),
       },
       globals: {
         NodeJS: 'readonly',

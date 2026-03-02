@@ -1315,6 +1315,14 @@
     "filterLabel": "Filtrar por documento",
     "filterPlaceholder": "Buscar documento...",
     "emptyTitle": "Nenhum histórico encontrado",
-    "emptyDescription": "Os registros de histórico aparecerão aqui conforme os documentos forem atualizados."
+    "emptyDescription": "Os registros de histórico aparecerão aqui conforme os documentos forem atualizados.",
+    "errorTitle": "Não foi possível carregar o histórico",
+    "errorDescription": "Por favor, tente novamente ou entre em contato com o suporte se o problema persistir.",
+    "eventType": "Tipo de Evento",
+    "document": "Documento",
+    "envelope": "Envelope",
+    "actor": "Ator",
+    "date": "Data",
+    "time": "Hora"
   }
 }
