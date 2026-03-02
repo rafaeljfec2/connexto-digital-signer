@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import { useDebounce } from '@/shared/hooks/use-debounce';
 import { usePersistedView } from '@/shared/hooks/use-persisted-view';
 import { useLocale, useTranslations } from 'next-intl';
@@ -66,7 +66,7 @@ function ViewToggle({ view, onViewChange }: ViewToggleProps) {
   );
 }
 
-export default function DocumentsPage() {
+function DocumentsPageContent() {
   const t = useTranslations('documents');
   const tTracking = useTranslations('tracking');
   const locale = useLocale();
@@ -285,5 +285,27 @@ export default function DocumentsPage() {
         )}
       </Dialog>
     </PageTransition>
+  );
+}
+
+export default function DocumentsPage() {
+  return (
+    <Suspense
+      fallback={(
+        <PageTransition className="space-y-5">
+          <Card variant="glass" className="space-y-3 p-5">
+            <Skeleton className="h-6 w-40" />
+            <Skeleton className="h-4 w-64" />
+          </Card>
+          <Card variant="glass" className="space-y-3 p-5">
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+            <Skeleton className="h-10 w-full" />
+          </Card>
+        </PageTransition>
+      )}
+    >
+      <DocumentsPageContent />
+    </Suspense>
   );
 }
