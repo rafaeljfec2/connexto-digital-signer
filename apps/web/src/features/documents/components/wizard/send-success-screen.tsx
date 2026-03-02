@@ -7,11 +7,10 @@ import { Button, Card } from '@/shared/ui';
 import { FadeIn } from '@/shared/animations';
 
 type SendSuccessScreenProps = {
-  readonly envelopeId: string;
   readonly onTrack: () => void;
 };
 
-export function SendSuccessScreen({ envelopeId: _envelopeId, onTrack }: SendSuccessScreenProps) {
+export function SendSuccessScreen({ onTrack }: SendSuccessScreenProps) {
   const t = useTranslations('review.success');
 
   return (

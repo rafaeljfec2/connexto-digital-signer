@@ -20,7 +20,6 @@ import { toast } from 'sonner';
 export type UploadStepProps = {
   readonly envelopeId: string;
   readonly documentId: string;
-  readonly hasFile: boolean;
   readonly onBack?: () => void;
   readonly onRestart?: () => void;
   readonly onCancel?: () => void;
@@ -143,7 +142,6 @@ function PendingFileItem({
 export function UploadStep({
   envelopeId,
   documentId,
-  hasFile,
   onBack,
   onRestart,
   onCancel,

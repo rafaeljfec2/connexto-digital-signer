@@ -76,7 +76,6 @@ export function ReviewStep({
   if (sent) {
     return (
       <SendSuccessScreen
-        envelopeId={envelopeId}
         onTrack={() => onSendSuccess?.(envelopeId)}
       />
     );

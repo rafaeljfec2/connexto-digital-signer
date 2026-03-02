@@ -48,11 +48,16 @@ export function SignUpForm() {
   });
 
   const onSubmit = async (data: FormData) => {
-    const { ownerPasswordConfirm: _confirm, ...rest } = data;
-    const payload = { ...rest, slug: slugify(data.name) };
+    const payload = {
+      name: data.name,
+      slug: slugify(data.name),
+      ownerName: data.ownerName,
+      ownerEmail: data.ownerEmail,
+      ownerPassword: data.ownerPassword,
+    };
     const created = await createTenant(payload);
     setResult(created);
-    await login({ email: data.ownerEmail, password: rest.ownerPassword });
+    await login({ email: data.ownerEmail, password: data.ownerPassword });
     router.replace(`/${locale}`);
   };
 

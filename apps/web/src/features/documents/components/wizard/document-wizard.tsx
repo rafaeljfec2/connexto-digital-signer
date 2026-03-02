@@ -104,7 +104,6 @@ export function DocumentWizard({ envelopeId, documentId, hasFile, onCancel, onSe
           <UploadStep
             envelopeId={envelopeId}
             documentId={documentId}
-            hasFile={uploadComplete}
             onRestart={() => setStep('upload')}
             onCancel={onCancel}
             onNext={() => {

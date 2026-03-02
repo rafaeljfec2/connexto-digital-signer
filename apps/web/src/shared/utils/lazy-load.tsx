@@ -17,6 +17,7 @@ export function lazyLoad<P extends object>(
   const LazyComponent = lazy(() =>
     importFn().then((mod) => ({ default: mod[exportName] })),
   );
+  const TypedLazyComponent = LazyComponent as unknown as ComponentType<P>;
 
   function LazyLoadWrapper(props: P) {
     const [isMounted, setIsMounted] = useState(false);
@@ -31,7 +32,7 @@ export function lazyLoad<P extends object>(
 
     return (
       <Suspense fallback={<LazySpinner minHeight={minHeight} />}>
-        <LazyComponent {...props} />
+        <TypedLazyComponent {...props} />
       </Suspense>
     );
   }

@@ -6,14 +6,12 @@ import type { ReactNode } from 'react';
 type StaggerChildrenProps = Readonly<{
   children: ReactNode;
   staggerDelay?: number;
-  duration?: number;
   className?: string;
 }>;
 
 export function StaggerChildren({
   children,
   staggerDelay = 0.08,
-  duration = 0.35,
   className,
 }: StaggerChildrenProps) {
   const prefersReduced = useReducedMotion();

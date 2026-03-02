@@ -78,7 +78,13 @@ export function VariablesStep({ variables, onSave, isSaving }: VariablesStepProp
     if (hasDuplicates) return;
     const valid = items
       .filter((i) => i.key.trim() && i.label.trim())
-      .map(({ _stableId: _, ...rest }) => rest);
+      .map((item) => ({
+        key: item.key,
+        label: item.label,
+        type: item.type,
+        required: item.required,
+        defaultValue: item.defaultValue,
+      }));
     try {
       await onSave(valid);
       setSaved(true);

@@ -69,6 +69,7 @@ interface RefreshResponse {
     readonly email: string;
     readonly role: string;
     readonly tenantId: string;
+    readonly tenantName: string;
   };
 }
 
