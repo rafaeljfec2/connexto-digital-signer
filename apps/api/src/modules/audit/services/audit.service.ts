@@ -2,6 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AuditLog } from '../entities/audit-log.entity';
+import type { HistoryQueryDto } from '../dto/history-query.dto';
+import type { HistoryItem, HistoryResponse } from '../dto/history-response.dto';
 
 export interface CreateAuditLogDto {
   tenantId: string;
@@ -11,6 +13,32 @@ export interface CreateAuditLogDto {
   actorId?: string | null;
   actorType?: string | null;
   metadata?: Record<string, unknown> | null;
+}
+
+const SUMMARY_MAP: Record<string, string> = {
+  'signature.completed': 'Signer signed document',
+  'document.completed': 'Document completed',
+  'document.expired': 'Document expired',
+  'user.login.success': 'User logged in',
+  'user.login.failed': 'Login attempt failed',
+  'user.logout': 'User logged out',
+};
+
+function buildSummary(eventType: string): string {
+  return SUMMARY_MAP[eventType] ?? eventType;
+}
+
+interface RawHistoryRow {
+  id: string;
+  occurredAt: Date | string;
+  eventType: string;
+  entityType: string;
+  entityId: string;
+  metadata: Record<string, unknown> | null;
+  documentTitle: string | null;
+  envelopeTitle: string | null;
+  actorName: string | null;
+  actorEmail: string | null;
 }
 
 @Injectable()
@@ -34,5 +62,117 @@ export class AuditService {
       where: { tenantId, entityType, entityId },
       order: { createdAt: 'ASC' },
     });
+  }
+
+  async findHistory(tenantId: string, query: HistoryQueryDto): Promise<HistoryResponse> {
+    const page = query.page ?? 1;
+    const limit = Math.min(query.limit ?? 20, 100);
+    const offset = (page - 1) * limit;
+
+    const params: unknown[] = [tenantId];
+    const conditions: string[] = ['al.tenant_id = $1'];
+
+    if (query.eventType) {
+      params.push(query.eventType);
+      conditions.push(`al.event_type = $${params.length}`);
+    }
+
+    if (query.from) {
+      params.push(query.from);
+      conditions.push(`al.created_at >= $${params.length}`);
+    }
+
+    if (query.to) {
+      params.push(query.to);
+      conditions.push(`al.created_at <= $${params.length}`);
+    }
+
+    if (query.search) {
+      params.push(`%${query.search}%`);
+      const idx = params.length;
+      conditions.push(
+        `(doc.title ILIKE $${idx} OR sig_doc.title ILIKE $${idx} OR env_doc.title ILIKE $${idx} OR env.title ILIKE $${idx})`
+      );
+    }
+
+    const whereClause = conditions.join(' AND ');
+
+    const baseQuery = `
+      FROM audit_logs al
+      LEFT JOIN documents doc
+        ON al.entity_type = 'document'
+        AND doc.id::text = al.entity_id
+        AND doc.tenant_id = al.tenant_id
+      LEFT JOIN envelopes env_doc
+        ON doc.envelope_id = env_doc.id
+      LEFT JOIN envelopes env
+        ON al.entity_type = 'envelope'
+        AND env.id::text = al.entity_id
+        AND env.tenant_id = al.tenant_id
+      LEFT JOIN documents sig_doc
+        ON al.entity_type = 'signer'
+        AND sig_doc.id::text = (al.metadata->>'documentId')
+        AND sig_doc.tenant_id = al.tenant_id
+      LEFT JOIN users usr
+        ON al.actor_type = 'user'
+        AND usr.id::text = al.actor_id
+        AND usr.tenant_id = al.tenant_id
+      LEFT JOIN signers sgn
+        ON al.actor_type = 'signer'
+        AND sgn.id::text = al.actor_id
+        AND sgn.tenant_id = al.tenant_id
+      WHERE ${whereClause}
+    `;
+
+    const dataParams = [...params, limit, offset];
+    const dataQuery = `
+      SELECT
+        al.id,
+        al.created_at AS "occurredAt",
+        al.event_type AS "eventType",
+        al.entity_type AS "entityType",
+        al.entity_id AS "entityId",
+        al.metadata AS metadata,
+        COALESCE(doc.title, sig_doc.title) AS "documentTitle",
+        COALESCE(env_doc.title, env.title) AS "envelopeTitle",
+        COALESCE(usr.name, sgn.name) AS "actorName",
+        COALESCE(usr.email, sgn.email, al.metadata->>'email') AS "actorEmail"
+      ${baseQuery}
+      ORDER BY al.created_at DESC
+      LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}
+    `;
+
+    const countQuery = `SELECT COUNT(*) AS total ${baseQuery}`;
+
+    const [rows, countResult] = await Promise.all([
+      this.auditRepository.manager.query<RawHistoryRow[]>(dataQuery, dataParams),
+      this.auditRepository.manager.query<[{ total: string }]>(countQuery, params),
+    ]);
+
+    const total = Number(countResult[0]?.total ?? 0);
+
+    const data: HistoryItem[] = rows.map((row) => ({
+      id: row.id,
+      occurredAt: row.occurredAt instanceof Date ? row.occurredAt.toISOString() : String(row.occurredAt),
+      eventType: row.eventType,
+      entityType: row.entityType,
+      entityId: row.entityId,
+      documentTitle: row.documentTitle ?? null,
+      envelopeTitle: row.envelopeTitle ?? null,
+      actorName: row.actorName ?? null,
+      actorEmail: row.actorEmail ?? null,
+      summary: buildSummary(row.eventType),
+      metadata: row.metadata,
+    }));
+
+    return {
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
+    };
   }
 }
