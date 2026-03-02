@@ -33,7 +33,7 @@ describe('CadesSigner', () => {
     const mockCertificate = {} as forge.pki.Certificate;
     const mockDigest = {
       update: jest.fn(),
-    } as unknown as forge.md.MessageDigest;
+    } as unknown as ReturnType<typeof forge.md.sha256.create>;
 
     const toDerSpy = jest
       .spyOn(forge.asn1, 'toDer')
