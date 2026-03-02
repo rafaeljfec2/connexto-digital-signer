@@ -102,7 +102,10 @@ function DocumentsPageContent() {
   }, [debouncedSearch]);
 
   const folderTreeQuery = useFolderTree();
-  const folderTree = folderTreeQuery.data ?? [];
+  const folderTree = useMemo(
+    () => folderTreeQuery.data ?? [],
+    [folderTreeQuery.data],
+  );
   const folderNameMap = useMemo(() => buildFolderNameMap(folderTree), [folderTree]);
 
   const query = useEnvelopesList({

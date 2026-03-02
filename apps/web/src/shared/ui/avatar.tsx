@@ -1,4 +1,5 @@
 import type { HTMLAttributes } from 'react';
+import Image from 'next/image';
 
 type AvatarSize = 'sm' | 'md' | 'lg';
 
@@ -13,6 +14,12 @@ const sizeClass: Record<AvatarSize, string> = {
   sm: 'h-8 w-8 text-xs',
   md: 'h-10 w-10 text-sm',
   lg: 'h-12 w-12 text-base',
+};
+
+const imageSize: Record<AvatarSize, number> = {
+  sm: 32,
+  md: 40,
+  lg: 48,
 };
 
 const getInitials = (name: string): string => {
@@ -38,7 +45,14 @@ export function Avatar({
         className={`flex items-center justify-center rounded-full border border-th-border bg-th-hover text-foreground ${sizeClass[size]}`}
       >
         {src ? (
-          <img src={src} alt={name} className="h-full w-full rounded-full object-cover" />
+          <Image
+            src={src}
+            alt={name}
+            width={imageSize[size]}
+            height={imageSize[size]}
+            className="h-full w-full rounded-full object-cover"
+            unoptimized
+          />
         ) : (
           <span className="font-medium tracking-wide">{getInitials(name)}</span>
         )}

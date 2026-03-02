@@ -85,7 +85,10 @@ export default function FoldersPage() {
   );
 
   const folderTreeQuery = useFolderTree();
-  const folderTree = folderTreeQuery.data ?? [];
+  const folderTree = useMemo(
+    () => folderTreeQuery.data ?? [],
+    [folderTreeQuery.data],
+  );
   const subfolders = useMemo(
     () => findSubfolders(folderTree, currentFolderId),
     [folderTree, currentFolderId],
@@ -96,7 +99,10 @@ export default function FoldersPage() {
     limit: 10,
     folderId: currentFolderId ?? undefined,
   });
-  const envelopes = envelopesQuery.data?.data ?? [];
+  const envelopes = useMemo(
+    () => envelopesQuery.data?.data ?? [],
+    [envelopesQuery.data?.data],
+  );
 
   const createMut = useCreateFolder();
   const updateMut = useUpdateFolder();

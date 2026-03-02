@@ -73,13 +73,17 @@ export function FieldInputModal({
     [fieldType],
   );
 
+  const canConfirm = fieldType === 'date'
+    ? isValidDate(value)
+    : value.trim().length > 0;
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLInputElement>) => {
       if (e.key === 'Enter' && canConfirm) {
         onConfirm(value.trim());
       }
     },
-    [value, onConfirm],
+    [canConfirm, onConfirm, value],
   );
 
   if (!open) return null;
@@ -88,10 +92,6 @@ export function FieldInputModal({
   const Icon = config.icon;
   const title = labels[config.titleKey];
   const placeholder = labels[config.placeholderKey];
-
-  const canConfirm = fieldType === 'date'
-    ? isValidDate(value)
-    : value.trim().length > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
