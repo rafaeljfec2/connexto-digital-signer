@@ -695,3 +695,43 @@ export const updateTenantSigner = async (
 export const deleteTenantSigner = async (id: string): Promise<void> => {
   await apiClient.delete(`/tenant-signers/${id}`);
 };
+
+export type HistoryItem = {
+  readonly id: string;
+  readonly occurredAt: string;
+  readonly eventType: string;
+  readonly entityType: string;
+  readonly entityId: string;
+  readonly documentTitle: string | null;
+  readonly envelopeTitle: string | null;
+  readonly actorName: string | null;
+  readonly actorEmail: string | null;
+  readonly summary: string;
+  readonly metadata: Record<string, unknown> | null;
+};
+
+export type HistoryMeta = {
+  readonly page: number;
+  readonly limit: number;
+  readonly total: number;
+  readonly totalPages: number;
+};
+
+export type HistoryResponse = {
+  readonly data: readonly HistoryItem[];
+  readonly meta: HistoryMeta;
+};
+
+export type ListHistoryParams = {
+  readonly search?: string;
+  readonly eventType?: string;
+  readonly from?: string;
+  readonly to?: string;
+  readonly page?: number;
+  readonly limit?: number;
+};
+
+export const listHistory = async (params: ListHistoryParams): Promise<HistoryResponse> => {
+  const response = await apiClient.get<HistoryResponse>('/audit/history', { params });
+  return response.data;
+};
