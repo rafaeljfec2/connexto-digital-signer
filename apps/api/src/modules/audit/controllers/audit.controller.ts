@@ -31,4 +31,22 @@ export class AuditController {
   findHistory(@TenantId() tenantId: string, @Query() query: HistoryQueryDto) {
     return this.auditService.findHistory(tenantId, query);
   }
+
+  @ApiOperation({ summary: 'List history grouped by document with pagination and optional search' })
+  @ApiQuery({ name: 'search', required: false, description: 'Filter by document title' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default 20, max 100)' })
+  @Get('history/documents')
+  findHistoryByDocuments(@TenantId() tenantId: string, @Query() query: HistoryQueryDto) {
+    return this.auditService.findHistoryByDocuments(tenantId, query);
+  }
+
+  @ApiOperation({ summary: 'List all audit events for a specific document' })
+  @Get('history/documents/:documentId/events')
+  findDocumentEvents(
+    @TenantId() tenantId: string,
+    @Param('documentId') documentId: string
+  ) {
+    return this.auditService.findDocumentEvents(tenantId, documentId);
+  }
 }

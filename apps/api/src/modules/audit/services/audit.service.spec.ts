@@ -229,4 +229,185 @@ describe('AuditService', () => {
       expect(result.meta.totalPages).toBe(0);
     });
   });
+
+  describe('findHistoryByDocuments', () => {
+    const makeRawDocumentRow = (overrides: Partial<{
+      documentId: string;
+      documentTitle: string | null;
+      documentStatus: string | null;
+      lastActivityAt: Date;
+      eventCount: string;
+    }> = {}) => ({
+      documentId: 'doc-1',
+      documentTitle: 'Contrato X',
+      documentStatus: 'completed',
+      lastActivityAt: new Date('2026-01-01T10:00:00.000Z'),
+      eventCount: '3',
+      ...overrides,
+    });
+
+    it('should return grouped documents with correct shape', async () => {
+      const mockQuery = jest.fn()
+        .mockResolvedValueOnce([makeRawDocumentRow()])
+        .mockResolvedValueOnce([{ total: '1' }]);
+
+      const repo = makeRepo({ manager: { query: mockQuery } });
+      const service = new AuditService(repo);
+
+      const result = await service.findHistoryByDocuments('tenant-1', {});
+
+      expect(result.data).toHaveLength(1);
+      expect(result.data[0]).toMatchObject({
+        documentId: 'doc-1',
+        documentTitle: 'Contrato X',
+        documentStatus: 'completed',
+        occurredAt: undefined,
+        eventCount: 3,
+      });
+      expect(result.data[0]?.lastActivityAt).toBe('2026-01-01T10:00:00.000Z');
+    });
+
+    it('should return correct pagination meta', async () => {
+      const mockQuery = jest.fn()
+        .mockResolvedValueOnce([makeRawDocumentRow()])
+        .mockResolvedValueOnce([{ total: '1' }]);
+
+      const repo = makeRepo({ manager: { query: mockQuery } });
+      const service = new AuditService(repo);
+
+      const result = await service.findHistoryByDocuments('tenant-1', { page: 1, limit: 10 });
+
+      expect(result.meta.page).toBe(1);
+      expect(result.meta.limit).toBe(10);
+      expect(result.meta.total).toBe(1);
+      expect(result.meta.totalPages).toBe(1);
+    });
+
+    it('should include search filter in SQL when provided', async () => {
+      const mockQuery = jest.fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ total: '0' }]);
+
+      const repo = makeRepo({ manager: { query: mockQuery } });
+      const service = new AuditService(repo);
+
+      await service.findHistoryByDocuments('tenant-1', { search: 'Contrato' });
+
+      const calledSql = mockQuery.mock.calls[0][0] as string;
+      expect(calledSql).toContain('ILIKE');
+    });
+
+    it('should return empty data with zero total when no documents found', async () => {
+      const mockQuery = jest.fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([{ total: '0' }]);
+
+      const repo = makeRepo({ manager: { query: mockQuery } });
+      const service = new AuditService(repo);
+
+      const result = await service.findHistoryByDocuments('tenant-1', {});
+
+      expect(result.data).toHaveLength(0);
+      expect(result.meta.total).toBe(0);
+      expect(result.meta.totalPages).toBe(0);
+    });
+  });
+
+  describe('findDocumentEvents', () => {
+    const makeRawEventRow = (overrides: Partial<{
+      id: string;
+      occurredAt: Date;
+      eventType: string;
+      entityType: string;
+      entityId: string;
+      metadata: Record<string, unknown> | null;
+      documentTitle: string | null;
+      actorName: string | null;
+      actorEmail: string | null;
+    }> = {}) => ({
+      id: 'log-1',
+      occurredAt: new Date('2026-01-01T10:00:00.000Z'),
+      eventType: 'document.completed',
+      entityType: 'document',
+      entityId: 'doc-1',
+      metadata: { completedAt: '2026-01-01T10:00:00.000Z' },
+      documentTitle: 'Contrato X',
+      actorName: null,
+      actorEmail: null,
+      ...overrides,
+    });
+
+    it('should return events for a document with correct shape', async () => {
+      const mockQuery = jest.fn().mockResolvedValueOnce([makeRawEventRow()]);
+
+      const repo = makeRepo({ manager: { query: mockQuery } });
+      const service = new AuditService(repo);
+
+      const result = await service.findDocumentEvents('tenant-1', 'doc-1');
+
+      expect(result.documentId).toBe('doc-1');
+      expect(result.documentTitle).toBe('Contrato X');
+      expect(result.events).toHaveLength(1);
+      expect(result.events[0]).toMatchObject({
+        id: 'log-1',
+        occurredAt: '2026-01-01T10:00:00.000Z',
+        eventType: 'document.completed',
+        entityType: 'document',
+        entityId: 'doc-1',
+        summary: 'Document completed',
+      });
+    });
+
+    it('should resolve documentTitle from first event with non-null title', async () => {
+      const rows = [
+        makeRawEventRow({ documentTitle: null, eventType: 'signature.completed', entityType: 'signer' }),
+        makeRawEventRow({ documentTitle: 'Contrato X', eventType: 'document.completed' }),
+      ];
+      const mockQuery = jest.fn().mockResolvedValueOnce(rows);
+
+      const repo = makeRepo({ manager: { query: mockQuery } });
+      const service = new AuditService(repo);
+
+      const result = await service.findDocumentEvents('tenant-1', 'doc-1');
+
+      expect(result.documentTitle).toBe('Contrato X');
+    });
+
+    it('should return null documentTitle when no events have a title', async () => {
+      const mockQuery = jest.fn().mockResolvedValueOnce([makeRawEventRow({ documentTitle: null })]);
+
+      const repo = makeRepo({ manager: { query: mockQuery } });
+      const service = new AuditService(repo);
+
+      const result = await service.findDocumentEvents('tenant-1', 'doc-1');
+
+      expect(result.documentTitle).toBeNull();
+    });
+
+    it('should return empty events list when no records found', async () => {
+      const mockQuery = jest.fn().mockResolvedValueOnce([]);
+
+      const repo = makeRepo({ manager: { query: mockQuery } });
+      const service = new AuditService(repo);
+
+      const result = await service.findDocumentEvents('tenant-1', 'doc-1');
+
+      expect(result.events).toHaveLength(0);
+      expect(result.documentTitle).toBeNull();
+    });
+
+    it('should query events by both document entity and signer metadata', async () => {
+      const mockQuery = jest.fn().mockResolvedValueOnce([]);
+
+      const repo = makeRepo({ manager: { query: mockQuery } });
+      const service = new AuditService(repo);
+
+      await service.findDocumentEvents('tenant-1', 'doc-1');
+
+      const calledSql = mockQuery.mock.calls[0][0] as string;
+      expect(calledSql).toContain("entity_type = 'document'");
+      expect(calledSql).toContain("entity_type = 'signer'");
+      expect(calledSql).toContain("documentId");
+    });
+  });
 });
