@@ -1351,15 +1351,36 @@
     "subtitle": "Track changes and activity across your documents",
     "filterLabel": "Filter by document",
     "filterPlaceholder": "Search document...",
-    "emptyTitle": "No history found",
+    "emptyTitle": "No documents found",
     "emptyDescription": "History entries will appear here as documents are updated.",
     "errorTitle": "Unable to load history",
     "errorDescription": "Please try again or contact support if the problem persists.",
+    "retry": "Try again",
     "eventType": "Event Type",
     "document": "Document",
     "envelope": "Envelope",
     "actor": "Actor",
     "date": "Date",
-    "time": "Time"
+    "time": "Time",
+    "lastActivity": "Last activity",
+    "eventCount": "event",
+    "eventCountPlural": "events",
+    "back": "Back to list",
+    "eventsTimeline": "Events timeline",
+    "emptyEvents": "No events found",
+    "emptyEventsDescription": "No events have been recorded for this document.",
+    "errorEventsTitle": "Unable to load events",
+    "errorEventsDescription": "Please try again.",
+    "status": {
+      "draft": "Draft",
+      "pending_signatures": "Pending signatures",
+      "completed": "Completed",
+      "expired": "Expired"
+    },
+    "pagination": {
+      "previous": "Previous",
+      "next": "Next",
+      "page": "Page"
+    }
   }
 }

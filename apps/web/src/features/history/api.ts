@@ -39,3 +39,61 @@ export const historyApi = {
   getHistory: (params: HistoryQueryParams) =>
     apiClient.get<HistoryResponse>('/audit/history', { params }).then((r) => r.data),
 };
+
+export interface DocumentHistorySummary {
+  readonly documentId: string;
+  readonly documentTitle: string;
+  readonly documentStatus: string | null;
+  readonly lastActivity: string;
+  readonly eventCount: number;
+}
+
+export interface DocumentHistoryResponse {
+  readonly data: readonly DocumentHistorySummary[];
+  readonly meta: HistoryMeta;
+}
+
+export interface ListDocumentHistoryParams {
+  readonly search?: string;
+  readonly page?: number;
+  readonly limit?: number;
+}
+
+export interface DocumentEventItem {
+  readonly id: string;
+  readonly eventType: string;
+  readonly occurredAt: string;
+  readonly actorId: string | null;
+  readonly actorType: string | null;
+  readonly metadata: Record<string, unknown> | null;
+}
+
+export interface DocumentEventsResponse {
+  readonly data: readonly DocumentEventItem[];
+  readonly meta: HistoryMeta;
+}
+
+export interface ListDocumentEventsParams {
+  readonly page?: number;
+  readonly limit?: number;
+}
+
+export const listHistoryByDocuments = async (
+  params: ListDocumentHistoryParams,
+): Promise<DocumentHistoryResponse> => {
+  const response = await apiClient.get<DocumentHistoryResponse>('/audit/history/documents', {
+    params,
+  });
+  return response.data;
+};
+
+export const listDocumentEvents = async (
+  documentId: string,
+  params: ListDocumentEventsParams,
+): Promise<DocumentEventsResponse> => {
+  const response = await apiClient.get<DocumentEventsResponse>(
+    `/audit/history/documents/${documentId}/events`,
+    { params },
+  );
+  return response.data;
+};

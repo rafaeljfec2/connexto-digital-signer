@@ -1314,15 +1314,36 @@
     "subtitle": "Acompanhe as alterações e atividades dos seus documentos",
     "filterLabel": "Filtrar por documento",
     "filterPlaceholder": "Buscar documento...",
-    "emptyTitle": "Nenhum histórico encontrado",
+    "emptyTitle": "Nenhum documento encontrado",
     "emptyDescription": "Os registros de histórico aparecerão aqui conforme os documentos forem atualizados.",
     "errorTitle": "Não foi possível carregar o histórico",
     "errorDescription": "Por favor, tente novamente ou entre em contato com o suporte se o problema persistir.",
+    "retry": "Tentar novamente",
     "eventType": "Tipo de Evento",
     "document": "Documento",
     "envelope": "Envelope",
     "actor": "Ator",
     "date": "Data",
-    "time": "Hora"
+    "time": "Hora",
+    "lastActivity": "Última atividade",
+    "eventCount": "evento",
+    "eventCountPlural": "eventos",
+    "back": "Voltar para a lista",
+    "eventsTimeline": "Linha do tempo de eventos",
+    "emptyEvents": "Nenhum evento encontrado",
+    "emptyEventsDescription": "Nenhum evento foi registrado para este documento.",
+    "errorEventsTitle": "Não foi possível carregar os eventos",
+    "errorEventsDescription": "Por favor, tente novamente.",
+    "status": {
+      "draft": "Rascunho",
+      "pending_signatures": "Aguardando assinaturas",
+      "completed": "Concluído",
+      "expired": "Expirado"
+    },
+    "pagination": {
+      "previous": "Anterior",
+      "next": "Próximo",
+      "page": "Página"
+    }
   }
 }
