@@ -1,5 +1,10 @@
 import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default [
   js.configs.recommended,
@@ -14,7 +19,7 @@ export default [
         ecmaVersion: 2022,
         sourceType: 'module',
         project: ['./apps/*/tsconfig.json', './packages/*/tsconfig.json'],
-        tsconfigRootDir: process.cwd(),
+        tsconfigRootDir: __dirname,
       },
       globals: {
         NodeJS: 'readonly',
