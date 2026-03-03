@@ -1,16 +1,19 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { AuditLog } from '../entities/audit-log.entity';
-import type { HistoryQueryDto } from '../dto/history-query.dto';
 import type {
-  DocumentEventItem,
+  DocumentEventsQueryDto,
+  DocumentHistoryQueryDto,
+} from '../dto/document-history-query.dto';
+import type {
+  DocumentEvent,
   DocumentEventsResponse,
-  DocumentHistoryItem,
   DocumentHistoryResponse,
-  HistoryItem,
-  HistoryResponse,
-} from '../dto/history-response.dto';
+  DocumentHistorySummary,
+} from '../dto/document-history-response.dto';
+import type { HistoryQueryDto } from '../dto/history-query.dto';
+import type { HistoryItem, HistoryResponse } from '../dto/history-response.dto';
+import { AuditLog } from '../entities/audit-log.entity';
 
 export interface CreateAuditLogDto {
   tenantId: string;
@@ -80,11 +83,7 @@ export class AuditService {
     return this.auditRepository.save(entry);
   }
 
-  async findByEntity(
-    tenantId: string,
-    entityType: string,
-    entityId: string
-  ): Promise<AuditLog[]> {
+  async findByEntity(tenantId: string, entityType: string, entityId: string): Promise<AuditLog[]> {
     return this.auditRepository.find({
       where: { tenantId, entityType, entityId },
       order: { createdAt: 'ASC' },
@@ -180,7 +179,8 @@ export class AuditService {
 
     const data: HistoryItem[] = rows.map((row) => ({
       id: row.id,
-      occurredAt: row.occurredAt instanceof Date ? row.occurredAt.toISOString() : String(row.occurredAt),
+      occurredAt:
+        row.occurredAt instanceof Date ? row.occurredAt.toISOString() : String(row.occurredAt),
       eventType: row.eventType,
       entityType: row.entityType,
       entityId: row.entityId,
@@ -203,96 +203,75 @@ export class AuditService {
     };
   }
 
-  async findHistoryByDocuments(
+  async findDocumentHistory(
     tenantId: string,
-    query: HistoryQueryDto
+    query: DocumentHistoryQueryDto
   ): Promise<DocumentHistoryResponse> {
     const page = query.page ?? 1;
     const limit = Math.min(query.limit ?? 20, 100);
     const offset = (page - 1) * limit;
 
     const params: unknown[] = [tenantId];
-    const outerConditions: string[] = [];
+    const conditions: string[] = ['doc.tenant_id = $1'];
 
     if (query.search) {
       params.push(`%${query.search}%`);
-      outerConditions.push(`resolved_doc_title ILIKE $${params.length}`);
+      conditions.push(`doc.title ILIKE $${params.length}`);
     }
 
-    const whereClause =
-      outerConditions.length > 0 ? `WHERE ${outerConditions.join(' AND ')}` : '';
+    const whereClause = conditions.join(' AND ');
 
-    const cte = `
-      WITH doc_events AS (
-        SELECT
-          al.id,
-          al.created_at,
-          doc.id AS resolved_doc_id,
-          doc.title AS resolved_doc_title,
-          doc.status::text AS resolved_doc_status
-        FROM audit_logs al
-        INNER JOIN documents doc
-          ON al.entity_type = 'document'
-          AND doc.id::text = al.entity_id
-          AND doc.tenant_id = al.tenant_id
-        WHERE al.tenant_id = $1
-
-        UNION ALL
-
-        SELECT
-          al.id,
-          al.created_at,
-          sig_doc.id AS resolved_doc_id,
-          sig_doc.title AS resolved_doc_title,
-          sig_doc.status::text AS resolved_doc_status
-        FROM audit_logs al
-        INNER JOIN documents sig_doc
-          ON al.entity_type = 'signer'
-          AND sig_doc.id::text = (al.metadata->>'documentId')
-          AND sig_doc.tenant_id = al.tenant_id
-        WHERE al.tenant_id = $1
-      )
+    const baseQuery = `
+      FROM documents doc
+      JOIN audit_logs al
+        ON al.tenant_id = doc.tenant_id
+        AND (
+          (al.entity_type = 'document' AND al.entity_id = doc.id::text)
+          OR (al.entity_type = 'signer' AND al.metadata->>'documentId' = doc.id::text)
+        )
+      WHERE ${whereClause}
     `;
 
     const dataParams = [...params, limit, offset];
-    const groupQuery = `
-      ${cte}
+    const dataQuery = `
       SELECT
-        resolved_doc_id::text AS "documentId",
-        resolved_doc_title AS "documentTitle",
-        resolved_doc_status AS "documentStatus",
-        MAX(created_at) AS "lastActivityAt",
-        COUNT(*)::int AS "eventCount"
-      FROM doc_events
-      ${whereClause}
-      GROUP BY resolved_doc_id, resolved_doc_title, resolved_doc_status
-      ORDER BY MAX(created_at) DESC
-      LIMIT $${params.length + 1} OFFSET $${params.length + 2}
+        doc.id AS "documentId",
+        doc.title AS "documentTitle",
+        doc.status AS "documentStatus",
+        MAX(al.created_at) AS "lastActivity",
+        COUNT(al.id)::int AS "eventCount"
+      ${baseQuery}
+      GROUP BY doc.id, doc.title, doc.status
+      ORDER BY "lastActivity" DESC
+      LIMIT $${dataParams.length - 1} OFFSET $${dataParams.length}
     `;
 
-    const countQuery = `
-      ${cte}
-      SELECT COUNT(DISTINCT resolved_doc_id) AS total
-      FROM doc_events
-      ${whereClause}
-    `;
+    const countQuery = `SELECT COUNT(DISTINCT doc.id) AS total ${baseQuery}`;
+
+    interface RawDocumentRow {
+      documentId: string;
+      documentTitle: string;
+      documentStatus: string | null;
+      lastActivity: Date | string;
+      eventCount: number;
+    }
 
     const [rows, countResult] = await Promise.all([
-      this.auditRepository.manager.query<RawDocumentHistoryRow[]>(groupQuery, dataParams),
+      this.auditRepository.manager.query<RawDocumentRow[]>(dataQuery, dataParams),
       this.auditRepository.manager.query<[{ total: string }]>(countQuery, params),
     ]);
 
     const total = Number(countResult[0]?.total ?? 0);
 
-    const data: DocumentHistoryItem[] = rows.map((row) => ({
+    const data: DocumentHistorySummary[] = rows.map((row) => ({
       documentId: row.documentId,
-      documentTitle: row.documentTitle ?? null,
-      documentStatus: row.documentStatus ?? null,
-      lastActivityAt:
-        row.lastActivityAt instanceof Date
-          ? row.lastActivityAt.toISOString()
-          : String(row.lastActivityAt),
-      eventCount: Number(row.eventCount),
+      documentTitle: row.documentTitle,
+      documentStatus: row.documentStatus,
+      lastActivity:
+        row.lastActivity instanceof Date
+          ? row.lastActivity.toISOString()
+          : String(row.lastActivity),
+      eventCount: row.eventCount,
     }));
 
     return {
@@ -308,63 +287,82 @@ export class AuditService {
 
   async findDocumentEvents(
     tenantId: string,
-    documentId: string
+    documentId: string,
+    query: DocumentEventsQueryDto
   ): Promise<DocumentEventsResponse> {
-    const params = [tenantId, documentId];
+    const docExists = await this.auditRepository.manager.query<[{ exists: boolean }]>(
+      `SELECT EXISTS(SELECT 1 FROM documents WHERE id = $1 AND tenant_id = $2) AS exists`,
+      [documentId, tenantId]
+    );
 
-    const sql = `
-      SELECT
-        al.id,
-        al.created_at AS "occurredAt",
-        al.event_type AS "eventType",
-        al.entity_type AS "entityType",
-        al.entity_id AS "entityId",
-        al.metadata AS metadata,
-        doc.title AS "documentTitle",
-        COALESCE(usr.name, sgn.name) AS "actorName",
-        COALESCE(usr.email, sgn.email, al.metadata->>'email') AS "actorEmail"
+    if (!docExists[0]?.exists) {
+      throw new NotFoundException(`Document not found: ${documentId}`);
+    }
+
+    const page = query.page ?? 1;
+    const limit = Math.min(query.limit ?? 20, 100);
+    const offset = (page - 1) * limit;
+
+    const baseQuery = `
       FROM audit_logs al
-      LEFT JOIN documents doc
-        ON al.entity_type = 'document'
-        AND doc.id::text = al.entity_id
-        AND doc.tenant_id = al.tenant_id
-      LEFT JOIN users usr
-        ON al.actor_type = 'user'
-        AND usr.id::text = al.actor_id
-        AND usr.tenant_id = al.tenant_id
-      LEFT JOIN signers sgn
-        ON al.actor_type = 'signer'
-        AND sgn.id::text = al.actor_id
-        AND sgn.tenant_id = al.tenant_id
       WHERE al.tenant_id = $1
         AND (
           (al.entity_type = 'document' AND al.entity_id = $2)
           OR (al.entity_type = 'signer' AND al.metadata->>'documentId' = $2)
         )
-      ORDER BY al.created_at ASC
     `;
 
-    const rows = await this.auditRepository.manager.query<RawDocumentEventRow[]>(sql, params);
+    const dataParams = [tenantId, documentId, limit, offset];
+    const dataQuery = `
+      SELECT
+        al.id,
+        al.event_type AS "eventType",
+        al.created_at AS "occurredAt",
+        al.actor_id AS "actorId",
+        al.actor_type AS "actorType",
+        al.metadata
+      ${baseQuery}
+      ORDER BY al.created_at DESC
+      LIMIT $3 OFFSET $4
+    `;
 
-    const documentTitle = rows.find((r) => r.documentTitle != null)?.documentTitle ?? null;
+    const countQuery = `SELECT COUNT(*) AS total ${baseQuery}`;
+    const countParams = [tenantId, documentId];
 
-    const events: DocumentEventItem[] = rows.map((row) => ({
+    interface RawEventRow {
+      id: string;
+      eventType: string;
+      occurredAt: Date | string;
+      actorId: string | null;
+      actorType: string | null;
+      metadata: Record<string, unknown> | null;
+    }
+
+    const [rows, countResult] = await Promise.all([
+      this.auditRepository.manager.query<RawEventRow[]>(dataQuery, dataParams),
+      this.auditRepository.manager.query<[{ total: string }]>(countQuery, countParams),
+    ]);
+
+    const total = Number(countResult[0]?.total ?? 0);
+
+    const data: DocumentEvent[] = rows.map((row) => ({
       id: row.id,
+      eventType: row.eventType,
       occurredAt:
         row.occurredAt instanceof Date ? row.occurredAt.toISOString() : String(row.occurredAt),
-      eventType: row.eventType,
-      entityType: row.entityType,
-      entityId: row.entityId,
-      actorName: row.actorName ?? null,
-      actorEmail: row.actorEmail ?? null,
-      summary: buildSummary(row.eventType),
+      actorId: row.actorId,
+      actorType: row.actorType,
       metadata: row.metadata,
     }));
 
     return {
-      documentId,
-      documentTitle,
-      events,
+      data,
+      meta: {
+        page,
+        limit,
+        total,
+        totalPages: Math.ceil(total / limit),
+      },
     };
   }
 }

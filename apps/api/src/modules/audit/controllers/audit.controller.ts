@@ -1,9 +1,10 @@
-import { Controller, Get, Param, Query } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiQuery } from '@nestjs/swagger';
 import { TenantId } from '@connexto/shared';
-import { AuditService } from '../services/audit.service';
+import { Controller, Get, Param, ParseUUIDPipe, Query } from '@nestjs/common';
+import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
+import { DocumentEventsQueryDto, DocumentHistoryQueryDto } from '../dto/document-history-query.dto';
 import { HistoryQueryDto } from '../dto/history-query.dto';
+import { AuditService } from '../services/audit.service';
 
 @ApiTags('Audit')
 @RequireAuthMethod('jwt')
@@ -21,7 +22,11 @@ export class AuditController {
   }
 
   @ApiOperation({ summary: 'List paginated history events for the tenant' })
-  @ApiQuery({ name: 'search', required: false, description: 'Search by document or envelope title' })
+  @ApiQuery({
+    name: 'search',
+    required: false,
+    description: 'Search by document or envelope title',
+  })
   @ApiQuery({ name: 'eventType', required: false, description: 'Filter by event type' })
   @ApiQuery({ name: 'from', required: false, description: 'Filter events from date (ISO 8601)' })
   @ApiQuery({ name: 'to', required: false, description: 'Filter events up to date (ISO 8601)' })
@@ -32,21 +37,25 @@ export class AuditController {
     return this.auditService.findHistory(tenantId, query);
   }
 
-  @ApiOperation({ summary: 'List history grouped by document with pagination and optional search' })
-  @ApiQuery({ name: 'search', required: false, description: 'Filter by document title' })
+  @ApiOperation({ summary: 'List documents with activity summary, grouped by document' })
+  @ApiQuery({ name: 'search', required: false, description: 'Filter by document title (ILIKE)' })
   @ApiQuery({ name: 'page', required: false, description: 'Page number (default 1)' })
   @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default 20, max 100)' })
   @Get('history/documents')
-  findHistoryByDocuments(@TenantId() tenantId: string, @Query() query: HistoryQueryDto) {
-    return this.auditService.findHistoryByDocuments(tenantId, query);
+  findDocumentHistory(@TenantId() tenantId: string, @Query() query: DocumentHistoryQueryDto) {
+    return this.auditService.findDocumentHistory(tenantId, query);
   }
 
-  @ApiOperation({ summary: 'List all audit events for a specific document' })
+  @ApiOperation({ summary: 'List audit events timeline for a specific document' })
+  @ApiParam({ name: 'documentId', description: 'Document UUID' })
+  @ApiQuery({ name: 'page', required: false, description: 'Page number (default 1)' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Items per page (default 20, max 100)' })
   @Get('history/documents/:documentId/events')
   findDocumentEvents(
     @TenantId() tenantId: string,
-    @Param('documentId') documentId: string
+    @Param('documentId', ParseUUIDPipe) documentId: string,
+    @Query() query: DocumentEventsQueryDto
   ) {
-    return this.auditService.findDocumentEvents(tenantId, documentId);
+    return this.auditService.findDocumentEvents(tenantId, documentId, query);
   }
 }
