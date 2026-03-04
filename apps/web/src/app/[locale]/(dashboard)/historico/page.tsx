@@ -45,9 +45,9 @@ type DocumentListSkeletonProps = Readonly<{ count?: number }>;
 
 function DocumentListSkeleton({ count = 4 }: DocumentListSkeletonProps) {
   return (
-    <div className="space-y-3">
+    <div className="divide-y divide-th-card-border overflow-hidden rounded-xl border border-th-card-border bg-th-card shadow-th-card">
       {Array.from({ length: count }, (_, i) => i).map((i) => (
-        <Card key={i} className="p-4">
+        <div key={i} className="p-4">
           <div className="flex items-center gap-3">
             <Skeleton className="h-10 w-10 shrink-0 rounded-lg" />
             <div className="flex-1 space-y-2">
@@ -56,7 +56,7 @@ function DocumentListSkeleton({ count = 4 }: DocumentListSkeletonProps) {
             </div>
             <Skeleton className="h-5 w-16 shrink-0 rounded-full" />
           </div>
-        </Card>
+        </div>
       ))}
     </div>
   );
@@ -106,7 +106,7 @@ function DocumentCard({
       onClick={() => onClick(doc.documentId)}
       className="w-full text-left"
     >
-      <Card className="flex items-center gap-3 p-4 transition-colors hover:bg-th-hover active:bg-th-active">
+      <div className="flex items-center gap-3 p-4 transition-colors hover:bg-th-hover active:bg-th-active">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-th-icon-bg">
           <FileText className="h-5 w-5 text-th-icon-fg" />
         </div>
@@ -130,7 +130,7 @@ function DocumentCard({
           ) : null}
           <ChevronRight className="h-4 w-4 text-foreground-subtle" />
         </div>
-      </Card>
+      </div>
     </button>
   );
 }
@@ -197,7 +197,7 @@ function DocumentListView({ search, onSearchChange, onDocumentClick }: DocumentL
           <p className="max-w-sm text-xs text-foreground-muted">{t('emptyDescription')}</p>
         </Card>
       ) : (
-        <div className="space-y-3">
+        <div className="divide-y divide-th-card-border overflow-hidden rounded-xl border border-th-card-border bg-th-card shadow-th-card">
           {data.data.map((doc) => (
             <DocumentCard
               key={doc.documentId}
