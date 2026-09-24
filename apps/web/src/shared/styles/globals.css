@@ -116,7 +116,7 @@
 * {
   box-sizing: border-box;
   scrollbar-width: thin;
-  scrollbar-color: var(--th-fg-subtle) transparent;
+  scrollbar-color: transparent transparent;
 }
 
 body {
@@ -141,6 +141,10 @@ body {
   border: 1px solid var(--th-border);
 }
 
+*:hover {
+  scrollbar-color: var(--th-fg-subtle) transparent;
+}
+
 *::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -151,8 +155,12 @@ body {
 }
 
 *::-webkit-scrollbar-thumb {
-  background: var(--th-fg-subtle);
+  background: transparent;
   border-radius: 9999px;
+}
+
+*:hover::-webkit-scrollbar-thumb {
+  background: var(--th-fg-subtle);
 }
 
 *::-webkit-scrollbar-thumb:hover {
