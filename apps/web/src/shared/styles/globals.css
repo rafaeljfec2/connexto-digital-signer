@@ -142,12 +142,12 @@ body {
 }
 
 *:hover {
-  scrollbar-color: var(--th-fg-subtle) transparent;
+  scrollbar-color: color-mix(in srgb, var(--th-fg-subtle) 35%, transparent) transparent;
 }
 
 *::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 4px;
+  height: 4px;
 }
 
 *::-webkit-scrollbar-track {
@@ -160,11 +160,11 @@ body {
 }
 
 *:hover::-webkit-scrollbar-thumb {
-  background: var(--th-fg-subtle);
+  background: color-mix(in srgb, var(--th-fg-subtle) 35%, transparent);
 }
 
 *::-webkit-scrollbar-thumb:hover {
-  background: var(--th-fg-muted);
+  background: color-mix(in srgb, var(--th-fg-subtle) 55%, transparent);
 }
 
 @layer components {
