@@ -1,9 +1,11 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
+import { ensureBaselineSchema } from './helpers/ensure-baseline-schema';
 
 export class AddSigningModeAndFields1730000000001 implements MigrationInterface {
   name = 'AddSigningModeAndFields1730000000001';
 
   async up(queryRunner: QueryRunner): Promise<void> {
+    await ensureBaselineSchema(queryRunner);
     await queryRunner.query(
       `CREATE TYPE "public"."documents_signing_mode_enum" AS ENUM('parallel', 'sequential')`
     );
