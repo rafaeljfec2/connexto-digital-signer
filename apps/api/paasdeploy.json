@@ -1,0 +1,29 @@
+{
+  "$schema": "https://raw.githubusercontent.com/rafaelcmd/connexto-vps-deploy-paas/main/paasdeploy.schema.json",
+  "name": "connexto-digital-signer-api",
+  "runtime": "node",
+  "build": {
+    "type": "dockerfile",
+    "dockerfile": "./Dockerfile",
+    "context": "../.."
+  },
+  "port": 3000,
+  "hostPort": 3004,
+  "healthcheck": {
+    "path": "/digital-signer/v1/health",
+    "interval": "15s",
+    "timeout": "10s",
+    "retries": 10,
+    "startPeriod": "60s",
+    "tls": false
+  },
+  "env": {
+    "TZ": "America/Sao_Paulo",
+    "NODE_ENV": "production",
+    "PORT": "3000"
+  },
+  "resources": {
+    "memory": "512m",
+    "cpu": "1.0"
+  }
+}

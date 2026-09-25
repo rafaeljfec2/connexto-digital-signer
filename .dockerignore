@@ -22,4 +22,7 @@ LICENSE
 *.tsbuildinfo
 *.tgz
 .nyc_output
-.eslintcache
+apps/web/**
+!apps/web/package.json
+.cursor
+*.md
