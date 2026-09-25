@@ -23,7 +23,7 @@
     "PORT": "3000"
   },
   "resources": {
-    "memory": "512m",
+    "memory": "1g",
     "cpu": "1.0"
   }
 }

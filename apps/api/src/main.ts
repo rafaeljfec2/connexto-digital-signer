@@ -7,6 +7,7 @@ import { Logger } from 'nestjs-pino';
 import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
+import { formatBootError, runBootMigrations } from './database/run-boot-migrations';
 
 const apiPrefix = 'digital-signer/v1';
 
@@ -60,10 +61,8 @@ const bootstrap = async (): Promise<void> => {
   configureOpenApi(app);
 
   const port = process.env['PORT'] ?? 3000;
-  await app.listen(port);
-
-  const dataSource = app.get(DataSource);
-  await dataSource.runMigrations();
+  await app.listen(port, '0.0.0.0');
+  await runBootMigrations(app.get(DataSource), app.get(Logger));
 
   const shutdown = async (signal: string) => {
     app.get(Logger).log(`Received ${signal}, shutting down gracefully...`);
@@ -74,4 +73,7 @@ const bootstrap = async (): Promise<void> => {
   process.on('SIGINT', () => void shutdown('SIGINT'));
 };
 
-void bootstrap();
+void bootstrap().catch((error: unknown) => {
+  process.stderr.write(`BOOTSTRAP_FAILED ${formatBootError(error)}\n`);
+  process.exit(1);
+});
