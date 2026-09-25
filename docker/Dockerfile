@@ -15,7 +15,7 @@ RUN pnpm install --frozen-lockfile --filter api...
 FROM base AS builder
 COPY --from=deps /app .
 COPY . .
-RUN pnpm --filter api --filter shared --filter database --filter events build
+RUN pnpm --filter api... build
 RUN pnpm deploy --filter api --prod /app/deployed
 
 FROM node:24-alpine AS runner
