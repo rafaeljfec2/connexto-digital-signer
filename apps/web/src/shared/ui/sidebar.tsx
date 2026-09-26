@@ -1,8 +1,7 @@
 "use client";
 
 import type { ReactNode } from 'react';
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
+import { Link, usePathname } from '@/i18n/navigation';
 import { PenTool, Plus } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { Badge } from './badge';

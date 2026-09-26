@@ -12,6 +12,8 @@ import { UpdateEnvelopeDto } from '../dto/update-envelope.dto';
 import { ListEnvelopesQueryDto } from '../dto/list-envelopes-query.dto';
 import { FoldersService } from '../../folders/services/folders.service';
 import { TenantsService } from '../../tenants/services/tenants.service';
+import { DocumentsService } from '../../documents/services/documents.service';
+import { Document } from '../../documents/entities/document.entity';
 
 @Injectable()
 export class EnvelopesService {
@@ -22,16 +24,16 @@ export class EnvelopesService {
     private readonly envelopeRepository: Repository<Envelope>,
     private readonly foldersService: FoldersService,
     private readonly tenantsService: TenantsService,
+    private readonly documentsService: DocumentsService,
   ) {}
 
   async create(tenantId: string, dto: CreateEnvelopeDto): Promise<Envelope> {
-    await this.foldersService.findOne(dto.folderId, tenantId);
-
+    const folderId = await this.resolveFolderId(tenantId, dto.folderId);
     const tenant = await this.tenantsService.findOne(tenantId, tenantId);
 
     const envelope = this.envelopeRepository.create({
       tenantId,
-      folderId: dto.folderId,
+      folderId,
       title: dto.title,
       signingMode: dto.signingMode,
       signingLanguage: dto.signingLanguage ?? tenant.defaultSigningLanguage ?? 'pt-br',
@@ -42,6 +44,25 @@ export class EnvelopesService {
     });
 
     return this.envelopeRepository.save(envelope);
+  }
+
+  async createDraft(tenantId: string, title: string): Promise<Document> {
+    const envelope = await this.create(tenantId, { title });
+    try {
+      return await this.documentsService.create(tenantId, { title, envelopeId: envelope.id });
+    } catch (error) {
+      await this.envelopeRepository.remove(envelope);
+      throw error;
+    }
+  }
+
+  private async resolveFolderId(tenantId: string, folderId?: string): Promise<string> {
+    if (folderId !== undefined) {
+      const folder = await this.foldersService.findOne(folderId, tenantId);
+      return folder.id;
+    }
+    const root = await this.foldersService.ensureRootFolder(tenantId);
+    return root.id;
   }
 
   async findOne(id: string, tenantId: string): Promise<Envelope> {

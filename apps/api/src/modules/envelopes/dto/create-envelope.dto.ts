@@ -16,9 +16,10 @@ export class CreateEnvelopeDto {
   @ApiProperty({ example: 'Service Agreement Q1' })
   readonly title!: string;
 
+  @IsOptional()
   @IsUUID()
-  @ApiProperty({ description: 'Folder to place the envelope in' })
-  readonly folderId!: string;
+  @ApiPropertyOptional({ description: 'Folder to place the envelope in. Defaults to the tenant root folder.' })
+  readonly folderId?: string;
 
   @IsOptional()
   @IsEnum(SigningMode)

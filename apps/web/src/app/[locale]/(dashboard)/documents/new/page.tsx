@@ -1,30 +1,56 @@
 "use client";
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useCreateDraft } from '@/features/documents/hooks/use-documents';
-import { Skeleton } from '@/shared/ui';
+import { Button, Skeleton } from '@/shared/ui';
 
 export default function NewDocumentPage() {
   const tDocuments = useTranslations('documents');
   const router = useRouter();
   const createDraft = useCreateDraft();
   const triggered = useRef(false);
+  const [hasError, setHasError] = useState(false);
 
-  useEffect(() => {
-    if (triggered.current) return;
-    triggered.current = true;
-
+  const startDraft = () => {
+    setHasError(false);
     createDraft.mutateAsync({ title: tDocuments('upload.defaultTitle') }).then(
       (result) => {
         router.replace(`/documents/${result.envelopeId}`);
       },
       () => {
-        router.replace('/documents');
-      }
+        setHasError(true);
+      },
     );
-  }, [createDraft, router, tDocuments]);
+  };
+
+  useEffect(() => {
+    if (triggered.current) return;
+    triggered.current = true;
+    startDraft();
+    // First mount only; retry is explicit.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (hasError) {
+    return (
+      <div className="space-y-4">
+        <h1 className="text-2xl font-medium text-foreground">
+          {tDocuments('upload.title')}
+        </h1>
+        <p className="text-sm text-error">{tDocuments('upload.createDraftError')}</p>
+        <div className="flex flex-wrap gap-3">
+          <Button type="button" onClick={startDraft} isLoading={createDraft.isPending}>
+            {tDocuments('upload.retryCreateDraft')}
+          </Button>
+          <Button type="button" variant="ghost" onClick={() => router.replace('/documents')}>
+            {tDocuments('upload.backToDocuments')}
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-5">

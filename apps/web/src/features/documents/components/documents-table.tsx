@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import {
   FileText,
   Folder as FolderIcon,
@@ -117,6 +117,7 @@ export type DocumentsTableProps = Readonly<{
   }>;
   emptyTitle: string;
   emptyDescription?: string;
+  emptyAction?: ReactNode;
   formatDate: (value: string) => string;
   actionLabels: DocumentActionLabels;
   onDocumentClick: (doc: EnvelopeSummary) => void;
@@ -307,6 +308,7 @@ export function DocumentsTable({
   headers,
   emptyTitle,
   emptyDescription,
+  emptyAction,
   formatDate,
   actionLabels,
   onDocumentClick,
@@ -333,7 +335,7 @@ export function DocumentsTable({
   }, []);
 
   if (!isLoading && documents.length === 0) {
-    return <EmptyState title={emptyTitle} description={emptyDescription} />;
+    return <EmptyState title={emptyTitle} description={emptyDescription} action={emptyAction} />;
   }
 
   return (

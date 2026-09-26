@@ -187,6 +187,13 @@ function DocumentsPageContent() {
     );
   }, [moveTarget, moveMutation]);
 
+  const newDocumentAction = (
+    <Button type="button" variant="primary" className="gap-2" onClick={() => router.push('/documents/new')}>
+      <Plus className="h-4 w-4" />
+      {t('actions.newDocument')}
+    </Button>
+  );
+
   return (
     <PageTransition className="space-y-5">
       <FadeIn>
@@ -232,6 +239,7 @@ function DocumentsPageContent() {
               documents={envelopes} isLoading={query.isLoading} statusLabels={statusLabels}
               headers={{ title: t('table.title'), status: t('table.status'), docs: t('table.docs'), folder: t('table.folder'), created: t('table.created'), actions: t('table.actions') }}
               emptyTitle={t('empty.title')} emptyDescription={t('empty.description')}
+              emptyAction={newDocumentAction}
               formatDate={formatDate} actionLabels={actionLabels} folderNameMap={folderNameMap}
               onDocumentClick={handleDocumentClick} onDeleteDocument={setDeleteTarget}
               onDownloadOriginal={handleDownloadOriginal} onDownloadSigned={handleDownloadSigned}
@@ -265,7 +273,7 @@ function DocumentsPageContent() {
                 ))}
             {!query.isLoading && envelopes.length === 0 ? (
               <div className="md:col-span-2 xl:col-span-3">
-                <EmptyState title={t('empty.title')} description={t('empty.description')} />
+                <EmptyState title={t('empty.title')} description={t('empty.description')} action={newDocumentAction} />
               </div>
             ) : null}
           </motion.div>
