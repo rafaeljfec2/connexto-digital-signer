@@ -4,31 +4,16 @@ import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
-import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button, Input } from '@/shared/ui';
 import { createTenant, type SignUpResponse } from '../api';
 import { useAuth } from '../hooks/use-auth';
 import { slugify } from '@/shared/utils/slug';
-
-const schema = z
-  .object({
-    name: z.string().min(2),
-    ownerName: z.string().min(2),
-    ownerEmail: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
-    ownerPassword: z
-      .string()
-      .min(8)
-      .regex(/[A-Z]/)
-      .regex(/[a-z]/)
-      .regex(/\d/),
-    ownerPasswordConfirm: z.string().min(8),
-  })
-  .refine((data) => data.ownerPassword === data.ownerPasswordConfirm, {
-    path: ['ownerPasswordConfirm'],
-  });
-
-type FormData = z.infer<typeof schema>;
+import {
+  signupFormSchema,
+  signupPasswordErrorKey,
+  type SignupFormData,
+} from './signup-form.schema';
 
 export function SignUpForm() {
   const router = useRouter();
@@ -41,13 +26,13 @@ export function SignUpForm() {
     register,
     handleSubmit,
     formState: { errors, isSubmitting, isSubmitted },
-  } = useForm<FormData>({
-    resolver: zodResolver(schema),
+  } = useForm<SignupFormData>({
+    resolver: zodResolver(signupFormSchema),
     mode: 'onSubmit',
     reValidateMode: 'onChange',
   });
 
-  const onSubmit = async (data: FormData) => {
+  const onSubmit = async (data: SignupFormData) => {
     const payload = {
       name: data.name,
       slug: slugify(data.name),
@@ -63,7 +48,7 @@ export function SignUpForm() {
 
   return (
     <div className="space-y-6">
-      <form className="space-y-8" onSubmit={handleSubmit(onSubmit)}>
+      <form className="space-y-8" noValidate onSubmit={handleSubmit(onSubmit)}>
         <fieldset className="space-y-4">
           <div className="border-b border-th-border pb-2">
             <h2 className="text-sm font-semibold text-foreground">
@@ -77,7 +62,12 @@ export function SignUpForm() {
             <label className="text-sm font-normal text-foreground-muted" htmlFor="name">
               {tAuth('companyNameLabel')}
             </label>
-            <Input id="name" placeholder={tAuth('companyNamePlaceholder')} {...register('name')} />
+            <Input
+              id="name"
+              placeholder={tAuth('companyNamePlaceholder')}
+              aria-invalid={Boolean(errors.name)}
+              {...register('name')}
+            />
             {isSubmitted && errors.name ? (
               <p className="text-xs text-error">{tAuth('companyNameRequired')}</p>
             ) : null}
@@ -101,6 +91,7 @@ export function SignUpForm() {
               <Input
                 id="ownerName"
                 placeholder={tAuth('ownerNamePlaceholder')}
+                aria-invalid={Boolean(errors.ownerName)}
                 {...register('ownerName')}
               />
               {isSubmitted && errors.ownerName ? (
@@ -115,6 +106,7 @@ export function SignUpForm() {
                 id="ownerEmail"
                 type="email"
                 placeholder={tAuth('ownerEmailPlaceholder')}
+                aria-invalid={Boolean(errors.ownerEmail)}
                 {...register('ownerEmail')}
               />
               {isSubmitted && errors.ownerEmail ? (
@@ -142,10 +134,14 @@ export function SignUpForm() {
                 id="ownerPassword"
                 type="password"
                 placeholder={tAuth('ownerPasswordPlaceholder')}
+                autoComplete="new-password"
+                aria-invalid={Boolean(errors.ownerPassword)}
                 {...register('ownerPassword')}
               />
               {isSubmitted && errors.ownerPassword ? (
-                <p className="text-xs text-error">{tAuth('ownerPasswordRequired')}</p>
+                <p className="text-xs text-error">
+                  {tAuth(signupPasswordErrorKey(errors.ownerPassword.message))}
+                </p>
               ) : (
                 <p className="text-xs text-foreground-muted">{tAuth('ownerPasswordHelper')}</p>
               )}
@@ -158,6 +154,8 @@ export function SignUpForm() {
                 id="ownerPasswordConfirm"
                 type="password"
                 placeholder={tAuth('ownerPasswordConfirmPlaceholder')}
+                autoComplete="new-password"
+                aria-invalid={Boolean(errors.ownerPasswordConfirm)}
                 {...register('ownerPasswordConfirm')}
               />
               {isSubmitted && errors.ownerPasswordConfirm ? (

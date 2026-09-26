@@ -19,6 +19,7 @@ import { RequireAuthMethod } from '../../../common/decorators/auth-method.decora
 import { EnvelopesService } from '../services/envelopes.service';
 import { DocumentsService } from '../../documents/services/documents.service';
 import { CreateEnvelopeDto } from '../dto/create-envelope.dto';
+import { CreateDraftDto } from '../dto/create-draft.dto';
 import { UpdateEnvelopeDto } from '../dto/update-envelope.dto';
 import { ListEnvelopesQueryDto } from '../dto/list-envelopes-query.dto';
 
@@ -41,6 +42,16 @@ export class EnvelopesController {
     @Body() dto: CreateEnvelopeDto,
   ) {
     return this.envelopesService.create(tenantId, dto);
+  }
+
+  @Post('draft')
+  @ApiOperation({ summary: 'Create a draft envelope with root folder and empty document' })
+  @ApiResponse({ status: 201, description: 'Draft document created' })
+  createDraft(
+    @TenantId() tenantId: string,
+    @Body() dto: CreateDraftDto,
+  ) {
+    return this.envelopesService.createDraft(tenantId, dto.title);
   }
 
   @Get('stats')

@@ -45,6 +45,7 @@ export class FoldersService {
   }
 
   async getTree(tenantId: string): Promise<FolderTreeNode[]> {
+    await this.ensureRootFolder(tenantId);
     const allFolders = await this.folderRepository.find({
       where: { tenantId },
       order: { name: 'ASC' },

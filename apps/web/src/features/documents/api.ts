@@ -168,7 +168,7 @@ export type ListEnvelopesParams = {
 
 export type CreateEnvelopeInput = {
   readonly title: string;
-  readonly folderId: string;
+  readonly folderId?: string;
   readonly signingMode?: SigningMode;
   readonly expiresAt?: string | null;
   readonly reminderInterval?: ReminderInterval;
@@ -312,6 +312,13 @@ export const getEnvelope = async (id: string): Promise<EnvelopeSummary> => {
 
 export const createEnvelope = async (input: CreateEnvelopeInput): Promise<EnvelopeSummary> => {
   const response = await apiClient.post<EnvelopeSummary>('/envelopes', input);
+  return response.data;
+};
+
+export const createEnvelopeDraft = async (input: {
+  readonly title: string;
+}): Promise<DocumentSummary> => {
+  const response = await apiClient.post<DocumentSummary>('/envelopes/draft', input);
   return response.data;
 };
 

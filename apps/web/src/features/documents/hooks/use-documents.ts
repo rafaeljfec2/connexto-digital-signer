@@ -1,15 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
-  createDocument,
-  createEnvelope,
+  createEnvelopeDraft,
   deleteDocument,
   deleteEnvelope,
   getEnvelopesStats,
-  getFolderTree,
   listAllSigners,
   listEnvelopes,
-  type CreateDocumentInput,
-  type CreateEnvelopeInput,
+  uploadDocumentFile,
   type DocumentSummary,
   type ListEnvelopesParams,
   type ListSignersParams,
@@ -58,24 +55,11 @@ export const useDeleteDocument = () => {
 export const useCreateDraft = () => {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: async (input: { title: string }): Promise<DocumentSummary> => {
-      const tree = await getFolderTree();
-      const folderId = tree[0]?.id;
-      if (!folderId) {
-        throw new Error('No folder available');
-      }
-      const envelope = await createEnvelope({
-        title: input.title,
-        folderId,
-      } satisfies CreateEnvelopeInput);
-      const document = await createDocument({
-        title: input.title,
-        envelopeId: envelope.id,
-      } satisfies CreateDocumentInput);
-      return document;
-    },
+    mutationFn: (input: { title: string }): Promise<DocumentSummary> =>
+      createEnvelopeDraft(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['envelopes', 'documents'] });
+      queryClient.invalidateQueries({ queryKey: ['envelopes'] });
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
     },
   });
 };
@@ -84,26 +68,13 @@ export const useUploadDocument = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (input: { title: string; file: File }): Promise<DocumentSummary> => {
-      const tree = await getFolderTree();
-      const folderId = tree[0]?.id;
-      if (!folderId) {
-        throw new Error('No folder available');
-      }
-      const envelope = await createEnvelope({
-        title: input.title,
-        folderId,
-      } satisfies CreateEnvelopeInput);
-      const document = await createDocument(
-        {
-          title: input.title,
-          envelopeId: envelope.id,
-        } satisfies CreateDocumentInput,
-        input.file
-      );
-      return document;
+      const draft = await createEnvelopeDraft({ title: input.title });
+      await uploadDocumentFile(draft.id, input.file);
+      return draft;
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['envelopes', 'documents'] });
+      queryClient.invalidateQueries({ queryKey: ['envelopes'] });
+      queryClient.invalidateQueries({ queryKey: ['folders'] });
     },
   });
 };
