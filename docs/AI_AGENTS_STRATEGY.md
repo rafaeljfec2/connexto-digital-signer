@@ -1,302 +1,302 @@
-# Estudo Estratégico: Agentes de IA no Connexto Digital Signer
+# Strategic Study: AI Agents in Connexto Digital Signer
 
-## Contexto do Produto
+## Product Context
 
-O Connexto Digital Signer é uma plataforma SaaS de assinatura eletrônica multi-tenant com:
+Connexto Digital Signer is a multi-tenant electronic signature SaaS platform with:
 
-- Fluxo de criação de documentos em wizard (Upload, Signatários, Campos, Configurações, Revisão)
-- Fluxo de assinatura pública em 4 etapas (Visualizar, Preencher, Validar, Revisar)
-- Trilha de auditoria completa, webhooks, lembretes automáticos, multi-idioma
-- Conformidade com MP 2.200-2/2001 e Lei 14.063/2020
-
----
-
-## 1. Smart Field Placement Agent (Posicionamento Inteligente de Campos)
-
-**Dor que resolve:** Hoje o usuário precisa manualmente arrastar e posicionar cada campo de assinatura no PDF. Em documentos longos com múltiplos signatários, isso é tedioso e propenso a erros.
-
-**Como funciona:**
-
-- O usuário faz upload do PDF
-- O agente analisa o conteúdo do documento usando OCR + LLM
-- Detecta automaticamente áreas de assinatura (linhas "___________", textos como "Assinatura:", "Witness:", blocos de assinatura)
-- Sugere posicionamento de campos (signature, name, date, initials) com coordenadas normalizadas
-- O usuário revisa e ajusta as sugestões com um clique
-
-**Impacto no produto:**
-
-- Reduz tempo de preparação de documento de minutos para segundos
-- Diferencial competitivo direto contra DocuSign/Clicksign
-- Melhora onboarding de novos usuários (menos curva de aprendizado)
-
-**Integração técnica:**
-
-- Novo endpoint `POST /documents/:id/ai/suggest-fields`
-- Usa o PDF já armazenado no S3 (`originalFileKey`)
-- Retorna array de `SignatureField` sugeridos com coordenadas
-- Frontend exibe sugestões como campos "fantasma" que o usuário confirma
-
-**Complexidade:** Média | **Impacto:** Alto | **Prioridade:** 1
+- Document creation wizard (Upload, Signers, Fields, Settings, Review)
+- Public signing flow in 4 steps (View, Fill, Verify, Review)
+- Full audit trail, webhooks, automatic reminders, multi-language
+- Compliance with MP 2.200-2/2001 and Law 14.063/2020
 
 ---
 
-## 2. Document Summary Agent (Resumo Inteligente para Signatários)
+## 1. Smart Field Placement Agent
 
-**Dor que resolve:** Signatários recebem PDFs longos e complexos. Muitos não leem o documento inteiro antes de assinar, ou demoram porque precisam ler tudo.
+**Pain it solves:** Today users must manually drag and place each signature field on the PDF. On long documents with multiple signers, this is tedious and error-prone.
 
-**Como funciona:**
+**How it works:**
 
-- Quando o signatário abre o link de assinatura (`/sign/:token`)
-- O agente gera um resumo estruturado do documento:
-  - Tipo de documento (NDA, contrato de serviço, SOW, etc.)
-  - Partes envolvidas
-  - Obrigações principais
-  - Prazos e valores relevantes
-  - Cláusulas de rescisão/penalidade
-- Exibido como card colapsável no View Step, antes do signatário preencher campos
+- User uploads the PDF
+- The agent analyzes document content using OCR + LLM
+- Automatically detects signature areas (lines "___________", text like "Signature:", "Witness:", signature blocks)
+- Suggests field placement (signature, name, date, initials) with normalized coordinates
+- User reviews and adjusts suggestions with one click
 
-**Impacto no produto:**
+**Product impact:**
 
-- Aumenta taxa de conclusão de assinatura (menos abandono)
-- Reduz tempo médio de assinatura
-- Diferencial UX único no mercado brasileiro
-- Agrega valor de confiança (signatário entende o que está assinando)
+- Cuts document prep time from minutes to seconds
+- Direct competitive differentiator vs DocuSign/Clicksign
+- Better new-user onboarding (shorter learning curve)
 
-**Integração técnica:**
+**Technical integration:**
 
-- Novo endpoint `GET /sign/:token/ai/summary`
-- Cache do resumo no banco (campo `aiSummary` JSONB na tabela `documents`)
-- Gerado on-demand na primeira visualização, cached depois
-- Frontend: novo componente no `view-step.tsx`
+- New endpoint `POST /documents/:id/ai/suggest-fields`
+- Uses PDF already stored in S3 (`originalFileKey`)
+- Returns array of suggested `SignatureField` with coordinates
+- Frontend shows suggestions as "ghost" fields the user confirms
 
-**Complexidade:** Baixa | **Impacto:** Alto | **Prioridade:** 1
+**Complexity:** Medium | **Impact:** High | **Priority:** 1
 
 ---
 
-## 3. Intelligent Reminder Agent (Lembretes Inteligentes)
+## 2. Document Summary Agent
 
-**Dor que resolve:** O sistema atual envia lembretes em intervalos fixos (1, 2, 3 ou 7 dias). Não considera comportamento do signatário, horário ótimo de envio, nem tom da mensagem.
+**Pain it solves:** Signers receive long, complex PDFs. Many do not read the full document before signing, or take longer because they must read everything.
 
-**Como funciona:**
+**How it works:**
 
-- Analisa padrões históricos de assinatura por tenant:
-  - Horários com maior taxa de abertura/assinatura
-  - Número ideal de lembretes antes de assinar
-  - Signatários que nunca abrem vs. que abrem mas não assinam
-- Personaliza o tom do lembrete:
-  - 1º lembrete: neutro e informativo
-  - 2º lembrete: urgência leve + menciona prazo
-  - 3º lembrete: urgência alta + consequências
-- Otimiza horário de envio por signatário
+- When the signer opens the signing link (`/sign/:token`)
+- The agent generates a structured document summary:
+  - Document type (NDA, service agreement, SOW, etc.)
+  - Parties involved
+  - Main obligations
+  - Relevant deadlines and amounts
+  - Termination/penalty clauses
+- Shown as a collapsible card on the View step, before the signer fills fields
 
-**Impacto no produto:**
+**Product impact:**
 
-- Aumento de 15-30% na taxa de conclusão (benchmark do mercado)
-- Redução de documentos expirados
-- Menos fricção com signatários (não recebem email em horário inconveniente)
+- Higher signing completion rate (less abandonment)
+- Lower average time to sign
+- Unique UX differentiator in the Brazilian market
+- Builds trust (signer understands what they are signing)
 
-**Integração técnica:**
+**Technical integration:**
 
-- Evolução do `ReminderSchedulerService` existente
-- Nova tabela `signer_engagement` para tracking de abertura
-- Pixel de tracking em emails ou webhook de abertura
-- LLM gera copy personalizada do lembrete baseada no contexto
+- New endpoint `GET /sign/:token/ai/summary`
+- Cache summary in the database (`aiSummary` JSONB on `documents`)
+- Generated on first view, then cached
+- Frontend: new component in `view-step.tsx`
 
-**Complexidade:** Média | **Impacto:** Alto | **Prioridade:** 2
+**Complexity:** Low | **Impact:** High | **Priority:** 1
 
 ---
 
-## 4. Document Classification & Template Agent (Classificação e Templates)
+## 3. Intelligent Reminder Agent
 
-**Dor que resolve:** Usuários enviam os mesmos tipos de documento repetidamente (NDAs, contratos, aditivos). Cada vez precisam configurar tudo do zero.
+**Pain it solves:** The current system sends reminders on fixed intervals (1, 2, 3, or 7 days). It does not consider signer behavior, optimal send time, or message tone.
 
-**Como funciona:**
+**How it works:**
 
-- Ao fazer upload, o agente classifica automaticamente o tipo de documento
-- Sugere um template de configuração (signatários, campos, settings) baseado em documentos anteriores similares
-- Aprende com os documentos do tenant para sugerir templates cada vez mais precisos
-- Permite salvar configurações como template reutilizável
+- Analyzes historical signing patterns per tenant:
+  - Times with highest open/sign rates
+  - Ideal number of reminders before signing
+  - Signers who never open vs. open but do not sign
+- Personalizes reminder tone:
+  - 1st reminder: neutral and informative
+  - 2nd reminder: light urgency + mentions deadline
+  3rd reminder: high urgency + consequences
+- Optimizes send time per signer
 
-**Impacto no produto:**
+**Product impact:**
 
-- Reduz drasticamente tempo de preparação para documentos recorrentes
-- Feature de "templates inteligentes" é muito vendável para equipes jurídicas
-- Aumenta retenção (quanto mais templates, mais difícil migrar)
+- 15–30% completion rate lift (market benchmark)
+- Fewer expired documents
+- Less friction with signers (no emails at inconvenient times)
 
-**Integração técnica:**
+**Technical integration:**
 
-- Nova entidade `DocumentTemplate` com campos, signatários e settings pré-definidos
+- Evolution of existing `ReminderSchedulerService`
+- New `signer_engagement` table for open tracking
+- Email tracking pixel or open webhook
+- LLM generates personalized reminder copy from context
+
+**Complexity:** Medium | **Impact:** High | **Priority:** 2
+
+---
+
+## 4. Document Classification & Template Agent
+
+**Pain it solves:** Users send the same document types repeatedly (NDAs, contracts, addenda). Each time they configure everything from scratch.
+
+**How it works:**
+
+- On upload, the agent automatically classifies document type
+- Suggests a configuration template (signers, fields, settings) from similar past documents
+- Learns from tenant documents for increasingly accurate templates
+- Allows saving configurations as reusable templates
+
+**Product impact:**
+
+- Drastically reduces prep time for recurring documents
+- "Smart templates" is highly sellable to legal teams
+- Increases retention (more templates → harder to migrate)
+
+**Technical integration:**
+
+- New `DocumentTemplate` entity with predefined fields, signers, and settings
 - Endpoint `POST /documents/:id/ai/classify`
 - Endpoint `GET /tenants/:id/templates/suggestions`
-- Embeddings dos documentos para similarity search
+- Document embeddings for similarity search
 
-**Complexidade:** Média | **Impacto:** Alto | **Prioridade:** 2
+**Complexity:** Medium | **Impact:** High | **Priority:** 2
 
 ---
 
-## 5. Compliance Checker Agent (Verificação de Conformidade)
+## 5. Compliance Checker Agent
 
-**Dor que resolve:** Empresas precisam garantir que documentos estão em conformidade com requisitos legais antes de enviar para assinatura.
+**Pain it solves:** Companies must ensure documents meet legal requirements before sending for signature.
 
-**Como funciona:**
+**How it works:**
 
-- Analisa o documento contra checklist de conformidade:
-  - Identificação completa das partes (CPF/CNPJ, endereços)
-  - Cláusulas obrigatórias (foro, lei aplicável, rescisão)
-  - Linguagem ambígua ou problemática
-  - Valores sem extenso
-  - Datas inconsistentes
-- Retorna score de conformidade + lista de alertas
+- Analyzes the document against a compliance checklist:
+  - Complete party identification (CPF/CNPJ, addresses)
+  - Mandatory clauses (jurisdiction, applicable law, termination)
+  - Ambiguous or problematic language
+  - Amounts without written form
+  - Inconsistent dates
+- Returns compliance score + alert list
 
-**Impacto no produto:**
+**Product impact:**
 
-- Posiciona o produto como mais que assinatura: "compliance-first"
-- Reduz risco jurídico dos clientes
-- Upsell para plano premium
-- Diferencial forte no mercado brasileiro (regulação complexa)
+- Positions the product beyond signing: "compliance-first"
+- Reduces clients' legal risk
+- Premium plan upsell
+- Strong differentiator in Brazil (complex regulation)
 
-**Integração técnica:**
+**Technical integration:**
 
 - Endpoint `POST /documents/:id/ai/compliance-check`
-- Resultado exibido no wizard antes do envio (Review step)
-- Alertas como warnings (não bloqueantes) com sugestões de correção
+- Result shown in wizard before send (Review step)
+- Alerts as non-blocking warnings with fix suggestions
 
-**Complexidade:** Média-Alta | **Impacto:** Alto | **Prioridade:** 3
-
----
-
-## 6. Signing Assistant Chatbot (Assistente do Signatário)
-
-**Dor que resolve:** Signatários, especialmente menos técnicos, abandonam o fluxo de assinatura por não entenderem o processo ou terem dúvidas sobre o documento.
-
-**Como funciona:**
-
-- Widget de chat flutuante na página de assinatura (`/sign/:token`)
-- Responde perguntas sobre:
-  - O processo de assinatura ("É seguro?", "Tem validade jurídica?")
-  - O documento ("O que diz a cláusula 5?", "Qual o prazo?")
-  - Problemas técnicos ("Não consigo desenhar minha assinatura")
-- Contexto: tem acesso ao conteúdo do documento + FAQ do produto
-
-**Impacto no produto:**
-
-- Reduz abandono no fluxo de assinatura
-- Reduz tickets de suporte
-- Experiência premium que gera confiança
-
-**Integração técnica:**
-
-- Componente React `<SigningAssistant />` no layout de `/sign/:token`
-- Endpoint `POST /sign/:token/ai/chat` (stateless, context por request)
-- Contexto: conteúdo do PDF + FAQ embeddings
-
-**Complexidade:** Média | **Impacto:** Médio | **Prioridade:** 3
+**Complexity:** Medium–High | **Impact:** High | **Priority:** 3
 
 ---
 
-## 7. Fraud Detection Agent (Detecção de Anomalias)
+## 6. Signing Assistant Chatbot
 
-**Dor que resolve:** Assinaturas fraudulentas ou comportamento suspeito podem comprometer a validade jurídica dos documentos.
+**Pain it solves:** Signers, especially less technical ones, abandon the flow because they do not understand the process or have questions about the document.
 
-**Como funciona:**
+**How it works:**
 
-- Analisa padrões de comportamento durante a assinatura:
-  - Tempo muito curto entre abertura e assinatura (não leu o documento)
-  - IP de país diferente do esperado
-  - Múltiplas assinaturas do mesmo IP em curto período
-  - User-Agent inconsistente
-  - Assinatura (imagem) muito diferente de assinaturas anteriores do mesmo email
-- Gera score de risco por assinatura
-- Alerta o dono do documento em casos suspeitos
+- Floating chat widget on the signing page (`/sign/:token`)
+- Answers questions about:
+  - The signing process ("Is it secure?", "Is it legally valid?")
+  - The document ("What does clause 5 say?", "What is the deadline?")
+  - Technical issues ("I cannot draw my signature")
+- Context: document content + product FAQ
 
-**Impacto no produto:**
+**Product impact:**
 
-- Agrega camada de segurança única
-- Fortalece a validade jurídica das assinaturas
-- Diferencial para clientes enterprise e financeiros
+- Less abandonment in the signing flow
+- Fewer support tickets
+- Premium experience that builds trust
 
-**Integração técnica:**
+**Technical integration:**
 
-- Novo campo `riskScore` na entidade `Signer`
-- Processamento assíncrono via fila Bull após `signature.completed`
-- Dashboard de risco para o dono do documento
+- React component `<SigningAssistant />` on `/sign/:token` layout
+- Endpoint `POST /sign/:token/ai/chat` (stateless, context per request)
+- Context: PDF content + FAQ embeddings
+
+**Complexity:** Medium | **Impact:** Medium | **Priority:** 3
+
+---
+
+## 7. Fraud Detection Agent
+
+**Pain it solves:** Fraudulent signatures or suspicious behavior can compromise documents' legal validity.
+
+**How it works:**
+
+- Analyzes behavior patterns during signing:
+  - Very short time between open and sign (did not read)
+  - IP from unexpected country
+  - Multiple signatures from same IP in a short window
+  - Inconsistent User-Agent
+  - Signature image very different from prior signatures for same email
+- Produces risk score per signature
+- Alerts document owner in suspicious cases
+
+**Product impact:**
+
+- Unique security layer
+- Strengthens legal validity of signatures
+- Differentiator for enterprise and financial clients
+
+**Technical integration:**
+
+- New `riskScore` field on `Signer`
+- Async processing via Bull queue after `signature.completed`
+- Risk dashboard for document owner
 - Webhook event `signature.risk_detected`
 
-**Complexidade:** Alta | **Impacto:** Alto | **Prioridade:** 4
+**Complexity:** High | **Impact:** High | **Priority:** 4
 
 ---
 
-## 8. Natural Language Document Generation (Geração de Documentos)
+## 8. Natural Language Document Generation
 
-**Dor que resolve:** Muitas empresas não têm modelo de contrato pronto e perdem tempo criando documentos do zero.
+**Pain it solves:** Many companies lack a contract template and waste time creating documents from scratch.
 
-**Como funciona:**
+**How it works:**
 
-- Usuário descreve em linguagem natural o que precisa: "Preciso de um NDA entre minha empresa e um fornecedor, vigência de 2 anos, multa de R$ 50.000"
-- O agente gera um PDF profissional com todas as cláusulas relevantes
-- Usuário revisa, edita se necessário, e envia para assinatura no mesmo fluxo
+- User describes in natural language what they need: "I need an NDA between my company and a vendor, 2-year term, R$ 50,000 penalty"
+- The agent generates a professional PDF with relevant clauses
+- User reviews, edits if needed, and sends for signing in the same flow
 
-**Impacto no produto:**
+**Product impact:**
 
-- Transforma o produto de "ferramenta de assinatura" para "plataforma de contratos"
-- Aumenta significativamente o TAM (Total Addressable Market)
-- Feature "wow" que gera viralidade
+- Evolves from "signing tool" to "contract platform"
+- Significantly increases TAM
+- "Wow" feature with viral potential
 
-**Integração técnica:**
+**Technical integration:**
 
-- Novo fluxo no wizard: "Criar documento com IA" vs "Upload PDF"
+- New wizard path: "Create document with AI" vs "Upload PDF"
 - Endpoint `POST /documents/ai/generate`
-- Usa templates legais como base + personalização via LLM
-- Gera PDF com pdf-lib
+- Legal templates as base + LLM customization
+- Generate PDF with pdf-lib
 
-**Complexidade:** Alta | **Impacto:** Muito Alto | **Prioridade:** 4
+**Complexity:** High | **Impact:** Very High | **Priority:** 4
 
 ---
 
-## 9. Analytics & Insights Agent (Inteligência de Dados)
+## 9. Analytics & Insights Agent
 
-**Dor que resolve:** Donos de conta não têm visibilidade sobre eficiência do processo de assinatura.
+**Pain it solves:** Account owners lack visibility into signing process efficiency.
 
-**Como funciona:**
+**How it works:**
 
-- Dashboard com insights gerados por IA:
-  - "Seus documentos levam em média 3.2 dias para serem assinados. 40% mais lento que a média da plataforma"
-  - "João Silva tem 5 documentos pendentes há mais de 7 dias"
-  - "Seus NDAs têm taxa de conclusão de 85%, mas contratos de serviço apenas 60%"
-  - "Sugestão: ativar lembretes a cada 2 dias pode reduzir seu tempo médio em 30%"
-- Relatórios periódicos por email
+- Dashboard with AI-generated insights:
+  - "Your documents take on average 3.2 days to be signed. 40% slower than platform average"
+  - "João Silva has 5 pending documents for more than 7 days"
+  - "Your NDAs have 85% completion rate, but service contracts only 60%"
+  - "Suggestion: enabling reminders every 2 days may cut average time by 30%"
+- Periodic email reports
 
-**Integração técnica:**
+**Technical integration:**
 
-- Queries agregadas sobre `documents`, `signers`, `audit_logs`
+- Aggregated queries on `documents`, `signers`, `audit_logs`
 - Endpoint `GET /tenants/:id/ai/insights`
-- Componente de dashboard com cards de insights
-- Email semanal com resumo
+- Dashboard component with insight cards
+- Weekly email summary
 
-**Complexidade:** Média | **Impacto:** Médio | **Prioridade:** 5
+**Complexity:** Medium | **Impact:** Medium | **Priority:** 5
 
 ---
 
-## Mapa de Prioridades
+## Priority Map
 
-### Prioridade 1 - Quick Wins de Alto Impacto
-- **Smart Field Placement** - Posicionamento automático de campos via IA
-- **Document Summary** - Resumo inteligente do documento para signatários
+### Priority 1 — High-Impact Quick Wins
+- **Smart Field Placement** — AI automatic field placement
+- **Document Summary** — Smart document summary for signers
 
-### Prioridade 2 - Diferenciação Competitiva
-- **Intelligent Reminders** - Lembretes personalizados com timing otimizado
-- **Classification & Templates** - Classificação automática e templates inteligentes
+### Priority 2 — Competitive Differentiation
+- **Intelligent Reminders** — Personalized reminders with optimized timing
+- **Classification & Templates** — Auto classification and smart templates
 
-### Prioridade 3 - Valor Agregado
-- **Compliance Checker** - Verificação de conformidade legal
-- **Signing Chatbot** - Assistente de chat para signatários
+### Priority 3 — Added Value
+- **Compliance Checker** — Legal compliance verification
+- **Signing Chatbot** — Chat assistant for signers
 
-### Prioridade 4 - Visão de Futuro
-- **Fraud Detection** - Detecção de anomalias e scoring de risco
-- **Document Generation** - Geração de contratos via linguagem natural
-- **Analytics & Insights** - Inteligência de dados e relatórios
+### Priority 4 — Future Vision
+- **Fraud Detection** — Anomaly detection and risk scoring
+- **Document Generation** — Contract generation via natural language
+- **Analytics & Insights** — Data intelligence and reports
 
-### Dependências entre features
+### Feature dependencies
 
 ```
 Smart Field Placement ──> Intelligent Reminders ──> Fraud Detection
@@ -307,13 +307,13 @@ Document Summary ──────> Signing Chatbot ─────────
 
 ---
 
-## Arquitetura Técnica Sugerida
+## Suggested Technical Architecture
 
-Para implementar agentes de IA de forma escalável e desacoplada:
+To implement AI agents in a scalable, decoupled way:
 
 ```
 ┌──────────────────┐    ┌──────────────────────────────────────────┐
-│  Frontend        │    │  API NestJS                              │
+│  Frontend        │    │  NestJS API                              │
 │  Next.js         │───>│  AI Controller ──> AI Service ──> Queue  │
 │  UI Components   │    │                                          │
 └──────────────────┘    └──────────────┬───────────────────────────┘
@@ -331,40 +331,40 @@ Para implementar agentes de IA de forma escalável e desacoplada:
                         └──────────────────────────────────────────┘
 ```
 
-**Decisões arquiteturais chave:**
+**Key architectural decisions:**
 
-- **AI Gateway Service:** Camada de abstração sobre o provider de LLM (OpenAI, Anthropic, etc.), permitindo trocar sem impacto no código
-- **Bull Queue:** Tarefas de IA são assíncronas por natureza. Usar fila evita timeout e permite retry
-- **Redis Cache:** Resumos e classificações são cacheados para evitar custo desnecessário de API
-- **pgvector:** Para similarity search de documentos/templates, usar extensão pgvector do PostgreSQL (já utilizado no projeto)
-- **Custo por tenant:** Tracking de tokens consumidos por tenant para billing de features AI
+- **AI Gateway Service:** Abstraction over the LLM provider (OpenAI, Anthropic, etc.) so you can swap without code impact
+- **Bull Queue:** AI tasks are async by nature. Queues avoid timeouts and enable retry
+- **Redis Cache:** Summaries and classifications cached to avoid unnecessary API cost
+- **pgvector:** For document/template similarity search, use PostgreSQL pgvector (already used in the project)
+- **Cost per tenant:** Track tokens consumed per tenant for AI feature billing
 
 ---
 
-## Monetização Sugerida
+## Suggested Monetization
 
-- **Plano Free:**
-  - Smart Field Placement: 3 docs/mês
+- **Free plan:**
+  - Smart Field Placement: 3 docs/month
 
-- **Plano Pro:**
-  - Smart Field Placement: Ilimitado
-  - Document Summary: Ilimitado
-  - Intelligent Reminders: Ilimitado
-  - Document Generation: 5 docs/mês
+- **Pro plan:**
+  - Smart Field Placement: unlimited
+  - Document Summary: unlimited
+  - Intelligent Reminders: unlimited
+  - Document Generation: 5 docs/month
 
-- **Plano Enterprise:**
-  - Todas as features ilimitadas
+- **Enterprise plan:**
+  - All features unlimited
   - Compliance Checker
   - Signing Chatbot
   - Fraud Detection
-  - Document Generation ilimitado
+  - Unlimited Document Generation
 
 ---
 
-## Próximos Passos Recomendados
+## Recommended Next Steps
 
-1. **Validar com usuários:** Antes de implementar, conversar com 5-10 usuários atuais para entender quais dores são mais urgentes
-2. **PoC do Smart Field Placement:** É o quick win mais visível e vendável. Implementar com OpenAI Vision API + pdf-lib
-3. **PoC do Document Summary:** Segundo quick win. Simples de implementar (extrair texto do PDF + enviar para LLM)
-4. **Infraestrutura AI Gateway:** Criar a camada de abstração cedo para não acumular dívida técnica
-5. **Métricas:** Definir KPIs por feature AI (tempo economizado, taxa de conversão, NPS)
+1. **Validate with users:** Before building, talk to 5–10 active users about most urgent pains
+2. **Smart Field Placement PoC:** Most visible, sellable quick win. Implement with OpenAI Vision API + pdf-lib
+3. **Document Summary PoC:** Second quick win. Simple (extract PDF text + send to LLM)
+4. **AI Gateway infrastructure:** Build the abstraction layer early to avoid technical debt
+5. **Metrics:** Define KPIs per AI feature (time saved, conversion rate, NPS)

@@ -1,76 +1,76 @@
-## Especificacao Tecnica - MVP Fase 1
+## Technical Specification — MVP Phase 1
 
-Status: CONCLUIDA
+Status: COMPLETED
 
-### Objetivo
+### Objective
 
-Entregar a base do MVP com autenticacao por email e senha, auditoria de eventos de login, refatoracao de guards por tipo de consumo, e fundacao do frontend com login e shell do dashboard. O objetivo principal e reduzir atrito no acesso inicial e preparar a evolucao das fases seguintes.
+Deliver the MVP foundation with email/password authentication, login event auditing, guard refactor by consumption type, and frontend foundation with login and dashboard shell. The main goal is to reduce friction on first access and prepare for later phases.
 
-### Escopo Incluido
+### In Scope
 
-- Entidade User e modulo de usuarios no backend.
-- Login por email e senha com JWT.
-- Auditoria de eventos de autenticacao.
-- Refatoracao de guards para separar acessos por JWT e por API Key.
-- Frontend Next.js com login, signup e dashboard shell.
-- i18n (en/pt-br), slug auto e politica de senha no cadastro.
+- User entity and users module on the backend.
+- Email/password login with JWT.
+- Authentication event auditing.
+- Guard refactor to separate JWT and API Key access.
+- Next.js frontend with login, signup, and dashboard shell.
+- i18n (en/pt-br), auto slug, and signup password policy.
 
-### Escopo Fora
+### Out of Scope
 
-- Dashboard com KPIs e upload de documentos.
-- Fluxo de assinatura e campos de assinatura.
-- Notificacoes por email, webhooks e storage end-to-end.
-- Observabilidade e hardening avancado.
+- Dashboard with KPIs and document upload.
+- Signing flow and signature fields.
+- Email notifications, webhooks, and end-to-end storage.
+- Observability and advanced hardening.
 
 ---
 
-## Arquitetura de Autenticacao
+## Authentication Architecture
 
-### Entidade User
+### User Entity
 
-Arquivo: `apps/api/src/modules/users/entities/user.entity.ts`
+File: `apps/api/src/modules/users/entities/user.entity.ts`
 
-Campos principais:
+Main fields:
 
 - `id` (uuid)
-- `tenantId` (relacao logica com tenant)
-- `email` (unico)
+- `tenantId` (logical relation to tenant)
+- `email` (unique)
 - `passwordHash`
 - `name`
 - `role` (owner | admin | member)
 - `isActive`
 - `createdAt`, `updatedAt`
 
-### Fluxo Email e Senha
+### Email and Password Flow
 
 Endpoint: `POST /digital-signer/v1/auth/login`
 
-Entrada:
+Input:
 
 - `email`
 - `password`
 
-Saida:
+Output:
 
 - `accessToken`
 - `expiresIn`
 - `user` (id, name, email, role, tenantId)
 
-### Fluxo API Key
+### API Key Flow
 
-Endpoint atual:
+Current endpoint:
 
 - `POST /digital-signer/v1/auth/api-key/login`
 
-Mantido para compatibilidade. Deve continuar retornando JWT com `authMethod = 'api_key'`.
+Kept for compatibility. Must keep returning JWT with `authMethod = 'api_key'`.
 
-### Payload JWT
+### JWT Payload
 
-Arquivo: `packages/shared/src/decorators/current-user.decorator.ts`
+File: `packages/shared/src/decorators/current-user.decorator.ts`
 
-Estrutura:
+Structure:
 
-- `sub` (userId para login por email, tenantId para API Key)
+- `sub` (userId for email login, tenantId for API Key)
 - `email`
 - `tenantId`
 - `role`
@@ -78,34 +78,34 @@ Estrutura:
 
 ---
 
-## Refatoracao de Guards
+## Guard Refactor
 
-### Principio
+### Principle
 
-Separar os acessos por tipo de consumo:
+Separate access by consumption type:
 
-- Rotas do dashboard: JWT + TenantGuard
-- Rotas de API externa: API Key + TenantGuard
+- Dashboard routes: JWT + TenantGuard
+- External API routes: API Key + TenantGuard
 
 ### Guards
 
-Arquivos novos:
+New files:
 
 - `apps/api/src/common/guards/composite-auth.guard.ts`
 
-Opcional (recomendado para MVP):
+Optional (recommended for MVP):
 
 - `apps/api/src/common/guards/composite-auth.guard.ts`
 
-Comportamento esperado:
+Expected behavior:
 
-- `CompositeAuthGuard`: tenta JWT primeiro, depois API Key, e registra `authMethod`
+- `CompositeAuthGuard`: tries JWT first, then API Key, and records `authMethod`
 
-Decorator de restricao:
+Restriction decorator:
 
 - `@RequireAuthMethod('jwt' | 'api_key')`
 
-### Mapeamento por Controller
+### Controller Mapping
 
 - `AuthController`: `@Public()`
 - `SignController`: `@Public()`
@@ -117,21 +117,21 @@ Decorator de restricao:
 - `SignaturesController`: `CompositeAuthGuard`
 - `TenantsController`:
   - `create`: `@Public()`
-  - demais: `CompositeAuthGuard`
+  - others: `CompositeAuthGuard`
 
 ---
 
-## Audit de Autenticacao
+## Authentication Audit
 
-### Eventos Minimos
+### Minimum Events
 
-Eventos em `packages/events/src/event-names.ts`:
+Events in `packages/events/src/event-names.ts`:
 
 - `USER_LOGIN_SUCCESS`
 - `USER_LOGIN_FAILED`
 - `USER_LOGOUT`
 
-Tipos em `packages/events/src/event-types.ts`:
+Types in `packages/events/src/event-types.ts`:
 
 - `UserLoginSuccessEvent`
 - `UserLoginFailedEvent`
@@ -139,31 +139,31 @@ Tipos em `packages/events/src/event-types.ts`:
 
 ### Handler
 
-Arquivo: `apps/api/src/modules/audit/events/audit.events-handler.ts`
+File: `apps/api/src/modules/audit/events/audit.events-handler.ts`
 
-Regras:
+Rules:
 
-- `USER_LOGIN_SUCCESS`: grava log com `tenantId`, `userId`, `ipAddress`, `userAgent`
-- `USER_LOGIN_FAILED`: grava log com `email`, `ipAddress`, `userAgent`, `reason` e `tenantId = 'system'`
-- `USER_LOGOUT`: grava log com `tenantId`, `userId` e `email`
+- `USER_LOGIN_SUCCESS`: log with `tenantId`, `userId`, `ipAddress`, `userAgent`
+- `USER_LOGIN_FAILED`: log with `email`, `ipAddress`, `userAgent`, `reason`, and `tenantId = 'system'`
+- `USER_LOGOUT`: log with `tenantId`, `userId`, and `email`
 
-### Justificativa
+### Rationale
 
-Auditoria de autenticacao fornece rastreabilidade juridica e suporte a auditorias internas e externas.
-
----
-
-## Endpoints da API (Novos e Alterados)
-
-| Metodo | Rota                                     | Descricao |
-|--------|------------------------------------------|-----------|
-| POST   | `/digital-signer/v1/auth/login`          | Login por email e senha |
-| POST   | `/digital-signer/v1/auth/logout`         | Logout do usuario (JWT) |
-| POST   | `/digital-signer/v1/auth/api-key/login`  | Login por API Key (mantido) |
+Authentication auditing provides legal traceability and supports internal and external audits.
 
 ---
 
-## Frontend - Stack e Estrutura
+## API Endpoints (New and Changed)
+
+| Method | Route                                    | Description              |
+|--------|------------------------------------------|--------------------------|
+| POST   | `/digital-signer/v1/auth/login`          | Email/password login     |
+| POST   | `/digital-signer/v1/auth/logout`         | User logout (JWT)        |
+| POST   | `/digital-signer/v1/auth/api-key/login`  | API Key login (kept)     |
+
+---
+
+## Frontend — Stack and Structure
 
 ### Stack
 
@@ -177,7 +177,7 @@ Auditoria de autenticacao fornece rastreabilidade juridica e suporte a auditoria
 - axios
 - sonner
 
-### Estrutura de Pastas
+### Folder Structure
 
 ```
 apps/web/src/
@@ -208,45 +208,45 @@ apps/web/src/
 
 ### Design Tokens
 
-Tokens via CSS variables e Tailwind para white-label, com gradiente do login e cores primarias do tenant.
+Tokens via CSS variables and Tailwind for white-label, with login gradient and tenant primary colors.
 
 ---
 
-## Telas da Fase 1
+## Phase 1 Screens
 
 ### Login
 
-Requisitos:
+Requirements:
 
-- Gradiente azul -> teal no fundo
-- Card central com sombra
-- Logo Connexto
-- Formulario simples: email + senha
-- CTA principal: "Entrar"
+- Blue → teal gradient background
+- Center card with shadow
+- Connexto logo
+- Simple form: email + password
+- Primary CTA: "Sign in"
 - Mobile-first
 
 ### Dashboard Shell
 
-Requisitos:
+Requirements:
 
-- Header com logo, nome do tenant e avatar
-- Sidebar placeholder (minima)
-- Mensagem de boas-vindas
-
----
-
-## Requisitos Nao-Funcionais
-
-- Mobile-first em todas as telas
-- White-label por tenant via CSS variables
-- Estrutura feature-based
-- Sem Redux no MVP
-- Testes unitarios para auth e audit
+- Header with logo, tenant name, and avatar
+- Sidebar placeholder (minimal)
+- Welcome message
 
 ---
 
-## Migration e Seed
+## Non-Functional Requirements
 
-- Migration para tabela `users`
-- Ao criar tenant, criar user OWNER com senha definida no cadastro
-- Migrations executadas automaticamente no startup
+- Mobile-first on all screens
+- White-label per tenant via CSS variables
+- Feature-based structure
+- No Redux in the MVP
+- Unit tests for auth and audit
+
+---
+
+## Migration and Seed
+
+- Migration for `users` table
+- On tenant creation, create OWNER user with password set at signup
+- Migrations run automatically on startup

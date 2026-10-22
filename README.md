@@ -1,24 +1,24 @@
 # NexoSign Digital Signer
 
-Monolith modular em NestJS (Node.js + TypeScript) para assinatura digital de documentos, preparado para multi-tenant, white-label, auditabilidade e futura extração para microserviços.
+Modular NestJS monolith (Node.js + TypeScript) for digital document signing, built for multi-tenant, white-label, auditability, and future extraction into microservices.
 
 ## Stack
 
 - **Runtime:** Node.js 24+, TypeScript 5.x
 - **Framework:** NestJS 10
 - **ORM:** TypeORM 0.3 + PostgreSQL
-- **Filas:** Redis + Bull
-- **Storage:** S3-compatible (MinIO em dev, AWS S3 ou compatível em produção)
-- **Auth:** JWT (curto) + API Key por tenant
-- **PDF:** pdf-lib (geração de página de evidências, hash SHA-256)
+- **Queues:** Redis + Bull
+- **Storage:** S3-compatible (MinIO in dev, AWS S3 or compatible in production)
+- **Auth:** JWT (short-lived) + API Key per tenant
+- **PDF:** pdf-lib (evidence page generation, SHA-256 hash)
 - **Monorepo:** pnpm + Turborepo
 
-## Estrutura do repositório
+## Repository structure
 
 ```
 connexto-digital-signer/
 ├── apps/
-│   └── api/                    # Aplicação NestJS
+│   └── api/                    # NestJS application
 │       └── src/
 │           ├── modules/        # Bounded contexts
 │           │   ├── auth/
@@ -34,8 +34,8 @@ connexto-digital-signer/
 │           └── main.ts
 ├── packages/
 │   ├── shared/                 # Utils, decorators, guards, interfaces
-│   ├── database/               # Config TypeORM (opcional)
-│   └── events/                 # Tipos e nomes de eventos de domínio
+│   ├── database/               # TypeORM config (optional)
+│   └── events/                 # Domain event types and names
 ├── docker/
 │   ├── Dockerfile
 │   └── docker-compose.yml
@@ -44,90 +44,90 @@ connexto-digital-signer/
 └── package.json
 ```
 
-## Arquitetura
+## Architecture
 
-- **Multi-tenant:** Todas as entidades possuem `tenant_id`. Autenticação via JWT (após login com API Key) ou via header `x-api-key`.
-- **White-label:** Módulo Tenants com branding (nome, cor, logo), textos legais e limites de uso configuráveis.
-- **Comunicação entre módulos:** Apenas por eventos internos (EventEmitter2). Nenhum módulo acessa repositório ou serviço de outro módulo para regras de negócio; eventos publicados e consumidos por Audit, Notifications e Webhooks.
-- **Audit:** Append-only, estrutura genérica com JSONB, sem update/delete.
-- **PDF:** Original nunca é alterado; geração de novo PDF final com página de evidências (signatários, IP, User-Agent, timestamp UTC) e hash SHA-256 do binário final.
+- **Multi-tenant:** All entities have `tenant_id`. Authentication via JWT (after API Key login) or the `x-api-key` header.
+- **White-label:** Tenants module with branding (name, color, logo), legal copy, and configurable usage limits.
+- **Cross-module communication:** Internal events only (EventEmitter2). No module reaches into another module's repository or service for business rules; events are published and consumed by Audit, Notifications, and Webhooks.
+- **Audit:** Append-only, generic JSONB structure, no update/delete.
+- **PDF:** The original is never modified; a new final PDF is generated with an evidence page (signers, IP, User-Agent, UTC timestamp) and SHA-256 hash of the final binary.
 
-## Decisões técnicas
+## Technical decisions
 
-1. **ORM:** TypeORM com repositórios por entidade e migrations centralizadas.
-2. **Event bus:** `@nestjs/event-emitter` (EventEmitter2). Eventos tipados em `@connexto/events`.
-3. **Filas:** Bull (Redis) para notificações (e-mail) e webhooks (retry com backoff).
-4. **Storage:** Interface em `@connexto/shared`, implementação S3 em `apps/api` (MinIO em dev).
-5. **Guards:** Autenticação global (JWT ou API Key) com decorator `@Public()` para rotas abertas (criar tenant, login, página de assinatura).
+1. **ORM:** TypeORM with per-entity repositories and centralized migrations.
+2. **Event bus:** `@nestjs/event-emitter` (EventEmitter2). Typed events in `@connexto/events`.
+3. **Queues:** Bull (Redis) for notifications (email) and webhooks (retry with backoff).
+4. **Storage:** Interface in `@connexto/shared`, S3 implementation in `apps/api` (MinIO in dev).
+5. **Guards:** Global authentication (JWT or API Key) with `@Public()` for open routes (create tenant, login, signing page).
 
-### Por que Redis + Bull e não RabbitMQ?
+### Why Redis + Bull instead of RabbitMQ?
 
-O sistema utiliza Redis + Bull para filas assíncronas ao invés de RabbitMQ por uma decisão pragmática baseada nos seguintes critérios:
+The system uses Redis + Bull for async queues instead of RabbitMQ as a pragmatic choice based on:
 
-**Infraestrutura reutilizada** — Redis já é dependência do stack. Bull reutiliza esse componente sem introduzir um serviço adicional para operar e monitorar. RabbitMQ adicionaria mais um container (~150MB), configuração de vhosts, exchanges, bindings e políticas de DLQ.
+**Reused infrastructure** — Redis is already part of the stack. Bull reuses it without adding another service to operate and monitor. RabbitMQ would add another container (~150MB), vhost configuration, exchanges, bindings, and DLQ policies.
 
-**Simplicidade operacional** — `redis:7-alpine` (~30MB) sobe em segundos com zero configuração. Para o cenário atual de 2 filas (emails e webhooks), RabbitMQ seria over-engineering.
+**Operational simplicity** — `redis:7-alpine` (~30MB) starts in seconds with zero configuration. For the current scenario of two queues (email and webhooks), RabbitMQ would be over-engineering.
 
-**Integração nativa com NestJS** — `@nestjs/bull` é first-class citizen no ecossistema NestJS com decorators (`@Process`, `@OnQueueCompleted`), injeção de dependência e zero boilerplate. A integração com RabbitMQ exige mais configuração manual.
+**Native NestJS integration** — `@nestjs/bull` is a first-class citizen in the NestJS ecosystem with decorators (`@Process`, `@OnQueueCompleted`), dependency injection, and minimal boilerplate. RabbitMQ integration requires more manual setup.
 
-**Bull resolve o problema** — O sistema precisa de: enfileirar jobs, retry com backoff exponencial, concorrência controlada e persistência. Bull atende nativamente. RabbitMQ é uma solução de messaging (pub/sub, routing, fanout, topics) — patterns que o sistema não utiliza hoje.
+**Bull fits the problem** — The system needs: enqueue jobs, retry with exponential backoff, controlled concurrency, and persistence. Bull provides that natively. RabbitMQ is a messaging solution (pub/sub, routing, fanout, topics) — patterns the system does not use today.
 
-**Quando migrar para RabbitMQ** — A migração faria sentido quando houver múltiplos serviços consumindo os mesmos eventos, routing complexo (exchanges, topics, fanout), backpressure e acknowledgement distribuído, ou comunicação inter-serviços assíncrona. A seção "Evolução para microserviços" já contempla essa transição.
+**When to migrate to RabbitMQ** — Migration makes sense when multiple services consume the same events, complex routing (exchanges, topics, fanout), distributed backpressure and acknowledgement, or async inter-service communication. The "Evolution to microservices" section already covers that transition.
 
-| Critério                   | Redis + Bull               | RabbitMQ                          |
-| -------------------------- | -------------------------- | --------------------------------- |
-| Complexidade operacional   | Baixa (Redis já existia)   | Média (novo serviço)              |
-| Integração NestJS          | Nativa (`@nestjs/bull`)    | Manual ou `@nestjs/microservices` |
-| Caso de uso                | Job queues com retry       | Messaging distribuído             |
-| Adequação ao cenário atual | Perfeita (2 filas simples) | Excesso para o cenário            |
-| Escalabilidade futura      | Limitada a job queues      | Messaging completo                |
+| Criterion              | Redis + Bull              | RabbitMQ                          |
+| ---------------------- | ------------------------- | --------------------------------- |
+| Operational complexity | Low (Redis already there) | Medium (new service)              |
+| NestJS integration     | Native (`@nestjs/bull`)   | Manual or `@nestjs/microservices` |
+| Use case               | Job queues with retry     | Distributed messaging             |
+| Fit for current scope  | Strong (2 simple queues)  | Overkill for this scope           |
+| Future scalability     | Limited to job queues     | Full messaging                    |
 
-## Como rodar
+## How to run
 
-### Pré-requisitos
+### Prerequisites
 
-- Node.js 24+ (recomendado: 24.12.0)
+- Node.js 24+ (recommended: 24.12.0)
 - pnpm 9
-- Docker e Docker Compose (para Postgres, Redis e MinIO)
+- Docker and Docker Compose (for Postgres, Redis, and MinIO)
 
-### Versão do Node (troca automática)
+### Node version (automatic switch)
 
-O projeto usa Node 24 (`.nvmrc` com `24.12.0`). Para trocar automaticamente ao entrar na pasta:
+The project uses Node 24 (`.nvmrc` with `24.12.0`). To switch automatically when entering the folder:
 
-**Opção 1 – direnv (recomendado)**  
-Com [direnv](https://direnv.net/) instalado, na raiz do projeto rode uma vez:
+**Option 1 – direnv (recommended)**  
+With [direnv](https://direnv.net/) installed, run once at the project root:
 
 ```bash
 direnv allow
 ```
 
-A partir daí, ao entrar no diretório o direnv usará o Node definido no `.envrc`.
+From then on, entering the directory loads the Node version from `.envrc`.
 
-**Opção 2 – manual**  
-Sempre que abrir o terminal no projeto:
+**Option 2 – manual**  
+Whenever you open a terminal in the project:
 
 ```bash
 nvm use
 ```
 
-**Opção 3 – hook no shell (bash/zsh)**  
-Para trocar automaticamente em todo projeto que tiver `.nvmrc`, adicione o hook do [nvm](https://github.com/nvm-sh/nvm#deeper-shell-integration) no seu `~/.bashrc` ou `~/.zshrc` conforme a documentação do nvm.
+**Option 3 – shell hook (bash/zsh)**  
+To auto-switch in any project with `.nvmrc`, add the [nvm](https://github.com/nvm-sh/nvm#deeper-shell-integration) hook to `~/.bashrc` or `~/.zshrc` as documented by nvm.
 
-### Desenvolvimento local
+### Local development
 
-1. Garantir Node 24 ativo (`nvm use` ou direnv) e instalar dependências:
+1. Ensure Node 24 is active (`nvm use` or direnv) and install dependencies:
 
    ```bash
    pnpm install
    ```
 
-2. Subir dependências (Postgres, Redis, MinIO):
+2. Start dependencies (Postgres, Redis, MinIO):
 
    ```bash
    cd docker && docker compose up -d postgres redis minio
    ```
 
-3. Criar `.env` na raiz ou em `apps/api` (ou usar `.env.example`):
+3. Create `.env` at the root or in `apps/api` (or use `.env.example`):
 
    ```env
    DB_HOST=localhost
@@ -145,60 +145,60 @@ Para trocar automaticamente em todo projeto que tiver `.nvmrc`, adicione o hook 
    JWT_SECRET=your-secret
    ```
 
-4. Rodar a API:
+4. Run the API:
    ```bash
    pnpm dev:api
    ```
 
-### Build e Docker
+### Build and Docker
 
-- Build do monorepo:
+- Monorepo build:
 
   ```bash
   pnpm build
   ```
 
-- Build da API:
+- API build:
 
   ```bash
   pnpm build:api
   ```
 
-- Subir stack completa com Docker Compose:
+- Full stack with Docker Compose:
   ```bash
   cd docker && docker compose up --build
   ```
 
-A API estará em `http://localhost:3000`.
+The API will be at `http://localhost:3000`.
 
-## Fluxo principal
+## Main flow
 
-1. **Criar tenant:** `POST /tenants` (público) → retorna tenant e API Key (exibir uma vez).
-2. **Autenticar:** `POST /auth/api-key/login` com `{ "apiKey": "sk_..." }` → retorna JWT.
-3. **Rotas protegidas:** Header `Authorization: Bearer <jwt>` ou `x-api-key: sk_...` e, quando aplicável, `x-tenant-id`.
-4. **Documento:** `POST /documents` (multipart: file + title, opcional expiresAt) → documento criado, evento `document.created`.
-5. **Signatários:** `POST /documents/:documentId/signers` com nome e e-mail → evento `signer.added` dispara e-mail de convite com link de assinatura.
-6. **Assinatura:** Link `/sign/:token` (público) → `POST /sign/:token/accept` com consent → registro de IP, User-Agent, timestamp; quando todos assinam, geração do PDF final com página de evidências e evento `document.completed`.
-7. **Audit / Webhooks:** Listeners dos eventos gravam audit e disparam webhooks (HMAC) configurados por tenant.
+1. **Create tenant:** `POST /tenants` (public) → returns tenant and API Key (show once).
+2. **Authenticate:** `POST /auth/api-key/login` with `{ "apiKey": "sk_..." }` → returns JWT.
+3. **Protected routes:** Header `Authorization: Bearer <jwt>` or `x-api-key: sk_...` and, when applicable, `x-tenant-id`.
+4. **Document:** `POST /documents` (multipart: file + title, optional expiresAt) → document created, `document.created` event.
+5. **Signers:** `POST /documents/:documentId/signers` with name and email → `signer.added` sends invite email with signing link.
+6. **Signing:** Link `/sign/:token` (public) → `POST /sign/:token/accept` with consent → records IP, User-Agent, timestamp; when all sign, final PDF with evidence page and `document.completed`.
+7. **Audit / Webhooks:** Event listeners write audit and dispatch tenant-configured webhooks (HMAC).
 
-### Diagrama de fluxo
+### Flow diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        TENANT (Empresa)                             │
+│                        TENANT (Company)                             │
 │                                                                     │
-│  1. Cadastro ──► POST /tenants ──► API Key (sk_...)                │
+│  1. Signup ──► POST /tenants ──► API Key (sk_...)                  │
 │  2. Login    ──► POST /auth/login ──► JWT Token                    │
 └──────────────────────────┬──────────────────────────────────────────┘
                            │
                            ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    CRIAÇÃO DO DOCUMENTO                              │
+│                    DOCUMENT CREATION                                 │
 │                                                                     │
 │  3. Upload PDF ──► POST /envelopes/:id/documents                   │
-│  4. Adicionar signatários (nome, email, papel)                     │
-│  5. Posicionar campos de assinatura no PDF                         │
-│  6. Enviar para assinatura ──► POST /envelopes/:id/send            │
+│  4. Add signers (name, email, role)                                │
+│  5. Place signature fields on the PDF                              │
+│  6. Send for signing ──► POST /envelopes/:id/send                  │
 │                                                                     │
 │         ┌──────────────┐                                            │
 │         │ EventEmitter  │                                           │
@@ -222,20 +222,20 @@ A API estará em `http://localhost:3000`.
              │
              ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│                    ASSINATURA (Signatário)                           │
+│                    SIGNING (Signer)                                  │
 │                                                                     │
-│  7. Recebe email com link ──► /sign/:token                         │
+│  7. Receives email with link ──► /sign/:token                      │
 │                                                                     │
 │  ┌───────────┐   ┌───────────┐   ┌───────────┐   ┌─────────────┐  │
-│  │Identificar│──►│Visualizar │──►│ Preencher  │──►│  Validar    │  │
-│  │ (email/   │   │ documento │   │  campos    │   │(código OTP) │  │
-│  │  cpf/tel) │   │  (PDF)    │   │(assinatura)│   │             │  │
+│  │ Identify  │──►│  View     │──►│  Fill     │──►│  Verify     │  │
+│  │ (email/   │   │ document  │   │  fields   │   │ (OTP code)  │  │
+│  │  cpf/phone│   │  (PDF)    │   │ (signature│   │             │  │
 │  └───────────┘   └───────────┘   └───────────┘   └──────┬──────┘  │
 │                                                          │         │
 │                                                          ▼         │
 │                                                   ┌─────────────┐  │
-│                                                   │   Revisar   │  │
-│                                                   │  e Assinar  │  │
+│                                                   │   Review    │  │
+│                                                   │  and Sign   │  │
 │                                                   └──────┬──────┘  │
 │                                                          │         │
 │                  POST /sign/:token/accept ◄──────────────┘         │
@@ -243,57 +243,56 @@ A API estará em `http://localhost:3000`.
 │                                                                     │
 └──────────────────────────┬──────────────────────────────────────────┘
                            │
-                           ▼ (quando todos assinam)
+                           ▼ (when everyone has signed)
 ┌─────────────────────────────────────────────────────────────────────┐
-│                       FINALIZAÇÃO                                   │
+│                       COMPLETION                                    │
 │                                                                     │
-│  8. Embutir assinaturas no PDF (pdf-lib)                           │
-│  9. Gerar página de evidências (signatários, IP, hash)             │
-│ 10. Assinar digitalmente com certificado ICP-Brasil (PAdES)        │
-│ 11. Upload do PDF final para S3                                    │
-│ 12. Evento document.completed ──► Audit + Webhook + Email          │
+│  8. Embed signatures in the PDF (pdf-lib)                          │
+│  9. Generate evidence page (signers, IP, hash)                       │
+│ 10. Digitally sign with ICP-Brasil certificate (PAdES)             │
+│ 11. Upload final PDF to S3                                         │
+│ 12. document.completed event ──► Audit + Webhook + Email           │
 │                                                                     │
 │  ┌────────────────────────────────────────────────────────┐        │
-│  │                 PDF Final                               │        │
+│  │                 Final PDF                               │        │
 │  │  ┌──────────┐ ┌──────────┐ ┌────────────────────────┐ │        │
-│  │  │ Documento│ │Assinatura│ │  Evidência de           │ │        │
-│  │  │ Original │ │ Campos   │ │  Assinatura (hashes,    │ │        │
-│  │  │          │ │ Embutidos│ │  certificado, IP, data, │ │        │
-│  │  │          │ │          │ │  papel do signatário)   │ │        │
+│  │  │ Original │ │Signature │ │  Signing evidence      │ │        │
+│  │  │ Document │ │ Fields   │ │  (hashes, certificate, │ │        │
+│  │  │          │ │ Embedded │ │  IP, date, signer role) │ │        │
 │  │  └──────────┘ └──────────┘ └────────────────────────┘ │        │
 │  └────────────────────────────────────────────────────────┘        │
 │                                                                     │
-│  Assinatura digital PAdES/CAdES-BES (ICP-Brasil)                   │
+│  PAdES/CAdES-BES digital signature (ICP-Brasil)                    │
 │  ├── SHA-256 + RSA-PKCS1-V1_5                                      │
 │  ├── signing-certificate-v2 (ESSCertIDv2)                          │
-│  └── Sem signing-time nos atributos assinados                      │
+│  └── No signing-time in signed attributes                          │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Redis
 
-O Redis é utilizado exclusivamente como backend para filas de jobs assíncronos via Bull.
+Redis is used exclusively as the backend for async job queues via Bull.
 
-### Filas
+### Queues
 
-| Fila            | Módulo              | Propósito                                                                                                      |
+| Queue           | Module              | Purpose                                                                                                        |
 | --------------- | ------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `notifications` | NotificationsModule | Envio de emails (convites de assinatura, lembretes, documento finalizado, boas-vindas, códigos de verificação) |
-| `webhooks`      | WebhooksModule      | Entrega de webhooks com retries e backoff exponencial                                                          |
+| `notifications` | NotificationsModule | Email delivery (signing invites, reminders, completed document, welcome, verification codes)                 |
+| `webhooks`      | WebhooksModule      | Webhook delivery with retries and exponential backoff                                                          |
 
-### O que NÃO usa Redis
+### What does NOT use Redis
 
-| Funcionalidade | Implementação atual             |
-| -------------- | ------------------------------- |
-| Cache          | In-memory (`Map`)               |
-| Rate limiting  | In-memory (`@nestjs/throttler`) |
-| Sessões        | JWT (sem sessão server-side)    |
-| Pub/Sub        | Não utilizado                   |
+| Feature       | Current implementation          |
+| ------------- | ------------------------------- |
+| Cache         | In-memory (`Map`)               |
+| Rate limiting | In-memory (`@nestjs/throttler`) |
+| Sessions      | JWT (no server-side session)    |
+| Pub/Sub       | Not used                        |
 
-### Configuração
+### Configuration
 
-Variáveis de ambiente (`apps/api/.env`):
+Environment variables (`apps/api/.env`):
 
 ```env
 REDIS_HOST=localhost
@@ -301,14 +300,14 @@ REDIS_PORT=6379
 REDIS_PASSWORD=
 ```
 
-A conexão é configurada em `apps/api/src/app.module.ts` via `BullModule.forRoot()`. O health check (`/health`) verifica a conectividade Redis via `PING/PONG` na fila `notifications`.
+The connection is configured in `apps/api/src/app.module.ts` via `BullModule.forRoot()`. The health check (`/health`) verifies Redis connectivity with `PING/PONG` on the `notifications` queue.
 
-### Fluxo de publicação e consumo
+### Publish and consume flow
 
-#### Fila `notifications` — Emails
+#### `notifications` queue — Email
 
 ```
- Evento de domínio (EventEmitter2)
+ Domain event (EventEmitter2)
         │
         ▼
  NotificationsService.sendEmail(payload)
@@ -320,33 +319,33 @@ A conexão é configurada em `apps/api/src/app.module.ts` via `BullModule.forRoo
         ▼
  ┌─────────────────────────────┐
  │     Redis (Bull queue)      │
- │     fila: notifications     │
+ │     queue: notifications    │
  │     job: email              │
- │     retry: 3x exponencial   │
+ │     retry: 3x exponential   │
  │     delay: 1s → 2s → 4s    │
  └──────────────┬──────────────┘
                 │
                 ▼
  EmailProcessor (@Process('email'))
         │
-        ├── SMTP configurado? ──► Envia via nodemailer
-        └── Sem SMTP? ──► Log no console (dev)
+        ├── SMTP configured? ──► Send via nodemailer
+        └── No SMTP? ──► Log to console (dev)
 ```
 
-**Cenários que enfileiram emails:**
+**Scenarios that enqueue email:**
 
-| Método                  | Quando dispara                    |
-| ----------------------- | --------------------------------- |
-| `sendSignatureInvite`   | Documento enviado para assinatura |
-| `sendSignatureReminder` | Lembrete periódico ao signatário  |
-| `sendDocumentCompleted` | Todos os signatários assinaram    |
-| `sendWelcome`           | Novo tenant criado                |
-| `sendVerificationCode`  | Signatário solicita código OTP    |
+| Method                  | When it fires                         |
+| ----------------------- | ------------------------------------- |
+| `sendSignatureInvite`   | Document sent for signing             |
+| `sendSignatureReminder` | Periodic reminder to signer           |
+| `sendDocumentCompleted` | All signers have signed               |
+| `sendWelcome`           | New tenant created                    |
+| `sendVerificationCode`  | Signer requests OTP code              |
 
-#### Fila `webhooks` — Entregas HTTP
+#### `webhooks` queue — HTTP delivery
 
 ```
- Evento de domínio (EventEmitter2)
+ Domain event (EventEmitter2)
         │
         ▼
  WebhookEventsHandler (listener)
@@ -354,7 +353,7 @@ A conexão é configurada em `apps/api/src/app.module.ts` via `BullModule.forRoo
         ▼
  WebhooksService.dispatch(tenantId, event, data)
         │
-        │  Para cada webhook inscrito no evento:
+        │  For each webhook subscribed to the event:
         │  queue.add('deliver', {
         │    webhookConfigId, payload: {
         │      event, tenantId, timestamp, data
@@ -364,53 +363,53 @@ A conexão é configurada em `apps/api/src/app.module.ts` via `BullModule.forRoo
         ▼
  ┌─────────────────────────────┐
  │     Redis (Bull queue)      │
- │     fila: webhooks          │
+ │     queue: webhooks         │
  │     job: deliver            │
- │     retry: configurável     │
+ │     retry: configurable     │
  │     (default: 3x, 1s exp.) │
  └──────────────┬──────────────┘
                 │
                 ▼
  WebhookProcessor (@Process('deliver'))
         │
-        ├── Busca config do webhook (URL, secret)
+        ├── Load webhook config (URL, secret)
         ├── JSON.stringify(payload)
-        ├── Assina com HMAC-SHA256 (secret)
-        ├── POST para config.url
+        ├── Sign with HMAC-SHA256 (secret)
+        ├── POST to config.url
         │     Headers:
         │       Content-Type: application/json
         │       X-Webhook-Signature: sha256=<hmac>
         │       X-Webhook-Event: <event>
         │
-        ├── 2xx? ──► Job concluído
-        └── Erro? ──► throw Error ──► Bull faz retry
+        ├── 2xx? ──► Job completed
+        └── Error? ──► throw Error ──► Bull retries
 ```
 
-**Eventos que disparam webhooks:**
+**Events that trigger webhooks:**
 
-| Evento               | Dados enviados                       |
+| Event                | Payload sent                         |
 | -------------------- | ------------------------------------ |
 | `document.created`   | `documentId`, `title`, `createdAt`   |
 | `document.completed` | `documentId`, `completedAt`          |
 | `document.expired`   | `documentId`, `expiredAt`            |
 | `signature.signed`   | `documentId`, `signerId`, `signedAt` |
 
-### Pacotes relacionados
+### Related packages
 
-- `@nestjs/bull` — integração NestJS + Bull
-- `bull` — implementação de filas baseada em Redis
+- `@nestjs/bull` — NestJS + Bull integration
+- `bull` — Redis-backed queue implementation
 
-## Evolução para microserviços
+## Evolution to microservices
 
-- Cada módulo em `apps/api/src/modules/*` já é um bounded context com entidades, serviços e eventos próprios.
-- Para extrair um contexto (ex.: Notifications):
-  1. Mover o módulo para um novo app (ex.: `apps/notifications`) ou repositório.
-  2. Trocar EventEmitter2 por um message broker (ex.: RabbitMQ, SQS) publicando os mesmos eventos.
-  3. Manter contratos de evento (payloads) em um package compartilhado.
-  4. Expor apenas APIs necessárias (ex.: health, métricas) no novo serviço.
-- Banco: hoje shared schema com `tenant_id`; na extração pode-se manter DB compartilhado com schema por serviço ou DB por serviço, migrando as tabelas do contexto.
-- Webhooks e Audit podem virar consumidores assíncronos dos mesmos eventos em filas, sem alterar produtores.
+- Each module under `apps/api/src/modules/*` is already a bounded context with its own entities, services, and events.
+- To extract a context (e.g. Notifications):
+  1. Move the module to a new app (e.g. `apps/notifications`) or repository.
+  2. Replace EventEmitter2 with a message broker (e.g. RabbitMQ, SQS) publishing the same events.
+  3. Keep event contracts (payloads) in a shared package.
+  4. Expose only required APIs (e.g. health, metrics) on the new service.
+- Database: today a shared schema with `tenant_id`; on extraction you can keep a shared DB with schema per service or DB per service, migrating the context tables.
+- Webhooks and Audit can become async consumers of the same queued events without changing producers.
 
-## Licença
+## License
 
-Proprietary Software License — Copyright (c) 2025-2026 Rafael de Jesus. Todos os direitos reservados. Consulte o arquivo LICENSE para detalhes.
+Proprietary Software License — Copyright (c) 2025-2026 Rafael de Jesus. All rights reserved. See the LICENSE file for details.

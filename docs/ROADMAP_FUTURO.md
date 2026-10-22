@@ -1,193 +1,193 @@
-## Roadmap de Implementacoes Futuras
+## Future Implementation Roadmap
 
-### Status Atual
+### Current Status
 
-- Fase 1 concluida (Auth, Users, Audit, i18n, Signup/Login, Dashboard shell)
+- Phase 1 completed (Auth, Users, Audit, i18n, Signup/Login, Dashboard shell)
 
-### Visao Geral do Produto
+### Product Overview
 
-Objetivo final: levar o usuario do upload do PDF ate a assinatura concluida com minimo atrito cognitivo e rastreabilidade completa.
+End goal: take the user from PDF upload to completed signing with minimal cognitive friction and full traceability.
 
-Fluxo alvo:
+Target flow:
 
 1. Login
 2. Dashboard
-3. Upload de documento
-4. Definir signatarios
-5. Definir campos de assinatura
-6. Revisao e envio
-7. Status do documento
-8. Experiencia do signatario
+3. Document upload
+4. Define signers
+5. Define signature fields
+6. Review and send
+7. Document status
+8. Signer experience
 
 ---
 
-## Fase 2 - Dashboard + Upload
+## Phase 2 — Dashboard + Upload
 
 ### Dashboard
 
-Requisitos:
+Requirements:
 
-- Cards KPI: pendentes, concluidos, expirados
-- CTA principal: "Novo Documento"
-- Sem excesso de opcao ou informacao
+- KPI cards: pending, completed, expired
+- Primary CTA: "New Document"
+- No option or information overload
 
 Backend:
 
-- Endpoint de contadores por tenant (`GET /documents/stats`)
-- Listagem paginada de documentos (`GET /documents?page=&limit=&status=`)
-- Filtro por status
+- Per-tenant counter endpoint (`GET /documents/stats`)
+- Paginated document list (`GET /documents?page=&limit=&status=`)
+- Filter by status
 
 Frontend:
 
-- Cards KPI + skeleton loaders
-- Empty state claro
-- Tabela de documentos recentes
+- KPI cards + skeleton loaders
+- Clear empty state
+- Recent documents table
 
-### Upload de Documento
+### Document Upload
 
-Requisitos:
+Requirements:
 
 - Drag and drop
-- Apenas PDF
-- Feedback visual imediato
-- Nome do arquivo + tamanho
-- CTA "Continuar"
+- PDF only
+- Immediate visual feedback
+- File name + size
+- "Continue" CTA
 
 Backend:
 
-- Validacao de tipo de arquivo (PDF)
-- Limites de tamanho (env)
-- Hash do arquivo e storage
-- Resposta com documento criado
+- File type validation (PDF)
+- Size limits (env)
+- File hash and storage
+- Response with created document
 
 Frontend:
 
-- Rota dedicada `/documents/new`
-- Dropzone com validacao de tipo e tamanho
-- Campo de titulo + submit
+- Dedicated route `/documents/new`
+- Dropzone with type and size validation
+- Title field + submit
 
 ---
 
-## Fase 3 - Signatarios + Review + Envio
+## Phase 3 — Signers + Review + Send
 
-### Definir Signatarios
+### Define Signers
 
 Layout:
 
-- Duas colunas
-- Esquerda: lista de signatarios, email, ordem opcional
-- Direita: preview estatico do PDF
-- CTA: "Definir Campos de Assinatura"
+- Two columns
+- Left: signer list, email, optional order
+- Right: static PDF preview
+- CTA: "Define Signature Fields"
 
 Backend:
 
-- CRUD de signatarios por documento
-- Regras de ordem de assinatura (opcional)
+- Signer CRUD per document
+- Optional signing order rules
 
-### Campos de Assinatura
+### Signature Fields
 
 Layout:
 
-- PDF central
-- Sidebar direita: assinatura, data, nome
-- Drag and drop simples
-- Highlight do signatario ativo
+- PDF in the center
+- Right sidebar: signature, date, name
+- Simple drag and drop
+- Highlight active signer
 
 Backend:
 
-- Persistencia de campos no documento
-- Validacao de campos obrigatorios
+- Persist fields on the document
+- Required field validation
 
-### Revisao e Envio
+### Review and Send
 
-Checklist visual:
+Visual checklist:
 
-- Documento
-- Signatarios
-- Campos
-- Prazo
+- Document
+- Signers
+- Fields
+- Deadline
 
-CTA forte: "Enviar para Assinatura"
+Strong CTA: "Send for Signing"
 
 Backend:
 
-- Disparo de notificacoes
-- Transicao de status do documento
+- Trigger notifications
+- Document status transition
 
 ---
 
-## Fase 4 - Status + Experiencia do Signatario
+## Phase 4 — Status + Signer Experience
 
-### Status do Documento
+### Document Status
 
-Requisitos:
+Requirements:
 
-- Timeline: Criado -> Visualizado -> Assinado -> Concluido
-- Acoes: reenviar convite, copiar link, baixar evidencias
-
-Backend:
-
-- Registro de eventos de visualizacao
-- Geração de evidencias
-
-### Experiencia do Signatario
-
-Requisitos:
-
-- UX ultra simples
-- Preview do documento
-- CTA unico: "Assinar Documento"
-- Modal de confirmacao
-- Mensagem de sucesso
+- Timeline: Created → Viewed → Signed → Completed
+- Actions: resend invite, copy link, download evidence
 
 Backend:
 
-- Endpoint publico para recuperar dados do signer
-- Endpoint publico para aceitar assinatura
-- Rate limiting dedicado
+- View event recording
+- Evidence generation
+
+### Signer Experience
+
+Requirements:
+
+- Ultra-simple UX
+- Document preview
+- Single CTA: "Sign Document"
+- Confirmation modal
+- Success message
+
+Backend:
+
+- Public endpoint to fetch signer data
+- Public endpoint to accept signature
+- Dedicated rate limiting
 
 ---
 
-## Evolucoes de Longo Prazo
+## Long-Term Evolution
 
-### Observabilidade
+### Observability
 
-- Logs estruturados (Pino em JSON)
-- Correlation ID por request
-- Metrics Prometheus
-- Tracing OpenTelemetry
+- Structured logs (Pino JSON)
+- Correlation ID per request
+- Prometheus metrics
+- OpenTelemetry tracing
 
-### Hardening de Seguranca
+### Security Hardening
 
 - Helmet
-- Sanitizacao de entrada
-- Rotacao de API Key
-- Auditoria de operacoes sensiveis
-- Scanning de dependencias
+- Input sanitization
+- API Key rotation
+- Sensitive operation audit
+- Dependency scanning
 
 ### Performance
 
-- Cache Redis por tenant
-- Paginacao em listagens
-- Limite de upload por perfil
-- Otimizacao de storage
+- Redis cache per tenant
+- Pagination on listings
+- Upload limit per profile
+- Storage optimization
 
-### Multiambiente
+### Multi-Environment
 
 - Staging
 - Feature flags
-- Blue/green ou canary
-- Backup e restore
+- Blue/green or canary
+- Backup and restore
 
-### Assinatura Digital Qualificada
+### Qualified Digital Signature
 
 - ICP-Brasil (A1/A3)
-- Carimbo de tempo
-- Prova juridica avancada
+- Timestamp
+- Advanced legal proof
 
-### Integracoes e Produto
+### Integrations and Product
 
 - SSO (SAML / OIDC)
-- Templates de documentos
+- Document templates
 - Bulk signing
-- API publica versionada
+- Versioned public API

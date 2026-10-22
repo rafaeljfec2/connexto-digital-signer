@@ -1,61 +1,60 @@
-# Configuração do VS Code para o Backend
+# VS Code Configuration for the Backend
 
-Esta pasta contém as configurações do VS Code para o projeto backend.
+This folder contains VS Code settings for the backend project.
 
-## Extensões Recomendadas
+## Recommended Extensions
 
-As seguintes extensões são recomendadas (sugeridas automaticamente pelo VS Code):
+The following extensions are recommended (VS Code will suggest them automatically):
 
 - **Prettier - Code formatter** (`esbenp.prettier-vscode`)
 - **ESLint** (`dbaeumer.vscode-eslint`)
 - **Jest Runner** (`firsttris.vscode-jest-runner`)
 
-## Funcionalidades Configuradas
+## Configured Features
 
-### 1. Formatação Automática ao Salvar
+### 1. Format on Save
 
-Quando você salvar um arquivo (Ctrl+S / Cmd+S), o código será automaticamente:
+When you save a file (Ctrl+S / Cmd+S), the code will automatically:
 
-- **Formatado** com Prettier
-- **Lintado** com ESLint e corrigido automaticamente quando possível
-- **Imports não utilizados removidos** automaticamente
+- **Format** with Prettier
+- **Lint** with ESLint and auto-fix when possible
+- **Remove unused imports**
 
-### 2. Remoção de Imports Não Utilizados
+### 2. Unused Import Removal
 
-A regra `unused-imports/no-unused-imports` está configurada como `error`, então:
+The `unused-imports/no-unused-imports` rule is set to `error`, so:
 
-- Imports não utilizados são **removidos automaticamente** ao salvar
-- Você verá erros no editor se houver imports não utilizados
-- O ESLint corrige automaticamente ao salvar (via `source.fixAll.eslint`)
+- Unused imports are **removed automatically** on save
+- You will see errors in the editor if unused imports remain
+- ESLint auto-fixes on save (via `source.fixAll.eslint`)
 
-### 3. Configuração do Prettier
+### 3. Prettier Settings
 
-O Prettier está configurado para:
+Prettier is configured to:
 
-- Usar aspas simples (`singleQuote: true`)
-- Adicionar vírgula no final (`trailingComma: 'all'`)
-- Largura máxima de linha: 100 caracteres
-- 2 espaços de indentação
-- Final de linha: LF
+- Use single quotes (`singleQuote: true`)
+- Add trailing commas (`trailingComma: 'all'`)
+- Max line width: 100 characters
+- 2-space indentation
+- Line endings: LF
 
-## Como Usar
+## How to Use
 
-1. **Instale as extensões recomendadas** (VS Code irá sugerir automaticamente)
-2. **Salve qualquer arquivo TypeScript** - a formatação e remoção de imports acontecerá automaticamente
-3. **Verifique os erros do ESLint** na aba "Problems" do VS Code
+1. **Install the recommended extensions** (VS Code will prompt you)
+2. **Save any TypeScript file** — formatting and import cleanup run automatically
+3. **Check ESLint errors** in the VS Code Problems panel
 
-## Comandos Disponíveis
+## Available Commands
 
-Você também pode executar manualmente:
+You can also run manually:
 
 ```bash
-# Formatar todos os arquivos
+# Format all files
 yarn format
 
-# Executar lint e corrigir automaticamente
+# Run lint and auto-fix
 yarn lint
 
-# Executar lint com remoção de imports não utilizados
+# Run lint with unused import removal
 yarn lint:fix
 ```
-

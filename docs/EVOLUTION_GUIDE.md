@@ -1,192 +1,192 @@
-# Digital Signer - Guia de Evolução
+# Digital Signer — Evolution Guide
 
-## Visão geral
+## Overview
 
-Este documento descreve o roadmap de evolução da API Connexto Digital Signer.
-Ele está organizado por prioridade e ordem de dependências.
+This document describes the evolution roadmap for the Connexto Digital Signer API.
+It is organized by priority and dependency order.
 
 ---
 
-## Fase 1 - Estrutura e Qualidade
+## Phase 1 — Structure and Quality
 
 ### 1.1 Health Check
 
-- Criar endpoint `/health` (readiness/liveness)
-- Necessário para healthcheck do Docker e probes do Kubernetes
-- Deve verificar conectividade com Postgres e Redis
+- Add `/health` endpoint (readiness/liveness)
+- Required for Docker healthcheck and Kubernetes probes
+- Must verify connectivity to Postgres and Redis
 
-### 1.2 Decorators de DTO no Swagger
+### 1.2 DTO Decorators in Swagger
 
-- Adicionar `@ApiProperty()` em todos os DTOs (`CreateTenantDto`, `CreateDocumentDto`, `CreateSignerDto`, etc.)
-- Garante que o Swagger/Scalar mostre nomes de campos, tipos, descrições e exemplos
+- Add `@ApiProperty()` to all DTOs (`CreateTenantDto`, `CreateDocumentDto`, `CreateSignerDto`, etc.)
+- Ensures Swagger/Scalar shows field names, types, descriptions, and examples
 
-### 1.3 Testes Unitários
+### 1.3 Unit Tests
 
-- Começar por `SignaturesService` (regra de negócio mais crítica)
-- Cobrir: addSigner, acceptSignature, areAllSignersSigned, finalizeDocument
-- Cobrir casos de borda: já assinado, documento expirado, documento completo
-- Depois expandir para `DocumentsService`, `TenantsService`, `AuthService`
+- Start with `SignaturesService` (most critical business rules)
+- Cover: addSigner, acceptSignature, areAllSignersSigned, finalizeDocument
+- Edge cases: already signed, expired document, completed document
+- Then expand to `DocumentsService`, `TenantsService`, `AuthService`
 
-### 1.4 Filtro Global de Exceções
+### 1.4 Global Exception Filter
 
-- Criar um filtro global de exceções HTTP
-- Padronizar o formato de erro: `{ statusCode, message, error, timestamp }`
-- Tratar erros do TypeORM (chave duplicada, não encontrado) de forma elegante
+- Create a global HTTP exception filter
+- Standardize error shape: `{ statusCode, message, error, timestamp }`
+- Handle TypeORM errors (duplicate key, not found) gracefully
 
 ### 1.5 CORS
 
-- Configurar CORS no `main.ts` para consumo do frontend
-- Usar variável de ambiente para origens permitidas
+- Configure CORS in `main.ts` for frontend consumption
+- Use an environment variable for allowed origins
 
 ---
 
-## Fase 2 - Robustez
+## Phase 2 — Robustness
 
-### 2.1 Migrations do TypeORM
+### 2.1 TypeORM Migrations
 
-- Substituir `synchronize: true` por migrations versionadas
-- Gerar migration inicial a partir das entidades atuais
-- Adicionar scripts no `package.json` (`migration:generate`, `migration:run`, `migration:revert`)
+- Replace `synchronize: true` with versioned migrations
+- Generate initial migration from current entities
+- Add scripts to `package.json` (`migration:generate`, `migration:run`, `migration:revert`)
 
 ### 2.2 Rate Limiting
 
-- Adicionar `@nestjs/throttler` para rate limiting
-- Proteger endpoints públicos (`/sign/:token`, `/auth/api-key/login`, `/tenants`)
-- Configurar limites por tenant e por IP
+- Add `@nestjs/throttler` for rate limiting
+- Protect public endpoints (`/sign/:token`, `/auth/api-key/login`, `/tenants`)
+- Configure limits per tenant and per IP
 
-### 2.3 Testes de Integração
+### 2.3 Integration Tests
 
-- Fluxo completo: criar tenant -> criar documento -> adicionar signer -> assinar -> validar PDF final
-- Usar `@nestjs/testing` com banco de teste
-- Verificar emissão correta de eventos
+- Full flow: create tenant → create document → add signer → sign → validate final PDF
+- Use `@nestjs/testing` with a test database
+- Verify events are emitted correctly
 
-### 2.4 Pipeline de CI
+### 2.4 CI Pipeline
 
-- Workflow no GitHub Actions
-- Etapas: install -> lint -> test -> build
-- Rodar em push na `main` e em pull requests
-
----
-
-## Fase 3 - Funcionalidades de Produto
-
-### 3.1 Frontend de Assinatura
-
-- Página pública onde o signer visualiza e aceita o documento
-- Acessível via `/sign/:token`
-- Design mobile-first
-- Mostrar preview do documento, dados do signer e checkbox de consentimento
-
-### 3.2 Notificações por E-mail
-
-- Implementar envio real via nodemailer
-- Templates: convite ao signer, assinatura concluída, documento finalizado
-- Enfileirar e-mails via Bull para confiabilidade e retry
-
-### 3.3 Entrega de Webhooks
-
-- Processor do Bull que faz POST dos eventos para URLs configuradas
-- Retry com backoff exponencial
-- Assinar payload com segredo do webhook (HMAC)
-- Logar tentativas e status de entrega
-
-### 3.4 Storage End-to-End
-
-- Verificar upload/download no MinIO para o fluxo completo
-- URLs presigned para download de documentos
-- Auto-criação do bucket no startup (apenas dev)
+- GitHub Actions workflow
+- Steps: install → lint → test → build
+- Run on push to `main` and on pull requests
 
 ---
 
-## Fase 4 - Prontidão para Produção
+## Phase 3 — Product Features
 
-### 4.1 Observabilidade
+### 3.1 Signing Frontend
 
-- Logs estruturados em produção (JSON via Pino)
-- Adicionar correlation ID de requisição (`x-request-id`)
-- Endpoint de métricas (formato Prometheus)
-- Tracing distribuído (OpenTelemetry)
+- Public page where the signer views and accepts the document
+- Accessible via `/sign/:token`
+- Mobile-first design
+- Show document preview, signer data, and consent checkbox
 
-### 4.2 Hardening de Segurança
+### 3.2 Email Notifications
 
-- Middleware Helmet
-- Sanitização de entrada
-- Mecanismo de rotação de API key
-- Audit log para operações sensíveis
-- Scanning de vulnerabilidades nas dependências
+- Implement real delivery via nodemailer
+- Templates: signer invite, signature completed, document finalized
+- Enqueue email via Bull for reliability and retry
+
+### 3.3 Webhook Delivery
+
+- Bull processor that POSTs events to configured URLs
+- Retry with exponential backoff
+- Sign payload with webhook secret (HMAC)
+- Log attempts and delivery status
+
+### 3.4 End-to-End Storage
+
+- Verify MinIO upload/download for the full flow
+- Presigned URLs for document download
+- Auto-create bucket on startup (dev only)
+
+---
+
+## Phase 4 — Production Readiness
+
+### 4.1 Observability
+
+- Structured logs in production (JSON via Pino)
+- Add request correlation ID (`x-request-id`)
+- Metrics endpoint (Prometheus format)
+- Distributed tracing (OpenTelemetry)
+
+### 4.2 Security Hardening
+
+- Helmet middleware
+- Input sanitization
+- API key rotation mechanism
+- Audit log for sensitive operations
+- Dependency vulnerability scanning
 
 ### 4.3 Performance
 
-- Ajuste de pool de conexões do banco
-- Cache Redis para configuração de tenant
-- Paginação nos endpoints de listagem
-- Limites de tamanho de upload de arquivo
+- Database connection pool tuning
+- Redis cache for tenant configuration
+- Pagination on list endpoints
+- File upload size limits
 
-### 4.4 Multiambiente
+### 4.4 Multi-Environment
 
-- Configuração de ambiente staging
+- Staging environment configuration
 - Feature flags
-- Estratégia de deploy blue/green ou canary
-- Estratégia de backup de banco
+- Blue/green or canary deploy strategy
+- Database backup strategy
 
 ---
 
-## Estado Atual
+## Current State
 
-### Concluído
+### Completed
 
-- [x] Estrutura do projeto (monorepo pnpm + Turborepo)
-- [x] API NestJS com módulos: auth, tenants, documents, signatures, audit, notifications, webhooks, billing
-- [x] Entidades TypeORM com índices
-- [x] Entidade User (roles: owner/admin/member) e senha com bcryptjs
-- [x] Login por email e senha (POST `/auth/login`) + logout (POST `/auth/logout`)
-- [x] Auth guard unificado (JWT + API Key) com `@RequireAuthMethod`
-- [x] Auditoria de auth (login success/failed, logout)
-- [x] Migrations versionadas com `runMigrations()` no startup
-- [x] Setup Docker (Postgres, Redis, MinIO)
-- [x] Logger (NestJS + Pino com pino-pretty)
+- [x] Project structure (pnpm monorepo + Turborepo)
+- [x] NestJS API with modules: auth, tenants, documents, signatures, audit, notifications, webhooks, billing
+- [x] TypeORM entities with indexes
+- [x] User entity (roles: owner/admin/member) and bcryptjs password
+- [x] Email/password login (POST `/auth/login`) + logout (POST `/auth/logout`)
+- [x] Unified auth guard (JWT + API Key) with `@RequireAuthMethod`
+- [x] Auth audit (login success/failed, logout)
+- [x] Versioned migrations with `runMigrations()` on startup
+- [x] Docker setup (Postgres, Redis, MinIO)
+- [x] Logger (NestJS + Pino with pino-pretty)
 - [x] Swagger UI + Scalar UI
-- [x] Prefixo global de rotas (`/digital-signer/v1`)
-- [x] Agrupamento no Swagger via `@ApiTags`
-- [x] Lógica de negócio: adicionar signer, aceitar assinatura, finalizar documento com página de evidências
-- [x] Frontend Next.js 14 (App Router) com Tailwind + i18n (en/pt-br)
-- [x] Telas: Login, Signup (slug auto + politica de senha), Dashboard shell
-- [x] API client Axios + middleware de proteção de rotas
+- [x] Global route prefix (`/digital-signer/v1`)
+- [x] Swagger grouping via `@ApiTags`
+- [x] Business logic: add signer, accept signature, finalize document with evidence page
+- [x] Next.js 14 frontend (App Router) with Tailwind + i18n (en/pt-br)
+- [x] Screens: Login, Signup (auto slug + password policy), Dashboard shell
+- [x] Axios API client + route protection middleware
 
-### Arquitetura
+### Architecture
 
 ```
 apps/
-  api/                          # API NestJS
+  api/                          # NestJS API
     src/
-      common/config/            # Config do logger
+      common/config/            # Logger config
       modules/
-        auth/                   # Auth por API key + JWT
-        users/                  # Usuarios e roles
+        auth/                   # API key + JWT auth
+        users/                  # Users and roles
         tenants/                # Multi-tenant
-        documents/              # CRUD de documentos + storage
-        signatures/             # Gestão de signers + fluxo de assinatura
+        documents/              # Document CRUD + storage
+        signatures/             # Signer management + signing flow
         audit/                  # Audit log (event-driven)
-        notifications/          # Notificações por e-mail (Bull)
-        webhooks/               # Config de webhooks + entrega (Bull)
-        billing/                # Uso/consumo (event-driven)
+        notifications/          # Email notifications (Bull)
+        webhooks/               # Webhook config + delivery (Bull)
+        billing/                # Usage/consumption (event-driven)
       shared/
-        guards/                 # Guard de tenant
-        pdf/                    # Manipulação de PDF (pdf-lib)
-        storage/                # Storage compatível com S3
-  web/                          # Frontend Next.js (Auth + Dashboard)
+        guards/                 # Tenant guard
+        pdf/                    # PDF handling (pdf-lib)
+        storage/                # S3-compatible storage
+  web/                          # Next.js frontend (Auth + Dashboard)
 packages/
-  shared/                       # Decorators e types compartilhados
-  database/                     # Utilitários de banco
-  events/                       # Constantes e types de eventos
+  shared/                       # Shared decorators and types
+  database/                     # Database utilities
+  events/                       # Event constants and types
 docker/
   docker-compose.yml            # Postgres, Redis, MinIO, API
-  Dockerfile                    # Build multi-stage Node 24
+  Dockerfile                    # Multi-stage Node 24 build
 ```
 
-### Endpoints da API
+### API Endpoints
 
-| Grupo      | Método | Rota                                           |
+| Group      | Method | Route                                           |
 |------------|--------|-------------------------------------------------|
 | Tenants    | POST   | `/digital-signer/v1/tenants`                    |
 | Tenants    | GET    | `/digital-signer/v1/tenants/:id`                |
@@ -206,7 +206,7 @@ docker/
 | Webhooks   | GET    | `/digital-signer/v1/webhooks/configs`           |
 | Billing    | GET    | `/digital-signer/v1/billing/usage`              |
 
-### URLs de Documentação (apenas dev)
+### Documentation URLs (dev only)
 
 - Swagger UI: `http://localhost:3000/digital-signer/v1/swagger`
 - Scalar UI: `http://localhost:3000/digital-signer/v1/reference`
