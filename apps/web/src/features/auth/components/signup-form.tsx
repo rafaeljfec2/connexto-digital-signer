@@ -5,6 +5,7 @@ import { useLocale, useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
+import { isAxiosError } from 'axios';
 import { Button, Input } from '@/shared/ui';
 import { createTenant, type SignUpResponse } from '../api';
 import { useAuth } from '../hooks/use-auth';
@@ -15,12 +16,15 @@ import {
   type SignupFormData,
 } from './signup-form.schema';
 
+const OWNER_EMAIL_TAKEN_API_MESSAGE = 'Owner email already registered';
+
 export function SignUpForm() {
   const router = useRouter();
   const locale = useLocale();
   const tAuth = useTranslations('auth');
   const tCommon = useTranslations('common');
   const [result, setResult] = useState<SignUpResponse | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const { login } = useAuth();
   const {
     register,
@@ -33,6 +37,7 @@ export function SignUpForm() {
   });
 
   const onSubmit = async (data: SignupFormData) => {
+    setSubmitError(null);
     const payload = {
       name: data.name,
       slug: slugify(data.name),
@@ -40,10 +45,25 @@ export function SignUpForm() {
       ownerEmail: data.ownerEmail,
       ownerPassword: data.ownerPassword,
     };
-    const created = await createTenant(payload);
-    setResult(created);
-    await login({ email: data.ownerEmail, password: data.ownerPassword });
-    router.replace(`/${locale}`);
+    try {
+      const created = await createTenant(payload);
+      setResult(created);
+    } catch (error) {
+      const apiMessage = extractApiMessage(error);
+      setSubmitError(
+        apiMessage === OWNER_EMAIL_TAKEN_API_MESSAGE
+          ? tAuth('ownerEmailTaken')
+          : tAuth('signupGenericError')
+      );
+      return;
+    }
+
+    try {
+      await login({ email: data.ownerEmail, password: data.ownerPassword });
+      router.replace(`/${locale}`);
+    } catch {
+      setSubmitError(tAuth('signupLoginFailed'));
+    }
   };
 
   return (
@@ -168,6 +188,11 @@ export function SignUpForm() {
         <Button className="w-full" type="submit" disabled={isSubmitting}>
           {tAuth('createAccountCta')}
         </Button>
+        {submitError ? (
+          <p className="text-center text-xs text-error" role="alert">
+            {submitError}
+          </p>
+        ) : null}
       </form>
 
       {result ? (
@@ -180,4 +205,19 @@ export function SignUpForm() {
       ) : null}
     </div>
   );
+}
+
+function extractApiMessage(error: unknown): string | null {
+  if (!isAxiosError(error)) {
+    return null;
+  }
+  const data = error.response?.data as { message?: string | string[] } | undefined;
+  const message = data?.message;
+  if (typeof message === 'string') {
+    return message;
+  }
+  if (Array.isArray(message) && typeof message[0] === 'string') {
+    return message[0];
+  }
+  return null;
 }

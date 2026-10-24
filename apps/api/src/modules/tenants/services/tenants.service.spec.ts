@@ -1,11 +1,18 @@
-import { NotFoundException } from '@nestjs/common';
-import type { Repository } from 'typeorm';
+import { ConflictException, NotFoundException } from '@nestjs/common';
+import { QueryFailedError, type Repository } from 'typeorm';
 import type { EventEmitter2 } from '@nestjs/event-emitter';
 import { TenantsService } from './tenants.service';
 import { Tenant } from '../entities/tenant.entity';
 import { sha256 } from '@connexto/shared';
 import * as crypto from 'node:crypto';
 import { UsersService } from '../../users/services/users.service';
+import { User, UserRole } from '../../users/entities/user.entity';
+
+const buildUniqueViolation = (detail: string): QueryFailedError =>
+  Object.assign(new QueryFailedError('', [], new Error('unique violation')), {
+    code: '23505',
+    detail,
+  });
 
 jest.mock('node:crypto', () => {
   const actual = jest.requireActual<typeof import('node:crypto')>('node:crypto');
@@ -63,12 +70,14 @@ describe('TenantsService', () => {
   });
 
   describe('create', () => {
-    test('should save tenant and return apiKey', async () => {
+    test('should save tenant with free slug unchanged', async () => {
       jest
         .mocked(crypto.randomBytes)
         .mockImplementation((size: number) => Buffer.from('a'.repeat(size)));
       const created = buildTenant({ apiKeyHash: 'hash' });
       const saved = buildTenant({ id: 'tenant-2', apiKeyHash: 'hash' });
+      usersService.findByEmail.mockResolvedValue(null);
+      (tenantRepository.findOne as jest.Mock).mockResolvedValue(null);
       (tenantRepository.create as jest.Mock).mockReturnValue(created);
       (tenantRepository.save as jest.Mock).mockResolvedValue(saved);
 
@@ -81,6 +90,7 @@ describe('TenantsService', () => {
       });
 
       const rawApiKey = `sk_${Buffer.from('a'.repeat(32)).toString('hex')}`;
+      expect(created.slug).toBe('acme');
       expect(created.apiKeyHash).toBe(sha256(Buffer.from(rawApiKey, 'utf-8')));
       expect(result.id).toBe('tenant-2');
       expect(usersService.createOwner).toHaveBeenCalledWith(
@@ -89,6 +99,108 @@ describe('TenantsService', () => {
         'Owner',
         'strong-password'
       );
+    });
+
+    test('should append numeric suffix when slug is taken', async () => {
+      jest
+        .mocked(crypto.randomBytes)
+        .mockImplementation((size: number) => Buffer.from('a'.repeat(size)));
+      const created = buildTenant({ apiKeyHash: 'hash', slug: 'acme' });
+      const saved = buildTenant({ id: 'tenant-2', apiKeyHash: 'hash', slug: 'acme-2' });
+      usersService.findByEmail.mockResolvedValue(null);
+      (tenantRepository.findOne as jest.Mock).mockImplementation(
+        ({ where }: { where: { slug: string } }) => {
+          if (where.slug === 'acme') {
+            return Promise.resolve(buildTenant({ slug: 'acme' }));
+          }
+          return Promise.resolve(null);
+        }
+      );
+      (tenantRepository.create as jest.Mock).mockReturnValue(created);
+      (tenantRepository.save as jest.Mock).mockResolvedValue(saved);
+
+      await service.create({
+        name: 'Acme',
+        slug: 'acme',
+        ownerName: 'Owner',
+        ownerEmail: 'owner@acme.com',
+        ownerPassword: 'strong-password',
+      });
+
+      expect(created.slug).toBe('acme-2');
+    });
+
+    test('should throw ConflictException when owner email is already registered', async () => {
+      usersService.findByEmail.mockResolvedValue({
+        id: 'user-1',
+        email: 'owner@acme.com',
+        name: 'Existing',
+        role: UserRole.OWNER,
+        tenantId: 'other-tenant',
+        passwordHash: 'hash',
+        isActive: true,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      } as User);
+
+      await expect(
+        service.create({
+          name: 'Acme',
+          slug: 'acme',
+          ownerName: 'Owner',
+          ownerEmail: 'owner@acme.com',
+          ownerPassword: 'strong-password',
+        })
+      ).rejects.toThrow(new ConflictException('Owner email already registered'));
+      expect(tenantRepository.save).not.toHaveBeenCalled();
+    });
+
+    test('should map slug unique violation on save to ConflictException', async () => {
+      jest
+        .mocked(crypto.randomBytes)
+        .mockImplementation((size: number) => Buffer.from('a'.repeat(size)));
+      const created = buildTenant({ apiKeyHash: 'hash' });
+      usersService.findByEmail.mockResolvedValue(null);
+      (tenantRepository.findOne as jest.Mock).mockResolvedValue(null);
+      (tenantRepository.create as jest.Mock).mockReturnValue(created);
+      (tenantRepository.save as jest.Mock).mockRejectedValue(
+        buildUniqueViolation('Key (slug)=(acme) already exists.')
+      );
+
+      await expect(
+        service.create({
+          name: 'Acme',
+          slug: 'acme',
+          ownerName: 'Owner',
+          ownerEmail: 'owner@acme.com',
+          ownerPassword: 'strong-password',
+        })
+      ).rejects.toThrow(new ConflictException('Tenant slug already exists'));
+    });
+
+    test('should map email unique violation on createOwner to ConflictException', async () => {
+      jest
+        .mocked(crypto.randomBytes)
+        .mockImplementation((size: number) => Buffer.from('a'.repeat(size)));
+      const created = buildTenant({ apiKeyHash: 'hash' });
+      const saved = buildTenant({ id: 'tenant-2', apiKeyHash: 'hash' });
+      usersService.findByEmail.mockResolvedValue(null);
+      (tenantRepository.findOne as jest.Mock).mockResolvedValue(null);
+      (tenantRepository.create as jest.Mock).mockReturnValue(created);
+      (tenantRepository.save as jest.Mock).mockResolvedValue(saved);
+      usersService.createOwner.mockRejectedValue(
+        buildUniqueViolation('Key (email)=(owner@acme.com) already exists.')
+      );
+
+      await expect(
+        service.create({
+          name: 'Acme',
+          slug: 'acme',
+          ownerName: 'Owner',
+          ownerEmail: 'owner@acme.com',
+          ownerPassword: 'strong-password',
+        })
+      ).rejects.toThrow(new ConflictException('Owner email already registered'));
     });
   });
 
