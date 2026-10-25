@@ -20,14 +20,19 @@ export const readStoredUser = (): LoginResponse['user'] | null => {
   }
 };
 
+const buildAuthCookie = (value: string, maxAge: number): string => {
+  const secure = globalThis.window?.location.protocol === 'https:' ? '; Secure' : '';
+  return `auth_token=${encodeURIComponent(value)}; path=/; max-age=${maxAge}; SameSite=Lax${secure}`;
+};
+
 export const writeAuthStorage = (token: string, user: LoginResponse['user']): void => {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(user));
-  document.cookie = `auth_token=${token}; path=/; max-age=${MIDDLEWARE_COOKIE_MAX_AGE}`;
+  document.cookie = buildAuthCookie(token, MIDDLEWARE_COOKIE_MAX_AGE);
 };
 
 export const clearAuthStorage = (): void => {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
-  document.cookie = 'auth_token=; path=/; max-age=0';
+  document.cookie = buildAuthCookie('', 0);
 };

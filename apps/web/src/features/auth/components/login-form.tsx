@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useRef, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useLocale, useTranslations } from 'next-intl';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -11,6 +10,7 @@ import { Button, Input } from '@/shared/ui';
 import { StepTransition } from '@/shared/animations';
 import { useAuth } from '../hooks/use-auth';
 import { checkEmail } from '../api';
+import { redirectAfterAuth } from '../redirect-after-auth';
 
 const emailSchema = z.object({
   email: z.string().regex(/^[^\s@]+@[^\s@]+\.[^\s@]+$/),
@@ -26,7 +26,6 @@ type PasswordData = z.infer<typeof passwordSchema>;
 type LoginStep = 'email' | 'password';
 
 export function LoginForm() {
-  const router = useRouter();
   const locale = useLocale();
   const tAuth = useTranslations('auth');
   const { login, loginStatus } = useAuth();
@@ -79,11 +78,11 @@ export function LoginForm() {
     setLoginError(null);
     try {
       await login({ email: emailRef.current, password: data.password });
-      router.replace(`/${locale}`);
+      redirectAfterAuth(locale);
     } catch {
       setLoginError(tAuth('invalidCredentials'));
     }
-  }, [login, router, locale, tAuth]);
+  }, [login, locale, tAuth]);
 
   return (
     <StepTransition stepKey={step} direction={direction}>

@@ -2,13 +2,13 @@
 
 import { useState } from 'react';
 import { useLocale, useTranslations } from 'next-intl';
-import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { isAxiosError } from 'axios';
 import { Button, Input } from '@/shared/ui';
 import { createTenant, type SignUpResponse } from '../api';
 import { useAuth } from '../hooks/use-auth';
+import { redirectAfterAuth } from '../redirect-after-auth';
 import { slugify } from '@/shared/utils/slug';
 import {
   signupFormSchema,
@@ -19,7 +19,6 @@ import {
 const OWNER_EMAIL_TAKEN_API_MESSAGE = 'Owner email already registered';
 
 export function SignUpForm() {
-  const router = useRouter();
   const locale = useLocale();
   const tAuth = useTranslations('auth');
   const tCommon = useTranslations('common');
@@ -60,7 +59,7 @@ export function SignUpForm() {
 
     try {
       await login({ email: data.ownerEmail, password: data.ownerPassword });
-      router.replace(`/${locale}`);
+      redirectAfterAuth(locale);
     } catch {
       setSubmitError(tAuth('signupLoginFailed'));
     }
