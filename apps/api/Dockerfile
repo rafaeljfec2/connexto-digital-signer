@@ -32,6 +32,6 @@ RUN addgroup -S app && adduser -S app -G app
 COPY --from=builder --chown=app:app /app/deployed .
 USER app
 EXPOSE 3000
-HEALTHCHECK --interval=15s --timeout=5s --start-period=40s --retries=5 \
+HEALTHCHECK --interval=10s --timeout=5s --start-period=120s --retries=12 \
   CMD node -e "fetch('http://127.0.0.1:3000/digital-signer/v1/health/live').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 CMD ["node", "dist/main.js"]

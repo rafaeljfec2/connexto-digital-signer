@@ -10,11 +10,11 @@
   "port": 3000,
   "hostPort": 3004,
   "healthcheck": {
-    "path": "/digital-signer/v1/health",
-    "interval": "15s",
-    "timeout": "10s",
-    "retries": 10,
-    "startPeriod": "60s",
+    "path": "/digital-signer/v1/health/live",
+    "interval": "10s",
+    "timeout": "5s",
+    "retries": 18,
+    "startPeriod": "120s",
     "tls": false
   },
   "env": {
