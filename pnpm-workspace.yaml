@@ -1,3 +1,10 @@
 packages:
   - "apps/*"
   - "packages/*"
+
+# Security patches for CVEs without published npm releases yet.
+# node-forge: CVE-2026-85393 / GHSA-86w9-cpqp-85rv (digitalbazaar/forge#1152)
+# picomatch: CVE-2026-112366 / GHSA-fc5q-39xc-vjpf (micromatch/picomatch#237)
+patchedDependencies:
+  node-forge@1.4.0: patches/node-forge@1.4.0.patch
+  picomatch@4.0.7: patches/picomatch@4.0.7.patch

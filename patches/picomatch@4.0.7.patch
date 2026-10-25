@@ -1,0 +1,77 @@
+diff --git a/lib/parse.js b/lib/parse.js
+index 29207512c60183b4bb9bf5112be3b9b5f4a9a9fd..59503402065268c05899ddad201cd185ecbc3a77 100644
+--- a/lib/parse.js
++++ b/lib/parse.js
+@@ -270,6 +270,50 @@ const getStarExtglobSequenceChars = pattern => {
+   return chars;
+ };
+ 
++
++const isSelfRepeatingStarBranch = branch => {
++  let escaped = false;
++  let bracket = false;
++  let star = false;
++
++  for (let i = 0; i < branch.length; i++) {
++    const ch = branch[i];
++
++    if (escaped === true) {
++      escaped = false;
++      continue;
++    }
++
++    if (ch === '\\') {
++      escaped = true;
++      continue;
++    }
++
++    if (bracket === true) {
++      if (ch === ']') bracket = false;
++      continue;
++    }
++
++    if (ch === '[') {
++      bracket = true;
++      continue;
++    }
++
++    if (/[/(){}|!+@]/.test(ch)) {
++      return false;
++    }
++
++    if (ch === '*') {
++      if (branch[i + 1] === '*') {
++        return false;
++      }
++      star = true;
++    }
++  }
++
++  return star && !escaped && !bracket;
++};
++
+ const repeatedExtglobRecursion = pattern => {
+   let depth = 0;
+   let value = pattern.trim();
+@@ -343,6 +387,10 @@ const analyzeRepeatedExtglob = (body, options) => {
+       : { risky: true };
+   }
+ 
++  if (branches.length === 1 && isSelfRepeatingStarBranch(branches[0])) {
++    return { risky: false, collapse: true };
++  }
++
+   return { risky: false };
+ };
+ 
+@@ -541,6 +589,10 @@ const parse = (input, options) => {
+     const body = input.slice(token.startIndex + 2, state.index);
+     const analysis = analyzeRepeatedExtglob(body, opts);
+ 
++    if (analysis.collapse === true && (token.type === 'plus' || token.type === 'star')) {
++      token.close = token.type === 'plus' ? ')' : ')?';
++    }
++
+     if ((token.type === 'plus' || token.type === 'star') && analysis.risky) {
+       const safeOutput = analysis.safeOutput
+         ? (token.output ? '' : ONE_CHAR) + (opts.capture ? `(${analysis.safeOutput})` : analysis.safeOutput)
