@@ -18,7 +18,7 @@ NexoSign / Connexto Digital Signer: multi-tenant electronic signature SaaS.
 | Layer | Choice |
 |---|---|
 | Package manager | pnpm 9 workspaces + Turborepo |
-| Node | >= 24 |
+| Node | >= 24.22.1 |
 | API | NestJS 10, TypeORM 0.3, PostgreSQL, Redis/Bull, S3/MinIO |
 | Web | Next.js 14.2, React 18, TanStack Query, RHF + Zod, next-intl |
 | Auth | JWT + tenant API keys; public routes for signup, login, `/sign/:token` |

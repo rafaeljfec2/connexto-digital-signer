@@ -1,4 +1,4 @@
-FROM node:24-alpine AS base
+FROM node:24.22.1-alpine AS base
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 WORKDIR /app
 
@@ -18,7 +18,7 @@ COPY . .
 RUN pnpm --filter api... build
 RUN pnpm deploy --filter api --prod /app/deployed
 
-FROM node:24-alpine AS runner
+FROM node:24.22.1-alpine AS runner
 ENV NODE_ENV=production
 WORKDIR /app
 RUN addgroup -S app && adduser -S app -G app

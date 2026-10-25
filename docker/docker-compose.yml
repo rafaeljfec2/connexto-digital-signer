@@ -30,7 +30,7 @@ services:
         condition: service_started
 
   web:
-    image: node:24-alpine
+    image: node:24.22.1-alpine
     working_dir: /app
     volumes:
       - ..:/app

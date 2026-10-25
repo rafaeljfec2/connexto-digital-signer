@@ -86,13 +86,13 @@ The system uses Redis + Bull for async queues instead of RabbitMQ as a pragmatic
 
 ### Prerequisites
 
-- Node.js 24+ (recommended: 24.12.0)
+- Node.js >= 24.22.1 (recommended: 24.22.1; October 2026 security release)
 - pnpm 9
 - Docker and Docker Compose (for Postgres, Redis, and MinIO)
 
 ### Node version (automatic switch)
 
-The project uses Node 24 (`.nvmrc` with `24.12.0`). To switch automatically when entering the folder:
+The project uses Node 24 (`.nvmrc` with `24.22.1`). To switch automatically when entering the folder:
 
 **Option 1 – direnv (recommended)**  
 With [direnv](https://direnv.net/) installed, run once at the project root:
