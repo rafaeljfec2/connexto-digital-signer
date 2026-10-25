@@ -20,11 +20,11 @@ COPY --from=deps /app .
 COPY . .
 RUN pnpm --filter api... build
 RUN pnpm deploy --filter api --prod /app/deployed \
-  && test -f /app/deployed/dist/main.js
+  && test -f /app/deployed/dist/src/main.js
 
 FROM node:24.22.1-alpine AS runner
 ENV NODE_ENV=production
 WORKDIR /app
 COPY --from=builder /app/deployed .
 EXPOSE 3000
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]

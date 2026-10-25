@@ -1,8 +1,11 @@
 {
   "name": "api",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "private": true,
   "license": "UNLICENSED",
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "nest build",
     "dev": "nest start --watch",

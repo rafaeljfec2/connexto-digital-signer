@@ -8,3 +8,9 @@ packages:
 patchedDependencies:
   node-forge@1.4.0: patches/node-forge@1.4.0.patch
   picomatch@4.0.7: patches/picomatch@4.0.7.patch
+
+# Skip native postinstalls from web tooling that break API Docker builds.
+neverBuiltDependencies:
+  - "@parcel/watcher"
+  - "@scarf/scarf"
+  - "unrs-resolver"

@@ -21,7 +21,7 @@ COPY --from=deps /app .
 COPY . .
 RUN pnpm --filter api... build
 RUN pnpm deploy --filter api --prod /app/deployed \
-  && test -f /app/deployed/dist/main.js
+  && test -f /app/deployed/dist/src/main.js
 
 FROM node:24.22.1-alpine AS runner
 ENV NODE_ENV=production
@@ -32,4 +32,4 @@ USER app
 EXPOSE 3000
 HEALTHCHECK --interval=10s --timeout=5s --start-period=120s --retries=12 \
   CMD node -e "fetch('http://127.0.0.1:3000/digital-signer/v1/health/live').then((r)=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
-CMD ["node", "dist/main.js"]
+CMD ["node", "dist/src/main.js"]
