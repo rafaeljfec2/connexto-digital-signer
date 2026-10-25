@@ -32,6 +32,7 @@ export class CreateTenantDto {
   @IsObject()
   @ApiPropertyOptional({
     type: 'object',
+    additionalProperties: true,
     example: { name: 'Acme', primaryColor: '#1E88E5', logoUrl: 'https://cdn.acme.com/logo.png' },
   })
   readonly branding?: { name?: string; primaryColor?: string; logoUrl?: string };
@@ -40,6 +41,7 @@ export class CreateTenantDto {
   @IsObject()
   @ApiPropertyOptional({
     type: 'object',
+    additionalProperties: true,
     example: { termsOfService: '...', privacyPolicy: '...' },
   })
   readonly legalTexts?: { termsOfService?: string; privacyPolicy?: string };
@@ -48,6 +50,7 @@ export class CreateTenantDto {
   @IsObject()
   @ApiPropertyOptional({
     type: 'object',
+    additionalProperties: true,
     example: { documentsPerMonth: 1000, signersPerDocument: 10 },
   })
   readonly usageLimits?: { documentsPerMonth?: number; signersPerDocument?: number };

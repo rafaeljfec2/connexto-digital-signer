@@ -13,7 +13,7 @@ import { TenantId, Public } from '@connexto/shared';
 import { TenantsService } from '../services/tenants.service';
 import { CreateTenantDto } from '../dto/create-tenant.dto';
 import { UpdateTenantDto } from '../dto/update-tenant.dto';
-import { throttleConfig } from '../../../common/config/throttle.config';
+import { publicThrottle } from '../../../common/config/throttle.config';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 @ApiTags('Tenants')
@@ -23,7 +23,7 @@ export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Post()
   create(@Body() createTenantDto: CreateTenantDto) {
     return this.tenantsService.create(createTenantDto);

@@ -30,7 +30,7 @@ import { CreateSignatureFieldDto } from '../dto/create-signature-field.dto';
 import { UpdateSignatureFieldDto } from '../dto/update-signature-field.dto';
 import { BatchUpdateFieldsDto } from '../dto/batch-update-fields.dto';
 import { SendDocumentDto } from '../dto/send-document.dto';
-import { throttleConfig } from '../../../common/config/throttle.config';
+import { publicThrottle } from '../../../common/config/throttle.config';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
 
 function getClientIp(
@@ -213,7 +213,7 @@ export class SignController {
   ) {}
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Get(':token')
   @ApiOperation({ summary: 'Get signer info by signing token' })
   @ApiParam({ name: 'token', description: 'Signing token' })
@@ -223,7 +223,7 @@ export class SignController {
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Get(':token/pdf')
   async getSignerPdf(
     @Param('token') token: string,
@@ -233,7 +233,7 @@ export class SignController {
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Get(':token/signed-pdf')
   async getSignerSignedPdf(
     @Param('token') token: string,
@@ -247,7 +247,7 @@ export class SignController {
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Get(':token/fields')
   getSignerFields(
     @Param('token') token: string,
@@ -257,7 +257,7 @@ export class SignController {
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Post(':token/accept')
   @ApiOperation({ summary: 'Accept and sign the document' })
   @ApiParam({ name: 'token', description: 'Signing token' })
@@ -280,14 +280,14 @@ export class SignController {
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Get(':token/summary')
   getSignerSummary(@Param('token') token: string) {
     return this.signaturesService.getEnvelopeAuditSummaryByToken(token);
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Post(':token/identify')
   identifySigner(
     @Param('token') token: string,
@@ -297,14 +297,14 @@ export class SignController {
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Post(':token/send-code')
   sendCode(@Param('token') token: string) {
     return this.verificationService.sendCode(token);
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Post(':token/verify-code')
   verifyCode(
     @Param('token') token: string,

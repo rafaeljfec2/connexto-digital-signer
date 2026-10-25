@@ -12,8 +12,8 @@ export function generateStaticParams() {
 export default async function LocaleLayout({
   children,
   params,
-}: Readonly<{ children: ReactNode; params: { locale: string } }>) {
-  const { locale } = params;
+}: Readonly<{ children: ReactNode; params: Promise<{ locale: string }> }>) {
+  const { locale } = await params;
   if (!locales.includes(locale as (typeof locales)[number])) {
     notFound();
   }

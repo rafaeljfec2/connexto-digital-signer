@@ -3,7 +3,7 @@ import { ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
 import { CurrentUser, Public, JwtPayload } from '@connexto/shared';
 import { AuthService, LoginResult } from '../services/auth.service';
-import { throttleConfig } from '../../../common/config/throttle.config';
+import { publicThrottle } from '../../../common/config/throttle.config';
 import { LoginDto } from '../dto/login.dto';
 import { CheckEmailDto } from '../dto/check-email.dto';
 import type { Request, Response } from 'express';
@@ -44,7 +44,7 @@ export class AuthController {
   ) {}
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Post('api-key/login')
   async loginWithApiKey(
     @Body('apiKey') apiKey: string
@@ -53,7 +53,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Post('check-email')
   async checkEmail(
     @Body() body: CheckEmailDto
@@ -62,7 +62,7 @@ export class AuthController {
   }
 
   @Public()
-  @Throttle(throttleConfig.publicLimit, throttleConfig.publicTtlSeconds)
+  @Throttle(publicThrottle)
   @Post('login')
   async loginWithEmail(
     @Body() body: LoginDto,

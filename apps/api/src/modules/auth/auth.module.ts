@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtModule, type JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { TenantsModule } from '../tenants/tenants.module';
@@ -9,6 +9,10 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { AuthService } from './services/auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
+const jwtSignOptions = {
+  expiresIn: process.env['JWT_EXPIRES_IN'] ?? '15m',
+} as JwtSignOptions;
+
 @Module({
   imports: [
     TenantsModule,
@@ -17,7 +21,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
     PassportModule.register({ defaultStrategy: 'jwt' }),
     JwtModule.register({
       secret: process.env['JWT_SECRET'] ?? 'dev-secret-change-in-production',
-      signOptions: { expiresIn: process.env['JWT_EXPIRES_IN'] ?? '15m' },
+      signOptions: jwtSignOptions,
     }),
   ],
   controllers: [AuthController],

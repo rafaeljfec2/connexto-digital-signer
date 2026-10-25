@@ -43,10 +43,12 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
     }),
     LoggerModule.forRoot(getLoggerConfig()),
     HealthModule,
-    ThrottlerModule.forRoot({
-      ttl: throttleConfig.ttlSeconds,
-      limit: throttleConfig.limit,
-    }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: throttleConfig.ttlMs,
+        limit: throttleConfig.limit,
+      },
+    ]),
     TypeOrmModule.forRoot({
       type: 'postgres',
       host: process.env['DB_HOST'] ?? 'localhost',

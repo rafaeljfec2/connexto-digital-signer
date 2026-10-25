@@ -29,6 +29,7 @@ export class UpdateWebhookConfigDto {
   @IsObject()
   @ApiPropertyOptional({
     type: 'object',
+    additionalProperties: true,
     example: { maxAttempts: 5, initialDelayMs: 1000, backoffMultiplier: 2 },
   })
   readonly retryConfig?: { maxAttempts?: number; initialDelayMs?: number; backoffMultiplier?: number };

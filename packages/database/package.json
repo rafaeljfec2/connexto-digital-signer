@@ -10,7 +10,7 @@
     "lint": "eslint \"src/**/*.ts\""
   },
   "dependencies": {
-    "typeorm": "^0.3.20",
+    "typeorm": "^0.3.31",
     "pg": "^8.11.0"
   }
 }
