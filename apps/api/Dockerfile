@@ -1,5 +1,6 @@
 FROM node:24.22.1-alpine AS base
-RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
+RUN apk add --no-cache patch \
+  && corepack enable && corepack prepare pnpm@9.0.0 --activate
 WORKDIR /app
 
 FROM base AS deps
