@@ -12,7 +12,9 @@ COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
 COPY packages/events/package.json ./packages/events/
 COPY packages/ai/package.json ./packages/ai/
-RUN pnpm install --frozen-lockfile --filter api...
+RUN pnpm install --frozen-lockfile --filter api... --ignore-scripts \
+  && node scripts/apply-security-patches.cjs \
+  && pnpm rebuild @swc/core
 
 FROM base AS builder
 COPY --from=deps /app .

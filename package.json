@@ -26,5 +26,12 @@
   "packageManager": "pnpm@9.0.0",
   "engines": {
     "node": ">=24.22.1"
+  },
+  "pnpm": {
+    "neverBuiltDependencies": [
+      "@parcel/watcher",
+      "@scarf/scarf",
+      "unrs-resolver"
+    ]
   }
 }
