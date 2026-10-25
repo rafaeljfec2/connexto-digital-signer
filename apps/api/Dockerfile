@@ -13,8 +13,11 @@ COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
 COPY packages/events/package.json ./packages/events/
 COPY packages/ai/package.json ./packages/ai/
-# neverBuiltDependencies in package.json skips broken web-tooling native scripts
-RUN pnpm install --frozen-lockfile --filter api...
+# ignore-scripts avoids unrs-resolver/napi-postinstall PATH failure in Alpine;
+# rebuild @swc/core for nest build; security patches applied explicitly.
+RUN pnpm install --frozen-lockfile --filter api... --ignore-scripts \
+  && node scripts/apply-security-patches.cjs \
+  && pnpm rebuild @swc/core
 
 FROM base AS builder
 COPY --from=deps /app .
