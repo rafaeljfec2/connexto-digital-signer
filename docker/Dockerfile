@@ -13,15 +13,14 @@ COPY packages/shared/package.json ./packages/shared/
 COPY packages/database/package.json ./packages/database/
 COPY packages/events/package.json ./packages/events/
 COPY packages/ai/package.json ./packages/ai/
-RUN pnpm install --frozen-lockfile --filter api... --ignore-scripts \
-  && node scripts/apply-security-patches.cjs \
-  && pnpm rebuild @swc/core
+RUN pnpm install --frozen-lockfile --filter api...
 
 FROM base AS builder
 COPY --from=deps /app .
 COPY . .
 RUN pnpm --filter api... build
-RUN pnpm deploy --filter api --prod /app/deployed
+RUN pnpm deploy --filter api --prod /app/deployed \
+  && test -f /app/deployed/dist/main.js
 
 FROM node:24.22.1-alpine AS runner
 ENV NODE_ENV=production
