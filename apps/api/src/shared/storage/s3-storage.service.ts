@@ -16,17 +16,27 @@ import { IStorageService, PutObjectResult } from '@connexto/shared';
 export class S3StorageService implements IStorageService {
   private readonly client: S3Client;
   private readonly bucket: string;
-  private readonly isProduction: boolean;
+  private readonly useServerSideEncryption: boolean;
+  private readonly canCreateBucket: boolean;
   private bucketReady: Promise<void> | null = null;
 
   constructor() {
     const region = process.env['S3_REGION'] ?? 'us-east-1';
     const endpoint = process.env['S3_ENDPOINT'];
+    const isProduction = process.env['NODE_ENV'] === 'production';
     this.bucket = process.env['S3_BUCKET'] ?? 'documents';
-    this.isProduction = process.env['NODE_ENV'] === 'production';
+    this.useServerSideEncryption = isProduction && !endpoint;
+    this.canCreateBucket = !isProduction || Boolean(endpoint);
     this.client = new S3Client({
       region,
-      ...(endpoint && { endpoint, forcePathStyle: true }),
+      ...(endpoint
+        ? {
+            endpoint,
+            forcePathStyle: true,
+            requestChecksumCalculation: 'WHEN_REQUIRED' as const,
+            responseChecksumValidation: 'WHEN_REQUIRED' as const,
+          }
+        : {}),
       credentials:
         process.env['S3_ACCESS_KEY_ID'] && process.env['S3_SECRET_ACCESS_KEY']
           ? {
@@ -44,7 +54,7 @@ export class S3StorageService implements IStorageService {
       Key: key,
       Body: body,
       ContentType: contentType ?? 'application/pdf',
-      ...(this.isProduction && { ServerSideEncryption: 'AES256' }),
+      ...(this.useServerSideEncryption && { ServerSideEncryption: 'AES256' }),
     });
     const result = await this.client.send(command);
     return { key, etag: result.ETag ?? undefined };
@@ -73,7 +83,7 @@ export class S3StorageService implements IStorageService {
       Bucket: this.bucket,
       CopySource: `${this.bucket}/${sourceKey}`,
       Key: destinationKey,
-      ...(this.isProduction && { ServerSideEncryption: 'AES256' }),
+      ...(this.useServerSideEncryption && { ServerSideEncryption: 'AES256' }),
     });
     const result = await this.client.send(command);
     return { key: destinationKey, etag: result.CopyObjectResult?.ETag ?? undefined };
@@ -97,27 +107,23 @@ export class S3StorageService implements IStorageService {
   private ensureBucket(): Promise<void> {
     if (this.bucketReady) return this.bucketReady;
 
-    if (this.isProduction) {
-      this.bucketReady = this.client
-        .send(new HeadBucketCommand({ Bucket: this.bucket }))
-        .then(() => undefined);
-      return this.bucketReady;
-    }
-
     this.bucketReady = (async () => {
       try {
         await this.client.send(new HeadBucketCommand({ Bucket: this.bucket }));
       } catch (error) {
-        const name = error instanceof Error ? error.name : '';
-        const statusCode = (error as { $metadata?: { httpStatusCode?: number } })?.$metadata
-          ?.httpStatusCode;
-        if (statusCode === 404 || name === 'NotFound' || name === 'NoSuchBucket') {
-          await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
-          return;
+        if (!this.canCreateBucket || !this.isMissingBucket(error)) {
+          throw error;
         }
-        throw error;
+        await this.client.send(new CreateBucketCommand({ Bucket: this.bucket }));
       }
     })();
     return this.bucketReady;
+  }
+
+  private isMissingBucket(error: unknown): boolean {
+    const name = error instanceof Error ? error.name : '';
+    const statusCode = (error as { $metadata?: { httpStatusCode?: number } })?.$metadata
+      ?.httpStatusCode;
+    return statusCode === 404 || name === 'NotFound' || name === 'NoSuchBucket';
   }
 }

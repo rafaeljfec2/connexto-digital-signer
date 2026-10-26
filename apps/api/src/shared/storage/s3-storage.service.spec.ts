@@ -4,6 +4,9 @@ import {
   PutObjectCommand,
   GetObjectCommand,
   DeleteObjectCommand,
+  CopyObjectCommand,
+  CreateBucketCommand,
+  HeadBucketCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
@@ -14,6 +17,7 @@ jest.mock('@aws-sdk/client-s3', () => ({
   PutObjectCommand: jest.fn().mockImplementation((input) => ({ input })),
   GetObjectCommand: jest.fn().mockImplementation((input) => ({ input })),
   DeleteObjectCommand: jest.fn().mockImplementation((input) => ({ input })),
+  CopyObjectCommand: jest.fn().mockImplementation((input) => ({ input })),
   HeadBucketCommand: jest.fn().mockImplementation((input) => ({ input })),
   CreateBucketCommand: jest.fn().mockImplementation((input) => ({ input })),
 }));
@@ -41,17 +45,42 @@ const asyncStream = (chunks: Array<Buffer | Uint8Array>) => ({
 });
 
 describe('S3StorageService', () => {
+  const originalNodeEnv = process.env['NODE_ENV'];
+
   beforeEach(() => {
     sendMock.mockReset();
     (getSignedUrl as jest.Mock).mockReset();
     (S3Client as unknown as jest.Mock).mockClear();
+    (PutObjectCommand as unknown as jest.Mock).mockClear();
+    (CopyObjectCommand as unknown as jest.Mock).mockClear();
+    (CreateBucketCommand as unknown as jest.Mock).mockClear();
+    (HeadBucketCommand as unknown as jest.Mock).mockClear();
     setEnv({
+      NODE_ENV: 'test',
       S3_REGION: 'us-east-1',
       S3_BUCKET: 'documents',
       S3_ENDPOINT: 'http://localhost:9000',
       S3_ACCESS_KEY_ID: 'minioadmin',
       S3_SECRET_ACCESS_KEY: 'minioadmin',
     });
+  });
+
+  afterAll(() => {
+    setEnv({ NODE_ENV: originalNodeEnv });
+  });
+
+  test('should configure checksum WHEN_REQUIRED when endpoint is set', () => {
+    new S3StorageService();
+
+    expect(S3Client).toHaveBeenCalledWith(
+      expect.objectContaining({
+        region: 'us-east-1',
+        endpoint: 'http://localhost:9000',
+        forcePathStyle: true,
+        requestChecksumCalculation: 'WHEN_REQUIRED',
+        responseChecksumValidation: 'WHEN_REQUIRED',
+      }),
+    );
   });
 
   test('should put object', async () => {
@@ -82,6 +111,70 @@ describe('S3StorageService', () => {
       Body: Buffer.from('data'),
       ContentType: 'application/custom',
     });
+  });
+
+  test('should omit SSE in production when custom endpoint is set', async () => {
+    setEnv({ NODE_ENV: 'production' });
+    const service = new S3StorageService();
+    sendMock.mockResolvedValue({ ETag: 'etag' });
+
+    await service.put('key', Buffer.from('data'));
+
+    expect(PutObjectCommand).toHaveBeenCalledWith({
+      Bucket: 'documents',
+      Key: 'key',
+      Body: Buffer.from('data'),
+      ContentType: 'application/pdf',
+    });
+  });
+
+  test('should use SSE in production without custom endpoint', async () => {
+    setEnv({ NODE_ENV: 'production', S3_ENDPOINT: undefined });
+    const service = new S3StorageService();
+    sendMock.mockResolvedValue({ ETag: 'etag' });
+
+    await service.put('key', Buffer.from('data'));
+
+    expect(PutObjectCommand).toHaveBeenCalledWith({
+      Bucket: 'documents',
+      Key: 'key',
+      Body: Buffer.from('data'),
+      ContentType: 'application/pdf',
+      ServerSideEncryption: 'AES256',
+    });
+  });
+
+  test('should create missing bucket in production when endpoint is set', async () => {
+    setEnv({ NODE_ENV: 'production' });
+    const service = new S3StorageService();
+    const missingBucket = Object.assign(new Error('Unknown'), {
+      name: 'NotFound',
+      $metadata: { httpStatusCode: 404 },
+    });
+    sendMock
+      .mockRejectedValueOnce(missingBucket)
+      .mockResolvedValueOnce({})
+      .mockResolvedValueOnce({ ETag: 'etag' });
+
+    await service.put('key', Buffer.from('data'));
+
+    expect(HeadBucketCommand).toHaveBeenCalledWith({ Bucket: 'documents' });
+    expect(CreateBucketCommand).toHaveBeenCalledWith({ Bucket: 'documents' });
+  });
+
+  test('should not create missing bucket in production without custom endpoint', async () => {
+    setEnv({ NODE_ENV: 'production', S3_ENDPOINT: undefined });
+    const service = new S3StorageService();
+    const missingBucket = Object.assign(new Error('Unknown'), {
+      name: 'NotFound',
+      $metadata: { httpStatusCode: 404 },
+    });
+    sendMock.mockRejectedValueOnce(missingBucket);
+
+    await expect(service.put('key', Buffer.from('data'))).rejects.toBe(missingBucket);
+
+    expect(HeadBucketCommand).toHaveBeenCalledWith({ Bucket: 'documents' });
+    expect(CreateBucketCommand).not.toHaveBeenCalled();
   });
 
   test('should get object', async () => {
@@ -145,7 +238,7 @@ describe('S3StorageService', () => {
     expect(result).toBe('signed-url-attachment');
   });
 
-  test('should use defaults without endpoint or credentials', async () => {
+  test('should use defaults without endpoint or credentials', () => {
     setEnv({
       S3_ENDPOINT: undefined,
       S3_ACCESS_KEY_ID: undefined,
@@ -158,6 +251,11 @@ describe('S3StorageService', () => {
       expect.objectContaining({
         region: 'us-east-1',
       })
+    );
+    expect(S3Client).toHaveBeenCalledWith(
+      expect.not.objectContaining({
+        requestChecksumCalculation: 'WHEN_REQUIRED',
+      }),
     );
     expect(service).toBeDefined();
   });
