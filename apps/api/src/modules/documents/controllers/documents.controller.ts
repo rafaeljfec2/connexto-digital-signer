@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   HttpCode,
   HttpStatus,
   NotFoundException,
@@ -12,6 +13,7 @@ import {
   Patch,
   Param,
   ParseUUIDPipe,
+  StreamableFile,
   UseInterceptors,
   UploadedFile,
 } from '@nestjs/common';
@@ -25,6 +27,8 @@ import { RequireAuthMethod } from '../../../common/decorators/auth-method.decora
 import { MAX_SIZE_BYTES } from '../../../shared/storage/file-validator';
 
 const UPLOAD_MAX_BYTES = Math.max(...Object.values(MAX_SIZE_BYTES));
+const DEFAULT_PDF_TYPE = 'application/pdf';
+const P7S_CONTENT_TYPE = 'application/pkcs7-signature';
 
 @ApiTags('Documents')
 @ApiBearerAuth()
@@ -66,6 +70,24 @@ export class DocumentsController {
     return this.documentsService.findOne(id, tenantId);
   }
 
+  @Get(':id/file/content')
+  @Header('Cache-Control', 'private, no-store')
+  @ApiOperation({ summary: 'Stream the original document file through the API' })
+  @ApiParam({ name: 'id', description: 'Document UUID' })
+  @ApiResponse({ status: 200, description: 'Original file bytes' })
+  @ApiResponse({ status: 404, description: 'Document or file not found' })
+  async getFileContent(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string,
+  ): Promise<StreamableFile> {
+    const document = await this.documentsService.findOne(id, tenantId);
+    const stream = await this.documentsService.getOriginalFileStream(document);
+    return new StreamableFile(stream, {
+      type: document.mimeType ?? DEFAULT_PDF_TYPE,
+      disposition: 'inline; filename="original.pdf"',
+    });
+  }
+
   @Get(':id/file')
   @ApiOperation({ summary: 'Get presigned URL for the original file' })
   @ApiParam({ name: 'id', description: 'Document UUID' })
@@ -77,6 +99,27 @@ export class DocumentsController {
   ) {
     const document = await this.documentsService.findOne(id, tenantId);
     return this.documentsService.getOriginalFileUrl(document);
+  }
+
+  @Get(':id/signed-file/content')
+  @Header('Cache-Control', 'private, no-store')
+  @ApiOperation({ summary: 'Stream the signed document file through the API' })
+  @ApiParam({ name: 'id', description: 'Document UUID' })
+  @ApiResponse({ status: 200, description: 'Signed file bytes' })
+  @ApiResponse({ status: 404, description: 'Signed document not available' })
+  async getSignedFileContent(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string,
+  ): Promise<StreamableFile> {
+    const document = await this.documentsService.findOne(id, tenantId);
+    const stream = await this.documentsService.getFinalFileStream(document);
+    if (stream === null) {
+      throw new NotFoundException('Signed document is not available yet');
+    }
+    return new StreamableFile(stream, {
+      type: document.mimeType ?? DEFAULT_PDF_TYPE,
+      disposition: 'inline; filename="signed.pdf"',
+    });
   }
 
   @Get(':id/signed-file')
@@ -94,6 +137,27 @@ export class DocumentsController {
       throw new NotFoundException('Signed document is not available yet');
     }
     return result;
+  }
+
+  @Get(':id/p7s/content')
+  @Header('Cache-Control', 'private, no-store')
+  @ApiOperation({ summary: 'Stream the detached .p7s signature file through the API' })
+  @ApiParam({ name: 'id', description: 'Document UUID' })
+  @ApiResponse({ status: 200, description: '.p7s file bytes' })
+  @ApiResponse({ status: 404, description: '.p7s signature file is not available' })
+  async getP7sFileContent(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string,
+  ): Promise<StreamableFile> {
+    const document = await this.documentsService.findOne(id, tenantId);
+    const stream = await this.documentsService.getP7sFileStream(document);
+    if (stream === null) {
+      throw new NotFoundException('.p7s signature file is not available yet');
+    }
+    return new StreamableFile(stream, {
+      type: P7S_CONTENT_TYPE,
+      disposition: 'attachment; filename="signature.p7s"',
+    });
   }
 
   @Get(':id/p7s')

@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomUUID } from 'node:crypto';
+import type { Readable } from 'node:stream';
 import { In, Repository } from 'typeorm';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Document, DocumentStatus } from '../entities/document.entity';
@@ -323,9 +324,31 @@ export class DocumentsService {
     return this.storage.get(document.originalFileKey);
   }
 
+  async getOriginalFileStream(document: Document): Promise<Readable> {
+    if (document.originalFileKey === null) {
+      throw new NotFoundException('Document has no file uploaded yet');
+    }
+    return this.storage.getStream(document.originalFileKey);
+  }
+
   async getFinalFile(document: Document): Promise<Buffer | null> {
     if (document.finalFileKey === null) return null;
     return this.storage.get(document.finalFileKey);
+  }
+
+  async getFinalFileStream(document: Document): Promise<Readable | null> {
+    if (document.finalFileKey === null) return null;
+    return this.storage.getStream(document.finalFileKey);
+  }
+
+  async getP7sFile(document: Document): Promise<Buffer | null> {
+    if (document.p7sFileKey === null) return null;
+    return this.storage.get(document.p7sFileKey);
+  }
+
+  async getP7sFileStream(document: Document): Promise<Readable | null> {
+    if (document.p7sFileKey === null) return null;
+    return this.storage.getStream(document.p7sFileKey);
   }
 
   async getOriginalFileUrl(

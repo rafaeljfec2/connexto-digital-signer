@@ -4,6 +4,7 @@ import { BadRequestException, Injectable, Logger, NotFoundException } from '@nes
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { randomBytes } from 'node:crypto';
+import type { Readable } from 'node:stream';
 import type { FindOptionsWhere } from 'typeorm';
 import { Repository } from 'typeorm';
 import { PdfService } from '../../../shared/pdf/pdf.service';
@@ -323,58 +324,44 @@ export class SignaturesService {
     }
   }
 
-  async getSignerPdf(accessToken: string, documentId?: string): Promise<Buffer> {
-    const signer = await this.findByToken(accessToken);
-    const documents = await this.documentsService.findByEnvelope(signer.envelopeId, signer.tenantId);
-
-    const target = documentId
-      ? documents.find((d) => d.id === documentId)
-      : documents[0];
-
-    if (!target) {
-      throw new NotFoundException('Document not found in this envelope');
-    }
-
-    return this.documentsService.getOriginalFile(target);
+  async getSignerPdfContent(
+    accessToken: string,
+    documentId?: string,
+  ): Promise<{ readonly stream: Readable; readonly mimeType: string | null }> {
+    const target = await this.resolveSignerDocument(accessToken, documentId);
+    const stream = await this.documentsService.getOriginalFileStream(target);
+    return { stream, mimeType: target.mimeType };
   }
 
   async getSignerPdfUrl(
     accessToken: string,
     documentId?: string,
   ): Promise<{ url: string; mimeType: string | null; expiresIn: number }> {
-    const signer = await this.findByToken(accessToken);
-    const documents = await this.documentsService.findByEnvelope(signer.envelopeId, signer.tenantId);
-
-    const target = documentId
-      ? documents.find((d) => d.id === documentId)
-      : documents[0];
-
-    if (!target) {
-      throw new NotFoundException('Document not found in this envelope');
-    }
-
+    const target = await this.resolveSignerDocument(accessToken, documentId);
     return this.documentsService.getOriginalFileUrl(target);
   }
 
-  async getSignerSignedPdf(accessToken: string, documentId?: string): Promise<Buffer | null> {
-    const signer = await this.findByToken(accessToken);
-    const documents = await this.documentsService.findByEnvelope(signer.envelopeId, signer.tenantId);
-
-    const target = documentId
-      ? documents.find((d) => d.id === documentId)
-      : documents[0];
-
-    if (!target) {
-      throw new NotFoundException('Document not found in this envelope');
+  async getSignerSignedPdfContent(
+    accessToken: string,
+    documentId?: string,
+  ): Promise<{ readonly stream: Readable; readonly mimeType: string | null } | null> {
+    const target = await this.resolveSignerDocument(accessToken, documentId);
+    const stream = await this.documentsService.getFinalFileStream(target);
+    if (stream === null) {
+      return null;
     }
-
-    return this.documentsService.getFinalFile(target);
+    return { stream, mimeType: target.mimeType };
   }
 
   async getSignerSignedPdfUrl(
     accessToken: string,
     documentId?: string,
   ): Promise<{ url: string; expiresIn: number } | null> {
+    const target = await this.resolveSignerDocument(accessToken, documentId);
+    return this.documentsService.getFinalFileUrl(target);
+  }
+
+  private async resolveSignerDocument(accessToken: string, documentId?: string) {
     const signer = await this.findByToken(accessToken);
     const documents = await this.documentsService.findByEnvelope(signer.envelopeId, signer.tenantId);
 
@@ -386,7 +373,7 @@ export class SignaturesService {
       throw new NotFoundException('Document not found in this envelope');
     }
 
-    return this.documentsService.getFinalFileUrl(target);
+    return target;
   }
 
   async getSignerFields(accessToken: string, documentId?: string) {

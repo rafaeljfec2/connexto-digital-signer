@@ -16,11 +16,12 @@ import { useRouter, Link } from '@/i18n/navigation';
 import { Button, Card } from '@/shared/ui';
 import { FadeIn } from '@/shared/animations';
 import type { SignerWithEnvelope } from '@/features/signing/api';
-import { getSignerByToken, getSignerPdfUrl, getSignerSignedPdfUrl } from '@/features/signing/api';
-
-function openDownloadUrl(url: string): void {
-  window.open(url, '_blank', 'noopener,noreferrer');
-}
+import {
+  fetchSignerPdfContent,
+  fetchSignerSignedPdfContent,
+  getSignerByToken,
+} from '@/features/signing/api';
+import { downloadBlob, fileDownloadName, isNotFoundError } from '@/shared/utils/blob-download';
 
 type DocumentInfo = SignerWithEnvelope['documents'][number];
 
@@ -44,24 +45,26 @@ function DocumentDownloadItem({ token, doc, signedAvailable, labels }: DocumentD
   const handleDownloadOriginal = useCallback(async () => {
     setDownloadingOriginal(true);
     try {
-      const result = await getSignerPdfUrl(token, doc.id);
-      openDownloadUrl(result.url);
+      const blob = await fetchSignerPdfContent(token, doc.id);
+      downloadBlob(blob, `${fileDownloadName(doc.title, 'document')}.pdf`);
     } finally {
       setDownloadingOriginal(false);
     }
-  }, [token, doc.id]);
+  }, [token, doc.id, doc.title]);
 
   const handleDownloadSigned = useCallback(async () => {
     setDownloadingSigned(true);
     try {
-      const result = await getSignerSignedPdfUrl(token, doc.id);
-      if (result) {
-        openDownloadUrl(result.url);
+      const blob = await fetchSignerSignedPdfContent(token, doc.id);
+      downloadBlob(blob, `${fileDownloadName(doc.title, 'document')}-signed.pdf`);
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        throw error;
       }
     } finally {
       setDownloadingSigned(false);
     }
-  }, [token, doc.id]);
+  }, [token, doc.id, doc.title]);
 
   return (
     <div className="space-y-2">

@@ -52,6 +52,7 @@ describe('DocumentsService', () => {
     storage = {
       put: jest.fn(),
       get: jest.fn(),
+      getStream: jest.fn(),
       delete: jest.fn(),
       getSignedUrl: jest.fn(),
     } as unknown as jest.Mocked<S3StorageService>;
@@ -359,6 +360,22 @@ describe('DocumentsService', () => {
     });
   });
 
+  describe('getOriginalFileStream', () => {
+    test('should return readable stream from storage', async () => {
+      const document = buildDocument({ originalFileKey: 'origin.pdf' });
+      const stream = { pipe: jest.fn() } as unknown as import('node:stream').Readable;
+      storage.getStream.mockResolvedValue(stream);
+
+      await expect(service.getOriginalFileStream(document)).resolves.toBe(stream);
+      expect(storage.getStream).toHaveBeenCalledWith('origin.pdf');
+    });
+
+    test('should throw NotFoundException when originalFileKey is null', async () => {
+      const document = buildDocument({ originalFileKey: null });
+      await expect(service.getOriginalFileStream(document)).rejects.toThrow(NotFoundException);
+    });
+  });
+
   describe('getFinalFile', () => {
     test('should return null when finalFileKey is null', async () => {
       const document = buildDocument({ finalFileKey: null });
@@ -372,6 +389,22 @@ describe('DocumentsService', () => {
 
       await expect(service.getFinalFile(document)).resolves.toEqual(buffer);
       expect(storage.get).toHaveBeenCalledWith('final.pdf');
+    });
+  });
+
+  describe('getFinalFileStream', () => {
+    test('should return null when finalFileKey is null', async () => {
+      const document = buildDocument({ finalFileKey: null });
+      await expect(service.getFinalFileStream(document)).resolves.toBeNull();
+    });
+
+    test('should return stream when finalFileKey exists', async () => {
+      const document = buildDocument({ finalFileKey: 'final.pdf' });
+      const stream = { pipe: jest.fn() } as unknown as import('node:stream').Readable;
+      storage.getStream.mockResolvedValue(stream);
+
+      await expect(service.getFinalFileStream(document)).resolves.toBe(stream);
+      expect(storage.getStream).toHaveBeenCalledWith('final.pdf');
     });
   });
 
@@ -410,6 +443,38 @@ describe('DocumentsService', () => {
       expect(result!.url).toBe('https://s3.example.com/signed');
       expect(result!.expiresIn).toBe(300);
       expect(storage.getSignedUrl).toHaveBeenCalledWith('signed.pdf', 300, { disposition: 'attachment' });
+    });
+  });
+
+  describe('getP7sFile', () => {
+    test('should return null when p7sFileKey is null', async () => {
+      const document = buildDocument({ p7sFileKey: null });
+      await expect(service.getP7sFile(document)).resolves.toBeNull();
+    });
+
+    test('should return buffer when p7sFileKey exists', async () => {
+      const document = buildDocument({ p7sFileKey: 'signature.p7s' });
+      const buffer = Buffer.from('p7s');
+      storage.get.mockResolvedValue(buffer);
+
+      await expect(service.getP7sFile(document)).resolves.toEqual(buffer);
+      expect(storage.get).toHaveBeenCalledWith('signature.p7s');
+    });
+  });
+
+  describe('getP7sFileStream', () => {
+    test('should return null when p7sFileKey is null', async () => {
+      const document = buildDocument({ p7sFileKey: null });
+      await expect(service.getP7sFileStream(document)).resolves.toBeNull();
+    });
+
+    test('should return stream when p7sFileKey exists', async () => {
+      const document = buildDocument({ p7sFileKey: 'signature.p7s' });
+      const stream = { pipe: jest.fn() } as unknown as import('node:stream').Readable;
+      storage.getStream.mockResolvedValue(stream);
+
+      await expect(service.getP7sFileStream(document)).resolves.toBe(stream);
+      expect(storage.getStream).toHaveBeenCalledWith('signature.p7s');
     });
   });
 

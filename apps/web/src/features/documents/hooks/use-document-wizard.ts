@@ -1,11 +1,12 @@
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   addSigner,
   batchUpdateFields,
   createDocument,
   deleteDocument,
+  fetchDocumentFileContent,
   getDocument,
-  getDocumentFileUrl,
   getEnvelope,
   getEnvelopeAuditSummary,
   listDocumentsByEnvelope,
@@ -27,6 +28,7 @@ import {
   type UpdateDocumentInput,
   type UpdateEnvelopeInput,
 } from '../api';
+import { createObjectUrl, revokeObjectUrl } from '@/shared/utils/blob-download';
 
 export const useDocument = (id: string) =>
   useQuery({
@@ -42,12 +44,33 @@ export const useEnvelope = (id: string) =>
     enabled: id.length > 0,
   });
 
-export const useDocumentFileUrl = (id: string) =>
-  useQuery({
-    queryKey: ['documents', 'file-url', id],
-    queryFn: () => getDocumentFileUrl(id),
+export const useDocumentFileUrl = (id: string) => {
+  const query = useQuery({
+    queryKey: ['documents', 'file-blob', id],
+    queryFn: () => fetchDocumentFileContent(id),
     enabled: id.length > 0,
+    staleTime: Infinity,
   });
+
+  const [objectUrl, setObjectUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!query.data) {
+      setObjectUrl(undefined);
+      return;
+    }
+    const url = createObjectUrl(query.data);
+    setObjectUrl(url);
+    return () => {
+      revokeObjectUrl(url);
+    };
+  }, [query.data]);
+
+  return {
+    ...query,
+    data: objectUrl,
+  };
+};
 
 export const useSigners = (envelopeId: string) =>
   useQuery({

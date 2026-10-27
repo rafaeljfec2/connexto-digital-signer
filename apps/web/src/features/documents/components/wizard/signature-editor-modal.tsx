@@ -80,7 +80,7 @@ export function SignatureEditorModal({ envelopeId, documentId, documents, onClos
     };
   }, []);
 
-  const fileUrl = fileQuery.data?.url ?? '';
+  const fileUrl = fileQuery.data ?? '';
 
   const signerColors = useMemo(() => {
     const palette = ['#2563EB', '#16A34A', '#F97316', '#7C3AED', '#DC2626', '#0EA5E9'];

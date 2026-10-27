@@ -6,8 +6,9 @@ import { useTranslations } from 'next-intl';
 import { AlertTriangle } from 'lucide-react';
 import { Card } from '@/shared/ui';
 import { useSignerData, useSignerSummary } from '@/features/signing/hooks';
-import { getSignerPdfUrl, getSignerSignedPdfUrl } from '@/features/signing/api';
+import { fetchSignerPdfContent, fetchSignerSignedPdfContent } from '@/features/signing/api';
 import { lazyLoad } from '@/shared/utils/lazy-load';
+import { downloadBlob, fileDownloadName, isNotFoundError } from '@/shared/utils/blob-download';
 
 const DocumentAuditView = lazyLoad(
   () => import('@/features/documents/components/document-audit-view'),
@@ -58,8 +59,28 @@ export default function SignerSummaryPage() {
         data={summaryQuery.data}
         documents={documents}
         privacyMode="public"
-        onDownloadOriginal={(documentId) => getSignerPdfUrl(token, documentId)}
-        onDownloadSigned={(documentId) => getSignerSignedPdfUrl(token, documentId)}
+        onDownloadOriginal={async (documentId) => {
+          const blob = await fetchSignerPdfContent(token, documentId);
+          const title = fileDownloadName(
+            documents.find((doc) => doc.id === documentId)?.title,
+            'document',
+          );
+          downloadBlob(blob, `${title}.pdf`);
+        }}
+        onDownloadSigned={async (documentId) => {
+          try {
+            const blob = await fetchSignerSignedPdfContent(token, documentId);
+            const title = fileDownloadName(
+              documents.find((doc) => doc.id === documentId)?.title,
+              'document',
+            );
+            downloadBlob(blob, `${title}-signed.pdf`);
+          } catch (error) {
+            if (!isNotFoundError(error)) {
+              throw error;
+            }
+          }
+        }}
         labels={{
           title: t('title'),
           documentDetails: t('documentDetails'),

@@ -134,7 +134,7 @@ export default function SignerDocumentPage() {
     setStepInitialized(true);
   }, [signerData, requiresIdentify, stepInitialized]);
 
-  const fileUrl = pdfQuery.data?.url ?? '';
+  const fileUrl = pdfQuery.data ?? '';
 
   const handleFieldClick = useCallback(
     (fieldId: string) => {

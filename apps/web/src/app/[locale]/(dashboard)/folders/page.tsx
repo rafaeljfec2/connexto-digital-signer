@@ -20,12 +20,17 @@ import {
   useMoveEnvelopeToFolder,
 } from '@/features/documents/hooks/use-folders';
 import { useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/use-documents';
-import { getDocumentFileUrl, getDocumentSignedFileUrl, getEnvelopeAuditSummary } from '@/features/documents/api';
+import {
+  fetchDocumentFileContent,
+  fetchDocumentSignedFileContent,
+  getEnvelopeAuditSummary,
+} from '@/features/documents/api';
 import type { DocumentStatus, EnvelopeSummary, FolderTreeNode } from '@/features/documents/api';
 import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
 import { Button, Card, ConfirmDialog, Pagination, Skeleton } from '@/shared/ui';
 import { FadeIn, PageTransition } from '@/shared/animations';
 import { useRouter } from '@/i18n/navigation';
+import { downloadBlob, fileDownloadName, isNotFoundError } from '@/shared/utils/blob-download';
 import {
   FileText,
   Folder as FolderIcon,
@@ -48,10 +53,6 @@ function findSubfolders(
     return null;
   }
   return search(tree) ?? [];
-}
-
-function openDownloadUrl(url: string) {
-  window.open(url, '_blank', 'noopener,noreferrer');
 }
 
 type FolderModalState =
@@ -154,14 +155,20 @@ export default function FoldersPage() {
 
   const handleDownloadOriginal = useCallback(async (env: EnvelopeSummary) => {
     const summary = await getEnvelopeAuditSummary(env.id);
-    const result = await getDocumentFileUrl(summary.document.id);
-    openDownloadUrl(result.url);
+    const blob = await fetchDocumentFileContent(summary.document.id);
+    downloadBlob(blob, `${fileDownloadName(summary.document.title, 'document')}.pdf`);
   }, []);
 
   const handleDownloadSigned = useCallback(async (env: EnvelopeSummary) => {
     const summary = await getEnvelopeAuditSummary(env.id);
-    const result = await getDocumentSignedFileUrl(summary.document.id);
-    if (result) openDownloadUrl(result.url);
+    try {
+      const blob = await fetchDocumentSignedFileContent(summary.document.id);
+      downloadBlob(blob, `${fileDownloadName(summary.document.title, 'document')}-signed.pdf`);
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        throw error;
+      }
+    }
   }, []);
 
   const handleCreate = useCallback((name: string) => {

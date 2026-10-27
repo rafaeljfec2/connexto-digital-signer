@@ -56,7 +56,7 @@ export function PdfPreviewModal({
     selectedDocId,
   );
 
-  const fileUrl = pdfQuery.data?.url ?? '';
+  const fileUrl = pdfQuery.data ?? '';
 
   const selectedFields = useMemo(
     () =>

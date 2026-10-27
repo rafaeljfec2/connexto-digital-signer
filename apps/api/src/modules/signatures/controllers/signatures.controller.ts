@@ -1,6 +1,7 @@
 import {
   Controller,
   Get,
+  Header,
   Post,
   Patch,
   Body,
@@ -11,6 +12,7 @@ import {
   NotFoundException,
   ParseUUIDPipe,
   Query,
+  StreamableFile,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Throttle } from '@nestjs/throttler';
@@ -32,6 +34,8 @@ import { BatchUpdateFieldsDto } from '../dto/batch-update-fields.dto';
 import { SendDocumentDto } from '../dto/send-document.dto';
 import { publicThrottle } from '../../../common/config/throttle.config';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
+
+const DEFAULT_PDF_TYPE = 'application/pdf';
 
 function getClientIp(
   req: RequestWithHeaders & { ip?: string; socket?: { remoteAddress?: string }; connection?: { remoteAddress?: string } }
@@ -224,12 +228,52 @@ export class SignController {
 
   @Public()
   @Throttle(publicThrottle)
+  @Get(':token/pdf/content')
+  @Header('Cache-Control', 'private, no-store')
+  @ApiOperation({ summary: 'Stream the original PDF for a signing token' })
+  @ApiParam({ name: 'token', description: 'Signing token' })
+  @ApiResponse({ status: 200, description: 'Original PDF bytes' })
+  async getSignerPdfContent(
+    @Param('token') token: string,
+    @Query('documentId') documentId: string | undefined,
+  ): Promise<StreamableFile> {
+    const result = await this.signaturesService.getSignerPdfContent(token, documentId);
+    return new StreamableFile(result.stream, {
+      type: result.mimeType ?? DEFAULT_PDF_TYPE,
+      disposition: 'inline; filename="original.pdf"',
+    });
+  }
+
+  @Public()
+  @Throttle(publicThrottle)
   @Get(':token/pdf')
   async getSignerPdf(
     @Param('token') token: string,
     @Query('documentId') documentId: string | undefined,
   ) {
     return this.signaturesService.getSignerPdfUrl(token, documentId);
+  }
+
+  @Public()
+  @Throttle(publicThrottle)
+  @Get(':token/signed-pdf/content')
+  @Header('Cache-Control', 'private, no-store')
+  @ApiOperation({ summary: 'Stream the signed PDF for a signing token' })
+  @ApiParam({ name: 'token', description: 'Signing token' })
+  @ApiResponse({ status: 200, description: 'Signed PDF bytes' })
+  @ApiResponse({ status: 404, description: 'Signed document not available' })
+  async getSignerSignedPdfContent(
+    @Param('token') token: string,
+    @Query('documentId') documentId: string | undefined,
+  ): Promise<StreamableFile> {
+    const result = await this.signaturesService.getSignerSignedPdfContent(token, documentId);
+    if (result === null) {
+      throw new NotFoundException('Signed document is not available yet');
+    }
+    return new StreamableFile(result.stream, {
+      type: result.mimeType ?? DEFAULT_PDF_TYPE,
+      disposition: 'inline; filename="signed.pdf"',
+    });
   }
 
   @Public()

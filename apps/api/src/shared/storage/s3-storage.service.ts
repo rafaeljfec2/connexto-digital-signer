@@ -11,6 +11,33 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import type { SignedUrlOptions } from '@connexto/shared';
 import { IStorageService, PutObjectResult } from '@connexto/shared';
+import { Readable } from 'node:stream';
+import type { ReadableStream as NodeWebReadableStream } from 'node:stream/web';
+
+type WebStreamBody = {
+  readonly transformToWebStream: () => NodeWebReadableStream;
+};
+
+const isWebStreamBody = (body: object): body is WebStreamBody =>
+  'transformToWebStream' in body &&
+  typeof (body as { transformToWebStream?: unknown }).transformToWebStream === 'function';
+
+const isAsyncIterableBody = (body: object): body is AsyncIterable<Uint8Array> =>
+  Symbol.asyncIterator in body &&
+  typeof (body as { [Symbol.asyncIterator]?: unknown })[Symbol.asyncIterator] === 'function';
+
+const toNodeReadable = (body: object): Readable => {
+  if (body instanceof Readable) {
+    return body;
+  }
+  if (isWebStreamBody(body)) {
+    return Readable.fromWeb(body.transformToWebStream());
+  }
+  if (isAsyncIterableBody(body)) {
+    return Readable.from(body);
+  }
+  throw new Error('Unsupported S3 response body type');
+};
 
 @Injectable()
 export class S3StorageService implements IStorageService {
@@ -61,15 +88,22 @@ export class S3StorageService implements IStorageService {
   }
 
   async get(key: string): Promise<Buffer> {
-    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
-    const response = await this.client.send(command);
-    const stream = response.Body;
-    if (stream === undefined) throw new Error('Empty response body');
+    const stream = await this.getStream(key);
     const chunks: Uint8Array[] = [];
-    for await (const chunk of stream as AsyncIterable<Uint8Array>) {
-      chunks.push(chunk);
+    for await (const chunk of stream) {
+      chunks.push(typeof chunk === 'string' ? Buffer.from(chunk) : chunk);
     }
     return Buffer.concat(chunks);
+  }
+
+  async getStream(key: string): Promise<Readable> {
+    const command = new GetObjectCommand({ Bucket: this.bucket, Key: key });
+    const response = await this.client.send(command);
+    const body = response.Body;
+    if (body === undefined || body === null) {
+      throw new Error('Empty response body');
+    }
+    return toNodeReadable(body);
   }
 
   async delete(key: string): Promise<void> {

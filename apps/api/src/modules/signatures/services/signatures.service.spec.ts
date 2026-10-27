@@ -110,7 +110,10 @@ describe('SignaturesService', () => {
       findOne: jest.fn(),
       findByEnvelope: jest.fn().mockResolvedValue([buildDocument()]),
       getOriginalFile: jest.fn(),
+      getOriginalFileStream: jest.fn(),
       getOriginalFileUrl: jest.fn().mockResolvedValue({ url: 'https://s3.example.com/file', mimeType: 'application/pdf', expiresIn: 300 }),
+      getFinalFile: jest.fn(),
+      getFinalFileStream: jest.fn(),
       getFinalFileUrl: jest.fn().mockResolvedValue({ url: 'https://s3.example.com/signed', expiresIn: 300 }),
       setFinalPdf: jest.fn(),
       setStatus: jest.fn(),
@@ -204,6 +207,56 @@ describe('SignaturesService', () => {
       const signer = buildSigner();
       (signerRepository.findOne as jest.Mock).mockResolvedValue(signer);
       await expect(service.findByToken('token-x')).resolves.toEqual(signer);
+    });
+  });
+
+  describe('getSignerPdfContent', () => {
+    test('should return original file stream and mime type', async () => {
+      const signer = buildSigner();
+      const document = buildDocument({ mimeType: 'application/pdf' });
+      const stream = { pipe: jest.fn() } as unknown as import('node:stream').Readable;
+      jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
+      documentsService.findByEnvelope.mockResolvedValue([document]);
+      documentsService.getOriginalFileStream.mockResolvedValue(stream);
+
+      await expect(service.getSignerPdfContent('token-1')).resolves.toEqual({
+        stream,
+        mimeType: 'application/pdf',
+      });
+    });
+
+    test('should throw NotFoundException when document is missing', async () => {
+      const signer = buildSigner();
+      jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
+      documentsService.findByEnvelope.mockResolvedValue([]);
+
+      await expect(service.getSignerPdfContent('token-1')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getSignerSignedPdfContent', () => {
+    test('should return null when signed file is missing', async () => {
+      const signer = buildSigner();
+      const document = buildDocument({ finalFileKey: null });
+      jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
+      documentsService.findByEnvelope.mockResolvedValue([document]);
+      documentsService.getFinalFileStream.mockResolvedValue(null);
+
+      await expect(service.getSignerSignedPdfContent('token-1')).resolves.toBeNull();
+    });
+
+    test('should return signed file stream when available', async () => {
+      const signer = buildSigner();
+      const document = buildDocument({ finalFileKey: 'signed.pdf', mimeType: 'application/pdf' });
+      const stream = { pipe: jest.fn() } as unknown as import('node:stream').Readable;
+      jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
+      documentsService.findByEnvelope.mockResolvedValue([document]);
+      documentsService.getFinalFileStream.mockResolvedValue(stream);
+
+      await expect(service.getSignerSignedPdfContent('token-1')).resolves.toEqual({
+        stream,
+        mimeType: 'application/pdf',
+      });
     });
   });
 

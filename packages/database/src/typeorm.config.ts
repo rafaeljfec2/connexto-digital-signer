@@ -1,12 +1,14 @@
 import { DataSource, DataSourceOptions, EntitySchema } from 'typeorm';
 
+type EntityClass = abstract new (...args: never[]) => object;
+
 export interface TypeOrmConfigOptions {
   host: string;
   port: number;
   username: string;
   password: string;
   database: string;
-  entities: (Function | EntitySchema)[];
+  entities: Array<EntityClass | EntitySchema>;
   migrations?: string[];
   synchronize?: boolean;
   logging?: boolean;

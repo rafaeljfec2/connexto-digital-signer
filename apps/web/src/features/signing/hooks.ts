@@ -2,7 +2,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { useEffect, useRef, useState } from 'react';
 import {
   getSignerByToken,
-  getSignerPdfUrl,
+  fetchSignerPdfContent,
   getSignerFields,
   acceptSignature,
   identifySigner,
@@ -11,6 +11,7 @@ import {
   getSignerSummary,
 } from './api';
 import type { AcceptSignatureInput, IdentifySignerInput } from './api';
+import { createObjectUrl, revokeObjectUrl } from '@/shared/utils/blob-download';
 
 type Geolocation = { readonly latitude: number; readonly longitude: number };
 
@@ -48,13 +49,34 @@ export const useSignerData = (token: string) =>
     retry: false,
   });
 
-export const useSignerPdfUrl = (token: string, documentId?: string) =>
-  useQuery({
-    queryKey: ['signer-pdf-url', token, documentId],
-    queryFn: () => getSignerPdfUrl(token, documentId),
+export const useSignerPdfUrl = (token: string, documentId?: string) => {
+  const query = useQuery({
+    queryKey: ['signer-pdf-blob', token, documentId],
+    queryFn: () => fetchSignerPdfContent(token, documentId),
     enabled: token.length > 0 && (documentId === undefined || documentId.length > 0),
     retry: false,
+    staleTime: Infinity,
   });
+
+  const [objectUrl, setObjectUrl] = useState<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!query.data) {
+      setObjectUrl(undefined);
+      return;
+    }
+    const url = createObjectUrl(query.data);
+    setObjectUrl(url);
+    return () => {
+      revokeObjectUrl(url);
+    };
+  }, [query.data]);
+
+  return {
+    ...query,
+    data: objectUrl,
+  };
+};
 
 export const useSignerFields = (token: string) =>
   useQuery({

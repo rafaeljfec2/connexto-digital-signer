@@ -14,9 +14,9 @@ import { SignerTrackingPanel } from '@/features/documents/components/signer-trac
 import { useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/use-documents';
 import { useFolderTree, useMoveEnvelopeToFolder } from '@/features/documents/hooks/use-folders';
 import {
-  getDocumentFileUrl,
-  getDocumentP7sFileUrl,
-  getDocumentSignedFileUrl,
+  fetchDocumentFileContent,
+  fetchDocumentP7sFileContent,
+  fetchDocumentSignedFileContent,
   listDocumentsByEnvelope,
 } from '@/features/documents/api';
 import type { DocumentStatus, EnvelopeSummary, FolderTreeNode } from '@/features/documents/api';
@@ -24,11 +24,8 @@ import type { DocumentActionLabels } from '@/features/documents/components/docum
 import { Button, Card, ConfirmDialog, Dialog, Pagination, Select, Skeleton } from '@/shared/ui';
 import { FadeIn, PageTransition } from '@/shared/animations';
 import { useRouter } from '@/i18n/navigation';
+import { downloadBlob, fileDownloadName, isNotFoundError } from '@/shared/utils/blob-download';
 import { LayoutGrid, List, Plus, Search } from 'lucide-react';
-
-function openDownloadUrl(url: string) {
-  window.open(url, '_blank', 'noopener,noreferrer');
-}
 
 function buildFolderNameMap(tree: readonly FolderTreeNode[]): Map<string, string> {
   const map = new Map<string, string>();
@@ -154,24 +151,36 @@ function DocumentsPageContent() {
     const documents = await listDocumentsByEnvelope(env.id);
     const firstDocument = documents[0];
     if (!firstDocument) return;
-    const result = await getDocumentFileUrl(firstDocument.id);
-    openDownloadUrl(result.url);
+    const blob = await fetchDocumentFileContent(firstDocument.id);
+    downloadBlob(blob, `${fileDownloadName(firstDocument.title, 'document')}.pdf`);
   }, []);
 
   const handleDownloadSigned = useCallback(async (env: EnvelopeSummary) => {
     const documents = await listDocumentsByEnvelope(env.id);
     const firstDocument = documents[0];
     if (!firstDocument) return;
-    const result = await getDocumentSignedFileUrl(firstDocument.id);
-    if (result) openDownloadUrl(result.url);
+    try {
+      const blob = await fetchDocumentSignedFileContent(firstDocument.id);
+      downloadBlob(blob, `${fileDownloadName(firstDocument.title, 'document')}-signed.pdf`);
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        throw error;
+      }
+    }
   }, []);
 
   const handleDownloadP7s = useCallback(async (env: EnvelopeSummary) => {
     const documents = await listDocumentsByEnvelope(env.id);
     const firstDocument = documents[0];
     if (!firstDocument) return;
-    const result = await getDocumentP7sFileUrl(firstDocument.id);
-    if (result) openDownloadUrl(result.url);
+    try {
+      const blob = await fetchDocumentP7sFileContent(firstDocument.id);
+      downloadBlob(blob, `${fileDownloadName(firstDocument.title, 'document')}.p7s`);
+    } catch (error) {
+      if (!isNotFoundError(error)) {
+        throw error;
+      }
+    }
   }, []);
 
   const handleConfirmDelete = useCallback(() => {

@@ -119,6 +119,30 @@ export const getSignerPdfUrl = async (
   return response.data;
 };
 
+export const fetchSignerPdfContent = async (
+  token: string,
+  documentId?: string,
+): Promise<Blob> => {
+  const params = documentId ? { documentId } : {};
+  const response = await publicClient.get<Blob>(`/sign/${token}/pdf/content`, {
+    params,
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
+export const fetchSignerSignedPdfContent = async (
+  token: string,
+  documentId?: string,
+): Promise<Blob> => {
+  const params = documentId ? { documentId } : {};
+  const response = await publicClient.get<Blob>(`/sign/${token}/signed-pdf/content`, {
+    params,
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
 export const getSignerFields = async (
   token: string,
   documentId?: string,

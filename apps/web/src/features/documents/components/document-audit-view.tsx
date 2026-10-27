@@ -24,10 +24,6 @@ import type { LucideIcon } from 'lucide-react';
 import { useCallback, useState } from 'react';
 import type { DocumentAuditSummary } from '../api';
 
-function openDownloadUrl(url: string): void {
-  window.open(url, '_blank', 'noopener,noreferrer');
-}
-
 type AuditDocumentItem = Readonly<{
   id: string;
   title: string;
@@ -37,9 +33,9 @@ type DocumentAuditViewProps = Readonly<{
   data: DocumentAuditSummary;
   documents?: readonly AuditDocumentItem[];
   privacyMode?: 'public' | 'private';
-  onDownloadOriginal: (documentId?: string) => Promise<{ url: string }>;
-  onDownloadSigned: (documentId?: string) => Promise<{ url: string } | null>;
-  onDownloadP7s?: (documentId?: string) => Promise<{ url: string } | null>;
+  onDownloadOriginal: (documentId?: string) => Promise<void>;
+  onDownloadSigned: (documentId?: string) => Promise<void>;
+  onDownloadP7s?: (documentId?: string) => Promise<void>;
   labels: Readonly<{
     title: string;
     documentDetails: string;
@@ -197,9 +193,9 @@ function SingleDocDownload({
 }: Readonly<{
   documentId?: string;
   isCompleted: boolean;
-  onDownloadOriginal: (documentId?: string) => Promise<{ url: string }>;
-  onDownloadSigned: (documentId?: string) => Promise<{ url: string } | null>;
-  onDownloadP7s?: (documentId?: string) => Promise<{ url: string } | null>;
+  onDownloadOriginal: (documentId?: string) => Promise<void>;
+  onDownloadSigned: (documentId?: string) => Promise<void>;
+  onDownloadP7s?: (documentId?: string) => Promise<void>;
   labels: Readonly<{
     downloadOriginal: string;
     downloadOriginalDesc: string;
@@ -217,8 +213,7 @@ function SingleDocDownload({
   const handleDownloadOriginal = useCallback(async () => {
     setDownloadingOriginal(true);
     try {
-      const result = await onDownloadOriginal(documentId);
-      openDownloadUrl(result.url);
+      await onDownloadOriginal(documentId);
     } finally {
       setDownloadingOriginal(false);
     }
@@ -227,10 +222,7 @@ function SingleDocDownload({
   const handleDownloadSigned = useCallback(async () => {
     setDownloadingSigned(true);
     try {
-      const result = await onDownloadSigned(documentId);
-      if (result) {
-        openDownloadUrl(result.url);
-      }
+      await onDownloadSigned(documentId);
     } finally {
       setDownloadingSigned(false);
     }
@@ -240,10 +232,7 @@ function SingleDocDownload({
     if (!onDownloadP7s) return;
     setDownloadingP7s(true);
     try {
-      const result = await onDownloadP7s(documentId);
-      if (result) {
-        openDownloadUrl(result.url);
-      }
+      await onDownloadP7s(documentId);
     } finally {
       setDownloadingP7s(false);
     }

@@ -370,6 +370,27 @@ export const getDocumentFileUrl = async (id: string): Promise<PresignedFileUrl> 
   return response.data;
 };
 
+export const fetchDocumentFileContent = async (id: string): Promise<Blob> => {
+  const response = await apiClient.get<Blob>(`/documents/${id}/file/content`, {
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
+export const fetchDocumentSignedFileContent = async (id: string): Promise<Blob> => {
+  const response = await apiClient.get<Blob>(`/documents/${id}/signed-file/content`, {
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
+export const fetchDocumentP7sFileContent = async (id: string): Promise<Blob> => {
+  const response = await apiClient.get<Blob>(`/documents/${id}/p7s/content`, {
+    responseType: 'blob',
+  });
+  return response.data;
+};
+
 export const uploadDocumentFile = async (
   documentId: string,
   file: File

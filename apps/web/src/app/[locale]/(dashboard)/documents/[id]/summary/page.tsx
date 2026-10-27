@@ -6,8 +6,13 @@ import { useTranslations } from 'next-intl';
 import { AlertTriangle, LayoutTemplate } from 'lucide-react';
 import { Button, Card } from '@/shared/ui';
 import { useEnvelopeAuditSummary, useEnvelopeDocuments } from '@/features/documents/hooks/use-document-wizard';
-import { getDocumentFileUrl, getDocumentP7sFileUrl, getDocumentSignedFileUrl } from '@/features/documents/api';
+import {
+  fetchDocumentFileContent,
+  fetchDocumentP7sFileContent,
+  fetchDocumentSignedFileContent,
+} from '@/features/documents/api';
 import { lazyLoad } from '@/shared/utils/lazy-load';
+import { downloadBlob, fileDownloadName, isNotFoundError } from '@/shared/utils/blob-download';
 import { SaveAsTemplateDialog } from '@/features/templates/components/save-as-template-dialog';
 
 const DocumentAuditView = lazyLoad(
@@ -76,9 +81,48 @@ export default function DocumentSummaryPage() {
         data={summaryQuery.data}
         documents={documents}
         privacyMode="private"
-        onDownloadOriginal={(documentId) => getDocumentFileUrl(documentId ?? documents[0]?.id ?? envelopeId)}
-        onDownloadSigned={(documentId) => getDocumentSignedFileUrl(documentId ?? documents[0]?.id ?? envelopeId)}
-        onDownloadP7s={(documentId) => getDocumentP7sFileUrl(documentId ?? documents[0]?.id ?? envelopeId)}
+        onDownloadOriginal={async (documentId) => {
+          const id = documentId ?? documents[0]?.id;
+          if (!id) return;
+          const title = fileDownloadName(
+            documents.find((doc) => doc.id === id)?.title,
+            'document',
+          );
+          const blob = await fetchDocumentFileContent(id);
+          downloadBlob(blob, `${title}.pdf`);
+        }}
+        onDownloadSigned={async (documentId) => {
+          const id = documentId ?? documents[0]?.id;
+          if (!id) return;
+          const title = fileDownloadName(
+            documents.find((doc) => doc.id === id)?.title,
+            'document',
+          );
+          try {
+            const blob = await fetchDocumentSignedFileContent(id);
+            downloadBlob(blob, `${title}-signed.pdf`);
+          } catch (error) {
+            if (!isNotFoundError(error)) {
+              throw error;
+            }
+          }
+        }}
+        onDownloadP7s={async (documentId) => {
+          const id = documentId ?? documents[0]?.id;
+          if (!id) return;
+          const title = fileDownloadName(
+            documents.find((doc) => doc.id === id)?.title,
+            'document',
+          );
+          try {
+            const blob = await fetchDocumentP7sFileContent(id);
+            downloadBlob(blob, `${title}.p7s`);
+          } catch (error) {
+            if (!isNotFoundError(error)) {
+              throw error;
+            }
+          }
+        }}
         labels={{
           title: t('title'),
           documentDetails: t('documentDetails'),

@@ -1,3 +1,4 @@
+import { Readable } from 'node:stream';
 import { S3StorageService } from './s3-storage.service';
 import {
   S3Client,
@@ -189,11 +190,76 @@ describe('S3StorageService', () => {
     expect(result.toString('utf-8')).toBe('ab');
   });
 
+  test('should return a Readable from AsyncIterable body', async () => {
+    const service = new S3StorageService();
+    sendMock.mockResolvedValue({
+      Body: asyncStream([Buffer.from('chunk-1'), Buffer.from('chunk-2')]),
+    });
+
+    const stream = await service.getStream('key');
+    expect(stream).toBeInstanceOf(Readable);
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+
+    expect(GetObjectCommand).toHaveBeenCalledWith({ Bucket: 'documents', Key: 'key' });
+    expect(Buffer.concat(chunks).toString('utf-8')).toBe('chunk-1chunk-2');
+  });
+
+  test('should return Node Readable body as-is', async () => {
+    const service = new S3StorageService();
+    const body = Readable.from([Buffer.from('direct')]);
+    sendMock.mockResolvedValue({ Body: body });
+
+    const stream = await service.getStream('key');
+
+    expect(stream).toBe(body);
+  });
+
+  test('should convert Web ReadableStream body via transformToWebStream', async () => {
+    const service = new S3StorageService();
+    const webStream = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode('web'));
+        controller.close();
+      },
+    });
+    sendMock.mockResolvedValue({
+      Body: {
+        transformToWebStream: () => webStream,
+      },
+    });
+
+    const stream = await service.getStream('key');
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+
+    expect(Buffer.concat(chunks).toString('utf-8')).toBe('web');
+  });
+
   test('should throw when response body is empty', async () => {
     const service = new S3StorageService();
     sendMock.mockResolvedValue({ Body: undefined });
 
     await expect(service.get('key')).rejects.toThrow('Empty response body');
+  });
+
+  test('should throw when getStream response body is empty', async () => {
+    const service = new S3StorageService();
+    sendMock.mockResolvedValue({ Body: undefined });
+
+    await expect(service.getStream('key')).rejects.toThrow('Empty response body');
+  });
+
+  test('should throw when getStream body type is unsupported', async () => {
+    const service = new S3StorageService();
+    sendMock.mockResolvedValue({ Body: {} });
+
+    await expect(service.getStream('key')).rejects.toThrow('Unsupported S3 response body type');
   });
 
   test('should delete object', async () => {
