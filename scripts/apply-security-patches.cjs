@@ -6,11 +6,13 @@
  * `pnpm.patchedDependencies` (and workspace patchedDependencies is not honored
  * by the active pnpm shim).
  *
+ * Uses a pure-JS unified-diff applicator so installs work on Vercel/Alpine
+ * without a system `patch` binary.
+ *
  * - node-forge@1.4.0: CVE-2026-85393 / GHSA-86w9-cpqp-85rv (digitalbazaar/forge#1152)
  * - picomatch@4.0.7: CVE-2026-112366 / GHSA-fc5q-39xc-vjpf (micromatch/picomatch#237)
  */
 
-const { execFileSync } = require('node:child_process');
 const fs = require('node:fs');
 const path = require('node:path');
 
@@ -67,15 +69,144 @@ function isAlreadyPatched(dir, relativeFile, marker) {
 }
 
 /**
+ * @param {string} patchContent
+ * @returns {Array<{ filePath: string; hunks: Array<{ oldStart: number; lines: string[] }> }>}
+ */
+function parseUnifiedDiff(patchContent) {
+  const normalized = patchContent.replace(/\r\n/g, '\n');
+  const files = [];
+  let current = null;
+
+  for (const line of normalized.split('\n')) {
+    if (line.startsWith('--- ')) {
+      current = { filePath: '', hunks: [] };
+      continue;
+    }
+    if (line.startsWith('+++ ') && current) {
+      const raw = line.slice(4).trim().split('\t')[0] ?? '';
+      current.filePath = raw.replace(/^[ab]\//, '');
+      files.push(current);
+      continue;
+    }
+    const hunkMatch = /^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(line);
+    if (hunkMatch && current) {
+      current.hunks.push({
+        oldStart: Number(hunkMatch[1]),
+        lines: [],
+      });
+      continue;
+    }
+    if (!current || current.hunks.length === 0) {
+      continue;
+    }
+    if (line.startsWith('+') || line.startsWith('-') || line.startsWith(' ') || line === '\\ No newline at end of file') {
+      current.hunks[current.hunks.length - 1].lines.push(line);
+    }
+  }
+
+  return files;
+}
+
+/**
+ * @param {string[]} originalLines
+ * @param {Array<{ oldStart: number; lines: string[] }>} hunks
+ * @returns {string[]}
+ */
+function applyHunks(originalLines, hunks) {
+  let result = [...originalLines];
+  let offset = 0;
+
+  for (const hunk of hunks) {
+    const oldLines = [];
+    const newLines = [];
+    for (const line of hunk.lines) {
+      if (line === '\\ No newline at end of file') {
+        continue;
+      }
+      const body = line.slice(1);
+      if (line.startsWith(' ') || line.startsWith('-')) {
+        oldLines.push(body);
+      }
+      if (line.startsWith(' ') || line.startsWith('+')) {
+        newLines.push(body);
+      }
+    }
+
+    const expectedStart = hunk.oldStart - 1 + offset;
+    let start = expectedStart;
+    const maxSearch = Math.min(result.length, expectedStart + 40);
+    let found = false;
+
+    for (let candidate = expectedStart; candidate <= maxSearch; candidate += 1) {
+      if (matchesAt(result, candidate, oldLines)) {
+        start = candidate;
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      for (let candidate = Math.max(0, expectedStart - 40); candidate < expectedStart; candidate += 1) {
+        if (matchesAt(result, candidate, oldLines)) {
+          start = candidate;
+          found = true;
+          break;
+        }
+      }
+    }
+    if (!found) {
+      throw new Error(`hunk at old line ${hunk.oldStart} did not match`);
+    }
+
+    result.splice(start, oldLines.length, ...newLines);
+    offset += newLines.length - oldLines.length;
+  }
+
+  return result;
+}
+
+/**
+ * @param {string[]} lines
+ * @param {number} start
+ * @param {string[]} expected
+ */
+function matchesAt(lines, start, expected) {
+  if (start < 0 || start + expected.length > lines.length) {
+    return false;
+  }
+  for (let i = 0; i < expected.length; i += 1) {
+    if (lines[start + i] !== expected[i]) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
  * @param {string} dir
  * @param {string} patchFile
  */
 function applyPatch(dir, patchFile) {
-  execFileSync(
-    'patch',
-    ['-p1', '--forward', '--batch', '--reject-file=-', '-i', patchFile],
-    { cwd: dir, stdio: ['ignore', 'pipe', 'pipe'] }
-  );
+  const patchContent = fs.readFileSync(patchFile, 'utf8');
+  const files = parseUnifiedDiff(patchContent);
+  if (files.length === 0) {
+    throw new Error('no file hunks found in patch');
+  }
+
+  for (const file of files) {
+    const targetPath = path.join(dir, file.filePath);
+    if (!fs.existsSync(targetPath)) {
+      throw new Error(`target missing: ${file.filePath}`);
+    }
+    const original = fs.readFileSync(targetPath, 'utf8');
+    const endsWithNewline = original.endsWith('\n');
+    const originalLines = original.split('\n');
+    if (endsWithNewline && originalLines[originalLines.length - 1] === '') {
+      originalLines.pop();
+    }
+    const updatedLines = applyHunks(originalLines, file.hunks);
+    const updated = `${updatedLines.join('\n')}${endsWithNewline ? '\n' : ''}`;
+    fs.writeFileSync(targetPath, updated, 'utf8');
+  }
 }
 
 let failures = 0;
