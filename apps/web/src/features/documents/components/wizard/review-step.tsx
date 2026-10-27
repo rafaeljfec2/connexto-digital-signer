@@ -170,21 +170,23 @@ export function ReviewStep({
           </Button>
         }
       >
-        <div className="space-y-4">
-          <div>
+        <div className="min-w-0 space-y-4 overflow-hidden">
+          <div className="min-w-0">
             <p className="text-xs font-normal uppercase tracking-wide text-foreground-subtle">
               {tReview('previewSubject')}
             </p>
-            <div className="mt-1.5 flex items-center gap-2 rounded-lg border border-th-border bg-th-hover px-3 py-2">
+            <div className="mt-1.5 flex min-w-0 items-center gap-2 rounded-lg border border-th-border bg-th-hover px-3 py-2">
               <Mail className="h-4 w-4 shrink-0 text-primary" />
-              <p className="text-sm text-foreground">{previewMutation.data?.subject}</p>
+              <p className="min-w-0 break-words text-sm text-foreground">
+                {previewMutation.data?.subject}
+              </p>
             </div>
           </div>
-          <div>
+          <div className="min-w-0">
             <p className="text-xs font-normal uppercase tracking-wide text-foreground-subtle">
               {tReview('previewBody')}
             </p>
-            <pre className="mt-1.5 whitespace-pre-wrap rounded-lg border border-th-border bg-th-hover p-3 text-sm leading-relaxed text-foreground-muted">
+            <pre className="mt-1.5 max-w-full min-w-0 whitespace-pre-wrap break-all rounded-lg border border-th-border bg-th-hover p-3 text-sm leading-relaxed text-foreground-muted">
               {previewMutation.data?.body}
             </pre>
           </div>
