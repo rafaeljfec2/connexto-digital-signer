@@ -1,6 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type KeyboardEvent,
+  type ReactNode,
+} from 'react';
 import {
   FileText,
   Folder as FolderIcon,
@@ -418,10 +426,26 @@ type DocumentRowProps = Readonly<{
 function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, isDeleting, folderName }: DocumentRowProps) {
   const actions = useDocumentActions(doc, actionLabels, handlers);
 
+  const openDocument = () => {
+    handlers.onDocumentClick(doc);
+  };
+
+  const handleRowKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openDocument();
+    }
+  };
+
   return (
-    <button
-      type="button"
-      onClick={() => handlers.onDocumentClick(doc)}
+    <div
+      role="button"
+      tabIndex={0}
+      onClick={openDocument}
+      onKeyDown={handleRowKeyDown}
       className={`group flex w-full items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-th-hover ${isDeleting ? 'pointer-events-none opacity-50' : 'cursor-pointer'}`}
     >
       <div
@@ -499,6 +523,6 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
         <ActionsDropdown actions={actions} />
         <ChevronRight className="hidden h-4 w-4 text-foreground-subtle transition-colors group-hover:text-foreground-muted sm:block" />
       </div>
-    </button>
+    </div>
   );
 }
