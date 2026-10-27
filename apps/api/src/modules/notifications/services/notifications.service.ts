@@ -4,11 +4,12 @@ import { Queue } from 'bull';
 import { TemplateService } from './template.service';
 
 export interface SendEmailJobPayload {
-  to: string;
-  subject: string;
-  text: string;
-  html?: string;
-  senderName?: string;
+  readonly channel?: 'email';
+  readonly to: string;
+  readonly subject: string;
+  readonly text: string;
+  readonly html?: string;
+  readonly senderName?: string;
 }
 
 @Injectable()
@@ -20,7 +21,10 @@ export class NotificationsService {
   ) {}
 
   async sendEmail(payload: SendEmailJobPayload): Promise<string> {
-    const job = await this.queue.add('email', payload);
+    const job = await this.queue.add('email', {
+      ...payload,
+      channel: payload.channel ?? 'email',
+    });
     return job.id === undefined ? '' : String(job.id);
   }
 

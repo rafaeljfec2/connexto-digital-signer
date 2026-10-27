@@ -5,6 +5,8 @@ import { Document } from '../documents/entities/document.entity';
 import { Envelope } from '../envelopes/entities/envelope.entity';
 import { Signer } from '../signatures/entities/signer.entity';
 import { User } from '../users/entities/user.entity';
+import { EMAIL_CLIENT } from './channels/email/email-client';
+import { createEmailClientFromEnv } from './channels/email/email-driver';
 import { NotificationsService } from './services/notifications.service';
 import { TemplateService } from './services/template.service';
 import { ReminderSchedulerService } from './services/reminder-scheduler.service';
@@ -28,6 +30,10 @@ import { NotificationEventsHandler } from './events/notification.events-handler'
     ReminderSchedulerService,
     EmailProcessor,
     NotificationEventsHandler,
+    {
+      provide: EMAIL_CLIENT,
+      useFactory: createEmailClientFromEnv,
+    },
     {
       provide: 'NotificationEventsLogger',
       useValue: new Logger(NotificationEventsHandler.name),
