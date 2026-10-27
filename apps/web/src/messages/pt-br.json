@@ -653,7 +653,8 @@
       "filled": "Preenchido",
       "tapToFill": "Toque para preencher",
       "next": "Prosseguir para revisão",
-      "documentGroup": "Documento: {title}"
+      "documentGroup": "Documento: {title}",
+      "signaturePages": "Páginas {pages}"
     },
     "validateStep": {
       "title": "Verificação de identidade",
@@ -674,7 +675,8 @@
       "signerInfo": "Signatário",
       "filledFields": "Campos preenchidos",
       "fieldPreview": "{type} - Página {page}",
-      "viewDocument": "Visualizar documento"
+      "viewDocument": "Visualizar documento",
+      "acceptError": "Não foi possível concluir a assinatura. Tente novamente."
     },
     "consent": {
       "label": "Li e concordo com os termos do documento e reconheço a validade jurídica desta assinatura eletrônica.",

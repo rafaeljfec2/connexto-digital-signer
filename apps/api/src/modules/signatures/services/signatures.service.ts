@@ -26,6 +26,7 @@ import type {
   SigningContext,
 } from '../interfaces/audit.interface';
 import type { SignerPendingDocument } from '../interfaces/signer-document.interface';
+import { SignatureFieldType } from '../entities/signature-field.entity';
 import { SignatureFieldsService } from './signature-fields.service';
 import { TenantSignerService } from './tenant-signer.service';
 
@@ -361,6 +362,33 @@ export class SignaturesService {
     return this.documentsService.getFinalFileUrl(target);
   }
 
+  private async applySignatureDataToEmptyFields(
+    tenantId: string,
+    envelopeId: string,
+    signerId: string,
+    signatureData: string,
+  ): Promise<void> {
+    const documents = await this.documentsService.findByEnvelope(envelopeId, tenantId);
+    const fieldsByDocument = await Promise.all(
+      documents.map((document) =>
+        this.fieldsService.findBySigner(tenantId, document.id, signerId),
+      ),
+    );
+    const emptySignatureFields = fieldsByDocument
+      .flat()
+      .filter(
+        (field) =>
+          field.type === SignatureFieldType.SIGNATURE &&
+          (field.value === null || field.value.length === 0),
+      );
+
+    await Promise.all(
+      emptySignatureFields.map((field) =>
+        this.fieldsService.updateValueByFieldId(tenantId, field.id, signatureData),
+      ),
+    );
+  }
+
   private async resolveSignerDocument(accessToken: string, documentId?: string) {
     const signer = await this.findByToken(accessToken);
     const documents = await this.documentsService.findByEnvelope(signer.envelopeId, signer.tenantId);
@@ -417,6 +445,15 @@ export class SignaturesService {
         ),
       ),
     );
+
+    if (dto.signatureData) {
+      await this.applySignatureDataToEmptyFields(
+        signer.tenantId,
+        signer.envelopeId,
+        signer.id,
+        dto.signatureData,
+      );
+    }
 
     signer.status = SignerStatus.SIGNED;
     signer.signedAt = new Date();

@@ -653,7 +653,8 @@
       "filled": "Filled",
       "tapToFill": "Tap to fill",
       "next": "Proceed to review",
-      "documentGroup": "Document: {title}"
+      "documentGroup": "Document: {title}",
+      "signaturePages": "Pages {pages}"
     },
     "validateStep": {
       "title": "Identity verification",
@@ -674,7 +675,8 @@
       "signerInfo": "Signer",
       "filledFields": "Filled fields",
       "fieldPreview": "{type} - Page {page}",
-      "viewDocument": "View document"
+      "viewDocument": "View document",
+      "acceptError": "Could not complete the signature. Please try again."
     },
     "consent": {
       "label": "I have read and agree to the terms of the document and acknowledge the legal validity of this electronic signature.",

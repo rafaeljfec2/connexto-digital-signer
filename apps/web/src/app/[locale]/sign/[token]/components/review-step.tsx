@@ -33,6 +33,7 @@ type ReviewStepProps = Readonly<{
   onSubmit: () => void;
   onViewDocument: () => void;
   isSubmitting: boolean;
+  submitError: string | null;
   labels: Readonly<{
     title: string;
     documentTitle: string;
@@ -73,20 +74,32 @@ export function ReviewStep({
   onSubmit,
   onViewDocument,
   isSubmitting,
+  submitError,
   labels,
   fieldTypeLabels,
 }: ReviewStepProps) {
   const [consentAccepted, setConsentAccepted] = useState(false);
 
-  const filledFields = fields.filter(
-    (f) => (fieldValues[f.id] ?? f.value ?? '').length > 0
+  const signatureFields = fields.filter((f) => f.type === 'signature');
+  const filledNonSignatureFields = fields.filter(
+    (f) =>
+      f.type !== 'signature' &&
+      (fieldValues[f.id] ?? f.value ?? '').length > 0,
   );
+  const signaturePreview =
+    signatureFields
+      .map((f) => fieldValues[f.id] ?? f.value ?? '')
+      .find((value) => value.length > 0) ?? null;
+  const signatureFilled = signaturePreview !== null;
 
-  const hasSignatureField = filledFields.some(
-    (f) => f.type === 'signature' || f.type === 'initials'
-  );
+  const hasSignatureField =
+    signatureFilled ||
+    filledNonSignatureFields.some((f) => f.type === 'initials');
   const hasSignature = hasSignatureField || standaloneSignature !== null;
-  const totalFilledCount = filledFields.length + (standaloneSignature === null ? 0 : 1);
+  const totalFilledCount =
+    filledNonSignatureFields.length +
+    (signatureFilled ? 1 : 0) +
+    (standaloneSignature === null ? 0 : 1);
 
   const canSubmit = consentAccepted && hasSignature && !isSubmitting;
 
@@ -160,7 +173,35 @@ export function ReviewStep({
             </Badge>
           </div>
           <div className="space-y-2">
-            {filledFields.map((field) => {
+            {signatureFilled && signaturePreview ? (
+              <div className="flex items-center gap-3 rounded-lg border border-success/20 bg-success/5 px-3 py-2">
+                <PenTool className="h-4 w-4 shrink-0 text-success" />
+                <div className="flex-1">
+                  <p className="text-xs font-medium text-success">
+                    {fieldTypeLabels.signature ?? 'signature'}
+                  </p>
+                  <p className="text-[10px] text-foreground-subtle">
+                    {labels.fieldPreviewFormat(
+                      fieldTypeLabels.signature ?? 'signature',
+                      signatureFields[0]?.page ?? 1,
+                    )}
+                  </p>
+                </div>
+                {signaturePreview.startsWith('data:image/') ? (
+                  <div className="flex h-8 w-14 items-center justify-center overflow-hidden rounded border border-success/20 bg-white">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={signaturePreview}
+                      alt=""
+                      className="h-full w-full object-contain"
+                    />
+                  </div>
+                ) : (
+                  <Check className="h-4 w-4 shrink-0 text-success" />
+                )}
+              </div>
+            ) : null}
+            {filledNonSignatureFields.map((field) => {
               const value = fieldValues[field.id] ?? field.value ?? '';
               const Icon = FIELD_ICONS[field.type] ?? PenTool;
               return (
@@ -248,6 +289,11 @@ export function ReviewStep({
               {labels.consentRequired}
             </p>
           )}
+          {submitError ? (
+            <p className="rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-xs text-error">
+              {submitError}
+            </p>
+          ) : null}
         </Card>
       </div>
 

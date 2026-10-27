@@ -11,6 +11,7 @@ import { PdfService } from '../../../shared/pdf/pdf.service';
 import { EVENT_SIGNATURE_COMPLETED, EVENT_DOCUMENT_SENT } from '@connexto/events';
 import type { SignatureCompletedEvent } from '@connexto/events';
 import { SignatureFieldsService } from './signature-fields.service';
+import { SignatureFieldType } from '../entities/signature-field.entity';
 import { TenantSignerService } from './tenant-signer.service';
 import { NotificationsService } from '../../notifications/services/notifications.service';
 import { CertificateService } from '../../tenants/services/certificate.service';
@@ -410,6 +411,85 @@ describe('SignaturesService', () => {
           latitude: null,
           longitude: null,
         })
+      );
+    });
+
+    test('should apply one signatureData to all empty signature fields without repeating PNG in fields', async () => {
+      const signatureData = 'data:image/png;base64,AAA';
+      const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
+      const document = buildDocument();
+      jest.spyOn(service, 'findByToken').mockResolvedValue(signer);
+      envelopesService.findOne.mockResolvedValue(buildEnvelope());
+      documentsService.findByEnvelope.mockResolvedValue([document]);
+      (signerRepository.save as jest.Mock).mockImplementation((s: Signer) => Promise.resolve(s));
+      jest.spyOn(service, 'areAllSignersSigned').mockResolvedValue(false);
+      fieldsService.findBySigner.mockResolvedValue([
+        {
+          id: 'sig-1',
+          type: SignatureFieldType.SIGNATURE,
+          value: null,
+          signerId: 'signer-1',
+        },
+        {
+          id: 'sig-2',
+          type: SignatureFieldType.SIGNATURE,
+          value: null,
+          signerId: 'signer-1',
+        },
+        {
+          id: 'sig-3',
+          type: SignatureFieldType.SIGNATURE,
+          value: 'already-set',
+          signerId: 'signer-1',
+        },
+        {
+          id: 'name-1',
+          type: SignatureFieldType.NAME,
+          value: null,
+          signerId: 'signer-1',
+        },
+      ] as never);
+
+      await service.acceptSignature(
+        'token-1',
+        {
+          consent: 'ok',
+          fields: [{ fieldId: 'name-1', value: 'Jane Doe' }],
+          signatureData,
+        },
+        {
+          ipAddress: '127.0.0.1',
+          userAgent: 'jest',
+        },
+      );
+
+      expect(fieldsService.findBySigner).toHaveBeenCalledWith(
+        'tenant-1',
+        document.id,
+        'signer-1',
+      );
+      expect(fieldsService.updateValueByFieldId).toHaveBeenCalledWith(
+        'tenant-1',
+        'name-1',
+        'Jane Doe',
+      );
+      expect(fieldsService.updateValueByFieldId).toHaveBeenCalledWith(
+        'tenant-1',
+        'sig-1',
+        signatureData,
+      );
+      expect(fieldsService.updateValueByFieldId).toHaveBeenCalledWith(
+        'tenant-1',
+        'sig-2',
+        signatureData,
+      );
+      expect(fieldsService.updateValueByFieldId).not.toHaveBeenCalledWith(
+        'tenant-1',
+        'sig-3',
+        signatureData,
+      );
+      expect(signerRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ signatureData }),
       );
     });
   });

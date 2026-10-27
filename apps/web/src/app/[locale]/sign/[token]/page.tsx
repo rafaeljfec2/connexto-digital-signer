@@ -91,6 +91,7 @@ export default function SignerDocumentPage() {
   const [showPdfPreview, setShowPdfPreview] = useState(false);
   const [standaloneSignature, setStandaloneSignature] = useState<string | null>(null);
   const [showStandaloneSignature, setShowStandaloneSignature] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     const signingLang = signerQuery.data?.envelope.signingLanguage;
@@ -152,10 +153,23 @@ export default function SignerDocumentPage() {
         return;
       }
       if (!activeFieldId) return;
-      setFieldValues((prev) => ({ ...prev, [activeFieldId]: value }));
+      const activeField = allFields.find((field) => field.id === activeFieldId);
+      if (activeField?.type === 'signature') {
+        setFieldValues((prev) => {
+          const next = { ...prev };
+          for (const field of allFields) {
+            if (field.type === 'signature') {
+              next[field.id] = value;
+            }
+          }
+          return next;
+        });
+      } else {
+        setFieldValues((prev) => ({ ...prev, [activeFieldId]: value }));
+      }
       setActiveFieldId(null);
     },
-    [activeFieldId, showStandaloneSignature]
+    [activeFieldId, allFields, showStandaloneSignature]
   );
 
   const hasSignatureField = useMemo(
@@ -184,7 +198,10 @@ export default function SignerDocumentPage() {
   }, [requiresValidation]);
 
   const handleSubmit = async () => {
+    setSubmitError(null);
+
     const fieldPayload = allFields
+      .filter((f) => f.type !== 'signature')
       .filter((f) => (fieldValues[f.id] ?? '').length > 0)
       .map((f) => ({
         fieldId: f.id,
@@ -196,14 +213,28 @@ export default function SignerDocumentPage() {
         .filter((f) => f.type === 'signature' && (fieldValues[f.id] ?? '').startsWith('data:image/'))
         .map((f) => fieldValues[f.id])[0];
 
-    await acceptMutation.mutateAsync({
-      consent: t('consent.label'),
-      fields: fieldPayload,
-      signatureData: signaturePayload,
-      ...(geolocation && { geolocation }),
-    });
-
-    router.push(`/success?token=${token}`);
+    try {
+      await acceptMutation.mutateAsync({
+        consent: t('consent.label'),
+        fields: fieldPayload,
+        signatureData: signaturePayload,
+        ...(geolocation && { geolocation }),
+      });
+      router.push(`/success?token=${token}`);
+    } catch (error: unknown) {
+      const apiError = error as {
+        readonly response?: { readonly data?: { readonly message?: string | string[] } };
+        readonly message?: string;
+      };
+      const apiMessage = apiError.response?.data?.message;
+      const resolved =
+        typeof apiMessage === 'string'
+          ? apiMessage
+          : Array.isArray(apiMessage)
+            ? apiMessage.join(', ')
+            : null;
+      setSubmitError(resolved ?? apiError.message ?? t('reviewStep.acceptError'));
+    }
   };
 
   const verifyErrorMessage = useMemo(() => {
@@ -432,6 +463,7 @@ export default function SignerDocumentPage() {
               signatureRequired: t('signatureRequired'),
               yourSignature: t('yourSignature'),
               documentGroup: (title: string) => t('fillStep.documentGroup', { title }),
+              signaturePages: (pages: string) => t('fillStep.signaturePages', { pages }),
             }}
             fieldTypeLabels={fieldTypeLabels}
           />
@@ -473,6 +505,7 @@ export default function SignerDocumentPage() {
             onSubmit={handleSubmit}
             onViewDocument={() => setShowPdfPreview(true)}
             isSubmitting={acceptMutation.isPending}
+            submitError={submitError}
             labels={{
               title: t('reviewStep.title'),
               documentTitle: t('reviewStep.documentTitle'),
