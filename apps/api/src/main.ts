@@ -1,9 +1,9 @@
 import { ValidationPipe } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { apiReference } from '@scalar/nestjs-api-reference';
 import cookieParser from 'cookie-parser';
-import { json, urlencoded } from 'express';
 import { Logger } from 'nestjs-pino';
 import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
@@ -21,7 +21,7 @@ const resolveAllowedOrigins = (): string[] => {
     .filter((origin) => origin.length > 0);
 };
 
-const configureOpenApi = (app: Awaited<ReturnType<typeof NestFactory.create>>): void => {
+const configureOpenApi = (app: NestExpressApplication): void => {
   if (process.env['NODE_ENV'] === 'production') return;
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Digital Signer API')
@@ -41,7 +41,7 @@ const configureOpenApi = (app: Awaited<ReturnType<typeof NestFactory.create>>): 
 };
 
 const bootstrap = async (): Promise<void> => {
-  const app = await NestFactory.create(AppModule, {
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bufferLogs: true,
     bodyParser: false,
   });
@@ -49,8 +49,8 @@ const bootstrap = async (): Promise<void> => {
   app.enableShutdownHooks();
   app.setGlobalPrefix(apiPrefix);
   const allowedOrigins = resolveAllowedOrigins();
-  app.use(json({ limit: jsonBodyLimit }));
-  app.use(urlencoded({ extended: true, limit: jsonBodyLimit }));
+  app.useBodyParser('json', { limit: jsonBodyLimit });
+  app.useBodyParser('urlencoded', { limit: jsonBodyLimit, extended: true });
   app.use(cookieParser());
   app.enableCors({
     origin: allowedOrigins.length > 0 ? allowedOrigins : true,
