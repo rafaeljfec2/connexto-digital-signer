@@ -11,8 +11,9 @@ import { TemplateVariable } from '../entities/template-variable.entity';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
 import { DocumentsService } from '../../documents/services/documents.service';
 import { EnvelopesService } from '../../envelopes/services/envelopes.service';
-import { SignaturesService } from '../../signatures/services/signatures.service';
+import { EnvelopeDispatchService } from '../../signatures/services/envelope-dispatch.service';
 import { SignatureFieldsService } from '../../signatures/services/signature-fields.service';
+import { SignaturesService } from '../../signatures/services/signatures.service';
 import { SigningMode } from '../../envelopes/entities/envelope.entity';
 import { SignerRole } from '../../signatures/entities/signer.entity';
 
@@ -142,6 +143,11 @@ describe('TemplatesService', () => {
           useValue: {
             findByEnvelope: jest.fn().mockResolvedValue([]),
             addSigner: jest.fn(),
+          },
+        },
+        {
+          provide: EnvelopeDispatchService,
+          useValue: {
             sendEnvelope: jest.fn(),
           },
         },

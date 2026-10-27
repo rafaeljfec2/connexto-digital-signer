@@ -1,29 +1,33 @@
 import { NotFoundException, StreamableFile } from '@nestjs/common';
 import { Readable } from 'node:stream';
+import { EnvelopeAuditService } from '../services/envelope-audit.service';
 import { SignaturesService } from '../services/signatures.service';
+import { SigningFlowService } from '../services/signing-flow.service';
 import { VerificationService } from '../services/verification.service';
 import { SignController } from './signatures.controller';
 
 describe('SignController content streaming', () => {
   let controller: SignController;
-  let signaturesService: jest.Mocked<
-    Pick<SignaturesService, 'getSignerPdfContent' | 'getSignerSignedPdfContent'>
+  let signingFlowService: jest.Mocked<
+    Pick<SigningFlowService, 'getSignerPdfContent' | 'getSignerSignedPdfContent'>
   >;
 
   beforeEach(() => {
-    signaturesService = {
+    signingFlowService = {
       getSignerPdfContent: jest.fn(),
       getSignerSignedPdfContent: jest.fn(),
     };
     controller = new SignController(
-      signaturesService as unknown as SignaturesService,
+      {} as SignaturesService,
+      signingFlowService as unknown as SigningFlowService,
+      {} as EnvelopeAuditService,
       {} as VerificationService,
     );
   });
 
   test('getSignerPdfContent wraps service stream and never returns a Buffer payload', async () => {
     const stream = Readable.from([Buffer.from('%PDF')]);
-    signaturesService.getSignerPdfContent.mockResolvedValue({
+    signingFlowService.getSignerPdfContent.mockResolvedValue({
       stream,
       mimeType: 'application/pdf',
     });
@@ -32,12 +36,12 @@ describe('SignController content streaming', () => {
 
     expect(result).toBeInstanceOf(StreamableFile);
     expect(result.getStream()).toBe(stream);
-    expect(signaturesService.getSignerPdfContent).toHaveBeenCalledWith('token-1', undefined);
+    expect(signingFlowService.getSignerPdfContent).toHaveBeenCalledWith('token-1', undefined);
   });
 
   test('getSignerSignedPdfContent wraps signed stream when available', async () => {
     const stream = Readable.from([Buffer.from('signed')]);
-    signaturesService.getSignerSignedPdfContent.mockResolvedValue({
+    signingFlowService.getSignerSignedPdfContent.mockResolvedValue({
       stream,
       mimeType: 'application/pdf',
     });
@@ -46,11 +50,14 @@ describe('SignController content streaming', () => {
 
     expect(result).toBeInstanceOf(StreamableFile);
     expect(result.getStream()).toBe(stream);
-    expect(signaturesService.getSignerSignedPdfContent).toHaveBeenCalledWith('token-1', 'doc-1');
+    expect(signingFlowService.getSignerSignedPdfContent).toHaveBeenCalledWith(
+      'token-1',
+      'doc-1',
+    );
   });
 
   test('getSignerSignedPdfContent throws when signed content is missing', async () => {
-    signaturesService.getSignerSignedPdfContent.mockResolvedValue(null);
+    signingFlowService.getSignerSignedPdfContent.mockResolvedValue(null);
 
     await expect(
       controller.getSignerSignedPdfContent('token-1', undefined),

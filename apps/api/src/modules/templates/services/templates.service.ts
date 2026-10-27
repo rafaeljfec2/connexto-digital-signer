@@ -29,8 +29,9 @@ import { validateFile } from '../../../shared/storage/file-validator';
 import { sha256 } from '@connexto/shared';
 import { DocumentsService } from '../../documents/services/documents.service';
 import { EnvelopesService } from '../../envelopes/services/envelopes.service';
-import { SignaturesService } from '../../signatures/services/signatures.service';
+import { EnvelopeDispatchService } from '../../signatures/services/envelope-dispatch.service';
 import { SignatureFieldsService } from '../../signatures/services/signature-fields.service';
+import { SignaturesService } from '../../signatures/services/signatures.service';
 import {
   EVENT_TEMPLATE_CREATED,
   EVENT_TEMPLATE_USED,
@@ -66,6 +67,7 @@ export class TemplatesService {
     private readonly documentsService: DocumentsService,
     private readonly envelopesService: EnvelopesService,
     private readonly signaturesService: SignaturesService,
+    private readonly envelopeDispatchService: EnvelopeDispatchService,
     private readonly fieldsService: SignatureFieldsService,
     private readonly eventEmitter: EventEmitter2,
   ) {}
@@ -525,7 +527,7 @@ export class TemplatesService {
     await this.templateRepository.increment({ id: templateId }, 'usageCount', 1);
 
     const sent = dto.autoSend
-      ? (await this.signaturesService.sendEnvelope(tenantId, envelope.id, dto.message), true)
+      ? (await this.envelopeDispatchService.sendEnvelope(tenantId, envelope.id, dto.message), true)
       : false;
 
     this.eventEmitter.emit(EVENT_TEMPLATE_USED, {

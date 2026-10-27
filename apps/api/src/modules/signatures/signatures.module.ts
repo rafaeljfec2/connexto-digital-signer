@@ -15,8 +15,11 @@ import {
   DocumentSendController,
 } from './controllers/signatures.controller';
 import { TenantSignerController } from './controllers/tenant-signer.controller';
-import { SignaturesService } from './services/signatures.service';
+import { EnvelopeAuditService } from './services/envelope-audit.service';
+import { EnvelopeDispatchService } from './services/envelope-dispatch.service';
 import { SignatureFieldsService } from './services/signature-fields.service';
+import { SignaturesService } from './services/signatures.service';
+import { SigningFlowService } from './services/signing-flow.service';
 import { TenantSignerService } from './services/tenant-signer.service';
 import { VerificationService } from './services/verification.service';
 
@@ -38,10 +41,18 @@ import { VerificationService } from './services/verification.service';
   ],
   providers: [
     SignaturesService,
+    SigningFlowService,
+    EnvelopeDispatchService,
+    EnvelopeAuditService,
     SignatureFieldsService,
     TenantSignerService,
     VerificationService,
   ],
-  exports: [SignaturesService, SignatureFieldsService, TenantSignerService],
+  exports: [
+    SignaturesService,
+    EnvelopeDispatchService,
+    SignatureFieldsService,
+    TenantSignerService,
+  ],
 })
 export class SignaturesModule {}

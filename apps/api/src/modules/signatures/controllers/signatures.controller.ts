@@ -18,8 +18,11 @@ import { ApiBearerAuth, ApiOperation, ApiParam, ApiResponse, ApiTags } from '@ne
 import { Throttle } from '@nestjs/throttler';
 import type { RequestWithHeaders } from '@connexto/shared';
 import { TenantId, Public } from '@connexto/shared';
-import { SignaturesService } from '../services/signatures.service';
+import { EnvelopeAuditService } from '../services/envelope-audit.service';
+import { EnvelopeDispatchService } from '../services/envelope-dispatch.service';
 import { SignatureFieldsService } from '../services/signature-fields.service';
+import { SignaturesService } from '../services/signatures.service';
+import { SigningFlowService } from '../services/signing-flow.service';
 import { VerificationService } from '../services/verification.service';
 import { CreateSignerDto } from '../dto/create-signer.dto';
 import { ListSignersQueryDto } from '../dto/list-signers-query.dto';
@@ -213,6 +216,8 @@ export class SignatureFieldsController {
 export class SignController {
   constructor(
     private readonly signaturesService: SignaturesService,
+    private readonly signingFlowService: SigningFlowService,
+    private readonly envelopeAuditService: EnvelopeAuditService,
     private readonly verificationService: VerificationService,
   ) {}
 
@@ -237,7 +242,7 @@ export class SignController {
     @Param('token') token: string,
     @Query('documentId') documentId: string | undefined,
   ): Promise<StreamableFile> {
-    const result = await this.signaturesService.getSignerPdfContent(token, documentId);
+    const result = await this.signingFlowService.getSignerPdfContent(token, documentId);
     return new StreamableFile(result.stream, {
       type: result.mimeType ?? DEFAULT_PDF_TYPE,
       disposition: 'inline; filename="original.pdf"',
@@ -251,7 +256,7 @@ export class SignController {
     @Param('token') token: string,
     @Query('documentId') documentId: string | undefined,
   ) {
-    return this.signaturesService.getSignerPdfUrl(token, documentId);
+    return this.signingFlowService.getSignerPdfUrl(token, documentId);
   }
 
   @Public()
@@ -266,7 +271,7 @@ export class SignController {
     @Param('token') token: string,
     @Query('documentId') documentId: string | undefined,
   ): Promise<StreamableFile> {
-    const result = await this.signaturesService.getSignerSignedPdfContent(token, documentId);
+    const result = await this.signingFlowService.getSignerSignedPdfContent(token, documentId);
     if (result === null) {
       throw new NotFoundException('Signed document is not available yet');
     }
@@ -283,7 +288,7 @@ export class SignController {
     @Param('token') token: string,
     @Query('documentId') documentId: string | undefined,
   ) {
-    const result = await this.signaturesService.getSignerSignedPdfUrl(token, documentId);
+    const result = await this.signingFlowService.getSignerSignedPdfUrl(token, documentId);
     if (result === null) {
       throw new NotFoundException('Signed document is not available yet');
     }
@@ -297,7 +302,7 @@ export class SignController {
     @Param('token') token: string,
     @Query('documentId') documentId: string | undefined,
   ) {
-    return this.signaturesService.getSignerFields(token, documentId);
+    return this.signingFlowService.getSignerFields(token, documentId);
   }
 
   @Public()
@@ -311,7 +316,7 @@ export class SignController {
     @Body() dto: AcceptSignatureDto,
     @Req() req: RequestWithHeaders & { ip?: string; socket?: { remoteAddress?: string }; connection?: { remoteAddress?: string } }
   ) {
-    return this.signaturesService.acceptSignature(
+    return this.signingFlowService.acceptSignature(
       token,
       dto,
       {
@@ -327,7 +332,7 @@ export class SignController {
   @Throttle(publicThrottle)
   @Get(':token/summary')
   getSignerSummary(@Param('token') token: string) {
-    return this.signaturesService.getEnvelopeAuditSummaryByToken(token);
+    return this.envelopeAuditService.getEnvelopeAuditSummaryByToken(token);
   }
 
   @Public()
@@ -363,7 +368,10 @@ export class SignController {
 @RequireAuthMethod('jwt')
 @Controller('envelopes/:envelopeId')
 export class DocumentSendController {
-  constructor(private readonly signaturesService: SignaturesService) {}
+  constructor(
+    private readonly envelopeDispatchService: EnvelopeDispatchService,
+    private readonly envelopeAuditService: EnvelopeAuditService,
+  ) {}
 
   @Get('summary')
   @ApiOperation({ summary: 'Get envelope audit summary' })
@@ -373,7 +381,7 @@ export class DocumentSendController {
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,
   ) {
-    return this.signaturesService.getEnvelopeAuditSummary(envelopeId, tenantId);
+    return this.envelopeAuditService.getEnvelopeAuditSummary(envelopeId, tenantId);
   }
 
   @Get('tracking')
@@ -384,7 +392,7 @@ export class DocumentSendController {
     @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
     @TenantId() tenantId: string,
   ) {
-    return this.signaturesService.getEnvelopeTracking(envelopeId, tenantId);
+    return this.envelopeAuditService.getEnvelopeTracking(envelopeId, tenantId);
   }
 
   @Get('send/preview')
@@ -393,7 +401,7 @@ export class DocumentSendController {
     @TenantId() tenantId: string,
     @Query() dto: SendDocumentDto
   ) {
-    return this.signaturesService.previewSend(tenantId, envelopeId, dto.message);
+    return this.envelopeDispatchService.previewSend(tenantId, envelopeId, dto.message);
   }
 
   @Post('send')
@@ -405,6 +413,6 @@ export class DocumentSendController {
     @TenantId() tenantId: string,
     @Body() dto: SendDocumentDto
   ) {
-    return this.signaturesService.sendEnvelope(tenantId, envelopeId, dto.message);
+    return this.envelopeDispatchService.sendEnvelope(tenantId, envelopeId, dto.message);
   }
 }
