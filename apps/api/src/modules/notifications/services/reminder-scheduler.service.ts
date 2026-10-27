@@ -1,10 +1,15 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, Not } from 'typeorm';
+import { LessThanOrEqual, Not, Repository } from 'typeorm';
 import { Envelope, EnvelopeStatus } from '../../envelopes/entities/envelope.entity';
 import { Document, DocumentStatus } from '../../documents/entities/document.entity';
 import { Signer, SignerStatus } from '../../signatures/entities/signer.entity';
+import {
+  CRON_LOCK_KEYS,
+  CRON_LOCK_TTL_MS,
+} from '../../../shared/distributed-lock/distributed-lock.constants';
+import { DistributedLockService } from '../../../shared/distributed-lock/distributed-lock.service';
 import { NotificationsService } from './notifications.service';
 
 const INTERVAL_MS: Record<string, number> = {
@@ -21,16 +26,26 @@ export class ReminderSchedulerService {
   constructor(
     @InjectRepository(Envelope)
     private readonly envelopeRepository: Repository<Envelope>,
-    @InjectRepository(Document)
-    private readonly documentRepository: Repository<Document>,
     @InjectRepository(Signer)
     private readonly signerRepository: Repository<Signer>,
     private readonly notificationsService: NotificationsService,
+    private readonly lockService: DistributedLockService,
     @Inject('ReminderSchedulerLogger') private readonly logger: Logger,
   ) {}
 
   @Cron(CronExpression.EVERY_HOUR)
   async handleReminders(): Promise<void> {
+    await this.withCronLock(CRON_LOCK_KEYS.reminders, () => this.runReminders());
+  }
+
+  @Cron(CronExpression.EVERY_HOUR)
+  async handleExpiredEnvelopes(): Promise<void> {
+    await this.withCronLock(CRON_LOCK_KEYS.expiredEnvelopes, () =>
+      this.runExpiredEnvelopes(),
+    );
+  }
+
+  async runReminders(): Promise<void> {
     this.logger.log('Running reminder scheduler...');
 
     const envelopes = await this.envelopeRepository.find({
@@ -47,21 +62,47 @@ export class ReminderSchedulerService {
     this.logger.log('Reminder scheduler completed.');
   }
 
-  @Cron(CronExpression.EVERY_HOUR)
-  async handleExpiredEnvelopes(): Promise<void> {
+  async runExpiredEnvelopes(): Promise<void> {
     this.logger.log('Checking for expired envelopes...');
 
-    const envelopes = await this.envelopeRepository.find({
-      where: { status: EnvelopeStatus.PENDING_SIGNATURES },
-    });
-
     const now = new Date();
+    const envelopes = await this.envelopeRepository.find({
+      where: {
+        status: EnvelopeStatus.PENDING_SIGNATURES,
+        expiresAt: LessThanOrEqual(now),
+      },
+    });
 
     for (const envelope of envelopes) {
       await this.processExpiredEnvelope(envelope, now);
     }
 
     this.logger.log('Expired envelopes check completed.');
+  }
+
+  private async withCronLock(
+    key: string,
+    run: () => Promise<void>,
+  ): Promise<void> {
+    let token: string | null;
+    try {
+      token = await this.lockService.acquire(key, CRON_LOCK_TTL_MS);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      this.logger.error(`Cron lock acquire failed for ${key}: ${message}`);
+      return;
+    }
+
+    if (token === null) {
+      this.logger.log(`Skipping cron; lock not acquired: ${key}`);
+      return;
+    }
+
+    try {
+      await run();
+    } finally {
+      await this.lockService.release(key, token);
+    }
   }
 
   private async processEnvelopeReminders(envelope: Envelope): Promise<void> {
@@ -94,9 +135,26 @@ export class ReminderSchedulerService {
     const lastNotified = signer.notifiedAt ? signer.notifiedAt.getTime() : 0;
     if (now - lastNotified < intervalMs) return;
 
+    const nextCount = signer.reminderCount + 1;
+    const claim = await this.signerRepository.update(
+      {
+        id: signer.id,
+        tenantId: envelope.tenantId,
+        reminderCount: signer.reminderCount,
+        status: SignerStatus.PENDING,
+      },
+      {
+        reminderCount: nextCount,
+        notifiedAt: new Date(),
+      },
+    );
+
+    if (claim.affected !== 1) {
+      return;
+    }
+
     try {
       const signUrl = this.buildSignUrl(signer.accessToken, envelope.signingLanguage ?? 'en');
-      const nextCount = signer.reminderCount + 1;
 
       await this.notificationsService.sendSignatureReminder({
         tenantId: envelope.tenantId,
@@ -109,16 +167,14 @@ export class ReminderSchedulerService {
         locale: envelope.signingLanguage ?? 'en',
       });
 
-      signer.notifiedAt = new Date();
-      signer.reminderCount = nextCount;
-      await this.signerRepository.save(signer);
-
       this.logger.log(
-        `Reminder ${signer.reminderCount}/${MAX_REMINDERS} sent to ${signer.email} for envelope ${envelope.id}`,
+        `Reminder ${nextCount}/${MAX_REMINDERS} sent to ${signer.email} for envelope ${envelope.id}`,
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      this.logger.error(`Failed to send reminder to ${signer.email}: ${message}`);
+      this.logger.error(
+        `Failed to send reminder to ${signer.email} after claim: ${message}`,
+      );
     }
   }
 
@@ -133,24 +189,41 @@ export class ReminderSchedulerService {
       },
     });
 
-    const newStatus = signedSigners.length > 0
-      ? EnvelopeStatus.COMPLETED
-      : EnvelopeStatus.EXPIRED;
+    const newStatus =
+      signedSigners.length > 0 ? EnvelopeStatus.COMPLETED : EnvelopeStatus.EXPIRED;
+    const docStatus =
+      newStatus === EnvelopeStatus.COMPLETED
+        ? DocumentStatus.COMPLETED
+        : DocumentStatus.EXPIRED;
 
-    envelope.status = newStatus;
-    await this.envelopeRepository.save(envelope);
+    const claimed = await this.envelopeRepository.manager.transaction(
+      async (manager) => {
+        const claim = await manager.update(
+          Envelope,
+          {
+            id: envelope.id,
+            tenantId: envelope.tenantId,
+            status: EnvelopeStatus.PENDING_SIGNATURES,
+            expiresAt: LessThanOrEqual(now),
+          },
+          { status: newStatus },
+        );
 
-    const documents = await this.documentRepository.find({
-      where: { envelopeId: envelope.id, tenantId: envelope.tenantId },
-    });
+        if (claim.affected !== 1) {
+          return false;
+        }
 
-    const docStatus = newStatus === EnvelopeStatus.COMPLETED
-      ? DocumentStatus.COMPLETED
-      : DocumentStatus.EXPIRED;
+        await manager.update(
+          Document,
+          { envelopeId: envelope.id, tenantId: envelope.tenantId },
+          { status: docStatus },
+        );
+        return true;
+      },
+    );
 
-    for (const doc of documents) {
-      doc.status = docStatus;
-      await this.documentRepository.save(doc);
+    if (!claimed) {
+      return;
     }
 
     this.logger.log(

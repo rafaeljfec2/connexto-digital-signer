@@ -1,3 +1,4 @@
+import './common/config/load-local-env';
 import { Module } from '@nestjs/common';
 import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule } from '@nestjs/config';
@@ -8,6 +9,8 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { EventEmitterModule } from '@nestjs/event-emitter';
 import { BullModule } from '@nestjs/bull';
 import { ScheduleModule } from '@nestjs/schedule';
+import { DistributedLockModule } from './shared/distributed-lock/distributed-lock.module';
+import { isSchedulerEnabled } from './shared/scheduler/is-scheduler-enabled';
 import { StorageModule } from './shared/storage/storage.module';
 import { PdfModule } from './shared/pdf/pdf.module';
 import { TenantsModule } from './modules/tenants/tenants.module';
@@ -63,7 +66,7 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
       connectTimeoutMS: 5000,
     }),
     EventEmitterModule.forRoot(),
-    ScheduleModule.forRoot(),
+    ...(isSchedulerEnabled() ? [ScheduleModule.forRoot()] : []),
     BullModule.forRoot({
       redis: {
         host: process.env['REDIS_HOST'] ?? 'localhost',
@@ -73,6 +76,7 @@ import { TenantThrottlerGuard } from './common/guards/tenant-throttler.guard';
         }),
       },
     }),
+    DistributedLockModule,
     StorageModule,
     PdfModule,
     AiCoreModule,

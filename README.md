@@ -292,7 +292,7 @@ Redis is used exclusively as the backend for async job queues via Bull.
 
 ### Multi-pod scaling
 
-The API can run multiple replicas without sticky sessions (JWT + shared Postgres/Redis/MinIO). Two operational caveats must be handled first: Nest `@Cron` reminder jobs fire on every pod, and in-process `EventEmitter2` / AI memory cache are not shared across pods. Details: [`docs/API_HORIZONTAL_SCALING.md`](docs/API_HORIZONTAL_SCALING.md).
+The API can run multiple replicas without sticky sessions (JWT + shared Postgres/Redis/MinIO). Hourly `@Cron` jobs use Redis locks + PostgreSQL claims (`ENABLE_SCHEDULER` can disable them). Remaining caveats: in-process `EventEmitter2` / AI memory cache are not shared across pods. Details: [`docs/API_HORIZONTAL_SCALING.md`](docs/API_HORIZONTAL_SCALING.md).
 
 ### Configuration
 
