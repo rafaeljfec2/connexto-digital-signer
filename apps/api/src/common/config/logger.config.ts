@@ -55,8 +55,8 @@ const developmentLoggerConfig: Options = {
         ctx === null ||
         (typeof ctx === 'string' && (ctx.trim() === '' || ctx === 'undefined'));
       if (isEmptyOrUndefinedStr) {
-        const { context: _c, ...rest } = object;
-        return { ...rest };
+        const { context: _, ...rest } = object;
+        return rest;
       }
       return object;
     },

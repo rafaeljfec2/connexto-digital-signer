@@ -51,6 +51,9 @@ function decryptPassword(encryptedData: string): string {
   const [ivHex, authTagHex, encryptedHex] = encryptedData.split(':');
   const iv = Buffer.from(ivHex, 'hex');
   const authTag = Buffer.from(authTagHex, 'hex');
+  if (authTag.length !== AUTH_TAG_LENGTH) {
+    throw new Error('Invalid authentication tag length');
+  }
   const encrypted = Buffer.from(encryptedHex, 'hex');
   const decipher = createDecipheriv(ALGORITHM, key, iv);
   decipher.setAuthTag(authTag);

@@ -51,26 +51,6 @@ interface RawHistoryRow {
   actorEmail: string | null;
 }
 
-interface RawDocumentHistoryRow {
-  documentId: string;
-  documentTitle: string | null;
-  documentStatus: string | null;
-  lastActivityAt: Date | string;
-  eventCount: string;
-}
-
-interface RawDocumentEventRow {
-  id: string;
-  occurredAt: Date | string;
-  eventType: string;
-  entityType: string;
-  entityId: string;
-  metadata: Record<string, unknown> | null;
-  documentTitle: string | null;
-  actorName: string | null;
-  actorEmail: string | null;
-}
-
 @Injectable()
 export class AuditService {
   constructor(
