@@ -1,4 +1,13 @@
-import { wrapInBaseLayout, ctaButton, paragraph } from './base-layout';
+import {
+  emailCtaButton,
+  emailDocumentCard,
+  emailGreeting,
+  emailHeadline,
+  emailSecurityNotice,
+  emailTrustBadges,
+  escapeHtmlVars,
+  wrapInBaseLayout,
+} from './base-layout';
 import { getEmailMessages, interpolate } from '../i18n';
 
 export interface SignatureReminderContext {
@@ -14,19 +23,34 @@ export function renderSignatureReminder(
   locale: string,
 ): { subject: string; text: string; html: string } {
   const messages = getEmailMessages(locale)['signature-reminder'];
-  const vars: Record<string, unknown> = { ...context };
+  const shared = getEmailMessages(locale).shared;
+  const plainVars: Record<string, unknown> = { ...context };
+  const htmlVars = escapeHtmlVars({
+    signerName: context.signerName,
+    documentTitle: context.documentTitle,
+    signUrl: context.signUrl,
+    reminderCount: context.reminderCount,
+    maxReminders: context.maxReminders,
+  });
 
-  const subject = interpolate(messages.subject, vars);
-  const text = interpolate(messages.textBody, vars);
+  const subject = interpolate(messages.subject, plainVars);
+  const text = interpolate(messages.textBody, plainVars);
 
   const content = [
-    paragraph(interpolate(messages.greeting, vars)),
-    paragraph(interpolate(messages.body, vars)),
-    ctaButton(context.signUrl, interpolate(messages.cta, vars)),
-    paragraph(interpolate(messages.footer, vars), 'muted'),
+    emailHeadline(interpolate(messages.headline, htmlVars)),
+    emailGreeting(
+      interpolate(messages.greeting, htmlVars),
+      interpolate(messages.body, htmlVars),
+    ),
+    emailDocumentCard(String(htmlVars['documentTitle'] ?? ''), messages.documentStatus),
+    emailCtaButton(context.signUrl, interpolate(messages.cta, htmlVars)),
+    emailSecurityNotice(shared.securityNotice),
+    emailTrustBadges(shared),
   ].join('\n');
 
-  const html = wrapInBaseLayout(content, subject);
-
-  return { subject, text, html };
+  return {
+    subject,
+    text,
+    html: wrapInBaseLayout(content, subject, shared),
+  };
 }

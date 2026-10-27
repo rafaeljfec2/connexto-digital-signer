@@ -1,4 +1,11 @@
-import { wrapInBaseLayout, ctaButton, paragraph } from './base-layout';
+import {
+  emailCtaButton,
+  emailGreeting,
+  emailHeadline,
+  emailTrustBadges,
+  escapeHtmlVars,
+  wrapInBaseLayout,
+} from './base-layout';
 import { getEmailMessages, interpolate } from '../i18n';
 
 export interface WelcomeContext {
@@ -10,20 +17,30 @@ export function renderWelcome(
   context: WelcomeContext,
   locale: string,
 ): { subject: string; text: string; html: string } {
-  const messages = getEmailMessages(locale)['welcome'];
-  const vars: Record<string, unknown> = { ...context };
+  const messages = getEmailMessages(locale).welcome;
+  const shared = getEmailMessages(locale).shared;
+  const plainVars: Record<string, unknown> = { ...context };
+  const htmlVars = escapeHtmlVars({
+    ownerName: context.ownerName,
+    dashboardUrl: context.dashboardUrl,
+  });
 
-  const subject = interpolate(messages.subject, vars);
-  const text = interpolate(messages.textBody, vars);
+  const subject = interpolate(messages.subject, plainVars);
+  const text = interpolate(messages.textBody, plainVars);
 
   const content = [
-    paragraph(interpolate(messages.greeting, vars)),
-    paragraph(interpolate(messages.body, vars)),
-    ctaButton(context.dashboardUrl, interpolate(messages.cta, vars)),
-    paragraph(interpolate(messages.footer, vars), 'muted'),
+    emailHeadline(interpolate(messages.headline, htmlVars)),
+    emailGreeting(
+      interpolate(messages.greeting, htmlVars),
+      interpolate(messages.body, htmlVars),
+    ),
+    emailCtaButton(context.dashboardUrl, interpolate(messages.cta, htmlVars)),
+    emailTrustBadges(shared),
   ].join('\n');
 
-  const html = wrapInBaseLayout(content, subject);
-
-  return { subject, text, html };
+  return {
+    subject,
+    text,
+    html: wrapInBaseLayout(content, subject, shared),
+  };
 }

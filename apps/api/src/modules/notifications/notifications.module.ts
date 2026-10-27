@@ -6,6 +6,7 @@ import { Document } from '../documents/entities/document.entity';
 import { Envelope } from '../envelopes/entities/envelope.entity';
 import { Signer } from '../signatures/entities/signer.entity';
 import { User } from '../users/entities/user.entity';
+import { TenantsModule } from '../tenants/tenants.module';
 import { isSchedulerEnabled } from '../../shared/scheduler/is-scheduler-enabled';
 import { EMAIL_CLIENT } from './channels/email/email-client';
 import { createEmailClientFromEnv } from './channels/email/email-driver';
@@ -31,6 +32,7 @@ function buildSchedulerProviders(): Provider[] {
 @Module({
   imports: [
     TypeOrmModule.forFeature([Document, Envelope, Signer, User]),
+    TenantsModule,
     BullModule.registerQueue({
       name: 'notifications',
       defaultJobOptions: {

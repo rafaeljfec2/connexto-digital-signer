@@ -101,6 +101,7 @@ export class EnvelopeDispatchService {
     const locale = envelope.signingLanguage ?? 'en';
     const signUrl = this.buildSignUrl(target.accessToken, locale);
     return this.notificationsService.buildSignatureInvite({
+      tenantId,
       signerName: target.name,
       documentTitle: envelope.title,
       signUrl,

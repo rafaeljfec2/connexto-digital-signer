@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
+import { TenantsService } from '../../tenants/services/tenants.service';
 import { TemplateService } from './template.service';
 
 export interface SendEmailJobPayload {
@@ -18,6 +19,7 @@ export class NotificationsService {
     @InjectQueue('notifications')
     private readonly queue: Queue,
     private readonly templateService: TemplateService,
+    private readonly tenantsService: TenantsService,
   ) {}
 
   async sendEmail(payload: SendEmailJobPayload): Promise<string> {
@@ -38,10 +40,12 @@ export class NotificationsService {
     message?: string;
     senderName?: string;
   }): Promise<string> {
+    const organizationName = await this.resolveOrganizationName(params.tenantId);
     const { subject, text, html } = this.templateService.renderTemplate(
       'signature-invite',
       {
         signerName: params.signerName,
+        organizationName,
         documentTitle: params.documentTitle,
         signUrl: params.signUrl,
         message: params.message,
@@ -136,17 +140,20 @@ export class NotificationsService {
     return this.sendEmail({ to: params.signerEmail, subject, text, html });
   }
 
-  buildSignatureInvite(params: {
+  async buildSignatureInvite(params: {
+    tenantId: string;
     signerName: string;
     documentTitle: string;
     signUrl: string;
     locale?: string;
     message?: string;
-  }): { subject: string; body: string } {
+  }): Promise<{ subject: string; body: string }> {
+    const organizationName = await this.resolveOrganizationName(params.tenantId);
     const { subject, text } = this.templateService.renderTemplate(
       'signature-invite',
       {
         signerName: params.signerName,
+        organizationName,
         documentTitle: params.documentTitle,
         signUrl: params.signUrl,
         message: params.message,
@@ -155,5 +162,10 @@ export class NotificationsService {
     );
 
     return { subject, body: text };
+  }
+
+  private async resolveOrganizationName(tenantId: string): Promise<string> {
+    const tenant = await this.tenantsService.findOne(tenantId);
+    return tenant.branding?.name ?? tenant.name;
   }
 }
