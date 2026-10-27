@@ -185,10 +185,12 @@ export function FieldsStep({
             <PenTool className="mr-2 h-4 w-4" />
             {hasFields ? tFields('editPositioning') : tFields('openEditor')}
           </Button>
-          <Button type="button" variant="ghost" onClick={onNext}>
-            {tFields('skipPositioning')}
-            <ArrowRight className="ml-2 h-4 w-4" />
-          </Button>
+          {!hasFields ? (
+            <Button type="button" variant="ghost" onClick={onNext}>
+              {tFields('skipPositioning')}
+              <ArrowRight className="ml-2 h-4 w-4" />
+            </Button>
+          ) : null}
         </div>
         <div className="flex items-center justify-between pt-4">
           <div className="flex items-center gap-2">
@@ -203,6 +205,11 @@ export function FieldsStep({
               {tWizard('cancel')}
             </Button>
           </div>
+          {hasFields ? (
+            <Button type="button" onClick={onNext}>
+              {tWizard('next')}
+            </Button>
+          ) : null}
         </div>
       </Card>
     </div>
