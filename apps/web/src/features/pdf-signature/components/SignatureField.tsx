@@ -53,8 +53,6 @@ export const SignatureField = ({
 
   return (
     <div
-      role="button"
-      tabIndex={0}
       ref={draggable.setNodeRef}
       {...draggable.listeners}
       {...draggable.attributes}
