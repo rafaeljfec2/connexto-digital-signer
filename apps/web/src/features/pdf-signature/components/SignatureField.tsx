@@ -1,3 +1,4 @@
+import { type KeyboardEvent } from 'react';
 import { PenTool, Fingerprint, X } from 'lucide-react';
 import { useDraggable } from '@dnd-kit/core';
 
@@ -35,16 +36,33 @@ export const SignatureField = ({
     data: { id: field.id, page: field.page, type: 'field' },
   });
 
+  const selectField = () => {
+    onSelect?.(field.id);
+  };
+
+  const handleFieldKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    if (event.target !== event.currentTarget) {
+      return;
+    }
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      event.stopPropagation();
+      selectField();
+    }
+  };
+
   return (
-    <button
-      type="button"
+    <div
+      role="button"
+      tabIndex={0}
       ref={draggable.setNodeRef}
       {...draggable.listeners}
       {...draggable.attributes}
       onClick={(event) => {
         event.stopPropagation();
-        onSelect?.(field.id);
+        selectField();
       }}
+      onKeyDown={handleFieldKeyDown}
       className={`absolute flex flex-col items-center justify-center rounded-md border-2 border-dashed bg-white/80 px-2 py-0.5 text-xs shadow-sm transition-shadow ${
         isSelected ? 'ring-2 ring-primary/70 shadow-md' : 'hover:shadow-md'
       }`}
@@ -84,6 +102,6 @@ export const SignatureField = ({
           <X className="h-2.5 w-2.5" />
         </button>
       ) : null}
-    </button>
+    </div>
   );
 };
