@@ -49,16 +49,19 @@
   --th-active-bg: #eff6ff;
   --th-active-text: #1f5ea8;
   --th-badge-default-bg: #f1f5f9;
-  --th-badge-default-text: #334155;
-  --th-badge-default-border: #e2e8f0;
+  --th-badge-default-text: #64748b;
+  --th-badge-default-border: transparent;
   --th-glass-backdrop: none;
   --th-body-bg: #f1f5f9;
   --th-header-border: #e2e8f0;
 
-  --th-btn-primary-bg: #1f5ea8;
-  --th-btn-primary-hover: #123a6f;
-  --th-btn-primary-shadow: 0 1px 3px rgba(31, 94, 168, 0.25), 0 4px 12px rgba(31, 94, 168, 0.12);
-  --th-btn-primary-shadow-hover: 0 2px 6px rgba(31, 94, 168, 0.3), 0 8px 20px rgba(31, 94, 168, 0.15);
+  --th-btn-primary-bg: var(--th-hover-bg);
+  --th-btn-primary-hover: var(--th-active-bg);
+  --th-btn-primary-text: var(--th-fg-muted);
+  --th-btn-primary-text-hover: var(--th-fg);
+  --th-btn-primary-border: var(--th-border);
+  --th-btn-primary-shadow: none;
+  --th-btn-primary-shadow-hover: none;
 
   --color-surface-glass: rgba(0, 0, 0, 0.02);
   --color-surface-card: var(--th-card-bg);
@@ -92,17 +95,19 @@
   --th-active-bg: #1e1e1e;
   --th-active-text: #fafafa;
   --th-badge-default-bg: #1e1e1e;
-  --th-badge-default-text: #fafafa;
-  --th-badge-default-border: #303030;
+  --th-badge-default-text: #a1a1aa;
+  --th-badge-default-border: transparent;
   --th-glass-backdrop: blur(24px);
   --th-body-bg: #0a0a0a;
   --th-header-border: #1e1e1e;
 
-  --th-btn-primary-bg: #fafafa;
-  --th-btn-primary-hover: #e4e4e7;
-  --th-btn-primary-text: #0a0a0a;
-  --th-btn-primary-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  --th-btn-primary-shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --th-btn-primary-bg: var(--th-hover-bg);
+  --th-btn-primary-hover: var(--th-active-bg);
+  --th-btn-primary-text: var(--th-fg-muted);
+  --th-btn-primary-text-hover: var(--th-fg);
+  --th-btn-primary-border: var(--th-border);
+  --th-btn-primary-shadow: none;
+  --th-btn-primary-shadow-hover: none;
 
   --color-surface-glass: #111111;
   --color-surface-card: #161616;
@@ -170,11 +175,13 @@ body {
 @layer components {
   .btn-primary-themed {
     background: var(--th-btn-primary-bg);
-    color: var(--th-btn-primary-text, #ffffff);
+    color: var(--th-btn-primary-text);
+    border: 1px solid var(--th-btn-primary-border);
     box-shadow: var(--th-btn-primary-shadow);
   }
   .btn-primary-themed:hover {
     background: var(--th-btn-primary-hover);
+    color: var(--th-btn-primary-text-hover);
     box-shadow: var(--th-btn-primary-shadow-hover);
   }
 }

@@ -86,7 +86,7 @@ export default function ContactPage() {
 
                 <button
                   type="submit"
-                  className="btn-primary-themed w-full rounded-lg px-6 py-3 text-sm font-medium transition-all hover:scale-[1.02] hover:shadow-xl"
+                  className="btn-primary-themed w-full rounded-lg px-6 py-3 text-sm font-medium transition-all"
                 >
                   {t('submitButton')}
                 </button>

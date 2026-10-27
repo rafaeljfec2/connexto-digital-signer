@@ -147,7 +147,7 @@ const STATUS_VARIANT: Record<
   'default' | 'success' | 'warning' | 'danger' | 'info'
 > = {
   draft: 'default',
-  pending_signatures: 'info',
+  pending_signatures: 'warning',
   completed: 'success',
   expired: 'danger',
 };

@@ -102,7 +102,7 @@ export function PricingSection() {
                   href="/signup"
                   className={`mt-8 inline-flex items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-medium transition-all hover:scale-105 ${
                     plan.highlighted
-                      ? 'btn-primary-themed shadow-lg hover:shadow-xl'
+                      ? 'btn-primary-themed'
                       : 'border border-white/20 text-white/80 hover:border-white/40 hover:bg-white/5 hover:text-white'
                   }`}
                 >

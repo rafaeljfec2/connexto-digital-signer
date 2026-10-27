@@ -7,11 +7,11 @@ export type BadgeProps = HTMLAttributes<HTMLSpanElement> & {
 };
 
 const variantStyles: Record<BadgeVariant, string> = {
-  default: 'bg-[var(--th-badge-default-bg)] text-[var(--th-badge-default-text)] border border-[var(--th-badge-default-border)]',
-  success: 'bg-success/15 text-success border border-success/20',
-  warning: 'bg-warning/15 text-warning border border-warning/20',
-  danger: 'bg-error/15 text-error border border-error/20',
-  info: 'bg-primary/15 text-primary border border-primary/20',
+  default: 'bg-[var(--th-badge-default-bg)] text-[var(--th-badge-default-text)]',
+  success: 'bg-[var(--th-badge-default-bg)] text-accent',
+  warning: 'bg-[var(--th-badge-default-bg)] text-warning',
+  danger: 'bg-[var(--th-badge-default-bg)] text-error',
+  info: 'bg-[var(--th-badge-default-bg)] text-primary',
 };
 
 export function Badge({
@@ -20,7 +20,7 @@ export function Badge({
   ...props
 }: Readonly<BadgeProps>) {
   const base =
-    'inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-medium tracking-wide';
+    'inline-flex items-center rounded-md px-2 py-0.5 text-[11px] font-medium tracking-wide';
   return (
     <span className={`${base} ${variantStyles[variant]} ${className}`} {...props} />
   );

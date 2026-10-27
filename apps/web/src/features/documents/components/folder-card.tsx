@@ -117,10 +117,15 @@ export function FolderCardList({
   );
 
   return (
-    <button
+    <div
       ref={setRefs}
-      type="button"
       onClick={() => onNavigate(folder.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onNavigate(folder.id);
+        }
+      }}
       className={`group flex w-full cursor-pointer items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-th-hover ${
         isOver ? 'bg-primary/10 ring-2 ring-primary/30' : ''
       } ${isDragging ? 'opacity-50' : ''}`}
@@ -144,7 +149,7 @@ export function FolderCardList({
         onDelete={() => onDelete(folder)}
         labels={menuLabels}
       />
-    </button>
+    </div>
   );
 }
 
@@ -175,10 +180,15 @@ export function FolderCardGrid({
   );
 
   return (
-    <button
+    <div
       ref={setRefs}
-      type="button"
       onClick={() => onNavigate(folder.id)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          onNavigate(folder.id);
+        }
+      }}
       className={`group cursor-pointer space-y-3 rounded-2xl border border-th-card-border bg-th-card p-5 text-left transition-all hover:border-th-card-border hover:bg-th-hover ${
         isOver ? 'bg-primary/10 ring-2 ring-primary/30' : ''
       } ${isDragging ? 'opacity-50' : ''}`}
@@ -204,6 +214,6 @@ export function FolderCardGrid({
           labels={menuLabels}
         />
       </div>
-    </button>
+    </div>
   );
 }

@@ -43,7 +43,7 @@ export function HeroSection() {
           >
             <Link
               href="/signup"
-              className="cta-shimmer btn-primary-themed inline-flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-medium transition-all hover:scale-105 hover:shadow-xl sm:w-auto"
+              className="btn-primary-themed inline-flex w-full items-center justify-center gap-2 rounded-lg px-6 py-3 text-sm font-medium transition-all sm:w-auto"
             >
               {t('ctaPrimary')}
               <ArrowRight className="h-4 w-4" />

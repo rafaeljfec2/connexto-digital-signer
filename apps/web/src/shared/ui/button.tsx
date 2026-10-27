@@ -1,4 +1,4 @@
-"use client";
+'use client';
 
 import type { ButtonHTMLAttributes } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -10,21 +10,13 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   readonly isLoading?: boolean;
 }
 
+const OUTLINE_BUTTON = 'btn-primary-themed';
+
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-  primary: 'btn-primary-themed',
-  secondary: [
-    'bg-white text-foreground border border-th-card-border',
-    'hover:bg-th-hover',
-    'dark:bg-white/10',
-  ].join(' '),
-  ghost: [
-    'bg-transparent text-foreground border border-th-input-border',
-    'hover:bg-th-hover',
-  ].join(' '),
-  destructive: [
-    'bg-error text-white',
-    'hover:opacity-90',
-  ].join(' '),
+  primary: OUTLINE_BUTTON,
+  secondary: OUTLINE_BUTTON,
+  ghost: OUTLINE_BUTTON,
+  destructive: ['bg-error text-white border border-transparent', 'hover:opacity-90'].join(' '),
 };
 
 export function Button({

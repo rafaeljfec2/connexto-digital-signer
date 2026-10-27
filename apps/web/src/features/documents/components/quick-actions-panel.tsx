@@ -33,7 +33,7 @@ export function QuickActionsPanel({
         <button
           type="button"
           onClick={onSendDocument}
-          className="btn-primary-themed flex w-full items-center justify-center gap-2 rounded-xl px-4 py-3 text-sm font-normal transition-all"
+          className="btn-primary-themed flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-normal transition-all"
         >
           <Send className="h-4 w-4" />
           {labels.sendDocument}
@@ -42,7 +42,7 @@ export function QuickActionsPanel({
         <button
           type="button"
           onClick={onViewAll}
-          className="flex w-full items-center justify-center gap-2 rounded-xl border border-th-border bg-th-hover px-4 py-2.5 text-sm font-normal text-foreground-muted transition-all hover:bg-th-active hover:text-foreground"
+          className="btn-primary-themed flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-normal transition-all"
         >
           <FileText className="h-4 w-4" />
           {labels.viewAll}
