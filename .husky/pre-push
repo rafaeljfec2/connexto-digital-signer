@@ -1,1 +1,8 @@
+#!/usr/bin/env sh
+export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
+# Cursor/IDE git hooks often skip direnv; load the repo Node from .nvmrc.
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  . "$NVM_DIR/nvm.sh"
+  nvm use >/dev/null
+fi
 pnpm hooks:pre-push
