@@ -7,6 +7,7 @@ import cookieParser from 'cookie-parser';
 import { Logger } from 'nestjs-pino';
 import { DataSource } from 'typeorm';
 import { AppModule } from './app.module';
+import { isOpenApiEnabled } from './common/config/openapi.config';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
 import { formatBootError, runBootMigrations } from './database/run-boot-migrations';
 
@@ -22,7 +23,7 @@ const resolveAllowedOrigins = (): string[] => {
 };
 
 const configureOpenApi = (app: NestExpressApplication): void => {
-  if (process.env['NODE_ENV'] === 'production') return;
+  if (!isOpenApiEnabled()) return;
   const swaggerConfig = new DocumentBuilder()
     .setTitle('Digital Signer API')
     .setDescription('Nexosign Digital Signer API — multi-tenant e-signature platform with REST API, Webhooks and Templates.')
