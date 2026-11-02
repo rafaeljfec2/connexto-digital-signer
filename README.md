@@ -140,7 +140,7 @@ To auto-switch in any project with `.nvmrc`, add the [nvm](https://github.com/nv
 
    ```env
    DB_HOST=localhost
-   DB_PORT=5432
+   DB_PORT=5433
    DB_USERNAME=postgres
    DB_PASSWORD=postgres
    DB_DATABASE=connexto_signer

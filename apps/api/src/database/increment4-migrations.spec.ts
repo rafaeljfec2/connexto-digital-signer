@@ -1,5 +1,5 @@
-import { AddCancelledStatus1730000000024 } from './1730000000024-add-cancelled-status';
-import { CreatePasswordResetTokens1730000000025 } from './1730000000025-create-password-reset-tokens';
+import { AddCancelledStatus1730000000024 } from './migrations/1730000000024-add-cancelled-status';
+import { CreatePasswordResetTokens1730000000025 } from './migrations/1730000000025-create-password-reset-tokens';
 
 describe('Increment 4 migrations', () => {
   test('AddCancelledStatus1730000000024 is registered with expected name', () => {
