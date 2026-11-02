@@ -48,3 +48,8 @@ Related (same class of issue): `@nestjs/throttler` and other in-memory rate limi
 2. No new business logic that assumes a single process for EventEmitter beyond the request
 3. Accept per-pod AI cache / throttling, or move those to Redis
 4. Shared Postgres, Redis, and MinIO reachable from every pod with the same env
+
+## See also
+
+- Product status and known cron/reminder defects: [`ROADMAP_FUTURO.md`](ROADMAP_FUTURO.md)
+- Docs index: [`README.md`](README.md)

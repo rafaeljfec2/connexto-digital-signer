@@ -1,6 +1,10 @@
 ## Technical Specification — MVP Phase 1
 
-Status: COMPLETED
+Status: COMPLETED (historical)
+
+> **Supersession.** This document freezes the Phase 1 MVP scope (auth, users, login audit, guard split, login/signup/dashboard shell). It is not the current product inventory.  
+> Post-MVP status, known issues, and future work: [`ROADMAP_FUTURO.md`](ROADMAP_FUTURO.md).  
+> Evidence audit (Portuguese): [`reports/discovery/`](../reports/discovery/).
 
 ### Objective
 

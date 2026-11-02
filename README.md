@@ -39,10 +39,19 @@ connexto-digital-signer/
 ├── docker/
 │   ├── Dockerfile
 │   └── docker-compose.yml
+├── docs/                       # Product status and engineering notes
+├── reports/discovery/          # 2026-11-02 audit evidence (PT-BR)
 ├── pnpm-workspace.yaml
 ├── turbo.json
 └── package.json
 ```
+
+## Documentation
+
+- **Product status and roadmap:** [`docs/ROADMAP_FUTURO.md`](docs/ROADMAP_FUTURO.md)
+- **Docs index:** [`docs/README.md`](docs/README.md)
+- **Multi-pod API caveats:** [`docs/API_HORIZONTAL_SCALING.md`](docs/API_HORIZONTAL_SCALING.md)
+- **Detailed discovery audit (Portuguese):** [`reports/discovery/`](reports/discovery/)
 
 ## Architecture
 

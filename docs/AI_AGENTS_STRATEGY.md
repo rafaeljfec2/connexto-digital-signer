@@ -1,5 +1,7 @@
 # Strategic Study: AI Agents in Connexto Digital Signer
 
+> **Status note.** This file is product strategy for AI features, not an implementation checklist. For what ships today (for example AI field suggestion), see [`ROADMAP_FUTURO.md`](ROADMAP_FUTURO.md).
+
 ## Product Context
 
 Connexto Digital Signer is a multi-tenant electronic signature SaaS platform with:
