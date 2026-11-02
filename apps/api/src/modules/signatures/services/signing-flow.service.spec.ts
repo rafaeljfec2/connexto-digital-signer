@@ -163,6 +163,23 @@ describe('SigningFlowService', () => {
       ).rejects.toThrow(BadRequestException);
     });
 
+    test('should reject cancelled envelope', async () => {
+      signaturesService.findByToken.mockResolvedValue(
+        buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') }),
+      );
+      envelopesService.findOne.mockResolvedValue(
+        buildEnvelope({ status: EnvelopeStatus.CANCELLED }),
+      );
+
+      await expect(
+        service.acceptSignature(
+          'token-1',
+          { consent: 'ok', fields: [] },
+          { ipAddress: '127.0.0.1', userAgent: 'jest' },
+        ),
+      ).rejects.toThrow(BadRequestException);
+    });
+
     test('should sign and emit event, without finalizing when not all signed', async () => {
       const signer = buildSigner({ verifiedAt: new Date('2026-01-01T12:00:00.000Z') });
       const saved = buildSigner({
