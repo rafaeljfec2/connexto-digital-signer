@@ -321,6 +321,27 @@ describe('DocumentsService', () => {
     });
   });
 
+  describe('I0-AC2 (policy B3 — closeDocument must not complete without final artifact)', () => {
+    test('should not mark document completed or emit document.completed without finalFileKey', async () => {
+      const document = buildDocument({
+        status: DocumentStatus.PENDING_SIGNATURES,
+        finalFileKey: null,
+        finalHash: null,
+      });
+      jest.spyOn(service, 'findOne').mockResolvedValue(document);
+      (documentRepository.save as jest.Mock).mockImplementation(async (doc: Document) => doc);
+
+      const result = await service.closeDocument('doc-1', 'tenant-1');
+
+      expect(result.status).not.toBe(DocumentStatus.COMPLETED);
+      expect(result.finalFileKey).toBeNull();
+      expect(eventEmitter.emit).not.toHaveBeenCalledWith(
+        EVENT_DOCUMENT_COMPLETED,
+        expect.anything(),
+      );
+    });
+  });
+
   describe('markExpired', () => {
     test('should mark document as expired and emit event', async () => {
       const document = buildDocument({ status: DocumentStatus.PENDING_SIGNATURES });

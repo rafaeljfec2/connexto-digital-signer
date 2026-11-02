@@ -163,10 +163,10 @@ Ordem **1 → 2 → 3 → 4 → 5** preservada. Fase 0 **precede** Inc 1 em cale
 | Problema | Falta de specs de regressão e evidência rastreável |
 | Incluído | Authoring specs; execução local/branch; log de falhas; link para critérios futuros I1/I2 |
 | Excluído | Merge de testes vermelhos; fix de produção |
-| Dependências | Nenhuma decisão de negócio |
-| Aceite | I0-D1..D4 (`04`) |
-| Evidência | Arquivo em `reports/roadmap/evidence/inc0-repro-log-YYYY-MM-DD.md` + AI Memory |
-| Concluído quando | Três falhas documentadas + specs prontos para copiar/colocar no PR de fix |
+| Dependências | Decisões A/B/C **aprovadas**; execução não altera produção |
+| Aceite | I0-D1..D4 (`04`) — **atendidos** 2026-11-02 |
+| Evidência | `reports/roadmap/evidence/inc0-repro-log-2026-11-02.md` + AI Memory |
+| Concluído quando | Três falhas documentadas + specs prontos para PR de fix — **sim** (branch isolada) |
 
 ### Incremento 1 — Integridade da conclusão
 
@@ -203,17 +203,18 @@ Sem alteração material de escopo; ver `03-prioritized-roadmap.md`. Todo merge 
 |---|---|
 | Comportamento em produção FlowDeploy | UNVERIFIED (Discovery) |
 | Nomes exatos de colunas SQL em Postgres prod | Entidade usa `finalFileKey` (camelCase TypeORM); SQL em `05` é hipótese |
-| Specs I0-AC1..3 ainda **não existem** no repo | Confirmado: `reminder-scheduler.service.spec.ts` passa 9 testes e **não** cobre sequencial `notifiedAt` null nem expiração parcial sem finalize |
+| Specs I0-AC1..3 ainda **não existem** no repo | **Resolvido na Fase 0** — specs em branch `phase0/inc0-diagnostic-evidence-2026-11-02`; ver `evidence/inc0-repro-log-2026-11-02.md` |
 | Páginas AI Memory `notes/discovery-2026-11-02-*` | Query retornou hits; leitura integral falhou escopo MCP em sessão anterior |
 | CI GitHub Actions falha com testes vermelhos | Não executado nesta revisão; princípio CI verde é requisito de plano |
 
-**Comando executado nesta revisão:**
+**Comando executado na Fase 0 (2026-11-02):**
 
 ```bash
-pnpm --filter api test -- reminder-scheduler.service.spec.ts --no-coverage
+pnpm --filter @connexto/shared build && pnpm --filter @connexto/events build
+pnpm --filter api test -- reminder-scheduler.service.spec.ts documents.service.spec.ts --no-coverage
 ```
 
-**Resultado:** PASS — 9 tests, 0 failures (confirma ausência de regressão dos três bugs na suíte atual).
+**Resultado:** 40 passed, **3 failed** (I0-AC1, I0-AC2, I0-AC3 — REPRODUZIDO). Baseline legada: 9 + 31 passed antes dos cenários I0. Detalhe: `evidence/inc0-repro-log-2026-11-02.md`.
 
 ---
 
@@ -227,6 +228,6 @@ pnpm --filter api test -- reminder-scheduler.service.spec.ts --no-coverage
 
 ## 11. Próximo passo recomendado
 
-1. **Engenharia:** executar **Fase 0** (autorizada) → `reports/roadmap/evidence/inc0-repro-log-2026-11-02.md`.  
+1. **Engenharia:** Fase 0 **concluída** — evidência em `reports/roadmap/evidence/inc0-repro-log-2026-11-02.md`; specs na branch `phase0/inc0-diagnostic-evidence-2026-11-02`.  
 2. **Produto:** quando for iniciar código na main, emitir **autorização explícita de implementação** do Incremento 1 (fora do escopo da aprovação de políticas 2026-11-02).  
 3. **Não** abrir PR Incremento 1 até Fase 0 concluída + autorização de implementação.

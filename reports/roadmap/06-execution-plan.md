@@ -12,9 +12,8 @@
 ```mermaid
 flowchart TD
   start[Aprovação roadmap]
-  dAB[Workshop: aprovar A e B]
+  dAB[Decisões A/B/C aprovadas 2026-11-02]
   phase0[Fase 0: specs + logs de falha]
-  dC[Aprovar C]
   i1[PR Incremento 1: fix + I0-AC1/AC2 verdes]
   i2[PR Incremento 2: fix + I0-AC3 verde]
   i3[Incremento 3]
@@ -23,9 +22,8 @@ flowchart TD
   start --> phase0
   phase0 --> dAB
   dAB --> i1
-  phase0 --> dC
+  phase0 --> i1
   i1 --> i2
-  dC --> i2
   i2 --> i3 --> i4 --> i5
 ```
 
@@ -56,7 +54,7 @@ flowchart TD
 |---|---|---|
 | Decisões **A1** e **B3** | Produto | **Aprovado** 2026-11-02 |
 | Matriz A1 em `04` | PM/Tech | **Preenchida** |
-| Fase 0 concluída (I0-D*) | Eng | Pendente |
+| Fase 0 concluída (I0-D*) | Eng | **Concluída** 2026-11-02 (`evidence/inc0-repro-log-2026-11-02.md`; branch isolada) |
 | Autorização de **implementação** Inc 1 | Produto | Pendente (fora do escopo da aprovação 2026-11-02) |
 
 **Conteúdo do PR Incremento 1 (quando autorizado)**

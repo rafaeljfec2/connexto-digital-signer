@@ -2,7 +2,7 @@
 
 **Base:** `reports/discovery/05-gap-analysis.md`, `06-technical-assessment.md`, `07-opportunity-backlog.md`  
 **Revisão de código referenciada:** `37c8036`  
-**Registro formal:** `decisions/product-approval-2026-11-02.md` (2026-11-02)
+**Registro formal:** `decisions/product-approval-2026-11-02.md` (2026-11-02) · consolidação **`08-product-decisions-approval.md`**
 
 ## Status das decisões A, B e C
 

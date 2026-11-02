@@ -28,7 +28,7 @@
 | I0-D1 | Specs redigidos para I0-AC1, I0-AC2, I0-AC3 (cenários nomeados) | Revisão em branch ou anexo |
 | I0-D2 | Executados contra código atual; **falham** como esperado | Log em `reports/roadmap/evidence/inc0-repro-log-*.md` |
 | I0-D3 | Evidência referencia commit/revisão testada | Hash ou tag no log |
-| I0-D4 | Mapeamento documentado: AC1/AC2 → PR Incremento 1; AC3 → PR Incremento 2 | `07-execution-readiness.md` |
+| I0-D4 | Mapeamento documentado: AC1/AC2 → PR Incremento 1; AC3 → PR Incremento 2 | `07-execution-readiness.md`, `evidence/inc0-repro-log-2026-11-02.md` |
 
 ### Especificação dos testes (integrados verdes depois)
 
@@ -195,7 +195,7 @@
 ## Definition of Ready (antes de codar Incremento 1)
 
 - [x] Decisões **A** e **B** aprovadas — **A1**, **B3** (2026-11-02).
-- [ ] Fase 0 concluída (I0-D1..D4); evidência arquivada.
+- [ ] Fase 0 concluída (I0-D1..D4); evidência arquivada — **concluída 2026-11-02** no worktree `phase0/inc0-diagnostic-evidence-2026-11-02` (ver `evidence/inc0-repro-log-2026-11-02.md`); **main** inalterada.
 - [x] Critérios I1-AC2 / I1-AC3 alinhados à aprovação (`04` e `product-approval-2026-11-02.md`).
 - [ ] Autorização explícita para **implementação** do Incremento 1 (fora do escopo da aprovação de produto de 2026-11-02).
 

@@ -1,7 +1,11 @@
 import { Logger } from '@nestjs/common';
 import type { Repository } from 'typeorm';
 import { ReminderSchedulerService } from './reminder-scheduler.service';
-import { Envelope, EnvelopeStatus } from '../../envelopes/entities/envelope.entity';
+import {
+  Envelope,
+  EnvelopeStatus,
+  SigningMode,
+} from '../../envelopes/entities/envelope.entity';
 import { Document, DocumentStatus } from '../../documents/entities/document.entity';
 import { Signer, SignerStatus } from '../../signatures/entities/signer.entity';
 import type { NotificationsService } from './notifications.service';
@@ -241,6 +245,71 @@ describe('ReminderSchedulerService', () => {
         expect.anything(),
         expect.anything(),
       );
+    });
+  });
+
+  describe('I0-AC1 (policy A1 — partial signatures at expiry)', () => {
+    it('should mark envelope and documents expired when signatures are partial at expiry', async () => {
+      const past = new Date('2020-01-01T00:00:00.000Z');
+      const envelope = buildEnvelope({ expiresAt: past });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([
+        buildSigner({ id: 'signer-signed', status: SignerStatus.SIGNED }),
+      ]);
+
+      const managerUpdate = jest
+        .fn()
+        .mockResolvedValueOnce({ affected: 1 })
+        .mockResolvedValueOnce({ affected: 1 });
+      envelopeRepository.manager.transaction.mockImplementation(
+        async (cb: (manager: { update: jest.Mock }) => Promise<boolean>) =>
+          cb({ update: managerUpdate }),
+      );
+
+      await service.runExpiredEnvelopes();
+
+      expect(managerUpdate).toHaveBeenCalledWith(
+        Envelope,
+        expect.objectContaining({ id: envelope.id }),
+        { status: EnvelopeStatus.EXPIRED },
+      );
+      expect(managerUpdate).toHaveBeenCalledWith(
+        Document,
+        { envelopeId: envelope.id, tenantId: envelope.tenantId },
+        { status: DocumentStatus.EXPIRED },
+      );
+      expect(managerUpdate).not.toHaveBeenCalledWith(
+        Envelope,
+        expect.anything(),
+        { status: EnvelopeStatus.COMPLETED },
+      );
+      expect(managerUpdate).not.toHaveBeenCalledWith(
+        Document,
+        expect.anything(),
+        { status: DocumentStatus.COMPLETED },
+      );
+    });
+  });
+
+  describe('I0-AC3 (policy C1 — sequential reminder eligibility)', () => {
+    it('should not send reminder when pending signer was never invited (notifiedAt null)', async () => {
+      const envelope = buildEnvelope({
+        signingMode: SigningMode.SEQUENTIAL,
+        reminderInterval: '1_day',
+      });
+      const neverInvited = buildSigner({
+        id: 'signer-2',
+        notifiedAt: null,
+        reminderCount: 0,
+      });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([neverInvited]);
+      signerRepository.update.mockResolvedValue({ affected: 1 });
+
+      await service.runReminders();
+
+      expect(signerRepository.update).not.toHaveBeenCalled();
+      expect(notificationsService.sendSignatureReminder).not.toHaveBeenCalled();
     });
   });
 });
