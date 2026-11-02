@@ -406,4 +406,208 @@ describe('ReminderSchedulerService', () => {
       expect(notificationsService.sendSignatureReminder).not.toHaveBeenCalled();
     });
   });
+
+  describe('Increment 2 — sequential reminders (C1)', () => {
+    const sequentialEnvelope = (): Envelope =>
+      buildEnvelope({
+        signingMode: SigningMode.SEQUENTIAL,
+        reminderInterval: '1_day',
+      });
+
+    const invitedAt = new Date('2020-01-01T00:00:00.000Z');
+
+    it('should send reminder to the first pending signer when notified in sequential mode', async () => {
+      const envelope = sequentialEnvelope();
+      const first = buildSigner({
+        id: 'signer-1',
+        order: 1,
+        notifiedAt: invitedAt,
+        reminderCount: 0,
+      });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([first]);
+      signerRepository.update.mockResolvedValue({ affected: 1 });
+
+      await service.runReminders();
+
+      expect(signerRepository.update).toHaveBeenCalledTimes(1);
+      expect(signerRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'signer-1' }),
+        expect.objectContaining({ reminderCount: 1 }),
+      );
+      expect(notificationsService.sendSignatureReminder).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not send reminder to active sequential signer without notifiedAt', async () => {
+      const envelope = sequentialEnvelope();
+      const firstNotInvited = buildSigner({
+        id: 'signer-1',
+        order: 1,
+        notifiedAt: null,
+        reminderCount: 0,
+      });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([firstNotInvited]);
+
+      await service.runReminders();
+
+      expect(signerRepository.update).not.toHaveBeenCalled();
+      expect(notificationsService.sendSignatureReminder).not.toHaveBeenCalled();
+    });
+
+    it('should not send reminder to second signer while first is still pending', async () => {
+      const envelope = sequentialEnvelope();
+      const first = buildSigner({
+        id: 'signer-1',
+        order: 1,
+        notifiedAt: invitedAt,
+        reminderCount: 0,
+      });
+      const second = buildSigner({
+        id: 'signer-2',
+        order: 2,
+        email: 'bob@example.com',
+        notifiedAt: invitedAt,
+        reminderCount: 0,
+      });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([first, second]);
+      signerRepository.update.mockResolvedValue({ affected: 1 });
+
+      await service.runReminders();
+
+      expect(signerRepository.update).toHaveBeenCalledTimes(1);
+      expect(signerRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'signer-1' }),
+        expect.anything(),
+      );
+      expect(notificationsService.sendSignatureReminder).toHaveBeenCalledWith(
+        expect.objectContaining({ signerEmail: 'alice@example.com' }),
+      );
+      expect(notificationsService.sendSignatureReminder).not.toHaveBeenCalledWith(
+        expect.objectContaining({ signerEmail: 'bob@example.com' }),
+      );
+    });
+
+    it('should send reminder to next signer after prior signers signed when notified', async () => {
+      const envelope = sequentialEnvelope();
+      const secondActive = buildSigner({
+        id: 'signer-2',
+        order: 2,
+        email: 'bob@example.com',
+        notifiedAt: invitedAt,
+        reminderCount: 0,
+      });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([secondActive]);
+      signerRepository.update.mockResolvedValue({ affected: 1 });
+
+      await service.runReminders();
+
+      expect(signerRepository.update).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'signer-2' }),
+        expect.objectContaining({ reminderCount: 1 }),
+      );
+      expect(notificationsService.sendSignatureReminder).toHaveBeenCalledWith(
+        expect.objectContaining({ signerEmail: 'bob@example.com' }),
+      );
+    });
+
+    it('should only query pending signers so signed signers never receive reminders', async () => {
+      const envelope = sequentialEnvelope();
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([]);
+
+      await service.runReminders();
+
+      expect(signerRepository.find).toHaveBeenCalledWith({
+        where: {
+          envelopeId: envelope.id,
+          tenantId: envelope.tenantId,
+          status: SignerStatus.PENDING,
+        },
+      });
+      expect(notificationsService.sendSignatureReminder).not.toHaveBeenCalled();
+    });
+
+    it('should respect MAX_REMINDERS for the active sequential signer', async () => {
+      const envelope = sequentialEnvelope();
+      const first = buildSigner({
+        id: 'signer-1',
+        order: 1,
+        notifiedAt: invitedAt,
+        reminderCount: 3,
+      });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([first]);
+
+      await service.runReminders();
+
+      expect(signerRepository.update).not.toHaveBeenCalled();
+      expect(notificationsService.sendSignatureReminder).not.toHaveBeenCalled();
+    });
+
+    it('should respect reminder interval for the active sequential signer', async () => {
+      const envelope = sequentialEnvelope();
+      const first = buildSigner({
+        id: 'signer-1',
+        order: 1,
+        notifiedAt: new Date(),
+        reminderCount: 0,
+      });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([first]);
+
+      await service.runReminders();
+
+      expect(signerRepository.update).not.toHaveBeenCalled();
+      expect(notificationsService.sendSignatureReminder).not.toHaveBeenCalled();
+    });
+
+    it('should not duplicate reminders when concurrent claim loses the race', async () => {
+      const envelope = sequentialEnvelope();
+      const first = buildSigner({
+        id: 'signer-1',
+        order: 1,
+        notifiedAt: invitedAt,
+        reminderCount: 0,
+      });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([first]);
+      signerRepository.update.mockResolvedValue({ affected: 0 });
+
+      await service.runReminders();
+
+      expect(signerRepository.update).toHaveBeenCalledTimes(1);
+      expect(notificationsService.sendSignatureReminder).not.toHaveBeenCalled();
+    });
+
+    it('should allow parallel mode to remind every notified pending signer', async () => {
+      const envelope = buildEnvelope({
+        signingMode: SigningMode.PARALLEL,
+        reminderInterval: '1_day',
+      });
+      const alice = buildSigner({
+        id: 'signer-1',
+        order: 1,
+        notifiedAt: invitedAt,
+        reminderCount: 0,
+      });
+      const bob = buildSigner({
+        id: 'signer-2',
+        order: 2,
+        email: 'bob@example.com',
+        notifiedAt: invitedAt,
+        reminderCount: 0,
+      });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([alice, bob]);
+      signerRepository.update.mockResolvedValue({ affected: 1 });
+
+      await service.runReminders();
+
+      expect(signerRepository.update).toHaveBeenCalledTimes(2);
+      expect(notificationsService.sendSignatureReminder).toHaveBeenCalledTimes(2);
+    });
+  });
 });
