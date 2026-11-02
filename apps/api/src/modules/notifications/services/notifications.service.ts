@@ -1,7 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import { Queue } from 'bull';
 import { TenantsService } from '../../tenants/services/tenants.service';
+import type { EmailClient } from '../channels/email/email-client';
+import { EMAIL_CLIENT } from '../channels/email/email-client';
 import { TemplateService } from './template.service';
 
 export interface SendEmailJobPayload {
@@ -20,6 +22,7 @@ export class NotificationsService {
     private readonly queue: Queue,
     private readonly templateService: TemplateService,
     private readonly tenantsService: TenantsService,
+    @Inject(EMAIL_CLIENT) private readonly emailClient: EmailClient,
   ) {}
 
   async sendEmail(payload: SendEmailJobPayload): Promise<string> {
@@ -53,7 +56,22 @@ export class NotificationsService {
       params.locale ?? 'en',
     );
 
-    return this.sendEmail({ to: params.signerEmail, subject, text, html, senderName: params.senderName });
+    const result = await this.emailClient.send({
+      to: { email: params.signerEmail, name: params.signerName },
+      subject,
+      text,
+      html,
+      tags: ['signature-invite'],
+      ...(params.senderName ? { fromName: params.senderName } : {}),
+    });
+
+    if (!result.accepted) {
+      throw new BadRequestException(
+        'Email provider did not accept the signature invitation',
+      );
+    }
+
+    return result.id ?? '';
   }
 
   async sendSignatureReminder(params: {

@@ -1,4 +1,4 @@
-import { BadRequestException } from '@nestjs/common';
+import { BadRequestException, ConflictException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { EVENT_DOCUMENT_SENT } from '@connexto/events';
 import type { Repository } from 'typeorm';
@@ -30,6 +30,7 @@ describe('EnvelopeDispatchService', () => {
   beforeEach(() => {
     signerRepository = {
       save: jest.fn(),
+      update: jest.fn(),
     } as unknown as Repository<Signer>;
     signaturesService = {
       findByEnvelope: jest.fn().mockResolvedValue([]),
@@ -113,8 +114,8 @@ describe('EnvelopeDispatchService', () => {
       envelopesService.findOne.mockResolvedValue(envelope);
       documentsService.findByEnvelope.mockResolvedValue([buildDocument()]);
       signaturesService.findByEnvelope.mockResolvedValue(signers);
-      (signerRepository.save as jest.Mock).mockResolvedValue([signers[0]]);
-      notificationsService.sendSignatureInvite.mockResolvedValue('job-1');
+      (signerRepository.save as jest.Mock).mockImplementation(async (s: Signer) => s);
+      notificationsService.sendSignatureInvite.mockResolvedValue('provider-id');
 
       const result = await service.sendEnvelope('tenant-1', 'env-1');
 
@@ -136,6 +137,164 @@ describe('EnvelopeDispatchService', () => {
           tenantId: 'tenant-1',
           signingMode: SigningMode.SEQUENTIAL,
         }),
+      );
+      expect(notificationsService.sendSignatureInvite).toHaveBeenCalledTimes(1);
+      expect(signerRepository.save).toHaveBeenCalledTimes(1);
+      const sendOrder =
+        notificationsService.sendSignatureInvite.mock.invocationCallOrder[0] ?? 0;
+      const saveOrder = (signerRepository.save as jest.Mock).mock.invocationCallOrder[0] ?? 0;
+      expect(sendOrder).toBeLessThan(saveOrder);
+    });
+
+    test('should notify all pending signers in parallel mode', async () => {
+      const envelope = buildEnvelope({ signingMode: SigningMode.PARALLEL });
+      const signers = [
+        buildSigner({ id: 'signer-1', order: 1 }),
+        buildSigner({ id: 'signer-2', order: 2, email: 'two@acme.com' }),
+      ];
+      envelopesService.findOne.mockResolvedValue(envelope);
+      documentsService.findByEnvelope.mockResolvedValue([buildDocument()]);
+      signaturesService.findByEnvelope.mockResolvedValue(signers);
+      (signerRepository.save as jest.Mock).mockImplementation(async (s: Signer) => s);
+      notificationsService.sendSignatureInvite.mockResolvedValue('provider-id');
+
+      const result = await service.sendEnvelope('tenant-1', 'env-1');
+
+      expect(result.notified).toEqual(['signer-1', 'signer-2']);
+      expect(notificationsService.sendSignatureInvite).toHaveBeenCalledTimes(2);
+      expect(signerRepository.save).toHaveBeenCalledTimes(2);
+    });
+
+    test('should not persist notifiedAt when provider rejects the invite', async () => {
+      const envelope = buildEnvelope({ signingMode: SigningMode.PARALLEL });
+      const signers = [buildSigner({ id: 'signer-1' })];
+      envelopesService.findOne.mockResolvedValue(envelope);
+      documentsService.findByEnvelope.mockResolvedValue([buildDocument()]);
+      signaturesService.findByEnvelope.mockResolvedValue(signers);
+      notificationsService.sendSignatureInvite.mockRejectedValue(
+        new BadRequestException('Email provider did not accept the signature invitation'),
+      );
+
+      await expect(service.sendEnvelope('tenant-1', 'env-1')).rejects.toThrow(
+        BadRequestException,
+      );
+      expect(signerRepository.save).not.toHaveBeenCalled();
+      expect(envelopesService.setStatus).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resendSignerInvitation', () => {
+    test('should resend to eligible pending signer and update notifiedAt', async () => {
+      const envelope = buildEnvelope({ signingMode: SigningMode.PARALLEL });
+      const signer = buildSigner({ id: 'signer-1', notifiedAt: null });
+      envelopesService.findOne.mockResolvedValue(envelope);
+      signaturesService.findByEnvelope.mockResolvedValue([signer]);
+      (signerRepository.update as jest.Mock)
+        .mockResolvedValueOnce({ affected: 1 })
+        .mockResolvedValueOnce({ affected: 1 });
+      notificationsService.sendSignatureInvite.mockResolvedValue('provider-id');
+
+      const result = await service.resendSignerInvitation(
+        'tenant-1',
+        'env-1',
+        'signer-1',
+      );
+
+      expect(result.signerId).toBe('signer-1');
+      expect(result.notifiedAt).toBeInstanceOf(Date);
+      expect(notificationsService.sendSignatureInvite).toHaveBeenCalledWith(
+        expect.objectContaining({ signerEmail: 'jane@acme.com' }),
+      );
+      expect(signerRepository.update).toHaveBeenLastCalledWith(
+        { id: 'signer-1', tenantId: 'tenant-1' },
+        expect.objectContaining({ notifiedAt: expect.any(Date) }),
+      );
+    });
+
+    test('should reject resend for signed signer', async () => {
+      const envelope = buildEnvelope();
+      const signer = buildSigner({ id: 'signer-1', status: SignerStatus.SIGNED });
+      envelopesService.findOne.mockResolvedValue(envelope);
+      signaturesService.findByEnvelope.mockResolvedValue([signer]);
+
+      await expect(
+        service.resendSignerInvitation('tenant-1', 'env-1', 'signer-1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(notificationsService.sendSignatureInvite).not.toHaveBeenCalled();
+    });
+
+    test('should reject resend for expired envelope status', async () => {
+      const envelope = buildEnvelope({ status: EnvelopeStatus.EXPIRED });
+      const signer = buildSigner({ id: 'signer-1' });
+      envelopesService.findOne.mockResolvedValue(envelope);
+      signaturesService.findByEnvelope.mockResolvedValue([signer]);
+
+      await expect(
+        service.resendSignerInvitation('tenant-1', 'env-1', 'signer-1'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    test('should reject resend for completed envelope', async () => {
+      const envelope = buildEnvelope({ status: EnvelopeStatus.COMPLETED });
+      const signer = buildSigner({ id: 'signer-1' });
+      envelopesService.findOne.mockResolvedValue(envelope);
+      signaturesService.findByEnvelope.mockResolvedValue([signer]);
+
+      await expect(
+        service.resendSignerInvitation('tenant-1', 'env-1', 'signer-1'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    test('should reject resend for non-active sequential signer', async () => {
+      const envelope = buildEnvelope({ signingMode: SigningMode.SEQUENTIAL });
+      const first = buildSigner({ id: 'signer-1', order: 1 });
+      const second = buildSigner({ id: 'signer-2', order: 2, email: 'two@acme.com' });
+      envelopesService.findOne.mockResolvedValue(envelope);
+      signaturesService.findByEnvelope.mockResolvedValue([first, second]);
+
+      await expect(
+        service.resendSignerInvitation('tenant-1', 'env-1', 'signer-2'),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    test('should not send duplicate email when concurrent claim fails', async () => {
+      const envelope = buildEnvelope();
+      const signer = buildSigner({ id: 'signer-1' });
+      envelopesService.findOne.mockResolvedValue(envelope);
+      signaturesService.findByEnvelope.mockResolvedValue([signer]);
+      (signerRepository.update as jest.Mock).mockResolvedValue({ affected: 0 });
+
+      await expect(
+        service.resendSignerInvitation('tenant-1', 'env-1', 'signer-1'),
+      ).rejects.toThrow(ConflictException);
+      expect(notificationsService.sendSignatureInvite).not.toHaveBeenCalled();
+    });
+
+    test('should keep notifiedAt unchanged when provider rejects resend', async () => {
+      const envelope = buildEnvelope();
+      const signer = buildSigner({
+        id: 'signer-1',
+        notifiedAt: new Date('2026-01-01T00:00:00.000Z'),
+      });
+      envelopesService.findOne.mockResolvedValue(envelope);
+      signaturesService.findByEnvelope.mockResolvedValue([signer]);
+      (signerRepository.update as jest.Mock)
+        .mockResolvedValueOnce({ affected: 1 })
+        .mockResolvedValueOnce({ affected: 1 });
+      notificationsService.sendSignatureInvite.mockRejectedValue(
+        new BadRequestException('Email provider did not accept the signature invitation'),
+      );
+
+      await expect(
+        service.resendSignerInvitation('tenant-1', 'env-1', 'signer-1'),
+      ).rejects.toThrow(BadRequestException);
+      expect(signerRepository.update).toHaveBeenCalledWith(
+        { id: 'signer-1', tenantId: 'tenant-1' },
+        { updatedAt: signer.updatedAt },
+      );
+      expect(signerRepository.update).not.toHaveBeenCalledWith(
+        { id: 'signer-1', tenantId: 'tenant-1' },
+        expect.objectContaining({ notifiedAt: expect.any(Date) }),
       );
     });
   });

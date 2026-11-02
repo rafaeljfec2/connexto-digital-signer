@@ -84,7 +84,10 @@ export class SignersListController {
 @RequireAuthMethod('jwt')
 @Controller('envelopes/:envelopeId/signers')
 export class SignaturesController {
-  constructor(private readonly signaturesService: SignaturesService) {}
+  constructor(
+    private readonly signaturesService: SignaturesService,
+    private readonly envelopeDispatchService: EnvelopeDispatchService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Add a signer to an envelope' })
@@ -138,6 +141,23 @@ export class SignaturesController {
     @TenantId() tenantId: string
   ) {
     return this.signaturesService.removeSigner(tenantId, envelopeId, signerId);
+  }
+
+  @Post(':signerId/resend-invite')
+  @ApiOperation({ summary: 'Resend signature invitation to a signer' })
+  @ApiParam({ name: 'envelopeId', description: 'Envelope UUID' })
+  @ApiParam({ name: 'signerId', description: 'Signer UUID' })
+  @ApiResponse({ status: 201, description: 'Invitation resent' })
+  resendInvite(
+    @Param('envelopeId', ParseUUIDPipe) envelopeId: string,
+    @Param('signerId', ParseUUIDPipe) signerId: string,
+    @TenantId() tenantId: string,
+  ) {
+    return this.envelopeDispatchService.resendSignerInvitation(
+      tenantId,
+      envelopeId,
+      signerId,
+    );
   }
 }
 

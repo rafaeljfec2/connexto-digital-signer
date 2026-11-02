@@ -1,6 +1,6 @@
 import type { DocumentSentEvent } from '@connexto/events';
 import { EVENT_DOCUMENT_SENT } from '@connexto/events';
-import { BadRequestException, Injectable, Logger } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -14,6 +14,9 @@ import { NotificationsService } from '../../notifications/services/notifications
 import { CertificateService } from '../../tenants/services/certificate.service';
 import { Signer, SignerStatus } from '../entities/signer.entity';
 import { validateEnvelopeIsActionable } from '../utils/validate-envelope-actionable';
+import {
+  assertSignerEligibleForInviteDelivery,
+} from '../utils/signer-invite-eligibility';
 import { SignatureFieldsService } from './signature-fields.service';
 import { SignaturesService } from './signatures.service';
 
@@ -79,6 +82,57 @@ export class EnvelopeDispatchService {
     this.eventEmitter.emit(EVENT_DOCUMENT_SENT, sentPayload);
 
     return { notified: notified.map((signer) => signer.id) };
+  }
+
+  async resendSignerInvitation(
+    tenantId: string,
+    envelopeId: string,
+    signerId: string,
+  ): Promise<{ signerId: string; notifiedAt: Date }> {
+    const envelope = await this.envelopesService.findOne(envelopeId, tenantId);
+    const signers = await this.signaturesService.findByEnvelope(envelopeId, tenantId);
+    const signer = signers.find((item) => item.id === signerId);
+    if (!signer) {
+      throw new BadRequestException('Signer not found');
+    }
+
+    assertSignerEligibleForInviteDelivery(envelope, signer, signers);
+
+    const claim = await this.signerRepository.update(
+      {
+        id: signer.id,
+        tenantId,
+        envelopeId,
+        updatedAt: signer.updatedAt,
+        status: SignerStatus.PENDING,
+      },
+      { updatedAt: new Date() },
+    );
+    if (claim.affected !== 1) {
+      throw new ConflictException('Invitation resend is already in progress');
+    }
+
+    const notifiedAt = new Date();
+    try {
+      await this.deliverSignatureInvite(envelope, signer);
+    } catch (error) {
+      await this.signerRepository.update(
+        { id: signer.id, tenantId },
+        { updatedAt: signer.updatedAt },
+      );
+      throw error;
+    }
+
+    await this.signerRepository.update(
+      { id: signer.id, tenantId },
+      { notifiedAt },
+    );
+
+    this.logger.log(
+      `Invitation resent to signer ${signer.id} for envelope ${envelopeId}`,
+    );
+
+    return { signerId: signer.id, notifiedAt };
   }
 
   async previewSend(
@@ -204,25 +258,36 @@ export class EnvelopeDispatchService {
     message?: string,
   ): Promise<Signer[]> {
     if (signers.length === 0) return [];
-    const updated = signers.map((signer) => ({
-      ...signer,
-      notifiedAt,
-    }));
-    const saved = await this.signerRepository.save(updated);
-    await Promise.all(
-      saved.map((signer) =>
-        this.notificationsService.sendSignatureInvite({
-          tenantId: envelope.tenantId,
-          signerEmail: signer.email,
-          signerName: signer.name,
-          documentTitle: envelope.title,
-          signUrl: this.buildSignUrl(signer.accessToken, envelope.signingLanguage ?? 'en'),
-          locale: envelope.signingLanguage ?? 'en',
-          message,
-        }),
-      ),
-    );
+    const saved: Signer[] = [];
+    for (const signer of signers) {
+      await this.deliverSignatureInvite(envelope, signer, message);
+      const persisted = await this.signerRepository.save({
+        ...signer,
+        notifiedAt,
+      });
+      saved.push(persisted);
+    }
     return saved;
+  }
+
+  private async deliverSignatureInvite(
+    envelope: {
+      readonly tenantId: string;
+      readonly title: string;
+      readonly signingLanguage?: string;
+    },
+    signer: Signer,
+    message?: string,
+  ): Promise<void> {
+    await this.notificationsService.sendSignatureInvite({
+      tenantId: envelope.tenantId,
+      signerEmail: signer.email,
+      signerName: signer.name,
+      documentTitle: envelope.title,
+      signUrl: this.buildSignUrl(signer.accessToken, envelope.signingLanguage ?? 'en'),
+      locale: envelope.signingLanguage ?? 'en',
+      message,
+    });
   }
 
   private async finalizeDocument(
