@@ -1,7 +1,12 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, Not, Repository } from 'typeorm';
+import {
+  EVENT_DOCUMENT_EXPIRED,
+  type DocumentExpiredEvent,
+} from '@connexto/events';
 import { Envelope, EnvelopeStatus, SigningMode } from '../../envelopes/entities/envelope.entity';
 import { Document, DocumentStatus } from '../../documents/entities/document.entity';
 import { Signer, SignerStatus } from '../../signatures/entities/signer.entity';
@@ -28,8 +33,11 @@ export class ReminderSchedulerService {
     private readonly envelopeRepository: Repository<Envelope>,
     @InjectRepository(Signer)
     private readonly signerRepository: Repository<Signer>,
+    @InjectRepository(Document)
+    private readonly documentRepository: Repository<Document>,
     private readonly notificationsService: NotificationsService,
     private readonly lockService: DistributedLockService,
+    private readonly eventEmitter: EventEmitter2,
     @Inject('ReminderSchedulerLogger') private readonly logger: Logger,
   ) {}
 
@@ -243,9 +251,30 @@ export class ReminderSchedulerService {
       return;
     }
 
+    await this.emitExpiredDocumentEvents(envelope);
+
     this.logger.log(
       `Envelope ${envelope.id} expired - marking as ${newStatus} (${signedSigners.length} signatures).`,
     );
+  }
+
+  private async emitExpiredDocumentEvents(envelope: Envelope): Promise<void> {
+    const documents = await this.documentRepository.find({
+      where: {
+        envelopeId: envelope.id,
+        tenantId: envelope.tenantId,
+        status: DocumentStatus.EXPIRED,
+      },
+    });
+    const expiredAt = new Date();
+    for (const document of documents) {
+      const payload: DocumentExpiredEvent = {
+        documentId: document.id,
+        tenantId: document.tenantId,
+        expiredAt,
+      };
+      this.eventEmitter.emit(EVENT_DOCUMENT_EXPIRED, payload);
+    }
   }
 
   private buildSignUrl(accessToken: string, locale = 'pt-br'): string {

@@ -45,7 +45,7 @@ export class CreateEnvelopeDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['automatic', 'manual'])
+  @IsIn(['automatic'])
   @ApiPropertyOptional({ example: 'automatic' })
   readonly closureMode?: string;
 }

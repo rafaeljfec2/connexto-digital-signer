@@ -1,4 +1,4 @@
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import type { Repository } from 'typeorm';
 import { EnvelopesService } from './envelopes.service';
 import { Envelope, EnvelopeStatus, SigningMode } from '../entities/envelope.entity';
@@ -131,6 +131,12 @@ describe('EnvelopesService', () => {
       await expect(
         service.create('tenant-1', { title: 'New document', folderId: 'missing' }),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    test('rejects manual closure mode', async () => {
+      await expect(
+        service.create('tenant-1', { title: 'New document', closureMode: 'manual' }),
+      ).rejects.toThrow(BadRequestException);
     });
   });
 

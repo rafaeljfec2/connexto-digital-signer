@@ -47,7 +47,7 @@ export class UpdateTemplateDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['automatic', 'manual'])
+  @IsIn(['automatic'])
   @ApiPropertyOptional()
   readonly closureMode?: string;
 

@@ -1,4 +1,10 @@
 import { Logger } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import {
+  EVENT_DOCUMENT_EXPIRED,
+  EVENT_DOCUMENT_COMPLETED,
+  type DocumentExpiredEvent,
+} from '@connexto/events';
 import type { Repository } from 'typeorm';
 import { ReminderSchedulerService } from './reminder-scheduler.service';
 import {
@@ -45,8 +51,10 @@ describe('ReminderSchedulerService', () => {
     manager: { transaction: jest.Mock };
   };
   let signerRepository: { find: jest.Mock; update: jest.Mock };
+  let documentRepository: { find: jest.Mock };
   let notificationsService: { sendSignatureReminder: jest.Mock };
   let lockService: { acquire: jest.Mock; release: jest.Mock };
+  let eventEmitter: { emit: jest.Mock };
   let logger: Logger;
   let service: ReminderSchedulerService;
 
@@ -60,6 +68,9 @@ describe('ReminderSchedulerService', () => {
       find: jest.fn(),
       update: jest.fn(),
     };
+    documentRepository = {
+      find: jest.fn().mockResolvedValue([]),
+    };
     notificationsService = {
       sendSignatureReminder: jest.fn().mockResolvedValue(undefined),
     };
@@ -67,6 +78,7 @@ describe('ReminderSchedulerService', () => {
       acquire: jest.fn().mockResolvedValue('lock-token'),
       release: jest.fn().mockResolvedValue(true),
     };
+    eventEmitter = { emit: jest.fn() };
     logger = {
       log: jest.fn(),
       error: jest.fn(),
@@ -76,8 +88,10 @@ describe('ReminderSchedulerService', () => {
     service = new ReminderSchedulerService(
       envelopeRepository as unknown as Repository<Envelope>,
       signerRepository as unknown as Repository<Signer>,
+      documentRepository as unknown as Repository<Document>,
       notificationsService as unknown as NotificationsService,
       lockService as unknown as DistributedLockService,
+      eventEmitter as unknown as EventEmitter2,
       logger,
     );
   });
@@ -288,6 +302,86 @@ describe('ReminderSchedulerService', () => {
         expect.anything(),
         { status: DocumentStatus.COMPLETED },
       );
+    });
+  });
+
+  describe('Increment 1 — partial expiry (A1)', () => {
+    it('should emit document.expired for each expired document and not emit document.completed', async () => {
+      const past = new Date('2020-01-01T00:00:00.000Z');
+      const envelope = buildEnvelope({ expiresAt: past });
+      const expiredDoc = {
+        id: 'doc-1',
+        tenantId: envelope.tenantId,
+        envelopeId: envelope.id,
+        status: DocumentStatus.EXPIRED,
+      } as Document;
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([
+        buildSigner({ id: 'signer-signed', status: SignerStatus.SIGNED }),
+      ]);
+      documentRepository.find.mockResolvedValue([expiredDoc]);
+
+      const managerUpdate = jest
+        .fn()
+        .mockResolvedValueOnce({ affected: 1 })
+        .mockResolvedValueOnce({ affected: 1 });
+      envelopeRepository.manager.transaction.mockImplementation(
+        async (cb: (manager: { update: jest.Mock }) => Promise<boolean>) =>
+          cb({ update: managerUpdate }),
+      );
+
+      await service.runExpiredEnvelopes();
+
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        EVENT_DOCUMENT_EXPIRED,
+        expect.objectContaining({
+          documentId: 'doc-1',
+          tenantId: envelope.tenantId,
+          expiredAt: expect.any(Date),
+        }) as DocumentExpiredEvent,
+      );
+      expect(eventEmitter.emit).not.toHaveBeenCalledWith(
+        EVENT_DOCUMENT_COMPLETED,
+        expect.anything(),
+      );
+    });
+
+    it('should preserve signed signers without deleting them', async () => {
+      const past = new Date('2020-01-01T00:00:00.000Z');
+      const envelope = buildEnvelope({ expiresAt: past });
+      const signed = buildSigner({ id: 'signer-signed', status: SignerStatus.SIGNED });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([signed]);
+      documentRepository.find.mockResolvedValue([]);
+      envelopeRepository.manager.transaction.mockImplementation(
+        async (cb: (manager: { update: jest.Mock }) => Promise<boolean>) =>
+          cb({ update: jest.fn().mockResolvedValue({ affected: 1 }) }),
+      );
+
+      await service.runExpiredEnvelopes();
+
+      expect(signerRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: expect.objectContaining({ status: SignerStatus.SIGNED }),
+        }),
+      );
+      expect(signerRepository.update).not.toHaveBeenCalled();
+    });
+
+    it('should be idempotent when envelope claim affects zero rows', async () => {
+      const past = new Date('2020-01-01T00:00:00.000Z');
+      const envelope = buildEnvelope({ expiresAt: past });
+      envelopeRepository.find.mockResolvedValue([envelope]);
+      signerRepository.find.mockResolvedValue([]);
+      envelopeRepository.manager.transaction.mockImplementation(
+        async (cb: (manager: { update: jest.Mock }) => Promise<boolean>) =>
+          cb({ update: jest.fn().mockResolvedValue({ affected: 0 }) }),
+      );
+
+      await service.runExpiredEnvelopes();
+
+      expect(documentRepository.find).not.toHaveBeenCalled();
+      expect(eventEmitter.emit).not.toHaveBeenCalled();
     });
   });
 

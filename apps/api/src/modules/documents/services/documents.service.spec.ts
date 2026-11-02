@@ -322,14 +322,13 @@ describe('DocumentsService', () => {
   });
 
   describe('I0-AC2 (policy B3 — closeDocument must not complete without final artifact)', () => {
-    test('should not mark document completed or emit document.completed without finalFileKey', async () => {
+    test('should reject manual close and not emit document.completed', async () => {
       const document = buildDocument({
         status: DocumentStatus.PENDING_SIGNATURES,
         finalFileKey: null,
         finalHash: null,
       });
       jest.spyOn(service, 'findOne').mockResolvedValue(document);
-      (documentRepository.save as jest.Mock).mockImplementation(async (doc: Document) => doc);
 
       await expect(service.closeDocument('doc-1', 'tenant-1')).rejects.toThrow(
         BadRequestException,
@@ -339,6 +338,29 @@ describe('DocumentsService', () => {
       expect(eventEmitter.emit).not.toHaveBeenCalledWith(
         EVENT_DOCUMENT_COMPLETED,
         expect.anything(),
+      );
+    });
+  });
+
+  describe('Increment 1 — automatic completion preserved', () => {
+    test('setFinalPdf should still complete document and emit document.completed', async () => {
+      const document = buildDocument({ status: DocumentStatus.PENDING_SIGNATURES });
+      jest.spyOn(service, 'findOne').mockResolvedValue(document);
+      const finalBuffer = Buffer.from('%PDF-final');
+      (documentRepository.save as jest.Mock).mockResolvedValue({
+        ...document,
+        status: DocumentStatus.COMPLETED,
+        finalFileKey: 'tenants/tenant-1/documents/doc-1/signed.pdf',
+      });
+
+      await service.setFinalPdf('doc-1', 'tenant-1', finalBuffer);
+
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        EVENT_DOCUMENT_COMPLETED,
+        expect.objectContaining({
+          documentId: 'doc-1',
+          tenantId: 'tenant-1',
+        }) as DocumentCompletedEvent,
       );
     });
   });

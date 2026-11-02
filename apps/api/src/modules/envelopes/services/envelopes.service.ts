@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  BadRequestException,
-  Logger,
-} from '@nestjs/common';
+import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Envelope, EnvelopeStatus } from '../entities/envelope.entity';
@@ -28,6 +23,7 @@ export class EnvelopesService {
   ) {}
 
   async create(tenantId: string, dto: CreateEnvelopeDto): Promise<Envelope> {
+    this.rejectManualClosureMode(dto.closureMode);
     const folderId = await this.resolveFolderId(tenantId, dto.folderId);
     const tenant = await this.tenantsService.findOne(tenantId, tenantId);
 
@@ -158,6 +154,7 @@ export class EnvelopesService {
   }
 
   async update(id: string, tenantId: string, dto: UpdateEnvelopeDto): Promise<Envelope> {
+    this.rejectManualClosureMode(dto.closureMode);
     const envelope = await this.findOne(id, tenantId);
 
     if (dto.title !== undefined) envelope.title = dto.title;
@@ -188,5 +185,11 @@ export class EnvelopesService {
       throw new BadRequestException('Only draft envelopes can be deleted');
     }
     await this.envelopeRepository.remove(envelope);
+  }
+
+  private rejectManualClosureMode(closureMode: string | undefined): void {
+    if (closureMode === 'manual') {
+      throw new BadRequestException('Manual closure mode is not supported');
+    }
   }
 }

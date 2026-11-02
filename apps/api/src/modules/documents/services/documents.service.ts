@@ -277,31 +277,12 @@ export class DocumentsService {
     return saved;
   }
 
+  /**
+   * @deprecated Manual close is not supported (product policy B3). Use automatic finalization.
+   */
   async closeDocument(id: string, tenantId: string): Promise<Document> {
-    const document = await this.findOne(id, tenantId);
-
-    if (document.status !== DocumentStatus.PENDING_SIGNATURES) {
-      throw new BadRequestException(
-        'Only documents with pending signatures can be manually closed',
-      );
-    }
-
-    if (document.finalFileKey === null) {
-      throw new BadRequestException(
-        'Document cannot be manually closed without a final signed file',
-      );
-    }
-
-    document.status = DocumentStatus.COMPLETED;
-    const saved = await this.documentRepository.save(document);
-
-    const payload: DocumentCompletedEvent = {
-      documentId: saved.id,
-      tenantId: saved.tenantId,
-      completedAt: new Date(),
-    };
-    this.eventEmitter.emit(EVENT_DOCUMENT_COMPLETED, payload);
-    return saved;
+    await this.findOne(id, tenantId);
+    throw new BadRequestException('Manual document close is not available');
   }
 
   async deleteDraft(id: string, tenantId: string): Promise<void> {

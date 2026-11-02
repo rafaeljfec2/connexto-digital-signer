@@ -2,7 +2,7 @@ import { IsOptional, IsIn } from 'class-validator';
 
 const SIGNING_LANGUAGES = ['pt-br', 'en'];
 const REMINDER_INTERVALS = ['none', '1_day', '2_days', '3_days', '7_days'];
-const CLOSURE_MODES = ['automatic', 'manual'];
+const CLOSURE_MODES = ['automatic'];
 
 export class UpdateDefaultsDto {
   @IsOptional()
