@@ -232,13 +232,11 @@ function DefaultsSection() {
   const updateMutation = useUpdateDefaults();
   const [language, setLanguage] = useState('pt-br');
   const [reminder, setReminder] = useState('none');
-  const [closure, setClosure] = useState('automatic');
   const [initialized, setInitialized] = useState(false);
 
   if (data && !initialized) {
     setLanguage(data.defaultSigningLanguage);
     setReminder(data.defaultReminderInterval);
-    setClosure(data.defaultClosureMode);
     setInitialized(true);
   }
 
@@ -246,9 +244,9 @@ function DefaultsSection() {
     await updateMutation.mutateAsync({
       defaultSigningLanguage: language,
       defaultReminderInterval: reminder,
-      defaultClosureMode: closure,
+      defaultClosureMode: 'automatic',
     });
-  }, [language, reminder, closure, updateMutation]);
+  }, [language, reminder, updateMutation]);
 
   return (
     <Card variant="glass" className="p-5 sm:p-6">
@@ -261,11 +259,10 @@ function DefaultsSection() {
         <div className="space-y-3">
           <FieldSkeleton />
           <FieldSkeleton />
-          <FieldSkeleton />
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-1.5">
               <LabelWithTooltip
                 label={t('languageLabel')}
@@ -297,21 +294,6 @@ function DefaultsSection() {
                 <option value="2_days">{t('reminder2Days')}</option>
                 <option value="3_days">{t('reminder3Days')}</option>
                 <option value="7_days">{t('reminder7Days')}</option>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <LabelWithTooltip
-                label={t('closureLabel')}
-                tooltip={tTooltips('defaultClosure')}
-                size="xs"
-                muted
-              />
-              <Select
-                value={closure}
-                onChange={(e) => setClosure(e.target.value)}
-              >
-                <option value="automatic">{t('closureAutomatic')}</option>
-                <option value="manual">{t('closureManual')}</option>
               </Select>
             </div>
           </div>

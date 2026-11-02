@@ -2,13 +2,13 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { ArrowLeft, ArrowRight, HelpCircle, Info, RotateCcw, X } from 'lucide-react';
-import type { ClosureMode, ReminderInterval, SigningLanguage } from '@/features/documents/api';
+import { ArrowLeft, ArrowRight, RotateCcw, X } from 'lucide-react';
+import type { ReminderInterval, SigningLanguage } from '@/features/documents/api';
 import {
   useEnvelope,
   useUpdateEnvelope,
 } from '@/features/documents/hooks/use-document-wizard';
-import { Button, Card, Input, LabelWithTooltip, Select, Tooltip } from '@/shared/ui';
+import { Button, Card, Input, LabelWithTooltip, Select } from '@/shared/ui';
 
 export type SettingsStepProps = {
   readonly envelopeId: string;
@@ -27,14 +27,12 @@ export function SettingsStep({ envelopeId, onBack, onRestart, onCancel, onNext }
   const [deadline, setDeadline] = useState('');
   const [reminderInterval, setReminderInterval] = useState<ReminderInterval>('none');
   const [signingLanguage, setSigningLanguage] = useState<SigningLanguage>('pt-br');
-  const [closureMode, setClosureMode] = useState<ClosureMode>('automatic');
 
   useEffect(() => {
     if (!envelope) return;
     setDeadline(envelope.expiresAt ? envelope.expiresAt.split('T')[0] : '');
     setReminderInterval(envelope.reminderInterval);
     setSigningLanguage(envelope.signingLanguage);
-    setClosureMode(envelope.closureMode);
   }, [envelope]);
 
   const daysRemaining = useMemo(() => {
@@ -49,11 +47,11 @@ export function SettingsStep({ envelopeId, onBack, onRestart, onCancel, onNext }
         expiresAt: deadline ? new Date(deadline).toISOString() : null,
         reminderInterval,
         signingLanguage,
-        closureMode,
+        closureMode: 'automatic',
       },
       { onSuccess: () => onNext() },
     );
-  }, [deadline, reminderInterval, signingLanguage, closureMode, updateEnvelopeMutation, onNext]);
+  }, [deadline, reminderInterval, signingLanguage, updateEnvelopeMutation, onNext]);
 
   return (
     <Card variant="glass" className="w-full p-6 md:p-8">
@@ -119,76 +117,6 @@ export function SettingsStep({ envelopeId, onBack, onRestart, onCancel, onNext }
             <option value="pt-br">{tSettings('languagePtBr')}</option>
             <option value="en">{tSettings('languageEn')}</option>
           </Select>
-        </div>
-      </div>
-
-      <hr className="my-6 border-th-border" />
-
-      <div>
-        <div className="mb-4 flex items-center gap-2">
-          <h3 className="text-base font-medium text-foreground">{tSettings('closureTitle')}</h3>
-          <Tooltip content={tWizard('tooltips.closureMode')} position="top" maxWidth={260}>
-            <HelpCircle className="h-4 w-4 text-foreground-muted" />
-          </Tooltip>
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <label
-            aria-label={tSettings('closureAutomatic')}
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
-              closureMode === 'automatic'
-                ? 'border-accent/50 bg-accent/10'
-                : 'border-th-border bg-th-hover hover:border-th-card-border'
-            }`}
-          >
-            <input
-              type="radio"
-              name="closureMode"
-              value="automatic"
-              checked={closureMode === 'automatic'}
-              onChange={() => setClosureMode('automatic')}
-              className="mt-1 accent-accent"
-            />
-            <div>
-              <span className="block text-sm font-normal text-foreground">
-                {tSettings('closureAutomatic')}
-              </span>
-              <span className="mt-0.5 block text-xs text-foreground-subtle">
-                {tSettings('closureAutomaticDesc')}
-              </span>
-            </div>
-          </label>
-
-          <label
-            aria-label={tSettings('closureManual')}
-            className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
-              closureMode === 'manual'
-                ? 'border-accent/50 bg-accent/10'
-                : 'border-th-border bg-th-hover hover:border-th-card-border'
-            }`}
-          >
-            <input
-              type="radio"
-              name="closureMode"
-              value="manual"
-              checked={closureMode === 'manual'}
-              onChange={() => setClosureMode('manual')}
-              className="mt-1 accent-accent"
-            />
-            <div>
-              <span className="block text-sm font-normal text-foreground">
-                {tSettings('closureManual')}
-              </span>
-              <span className="mt-0.5 block text-xs text-foreground-subtle">
-                {tSettings('closureManualDesc')}
-              </span>
-            </div>
-          </label>
-        </div>
-
-        <div className="mt-4 flex items-start gap-2 rounded-lg border border-accent/20 bg-accent/5 p-3">
-          <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-          <p className="text-xs text-foreground-muted">{tSettings('closureNote')}</p>
         </div>
       </div>
 
