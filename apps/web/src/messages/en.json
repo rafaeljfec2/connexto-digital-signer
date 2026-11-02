@@ -831,7 +831,10 @@
     "signerStatus": {
       "pending": "Pending",
       "signed": "Signed"
-    }
+    },
+    "resendInvite": "Resend invitation",
+    "resendInviteSuccess": "Invitation resent successfully.",
+    "resendInviteError": "Could not resend the invitation. Please try again."
   },
   "landing": {
     "header": {

@@ -831,7 +831,10 @@
     "signerStatus": {
       "pending": "Pendente",
       "signed": "Assinado"
-    }
+    },
+    "resendInvite": "Reenviar convite",
+    "resendInviteSuccess": "Convite reenviado com sucesso.",
+    "resendInviteError": "Não foi possível reenviar o convite. Tente novamente."
   },
   "landing": {
     "header": {

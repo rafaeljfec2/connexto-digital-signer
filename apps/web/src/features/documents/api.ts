@@ -545,6 +545,21 @@ export const getEnvelopeTracking = async (
   return response.data;
 };
 
+export type ResendSignerInviteResult = Readonly<{
+  signerId: string;
+  notifiedAt: string;
+}>;
+
+export const resendSignerInvite = async (
+  envelopeId: string,
+  signerId: string,
+): Promise<ResendSignerInviteResult> => {
+  const response = await apiClient.post<ResendSignerInviteResult>(
+    `/envelopes/${envelopeId}/signers/${signerId}/resend-invite`,
+  );
+  return response.data;
+};
+
 export const getEnvelopeAuditSummary = async (
   envelopeId: string,
 ): Promise<DocumentAuditSummary> => {

@@ -1,11 +1,15 @@
 "use client";
 
+import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Send, Eye, UserCheck, CheckCircle, Loader2 } from 'lucide-react';
+import { Send, Eye, UserCheck, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
 import { Badge } from '@/shared/ui/badge';
+import { Button } from '@/shared/ui/button';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { useEnvelopeTracking } from '../hooks/use-envelope-tracking';
-import type { TrackingStep, TrackingSigner } from '../api';
+import { useResendSignerInvite } from '../hooks/use-resend-signer-invite';
+import type { EnvelopeTracking, TrackingStep, TrackingSigner } from '../api';
+import { canResendSignerInvite } from '../utils/signer-invite-eligibility';
 
 type SignerTrackingPanelProps = Readonly<{
   envelopeId: string;
@@ -119,16 +123,23 @@ function TrackingStepItem({
 function SignerCard({
   signer,
   locale,
+  tracking,
+  onResendInvite,
+  isResending,
 }: Readonly<{
   signer: TrackingSigner;
   locale: string;
+  tracking: EnvelopeTracking;
+  onResendInvite: (signerId: string) => void;
+  isResending: boolean;
 }>) {
   const t = useTranslations('tracking');
   const badgeVariant = signer.status === 'signed' ? 'success' : 'warning';
+  const showResend = canResendSignerInvite(tracking, signer);
 
   return (
     <div className="rounded-xl border border-th-card-border bg-th-card p-4">
-      <div className="mb-4 flex items-start justify-between">
+      <div className="mb-4 flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-medium text-foreground">
             {signer.name}
@@ -137,9 +148,24 @@ function SignerCard({
             {signer.email}
           </p>
         </div>
-        <Badge variant={badgeVariant}>
-          {t(`signerStatus.${signer.status}`)}
-        </Badge>
+        <div className="flex shrink-0 flex-col items-end gap-2">
+          <Badge variant={badgeVariant}>
+            {t(`signerStatus.${signer.status}`)}
+          </Badge>
+          {showResend ? (
+            <Button
+              type="button"
+              variant="secondary"
+              className="h-8 gap-1.5 px-2.5 text-xs"
+              isLoading={isResending}
+              disabled={isResending}
+              onClick={() => onResendInvite(signer.id)}
+            >
+              <RefreshCw className="h-3.5 w-3.5" />
+              {t('resendInvite')}
+            </Button>
+          ) : null}
+        </div>
       </div>
 
       <div className="space-y-0">
@@ -194,6 +220,16 @@ function PanelSkeleton() {
 export function SignerTrackingPanel({ envelopeId }: SignerTrackingPanelProps) {
   const t = useTranslations('tracking');
   const { data, isLoading, isError } = useEnvelopeTracking(envelopeId);
+  const resendMutation = useResendSignerInvite(envelopeId);
+  const [feedback, setFeedback] = useState<'success' | 'error' | null>(null);
+
+  const handleResendInvite = (signerId: string) => {
+    setFeedback(null);
+    resendMutation.mutate(signerId, {
+      onSuccess: () => setFeedback('success'),
+      onError: () => setFeedback('error'),
+    });
+  };
 
   if (isLoading) return <PanelSkeleton />;
 
@@ -225,8 +261,22 @@ export function SignerTrackingPanel({ envelopeId }: SignerTrackingPanelProps) {
         </div>
       </div>
 
+      {feedback === 'success' ? (
+        <p className="text-sm text-success">{t('resendInviteSuccess')}</p>
+      ) : null}
+      {feedback === 'error' ? (
+        <p className="text-sm text-destructive">{t('resendInviteError')}</p>
+      ) : null}
+
       {data.signers.map((signer) => (
-        <SignerCard key={signer.id} signer={signer} locale={locale} />
+        <SignerCard
+          key={signer.id}
+          signer={signer}
+          locale={locale}
+          tracking={data}
+          onResendInvite={handleResendInvite}
+          isResending={resendMutation.isPending}
+        />
       ))}
     </div>
   );
