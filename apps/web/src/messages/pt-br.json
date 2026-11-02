@@ -477,7 +477,16 @@
     "cancel": "Cancelar",
     "confirm": "Adicionar",
     "listTitle": "Lista de signatários",
-    "empty": "Nenhum signatário ainda"
+    "empty": "Nenhum signatário ainda",
+    "updateErrors": {
+      "notifiedEmail": "Não é possível alterar o e-mail depois que o convite foi enviado. Use reenviar convite para o endereço atual ou ajuste outros dados permitidos.",
+      "signed": "Este signatário já assinou e não pode ser alterado.",
+      "completed": "Documento concluído: signatários não podem ser editados.",
+      "cancelled": "Documento cancelado: signatários não podem ser editados.",
+      "expired": "Documento expirado: signatários não podem ser editados.",
+      "orderDraftOnly": "A ordem dos signatários só pode ser alterada enquanto o documento for rascunho.",
+      "generic": "Não foi possível salvar o signatário. Verifique os dados e tente novamente."
+    }
   },
   "fields": {
     "title": "Campos de assinatura",

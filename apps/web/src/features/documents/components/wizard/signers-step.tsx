@@ -15,6 +15,11 @@ import {
 import { useSearchTenantSigners } from '@/features/documents/hooks/use-search-tenant-signers';
 import { Avatar, Badge, Button, Card, Dialog, Input, LabelWithTooltip, Select, Tooltip } from '@/shared/ui';
 import { formatCpf, isValidCpf } from '@/shared/utils/cpf';
+import { toast } from 'sonner';
+import {
+  extractApiMessage,
+  resolveSignerUpdateErrorKey,
+} from '@/features/documents/utils/signer-update-error';
 
 export type SignersStepProps = {
   readonly envelopeId: string;
@@ -51,6 +56,7 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
   const [authMethod, setAuthMethod] = useState('email');
   const [role, setRole] = useState<SignerRole>('signer');
   const [order, setOrder] = useState('');
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -115,10 +121,12 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
 
   const openAddModal = () => {
     resetForm();
+    setSubmitError(null);
     setModalOpen(true);
   };
 
   const openEditModal = (signer: Signer) => {
+    setSubmitError(null);
     setEditingSigner(signer);
     setName(signer.name);
     setEmail(signer.email);
@@ -143,6 +151,8 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
     if (!name.trim() || !email.trim()) return;
     if (isCpfTouched && !isValidCpf(cpf)) return;
 
+    setSubmitError(null);
+
     const payload = {
       name: name.trim(),
       email: email.trim(),
@@ -157,13 +167,24 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
       order: signingMode === 'sequential' && order ? Number(order) : undefined,
     };
 
-    if (isEditing) {
-      await updateSignerMutation.mutateAsync({
-        signerId: editingSigner.id,
-        input: payload,
-      });
-    } else {
-      await addSignerMutation.mutateAsync(payload);
+    try {
+      if (isEditing) {
+        await updateSignerMutation.mutateAsync({
+          signerId: editingSigner.id,
+          input: payload,
+        });
+      } else {
+        await addSignerMutation.mutateAsync(payload);
+      }
+    } catch (error) {
+      const apiMessage = extractApiMessage(error);
+      const errorKey = isEditing
+        ? resolveSignerUpdateErrorKey(apiMessage)
+        : 'generic';
+      const message = tSigners(`updateErrors.${errorKey}`);
+      setSubmitError(message);
+      toast.error(message);
+      return;
     }
 
     resetForm();
@@ -183,6 +204,7 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
 
   const handleCloseModal = () => {
     resetForm();
+    setSubmitError(null);
     setModalOpen(false);
   };
 
@@ -305,6 +327,11 @@ export function SignersStep({ envelopeId, onBack, onRestart, onCancel, onNext }:
           </>
         }
       >
+        {submitError ? (
+          <p className="mb-3 rounded-lg border border-error/30 bg-error/10 px-3 py-2 text-sm text-error">
+            {submitError}
+          </p>
+        ) : null}
         <div className="grid gap-3 md:grid-cols-2">
           <div className="relative space-y-1.5" ref={dropdownRef}>
             <label className="text-sm font-normal text-foreground-muted">

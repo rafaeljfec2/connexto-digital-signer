@@ -477,7 +477,16 @@
     "cancel": "Cancel",
     "confirm": "Add",
     "listTitle": "Signers list",
-    "empty": "No signers yet"
+    "empty": "No signers yet",
+    "updateErrors": {
+      "notifiedEmail": "You cannot change the email after an invitation was sent. Use resend invite for the current address, or adjust other allowed fields.",
+      "signed": "This signer has already signed and cannot be edited.",
+      "completed": "This document is completed; signers cannot be edited.",
+      "cancelled": "This document is cancelled; signers cannot be edited.",
+      "expired": "This document is expired; signers cannot be edited.",
+      "orderDraftOnly": "Signer order can only be changed while the document is still a draft.",
+      "generic": "Could not save the signer. Check the details and try again."
+    }
   },
   "fields": {
     "title": "Signature fields",
