@@ -1,6 +1,7 @@
 export const EVENT_SIGNATURE_COMPLETED = 'signature.completed';
 export const EVENT_DOCUMENT_COMPLETED = 'document.completed';
 export const EVENT_DOCUMENT_EXPIRED = 'document.expired';
+export const EVENT_DOCUMENT_CANCELLED = 'document.cancelled';
 export const EVENT_DOCUMENT_CREATED = 'document.created';
 export const EVENT_SIGNER_ADDED = 'signer.added';
 export const EVENT_DOCUMENT_SENT = 'document.sent';

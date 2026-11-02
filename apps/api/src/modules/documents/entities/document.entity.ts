@@ -13,6 +13,7 @@ export enum DocumentStatus {
   PENDING_SIGNATURES = 'pending_signatures',
   COMPLETED = 'completed',
   EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
 }
 
 @Entity('documents')

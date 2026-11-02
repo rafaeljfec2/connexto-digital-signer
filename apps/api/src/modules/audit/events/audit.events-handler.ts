@@ -4,6 +4,7 @@ import {
   EVENT_SIGNATURE_COMPLETED,
   EVENT_DOCUMENT_COMPLETED,
   EVENT_DOCUMENT_EXPIRED,
+  EVENT_DOCUMENT_CANCELLED,
   EVENT_USER_LOGIN_SUCCESS,
   EVENT_USER_LOGIN_FAILED,
   EVENT_USER_LOGOUT,
@@ -12,6 +13,7 @@ import type {
   SignatureCompletedEvent,
   DocumentCompletedEvent,
   DocumentExpiredEvent,
+  DocumentCancelledEvent,
   UserLoginSuccessEvent,
   UserLoginFailedEvent,
   UserLogoutEvent,
@@ -63,6 +65,17 @@ export class AuditEventsHandler {
       entityType: 'document',
       entityId: payload.documentId,
       metadata: { expiredAt: payload.expiredAt.toISOString() },
+    });
+  }
+
+  @OnEvent(EVENT_DOCUMENT_CANCELLED)
+  async handleDocumentCancelled(payload: DocumentCancelledEvent): Promise<void> {
+    await this.auditService.log({
+      tenantId: payload.tenantId,
+      eventType: 'document.cancelled',
+      entityType: 'document',
+      entityId: payload.documentId,
+      metadata: { cancelledAt: payload.cancelledAt.toISOString() },
     });
   }
 

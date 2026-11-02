@@ -4,6 +4,8 @@ import { Throttle } from '@nestjs/throttler';
 import { CurrentUser, Public, JwtPayload } from '@connexto/shared';
 import { AuthService, LoginResult } from '../services/auth.service';
 import { publicThrottle } from '../../../common/config/throttle.config';
+import { RequestPasswordResetDto } from '../dto/request-password-reset.dto';
+import { ResetPasswordDto } from '../dto/reset-password.dto';
 import { LoginDto } from '../dto/login.dto';
 import { CheckEmailDto } from '../dto/check-email.dto';
 import type { Request, Response } from 'express';
@@ -59,6 +61,23 @@ export class AuthController {
     @Body() body: CheckEmailDto
   ): Promise<{ exists: boolean }> {
     return this.authService.checkEmailExists(body.email);
+  }
+
+  @Public()
+  @Throttle(publicThrottle)
+  @Post('forgot-password')
+  async requestPasswordReset(
+    @Body() body: RequestPasswordResetDto,
+  ): Promise<{ message: string }> {
+    return this.authService.requestPasswordReset(body.email);
+  }
+
+  @Public()
+  @Throttle(publicThrottle)
+  @Post('reset-password')
+  async resetPassword(@Body() body: ResetPasswordDto): Promise<{ ok: true }> {
+    await this.authService.resetPasswordWithToken(body.token, body.password);
+    return { ok: true };
   }
 
   @Public()

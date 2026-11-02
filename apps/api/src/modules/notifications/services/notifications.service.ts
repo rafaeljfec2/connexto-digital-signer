@@ -182,6 +182,36 @@ export class NotificationsService {
     return { subject, body: text };
   }
 
+  async sendPasswordResetEmail(params: {
+    ownerEmail: string;
+    ownerName: string;
+    resetUrl: string;
+    locale?: string;
+  }): Promise<string> {
+    const { subject, text, html } = this.templateService.renderTemplate(
+      'password-reset',
+      {
+        ownerName: params.ownerName,
+        resetUrl: params.resetUrl,
+      },
+      params.locale ?? 'en',
+    );
+
+    const result = await this.emailClient.send({
+      to: { email: params.ownerEmail, name: params.ownerName },
+      subject,
+      text,
+      html,
+      tags: ['password-reset'],
+    });
+
+    if (!result.accepted) {
+      throw new BadRequestException('Email provider did not accept the password reset message');
+    }
+
+    return result.id ?? '';
+  }
+
   private async resolveOrganizationName(tenantId: string): Promise<string> {
     const tenant = await this.tenantsService.findOne(tenantId);
     return tenant.branding?.name ?? tenant.name;

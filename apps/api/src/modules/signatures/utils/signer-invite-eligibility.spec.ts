@@ -34,6 +34,14 @@ describe('signer-invite-eligibility', () => {
       ).toThrow(BadRequestException);
     });
 
+    it('should reject cancelled envelopes', () => {
+      expect(() =>
+        validateEnvelopeAllowsInviteDelivery(
+          buildEnvelope({ status: EnvelopeStatus.CANCELLED }),
+        ),
+      ).toThrow(BadRequestException);
+    });
+
     it('should allow pending signatures envelopes', () => {
       expect(() =>
         validateEnvelopeAllowsInviteDelivery(

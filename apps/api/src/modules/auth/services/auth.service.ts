@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, LessThan, IsNull } from 'typeorm';
@@ -14,8 +14,14 @@ import {
 } from '@connexto/events';
 import { UserRole } from '../../users/entities/user.entity';
 import { RefreshToken } from '../entities/refresh-token.entity';
+import { PasswordResetToken } from '../entities/password-reset-token.entity';
+import { NotificationsService } from '../../notifications/services/notifications.service';
 
 const REFRESH_TOKEN_EXPIRY_DAYS = 7;
+const PASSWORD_RESET_EXPIRY_HOURS = 1;
+
+export const PASSWORD_RESET_ACK_MESSAGE =
+  'If an account exists for this email, password reset instructions were sent';
 
 export interface LoginResult {
   accessToken: string;
@@ -60,7 +66,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly eventEmitter: EventEmitter2,
     @InjectRepository(RefreshToken)
-    private readonly refreshTokenRepository: Repository<RefreshToken>
+    private readonly refreshTokenRepository: Repository<RefreshToken>,
+    @InjectRepository(PasswordResetToken)
+    private readonly passwordResetTokenRepository: Repository<PasswordResetToken>,
+    private readonly notificationsService: NotificationsService,
   ) {}
 
   async loginWithApiKey(
@@ -212,6 +221,63 @@ export class AuthService {
     await this.refreshTokenRepository.delete({
       expiresAt: LessThan(new Date()),
     });
+  }
+
+  async requestPasswordReset(email: string): Promise<{ message: string }> {
+    const user = await this.usersService.findByEmail(email);
+    if (user?.isActive) {
+      await this.passwordResetTokenRepository.update(
+        { userId: user.id, usedAt: IsNull() },
+        { usedAt: new Date() },
+      );
+
+      const rawToken = randomBytes(32).toString('hex');
+      const tokenHash = hashToken(rawToken);
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + PASSWORD_RESET_EXPIRY_HOURS);
+
+      await this.passwordResetTokenRepository.save(
+        this.passwordResetTokenRepository.create({
+          userId: user.id,
+          tokenHash,
+          expiresAt,
+          usedAt: null,
+        }),
+      );
+
+      const baseUrl = process.env['WEB_BASE_URL'] ?? 'http://localhost:3001';
+      const resetUrl = `${baseUrl}/pt-br/reset-password?token=${rawToken}`;
+
+      try {
+        await this.notificationsService.sendPasswordResetEmail({
+          ownerEmail: user.email,
+          ownerName: user.name,
+          resetUrl,
+          locale: 'pt-br',
+        });
+      } catch {
+        // Do not reveal delivery failures to the client.
+      }
+    }
+
+    return { message: PASSWORD_RESET_ACK_MESSAGE };
+  }
+
+  async resetPasswordWithToken(token: string, newPassword: string): Promise<void> {
+    const tokenHash = hashToken(token);
+    const stored = await this.passwordResetTokenRepository.findOne({
+      where: { tokenHash, usedAt: IsNull() },
+    });
+
+    if (!stored || stored.expiresAt < new Date()) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    stored.usedAt = new Date();
+    await this.passwordResetTokenRepository.save(stored);
+
+    await this.usersService.updatePassword(stored.userId, newPassword);
+    await this.revokeAllForUser(stored.userId);
   }
 
   async validatePayload(payload: JwtPayload): Promise<JwtPayload | null> {

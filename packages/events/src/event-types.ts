@@ -21,6 +21,12 @@ export interface DocumentExpiredEvent {
   expiredAt: Date;
 }
 
+export interface DocumentCancelledEvent {
+  documentId: string;
+  tenantId: string;
+  cancelledAt: Date;
+}
+
 export interface DocumentCreatedEvent {
   documentId: string;
   tenantId: string;
@@ -112,6 +118,7 @@ export type DomainEvent =
   | { type: 'signature.completed'; payload: SignatureCompletedEvent }
   | { type: 'document.completed'; payload: DocumentCompletedEvent }
   | { type: 'document.expired'; payload: DocumentExpiredEvent }
+  | { type: 'document.cancelled'; payload: DocumentCancelledEvent }
   | { type: 'document.created'; payload: DocumentCreatedEvent }
   | { type: 'document.sent'; payload: DocumentSentEvent }
   | { type: 'signer.added'; payload: SignerAddedEvent }

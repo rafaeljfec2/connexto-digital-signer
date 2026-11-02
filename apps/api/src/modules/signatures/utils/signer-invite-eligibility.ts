@@ -11,6 +11,9 @@ export function validateEnvelopeAllowsInviteDelivery(envelope: {
   if (envelope.status === EnvelopeStatus.EXPIRED) {
     throw new BadRequestException('Envelope has expired');
   }
+  if (envelope.status === EnvelopeStatus.CANCELLED) {
+    throw new BadRequestException('Envelope has been cancelled');
+  }
   if (envelope.status === EnvelopeStatus.DRAFT) {
     throw new BadRequestException('Envelope has not been sent yet');
   }

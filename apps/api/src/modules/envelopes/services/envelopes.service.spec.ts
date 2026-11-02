@@ -1,4 +1,6 @@
-import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
+import { EVENT_DOCUMENT_CANCELLED } from '@connexto/events';
+import { BadRequestException, NotFoundException } from '@nestjs/common';
 import type { Repository } from 'typeorm';
 import { EnvelopesService } from './envelopes.service';
 import { Envelope, EnvelopeStatus, SigningMode } from '../entities/envelope.entity';
@@ -63,7 +65,8 @@ describe('EnvelopesService', () => {
   let envelopeRepository: Repository<Envelope>;
   let foldersService: jest.Mocked<Pick<FoldersService, 'findOne' | 'ensureRootFolder'>>;
   let tenantsService: jest.Mocked<Pick<TenantsService, 'findOne'>>;
-  let documentsService: jest.Mocked<Pick<DocumentsService, 'create'>>;
+  let documentsService: jest.Mocked<Pick<DocumentsService, 'create' | 'findByEnvelope'>>;
+  let eventEmitter: EventEmitter2;
 
   beforeEach(() => {
     envelopeRepository = {
@@ -71,6 +74,7 @@ describe('EnvelopesService', () => {
       save: jest.fn(),
       findOne: jest.fn(),
       remove: jest.fn(),
+      manager: { transaction: jest.fn() },
     } as unknown as Repository<Envelope>;
     foldersService = {
       findOne: jest.fn(),
@@ -81,12 +85,15 @@ describe('EnvelopesService', () => {
     };
     documentsService = {
       create: jest.fn(),
+      findByEnvelope: jest.fn().mockResolvedValue([buildDocument()]),
     };
+    eventEmitter = { emit: jest.fn() } as unknown as EventEmitter2;
     service = new EnvelopesService(
       envelopeRepository,
       foldersService as unknown as FoldersService,
       tenantsService as unknown as TenantsService,
       documentsService as unknown as DocumentsService,
+      eventEmitter,
     );
   });
 
@@ -174,6 +181,56 @@ describe('EnvelopesService', () => {
 
       await expect(service.createDraft('tenant-1', 'New document')).rejects.toThrow('persist failed');
       expect(envelopeRepository.remove).toHaveBeenCalledWith(envelope);
+    });
+  });
+
+  describe('cancelSentEnvelope', () => {
+    test('should cancel pending envelope and emit document.cancelled', async () => {
+      const envelope = buildEnvelope({ status: EnvelopeStatus.PENDING_SIGNATURES });
+      (envelopeRepository.findOne as jest.Mock).mockResolvedValue(envelope);
+      const managerUpdate = jest
+        .fn()
+        .mockResolvedValueOnce({ affected: 1 })
+        .mockResolvedValueOnce({ affected: 1 });
+      (envelopeRepository.manager.transaction as jest.Mock).mockImplementation(
+        async (cb: (manager: { update: jest.Mock }) => Promise<boolean>) =>
+          cb({ update: managerUpdate }),
+      );
+
+      const result = await service.cancelSentEnvelope('envelope-1', 'tenant-1');
+
+      expect(result.status).toBe(EnvelopeStatus.CANCELLED);
+      expect(eventEmitter.emit).toHaveBeenCalledWith(
+        EVENT_DOCUMENT_CANCELLED,
+        expect.objectContaining({ documentId: 'doc-1', tenantId: 'tenant-1' }),
+      );
+    });
+
+    test('should reject completed envelopes', async () => {
+      (envelopeRepository.findOne as jest.Mock).mockResolvedValue(
+        buildEnvelope({ status: EnvelopeStatus.COMPLETED }),
+      );
+      await expect(service.cancelSentEnvelope('envelope-1', 'tenant-1')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    test('should reject expired envelopes', async () => {
+      (envelopeRepository.findOne as jest.Mock).mockResolvedValue(
+        buildEnvelope({ status: EnvelopeStatus.EXPIRED }),
+      );
+      await expect(service.cancelSentEnvelope('envelope-1', 'tenant-1')).rejects.toThrow(
+        BadRequestException,
+      );
+    });
+
+    test('should reject draft envelopes', async () => {
+      (envelopeRepository.findOne as jest.Mock).mockResolvedValue(
+        buildEnvelope({ status: EnvelopeStatus.DRAFT }),
+      );
+      await expect(service.cancelSentEnvelope('envelope-1', 'tenant-1')).rejects.toThrow(
+        BadRequestException,
+      );
     });
   });
 });

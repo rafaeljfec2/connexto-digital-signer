@@ -14,6 +14,7 @@ import { UpdateSignerDto } from '../dto/update-signer.dto';
 import { Signer, SignerStatus } from '../entities/signer.entity';
 import type { SignerPendingDocument } from '../interfaces/signer-document.interface';
 import { TenantSignerService } from './tenant-signer.service';
+import { assertSignerUpdateAllowed } from '../utils/signer-update-policy';
 
 export type {
   AuditTimelineEvent,
@@ -64,7 +65,9 @@ export class SignaturesService {
     signerId: string,
     dto: UpdateSignerDto,
   ): Promise<Signer> {
+    const envelope = await this.envelopesService.findOne(envelopeId, tenantId);
     const signer = await this.findSignerOrFail({ id: signerId, envelopeId, tenantId });
+    assertSignerUpdateAllowed(envelope, signer, dto);
     Object.assign(signer, dto);
     return this.signerRepository.save(signer);
   }

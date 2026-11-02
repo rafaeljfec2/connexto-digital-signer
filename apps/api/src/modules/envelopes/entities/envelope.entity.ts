@@ -12,6 +12,7 @@ export enum EnvelopeStatus {
   PENDING_SIGNATURES = 'pending_signatures',
   COMPLETED = 'completed',
   EXPIRED = 'expired',
+  CANCELLED = 'cancelled',
 }
 
 export enum SigningMode {

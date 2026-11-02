@@ -58,4 +58,13 @@ export const emailMessages = {
     textBody:
       'Seu código de verificação é: {code}\nUse-o para verificar sua identidade antes de assinar o documento: {documentTitle}.\nEste código expira em 10 minutos.',
   },
+  'password-reset': {
+    subject: 'Redefinição de senha — Nexosign',
+    headline: 'Redefina sua senha',
+    greeting: 'Olá, <strong>{ownerName}</strong>.',
+    body: 'Recebemos um pedido para redefinir a senha da sua conta. Use o link abaixo (válido por tempo limitado):',
+    cta: 'Redefinir senha →',
+    textBody:
+      'Olá, {ownerName}.\nRedefina sua senha em: {resetUrl}\nSe você não solicitou, ignore este email.',
+  },
 } as const;

@@ -9,6 +9,8 @@ import { UsersService } from '../../users/services/users.service';
 import { User, UserRole } from '../../users/entities/user.entity';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import { RefreshToken } from '../entities/refresh-token.entity';
+import { PasswordResetToken } from '../entities/password-reset-token.entity';
+import type { NotificationsService } from '../../notifications/services/notifications.service';
 import bcrypt from 'bcryptjs';
 
 jest.mock('bcryptjs', () => ({
@@ -64,6 +66,8 @@ describe('AuthService', () => {
   let jwtService: jest.Mocked<JwtService>;
   let eventEmitter: jest.Mocked<EventEmitter2>;
   let refreshTokenRepository: jest.Mocked<Repository<RefreshToken>>;
+  let passwordResetTokenRepository: jest.Mocked<Repository<PasswordResetToken>>;
+  let notificationsService: jest.Mocked<Pick<NotificationsService, 'sendPasswordResetEmail'>>;
 
   beforeEach(() => {
     tenantsService = {
@@ -76,6 +80,7 @@ describe('AuthService', () => {
       findByEmail: jest.fn(),
       findOne: jest.fn(),
       findByTenantId: jest.fn(),
+      updatePassword: jest.fn(),
     } as unknown as jest.Mocked<UsersService>;
     jwtService = {
       sign: jest.fn(),
@@ -91,13 +96,24 @@ describe('AuthService', () => {
       update: jest.fn(),
       delete: jest.fn(),
     } as unknown as jest.Mocked<Repository<RefreshToken>>;
+    passwordResetTokenRepository = {
+      create: jest.fn().mockImplementation((v) => v),
+      save: jest.fn().mockResolvedValue({}),
+      findOne: jest.fn(),
+      update: jest.fn(),
+    } as unknown as jest.Mocked<Repository<PasswordResetToken>>;
+    notificationsService = {
+      sendPasswordResetEmail: jest.fn().mockResolvedValue('msg-id'),
+    };
 
     service = new AuthService(
       tenantsService,
       usersService,
       jwtService,
       eventEmitter,
-      refreshTokenRepository
+      refreshTokenRepository,
+      passwordResetTokenRepository,
+      notificationsService as unknown as NotificationsService,
     );
   });
 
@@ -261,10 +277,61 @@ describe('AuthService', () => {
     });
   });
 
-  describe('revokeRefreshToken', () => {
-    test('should update token as revoked', async () => {
-      await service.revokeRefreshToken('raw-token');
-      expect(refreshTokenRepository.update).toHaveBeenCalled();
+  describe('requestPasswordReset', () => {
+    test('should return the same message when email is unknown', async () => {
+      usersService.findByEmail.mockResolvedValue(null);
+      const result = await service.requestPasswordReset('missing@acme.com');
+      expect(result.message).toBeTruthy();
+      expect(notificationsService.sendPasswordResetEmail).not.toHaveBeenCalled();
+    });
+
+    test('should send reset email for active users', async () => {
+      usersService.findByEmail.mockResolvedValue(buildUser());
+      await service.requestPasswordReset('owner@acme.com');
+      expect(passwordResetTokenRepository.save).toHaveBeenCalled();
+      expect(notificationsService.sendPasswordResetEmail).toHaveBeenCalled();
+    });
+  });
+
+  describe('resetPasswordWithToken', () => {
+    test('should reject invalid tokens', async () => {
+      passwordResetTokenRepository.findOne.mockResolvedValue(null);
+      await expect(
+        service.resetPasswordWithToken('raw', 'Str0ngPass'),
+      ).rejects.toThrow('Invalid or expired reset token');
+    });
+
+    test('should reject expired tokens', async () => {
+      passwordResetTokenRepository.findOne.mockResolvedValue({
+        id: 'prt-1',
+        userId: 'user-1',
+        tokenHash: 'hash',
+        expiresAt: new Date('2020-01-01T00:00:00.000Z'),
+        usedAt: null,
+        createdAt: new Date(),
+      });
+      await expect(
+        service.resetPasswordWithToken('raw', 'Str0ngPass1'),
+      ).rejects.toThrow('Invalid or expired reset token');
+    });
+
+    test('should update password and mark token used', async () => {
+      const stored: PasswordResetToken = {
+        id: 'prt-1',
+        userId: 'user-1',
+        tokenHash: 'hash',
+        expiresAt: new Date(Date.now() + 60_000),
+        usedAt: null,
+        createdAt: new Date(),
+      };
+      passwordResetTokenRepository.findOne.mockResolvedValue(stored);
+      passwordResetTokenRepository.save.mockResolvedValue(stored);
+      usersService.updatePassword.mockResolvedValue(undefined);
+
+      await service.resetPasswordWithToken('raw-token', 'Str0ngPass1');
+
+      expect(stored.usedAt).toBeInstanceOf(Date);
+      expect(usersService.updatePassword).toHaveBeenCalledWith('user-1', 'Str0ngPass1');
     });
   });
 

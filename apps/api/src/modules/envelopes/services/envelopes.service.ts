@@ -1,6 +1,11 @@
-import { BadRequestException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, Logger, NotFoundException } from '@nestjs/common';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import {
+  EVENT_DOCUMENT_CANCELLED,
+  type DocumentCancelledEvent,
+} from '@connexto/events';
 import { Envelope, EnvelopeStatus } from '../entities/envelope.entity';
 import { CreateEnvelopeDto } from '../dto/create-envelope.dto';
 import { UpdateEnvelopeDto } from '../dto/update-envelope.dto';
@@ -8,7 +13,7 @@ import { ListEnvelopesQueryDto } from '../dto/list-envelopes-query.dto';
 import { FoldersService } from '../../folders/services/folders.service';
 import { TenantsService } from '../../tenants/services/tenants.service';
 import { DocumentsService } from '../../documents/services/documents.service';
-import { Document } from '../../documents/entities/document.entity';
+import { Document, DocumentStatus } from '../../documents/entities/document.entity';
 
 @Injectable()
 export class EnvelopesService {
@@ -20,6 +25,7 @@ export class EnvelopesService {
     private readonly foldersService: FoldersService,
     private readonly tenantsService: TenantsService,
     private readonly documentsService: DocumentsService,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async create(tenantId: string, dto: CreateEnvelopeDto): Promise<Envelope> {
@@ -185,6 +191,70 @@ export class EnvelopesService {
       throw new BadRequestException('Only draft envelopes can be deleted');
     }
     await this.envelopeRepository.remove(envelope);
+  }
+
+  async cancelSentEnvelope(
+    id: string,
+    tenantId: string,
+  ): Promise<{ id: string; status: EnvelopeStatus }> {
+    const envelope = await this.findOne(id, tenantId);
+    if (envelope.status === EnvelopeStatus.COMPLETED) {
+      throw new BadRequestException('Completed envelopes cannot be cancelled');
+    }
+    if (envelope.status === EnvelopeStatus.CANCELLED) {
+      throw new BadRequestException('Envelope is already cancelled');
+    }
+    if (envelope.status === EnvelopeStatus.EXPIRED) {
+      throw new BadRequestException('Expired envelopes cannot be cancelled');
+    }
+    if (envelope.status !== EnvelopeStatus.PENDING_SIGNATURES) {
+      throw new BadRequestException('Only sent envelopes awaiting signatures can be cancelled');
+    }
+    if (envelope.expiresAt !== null && new Date() > envelope.expiresAt) {
+      throw new BadRequestException('Expired envelopes cannot be cancelled');
+    }
+
+    const cancelledAt = new Date();
+    const claimed = await this.envelopeRepository.manager.transaction(
+      async (manager) => {
+        const claim = await manager.update(
+          Envelope,
+          {
+            id,
+            tenantId,
+            status: EnvelopeStatus.PENDING_SIGNATURES,
+          },
+          { status: EnvelopeStatus.CANCELLED },
+        );
+        if (claim.affected !== 1) {
+          return false;
+        }
+        await manager.update(
+          Document,
+          { envelopeId: id, tenantId },
+          { status: DocumentStatus.CANCELLED },
+        );
+        return true;
+      },
+    );
+
+    if (!claimed) {
+      throw new ConflictException('Envelope could not be cancelled');
+    }
+
+    const documents = await this.documentsService.findByEnvelope(id, tenantId);
+    for (const document of documents) {
+      const payload: DocumentCancelledEvent = {
+        documentId: document.id,
+        tenantId,
+        cancelledAt,
+      };
+      this.eventEmitter.emit(EVENT_DOCUMENT_CANCELLED, payload);
+    }
+
+    this.logger.log(`Envelope ${id} cancelled for tenant ${tenantId}`);
+
+    return { id, status: EnvelopeStatus.CANCELLED };
   }
 
   private rejectManualClosureMode(closureMode: string | undefined): void {

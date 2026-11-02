@@ -4,6 +4,7 @@ import { renderSignatureReminder } from '../templates/signature-reminder';
 import { renderDocumentCompleted } from '../templates/document-completed';
 import { renderWelcome } from '../templates/welcome';
 import { renderVerificationCode } from '../templates/verification-code';
+import { renderPasswordReset } from '../templates/password-reset';
 
 export interface RenderedEmail {
   subject: string;
@@ -42,6 +43,11 @@ export class TemplateService {
       case 'verification-code':
         return renderVerificationCode(
           context as unknown as Parameters<typeof renderVerificationCode>[0],
+          locale,
+        );
+      case 'password-reset':
+        return renderPasswordReset(
+          context as unknown as Parameters<typeof renderPasswordReset>[0],
           locale,
         );
       default:

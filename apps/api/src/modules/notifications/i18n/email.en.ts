@@ -58,4 +58,13 @@ export const emailMessages = {
     textBody:
       'Your verification code is: {code}\nUse it to verify your identity before signing the document: {documentTitle}.\nThis code expires in 10 minutes.',
   },
+  'password-reset': {
+    subject: 'Password reset — Nexosign',
+    headline: 'Reset your password',
+    greeting: 'Hello, <strong>{ownerName}</strong>.',
+    body: 'We received a request to reset your account password. Use the link below (valid for a limited time):',
+    cta: 'Reset password →',
+    textBody:
+      'Hello, {ownerName}.\nReset your password at: {resetUrl}\nIf you did not request this, ignore this email.',
+  },
 } as const;

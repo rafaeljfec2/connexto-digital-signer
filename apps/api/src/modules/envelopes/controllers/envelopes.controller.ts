@@ -119,4 +119,15 @@ export class EnvelopesController {
   ) {
     await this.envelopesService.deleteDraft(id, tenantId);
   }
+
+  @Post(':id/cancel')
+  @ApiOperation({ summary: 'Cancel a sent envelope awaiting signatures' })
+  @ApiParam({ name: 'id', description: 'Envelope UUID' })
+  @ApiResponse({ status: 201, description: 'Envelope cancelled' })
+  cancel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @TenantId() tenantId: string,
+  ) {
+    return this.envelopesService.cancelSentEnvelope(id, tenantId);
+  }
 }
