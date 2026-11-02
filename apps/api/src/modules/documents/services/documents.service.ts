@@ -286,6 +286,12 @@ export class DocumentsService {
       );
     }
 
+    if (document.finalFileKey === null) {
+      throw new BadRequestException(
+        'Document cannot be manually closed without a final signed file',
+      );
+    }
+
     document.status = DocumentStatus.COMPLETED;
     const saved = await this.documentRepository.save(document);
 

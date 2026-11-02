@@ -9,7 +9,7 @@ import {
   EVENT_DOCUMENT_EXPIRED,
 } from '@connexto/events';
 import { sha256 } from '@connexto/shared';
-import { Logger, NotFoundException } from '@nestjs/common';
+import { Logger, NotFoundException, BadRequestException } from '@nestjs/common';
 import { EventEmitter2 } from '@nestjs/event-emitter';
 import type { Repository } from 'typeorm';
 import { S3StorageService } from '../../../shared/storage/s3-storage.service';
@@ -331,10 +331,11 @@ describe('DocumentsService', () => {
       jest.spyOn(service, 'findOne').mockResolvedValue(document);
       (documentRepository.save as jest.Mock).mockImplementation(async (doc: Document) => doc);
 
-      const result = await service.closeDocument('doc-1', 'tenant-1');
+      await expect(service.closeDocument('doc-1', 'tenant-1')).rejects.toThrow(
+        BadRequestException,
+      );
 
-      expect(result.status).not.toBe(DocumentStatus.COMPLETED);
-      expect(result.finalFileKey).toBeNull();
+      expect(documentRepository.save).not.toHaveBeenCalled();
       expect(eventEmitter.emit).not.toHaveBeenCalledWith(
         EVENT_DOCUMENT_COMPLETED,
         expect.anything(),

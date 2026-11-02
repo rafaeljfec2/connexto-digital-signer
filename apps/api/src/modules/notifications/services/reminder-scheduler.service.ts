@@ -2,7 +2,7 @@ import { Inject, Injectable, Logger } from '@nestjs/common';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { InjectRepository } from '@nestjs/typeorm';
 import { LessThanOrEqual, Not, Repository } from 'typeorm';
-import { Envelope, EnvelopeStatus } from '../../envelopes/entities/envelope.entity';
+import { Envelope, EnvelopeStatus, SigningMode } from '../../envelopes/entities/envelope.entity';
 import { Document, DocumentStatus } from '../../documents/entities/document.entity';
 import { Signer, SignerStatus } from '../../signatures/entities/signer.entity';
 import {
@@ -120,8 +120,28 @@ export class ReminderSchedulerService {
     const now = Date.now();
 
     for (const signer of signers) {
+      if (!this.isReminderEligible(signer, envelope, signers)) {
+        continue;
+      }
       await this.sendReminderIfDue(signer, envelope, intervalMs, now);
     }
+  }
+
+  private isReminderEligible(
+    signer: Signer,
+    envelope: Envelope,
+    pendingSigners: Signer[],
+  ): boolean {
+    if (signer.notifiedAt === null) {
+      return false;
+    }
+    if (envelope.signingMode !== SigningMode.SEQUENTIAL) {
+      return true;
+    }
+    const sorted = [...pendingSigners].sort(
+      (a, b) => (a.order ?? 0) - (b.order ?? 0),
+    );
+    return sorted[0]?.id === signer.id;
   }
 
   private async sendReminderIfDue(
@@ -131,8 +151,9 @@ export class ReminderSchedulerService {
     now: number,
   ): Promise<void> {
     if (signer.reminderCount >= MAX_REMINDERS) return;
+    if (signer.notifiedAt === null) return;
 
-    const lastNotified = signer.notifiedAt ? signer.notifiedAt.getTime() : 0;
+    const lastNotified = signer.notifiedAt.getTime();
     if (now - lastNotified < intervalMs) return;
 
     const nextCount = signer.reminderCount + 1;
@@ -189,12 +210,8 @@ export class ReminderSchedulerService {
       },
     });
 
-    const newStatus =
-      signedSigners.length > 0 ? EnvelopeStatus.COMPLETED : EnvelopeStatus.EXPIRED;
-    const docStatus =
-      newStatus === EnvelopeStatus.COMPLETED
-        ? DocumentStatus.COMPLETED
-        : DocumentStatus.EXPIRED;
+    const newStatus = EnvelopeStatus.EXPIRED;
+    const docStatus = DocumentStatus.EXPIRED;
 
     const claimed = await this.envelopeRepository.manager.transaction(
       async (manager) => {
