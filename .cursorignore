@@ -1,0 +1,23 @@
+# Dependências e gerenciadores de pacotes
+node_modules
+.pnpm-store
+.turbo
+
+# Pastas de build e outputs do Monorepo
+dist
+build
+.vercel
+.next
+out
+.turbo
+
+# Logs e relatórios
+reports
+*.log
+
+# Pastas específicas de ferramentas e agentes
+.cursor
+.cursor-agent-home
+.playwright-mcp
+.husky
+.vscode
