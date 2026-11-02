@@ -10,6 +10,7 @@ import {
   FileSignature,
   Eye,
   Trash2,
+  Ban,
   Pencil,
   FileDown,
   ArrowRight,
@@ -22,10 +23,11 @@ import type { DocumentActionLabels } from './documents-table';
 const TRACKABLE_STATUSES = new Set<DocumentStatus>(['pending_signatures', 'completed']);
 
 const GRID_ICON_CLASS: Record<string, string> = {
+  draft: 'bg-th-icon-bg text-th-icon-fg',
   completed: 'bg-success/15 text-success',
   pending_signatures: 'bg-info/15 text-info',
   expired: 'bg-error/15 text-error',
-  draft: 'bg-th-icon-bg text-th-icon-fg',
+  cancelled: 'bg-th-icon-bg text-foreground-muted',
 };
 
 const STATUS_TO_VARIANT: Record<
@@ -36,6 +38,7 @@ const STATUS_TO_VARIANT: Record<
   pending_signatures: 'warning',
   completed: 'success',
   expired: 'danger',
+  cancelled: 'default',
 };
 
 type GridAction = Readonly<{
@@ -55,6 +58,7 @@ type GridActionHandlers = Readonly<{
   onViewSummary: (doc: EnvelopeSummary) => void;
   onMoveToFolder: (doc: EnvelopeSummary) => void;
   onTrackDocument?: (doc: EnvelopeSummary) => void;
+  onCancelDocument?: (doc: EnvelopeSummary) => void;
 }>;
 
 function buildGridActions(
@@ -85,6 +89,9 @@ function buildGridActions(
         { key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary(doc) },
         { key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal(doc) },
         move,
+        ...(handlers.onCancelDocument && labels.cancel
+          ? [{ key: 'cancel', label: labels.cancel, icon: Ban, variant: 'danger' as const, onClick: () => handlers.onCancelDocument?.(doc) }]
+          : []),
       ];
     }
     case 'completed': {
@@ -103,6 +110,7 @@ function buildGridActions(
       ];
     }
     case 'expired':
+    case 'cancelled':
       return [
         { key: 'summary', label: labels.viewSummary, icon: Eye, onClick: () => handlers.onViewSummary(doc) },
         { key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal(doc) },
@@ -129,6 +137,7 @@ export type GridDocumentCardProps = Readonly<{
   onViewSummary: (doc: EnvelopeSummary) => void;
   onMoveToFolder: (doc: EnvelopeSummary) => void;
   onTrackDocument?: (doc: EnvelopeSummary) => void;
+  onCancelDocument?: (doc: EnvelopeSummary) => void;
 }>;
 
 export function GridDocumentCard({
@@ -147,10 +156,31 @@ export function GridDocumentCard({
   onViewSummary,
   onMoveToFolder,
   onTrackDocument,
+  onCancelDocument,
 }: GridDocumentCardProps) {
   const handlers: GridActionHandlers = useMemo(
-    () => ({ onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onDownloadP7s, onViewSummary, onMoveToFolder, onTrackDocument }),
-    [onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onDownloadP7s, onViewSummary, onMoveToFolder, onTrackDocument],
+    () => ({
+      onDocumentClick,
+      onDeleteDocument,
+      onDownloadOriginal,
+      onDownloadSigned,
+      onDownloadP7s,
+      onViewSummary,
+      onMoveToFolder,
+      onTrackDocument,
+      onCancelDocument,
+    }),
+    [
+      onDocumentClick,
+      onDeleteDocument,
+      onDownloadOriginal,
+      onDownloadSigned,
+      onDownloadP7s,
+      onViewSummary,
+      onMoveToFolder,
+      onTrackDocument,
+      onCancelDocument,
+    ],
   );
 
   const actions = useMemo(

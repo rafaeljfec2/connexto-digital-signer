@@ -160,6 +160,7 @@ function DocumentListView({ search, onSearchChange, onDocumentClick }: DocumentL
     pending_signatures: t('status.pending_signatures'),
     completed: t('status.completed'),
     expired: t('status.expired'),
+    cancelled: t('status.cancelled'),
   };
 
   const handlePageChange = useCallback((newPage: number) => {

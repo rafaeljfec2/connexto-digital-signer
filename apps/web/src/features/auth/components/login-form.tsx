@@ -7,6 +7,7 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { ArrowLeft, Mail } from 'lucide-react';
 import { Button, Input } from '@/shared/ui';
+import { Link } from '@/i18n/navigation';
 import { StepTransition } from '@/shared/animations';
 import { useAuth } from '../hooks/use-auth';
 import { checkEmail } from '../api';
@@ -162,6 +163,11 @@ export function LoginForm() {
           <Button className="w-full" type="submit" disabled={loginStatus === 'pending'}>
             {tAuth('signInCta')}
           </Button>
+          <p className="text-center text-sm">
+            <Link href="/forgot-password" className="text-primary hover:underline">
+              {tAuth('forgotPasswordLink')}
+            </Link>
+          </p>
         </form>
       )}
     </StepTransition>

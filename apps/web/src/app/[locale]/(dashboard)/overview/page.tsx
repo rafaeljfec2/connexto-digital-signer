@@ -57,6 +57,7 @@ export default function DashboardPage() {
       pending_signatures: tDocuments('status.pending'),
       completed: tDocuments('status.completed'),
       expired: tDocuments('status.expired'),
+      cancelled: tDocuments('status.cancelled'),
     }),
     [tDocuments]
   );

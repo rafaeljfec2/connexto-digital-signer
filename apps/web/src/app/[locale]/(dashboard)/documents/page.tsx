@@ -11,7 +11,7 @@ import { EmptyState } from '@/features/documents/components/empty-state';
 import { MoveToFolderModal } from '@/features/documents/components/move-to-folder-modal';
 import { GridDocumentCard } from '@/features/documents/components/grid-document-card';
 import { SignerTrackingPanel } from '@/features/documents/components/signer-tracking-panel';
-import { useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/use-documents';
+import { useCancelEnvelope, useDeleteEnvelope, useEnvelopesList } from '@/features/documents/hooks/use-documents';
 import { useFolderTree, useMoveEnvelopeToFolder } from '@/features/documents/hooks/use-folders';
 import {
   fetchDocumentFileContent,
@@ -26,6 +26,7 @@ import { FadeIn, PageTransition } from '@/shared/animations';
 import { useRouter } from '@/i18n/navigation';
 import { downloadBlob, fileDownloadName, isNotFoundError } from '@/shared/utils/blob-download';
 import { LayoutGrid, List, Plus, Search } from 'lucide-react';
+import { toast } from 'sonner';
 
 function buildFolderNameMap(tree: readonly FolderTreeNode[]): Map<string, string> {
   const map = new Map<string, string>();
@@ -72,6 +73,7 @@ function DocumentsPageContent() {
   const [page, setPage] = useState(1);
   const [view, setView] = usePersistedView('documents-view');
   const [deleteTarget, setDeleteTarget] = useState<EnvelopeSummary | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<EnvelopeSummary | null>(null);
   const [gridMenuOpenId, setGridMenuOpenId] = useState<string | null>(null);
   const [moveTarget, setMoveTarget] = useState<EnvelopeSummary | null>(null);
   const [trackingId, setTrackingId] = useState<string | null>(null);
@@ -112,6 +114,7 @@ function DocumentsPageContent() {
     search: debouncedSearch || undefined,
   });
   const deleteMutation = useDeleteEnvelope();
+  const cancelMutation = useCancelEnvelope();
   const moveMutation = useMoveEnvelopeToFolder();
   const deletingId = deleteMutation.isPending ? (deleteMutation.variables ?? null) : null;
   const envelopes = query.data?.data ?? [];
@@ -124,6 +127,7 @@ function DocumentsPageContent() {
     pending_signatures: t('status.pending'),
     completed: t('status.completed'),
     expired: t('status.expired'),
+    cancelled: t('status.cancelled'),
   }), [t]);
 
   const actionLabels: DocumentActionLabels = useMemo(() => ({
@@ -136,6 +140,7 @@ function DocumentsPageContent() {
     delete: t('actions.delete'),
     moveToFolder: t('actions.moveToFolder'),
     track: t('actions.track'),
+    cancel: t('actions.cancelSent'),
   }), [t]);
 
   const handleDocumentClick = useCallback((env: EnvelopeSummary) => {
@@ -188,6 +193,16 @@ function DocumentsPageContent() {
     deleteMutation.mutate(deleteTarget.id, { onSuccess: () => setDeleteTarget(null) });
   }, [deleteTarget, deleteMutation]);
 
+  const handleConfirmCancel = useCallback(() => {
+    if (!cancelTarget) return;
+    cancelMutation.mutate(cancelTarget.id, {
+      onSuccess: () => {
+        setCancelTarget(null);
+        toast.success(t('actions.cancelSuccess'));
+      },
+    });
+  }, [cancelTarget, cancelMutation, t]);
+
   const handleConfirmMove = useCallback((targetFolderId: string) => {
     if (!moveTarget) return;
     moveMutation.mutate(
@@ -235,6 +250,7 @@ function DocumentsPageContent() {
               <option value="pending_signatures">{t('status.pending')}</option>
               <option value="completed">{t('status.completed')}</option>
               <option value="expired">{t('status.expired')}</option>
+              <option value="cancelled">{t('status.cancelled')}</option>
             </Select>
             <ViewToggle view={view} onViewChange={setView} />
           </div>
@@ -253,7 +269,9 @@ function DocumentsPageContent() {
               onDocumentClick={handleDocumentClick} onDeleteDocument={setDeleteTarget}
               onDownloadOriginal={handleDownloadOriginal} onDownloadSigned={handleDownloadSigned}
               onDownloadP7s={handleDownloadP7s}
-              onViewSummary={handleViewSummary} onMoveToFolder={setMoveTarget} onTrackDocument={(env) => setTrackingId(env.id)} deletingId={deletingId}
+              onViewSummary={handleViewSummary} onMoveToFolder={setMoveTarget} onTrackDocument={(env) => setTrackingId(env.id)}
+              onCancelDocument={setCancelTarget}
+              deletingId={deletingId}
             />
           </motion.div>
         ) : (
@@ -278,6 +296,7 @@ function DocumentsPageContent() {
                     onDownloadOriginal={handleDownloadOriginal} onDownloadSigned={handleDownloadSigned}
                     onDownloadP7s={handleDownloadP7s}
                     onViewSummary={handleViewSummary} onMoveToFolder={setMoveTarget} onTrackDocument={(env) => setTrackingId(env.id)}
+                    onCancelDocument={setCancelTarget}
                   />
                 ))}
             {!query.isLoading && envelopes.length === 0 ? (
@@ -292,6 +311,17 @@ function DocumentsPageContent() {
       <Pagination page={query.data?.meta.page ?? page} totalPages={query.data?.meta.totalPages ?? 1} onPageChange={setPage} previousLabel={t('pagination.previous')} nextLabel={t('pagination.next')} pageLabel={t('pagination.page')} />
 
       <ConfirmDialog open={deleteTarget !== null} title={t('actions.deleteTitle')} description={t('actions.deleteConfirm')} confirmLabel={t('actions.delete')} cancelLabel={t('actions.cancel')} isLoading={deleteMutation.isPending} onConfirm={handleConfirmDelete} onCancel={() => setDeleteTarget(null)} />
+
+      <ConfirmDialog
+        open={cancelTarget !== null}
+        title={t('actions.cancelConfirmTitle')}
+        description={t('actions.cancelConfirm')}
+        confirmLabel={t('actions.cancelSent')}
+        cancelLabel={t('actions.cancel')}
+        isLoading={cancelMutation.isPending}
+        onConfirm={handleConfirmCancel}
+        onCancel={() => setCancelTarget(null)}
+      />
 
       <MoveToFolderModal
         open={moveTarget !== null} folderTree={folderTree} currentFolderId={moveTarget?.folderId ?? null}

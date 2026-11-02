@@ -177,6 +177,17 @@
     "continue": "Continuar",
     "back": "Voltar",
     "signInCta": "Entrar",
+    "forgotPasswordLink": "Esqueci minha senha",
+    "forgotPasswordTitle": "Recuperar acesso",
+    "forgotPasswordSubtitle": "Informe seu email. Se existir uma conta, enviaremos instruções.",
+    "forgotPasswordSubmit": "Enviar instruções",
+    "forgotPasswordSuccess": "Se existir uma conta para este email, você receberá instruções em breve.",
+    "resetPasswordTitle": "Nova senha",
+    "resetPasswordSubtitle": "Escolha uma senha forte para sua conta.",
+    "resetPasswordSubmit": "Salvar nova senha",
+    "resetPasswordError": "Não foi possível redefinir a senha. Solicite um novo link.",
+    "resetPasswordMissingToken": "Link inválido ou expirado. Solicite uma nova redefinição de senha.",
+    "backToLogin": "Voltar ao login",
     "companyNameLabel": "Nome da empresa",
     "companyNamePlaceholder": "Acme Corp",
     "companySlugLabel": "Slug da empresa",
@@ -298,13 +309,18 @@
       "deleting": "Excluindo...",
       "cancel": "Cancelar",
       "moveToFolder": "Mover para pasta",
-      "track": "Acompanhar"
+      "track": "Acompanhar",
+      "cancelSent": "Cancelar envio",
+      "cancelConfirmTitle": "Cancelar documento enviado",
+      "cancelConfirm": "O documento ficará cancelado. Assinaturas já coletadas serão preservadas. Deseja continuar?",
+      "cancelSuccess": "Documento cancelado."
     },
     "status": {
       "draft": "Rascunho",
       "pending": "Pendente",
       "completed": "Concluído",
-      "expired": "Expirado"
+      "expired": "Expirado",
+      "cancelled": "Cancelado"
     },
     "filters": {
       "search": "Buscar documentos...",
@@ -593,7 +609,7 @@
     "signed": "Assinado",
     "loading": "Carregando documento...",
     "error": "Erro ao carregar documento",
-    "errorSubtitle": "O link pode ter expirado ou o documento não está mais disponível.",
+    "errorSubtitle": "O link pode estar inválido ou o documento não está mais disponível para assinatura.",
     "alreadySigned": "Você já assinou este documento.",
     "alreadySignedSubtitle": "Sua assinatura foi registrada com sucesso. Você receberá uma cópia por email quando todos assinarem.",
     "allFieldsRequired": "Preencha todos os campos obrigatórios antes de assinar.",
@@ -710,7 +726,8 @@
     },
     "back": "Voltar",
     "expired": "Este documento expirou e não aceita mais assinaturas.",
-    "completed": "Este documento já foi finalizado."
+    "completed": "Este documento já foi finalizado.",
+    "cancelled": "Este documento foi cancelado pelo remetente e não aceita mais assinaturas."
   },
   "success": {
     "title": "Documento assinado com sucesso!",
@@ -1349,7 +1366,8 @@
       "draft": "Rascunho",
       "pending_signatures": "Aguardando assinaturas",
       "completed": "Concluído",
-      "expired": "Expirado"
+      "expired": "Expirado",
+      "cancelled": "Cancelado"
     },
     "pagination": {
       "previous": "Anterior",

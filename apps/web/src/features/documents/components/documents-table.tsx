@@ -21,6 +21,7 @@ import {
   Download,
   FileSignature,
   Eye,
+  Ban,
   Trash2,
   Pencil,
   FileDown,
@@ -40,6 +41,7 @@ const STATUS_ORDER: Record<DocumentStatus, number> = {
   pending_signatures: 1,
   completed: 2,
   expired: 3,
+  cancelled: 4,
 };
 
 function sortDocuments(
@@ -109,6 +111,7 @@ export type DocumentActionLabels = Readonly<{
   delete: string;
   moveToFolder?: string;
   track?: string;
+  cancel?: string;
 }>;
 
 export type DocumentsTableProps = Readonly<{
@@ -136,6 +139,7 @@ export type DocumentsTableProps = Readonly<{
   onViewSummary?: (doc: EnvelopeSummary) => void;
   onMoveToFolder?: (doc: EnvelopeSummary) => void;
   onTrackDocument?: (doc: EnvelopeSummary) => void;
+  onCancelDocument?: (doc: EnvelopeSummary) => void;
   deletingId?: string | null;
   folderNameMap?: Map<string, string>;
 }>;
@@ -150,6 +154,7 @@ const STATUS_VARIANT: Record<
   pending_signatures: 'warning',
   completed: 'success',
   expired: 'danger',
+  cancelled: 'default',
 };
 
 const STATUS_ICON_CLASS: Record<DocumentStatus, string> = {
@@ -157,6 +162,7 @@ const STATUS_ICON_CLASS: Record<DocumentStatus, string> = {
   pending_signatures: 'bg-info/15 text-info',
   completed: 'bg-success/15 text-success',
   expired: 'bg-error/15 text-error',
+  cancelled: 'bg-th-icon-bg text-foreground-muted',
 };
 
 function DocumentRowSkeleton() {
@@ -185,6 +191,7 @@ type ActionHandlers = Readonly<{
   onViewSummary?: (doc: EnvelopeSummary) => void;
   onMoveToFolder?: (doc: EnvelopeSummary) => void;
   onTrackDocument?: (doc: EnvelopeSummary) => void;
+  onCancelDocument?: (doc: EnvelopeSummary) => void;
 }>;
 
 function buildMoveAction(doc: EnvelopeSummary, labels: DocumentActionLabels, handlers: ActionHandlers): DocumentAction[] {
@@ -223,6 +230,15 @@ function buildViewableActions(doc: EnvelopeSummary, labels: DocumentActionLabels
       ? [{ key: 'download-original', label: labels.downloadOriginal, icon: Download, onClick: () => handlers.onDownloadOriginal?.(doc) }]
       : []),
     ...buildMoveAction(doc, labels, handlers),
+    ...(handlers.onCancelDocument && labels.cancel
+      ? [{
+          key: 'cancel',
+          label: labels.cancel,
+          icon: Ban,
+          variant: 'danger' as const,
+          onClick: () => handlers.onCancelDocument?.(doc),
+        }]
+      : []),
   ];
 }
 
@@ -231,6 +247,7 @@ const ACTIONS_BY_STATUS: Record<DocumentStatus, (doc: EnvelopeSummary, labels: D
   pending_signatures: (doc, labels, handlers) => buildViewableActions(doc, labels, handlers, false),
   completed: (doc, labels, handlers) => buildViewableActions(doc, labels, handlers, true),
   expired: (doc, labels, handlers) => buildViewableActions(doc, labels, handlers, false),
+  cancelled: (doc, labels, handlers) => buildViewableActions(doc, labels, handlers, false),
 };
 
 function useDocumentActions(
@@ -327,10 +344,21 @@ export function DocumentsTable({
   onViewSummary,
   onMoveToFolder,
   onTrackDocument,
+  onCancelDocument,
   deletingId = null,
   folderNameMap,
 }: DocumentsTableProps) {
-  const handlers = { onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned, onDownloadP7s, onViewSummary, onMoveToFolder, onTrackDocument };
+  const handlers = {
+    onDocumentClick,
+    onDeleteDocument,
+    onDownloadOriginal,
+    onDownloadSigned,
+    onDownloadP7s,
+    onViewSummary,
+    onMoveToFolder,
+    onTrackDocument,
+    onCancelDocument,
+  };
   const [sort, setSort] = useState<SortState>(DEFAULT_SORT);
 
   const sortedDocuments = useMemo(

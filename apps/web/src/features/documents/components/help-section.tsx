@@ -1,6 +1,7 @@
 'use client';
 
 import { HelpCircle, MessageSquare, BookOpen, ExternalLink } from 'lucide-react';
+import { Link } from '@/i18n/navigation';
 import { Card } from '@/shared/ui';
 
 export type HelpSectionProps = {
@@ -12,10 +13,10 @@ export type HelpSectionProps = {
   }>;
 };
 
-const HELP_ITEMS = [
-  { key: 'faq' as const, icon: HelpCircle },
-  { key: 'support' as const, icon: MessageSquare },
-  { key: 'docs' as const, icon: BookOpen },
+const HELP_LINKS = [
+  { key: 'faq' as const, icon: HelpCircle, href: '/contact' as const },
+  { key: 'support' as const, icon: MessageSquare, href: '/contact' as const },
+  { key: 'docs' as const, icon: BookOpen, href: '/contact' as const },
 ];
 
 export function HelpSection({ labels }: Readonly<HelpSectionProps>) {
@@ -27,12 +28,12 @@ export function HelpSection({ labels }: Readonly<HelpSectionProps>) {
       </div>
 
       <div className="mt-3 space-y-1">
-        {HELP_ITEMS.map((item) => {
+        {HELP_LINKS.map((item) => {
           const Icon = item.icon;
           return (
-            <button
+            <Link
               key={item.key}
-              type="button"
+              href={item.href}
               className="group flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-all hover:bg-th-hover"
             >
               <Icon className="h-4 w-4 shrink-0 text-foreground-subtle transition-colors group-hover:text-primary" />
@@ -40,7 +41,7 @@ export function HelpSection({ labels }: Readonly<HelpSectionProps>) {
                 {labels[item.key]}
               </span>
               <ExternalLink className="h-3.5 w-3.5 text-foreground-subtle transition-colors group-hover:text-foreground-muted" />
-            </button>
+            </Link>
           );
         })}
       </div>

@@ -177,6 +177,17 @@
     "continue": "Continue",
     "back": "Back",
     "signInCta": "Sign in",
+    "forgotPasswordLink": "Forgot password",
+    "forgotPasswordTitle": "Recover access",
+    "forgotPasswordSubtitle": "Enter your email. If an account exists, we will send instructions.",
+    "forgotPasswordSubmit": "Send instructions",
+    "forgotPasswordSuccess": "If an account exists for this email, you will receive instructions shortly.",
+    "resetPasswordTitle": "New password",
+    "resetPasswordSubtitle": "Choose a strong password for your account.",
+    "resetPasswordSubmit": "Save new password",
+    "resetPasswordError": "Could not reset your password. Request a new link.",
+    "resetPasswordMissingToken": "Invalid or expired link. Request a new password reset.",
+    "backToLogin": "Back to login",
     "companyNameLabel": "Company name",
     "companyNamePlaceholder": "Acme Corp",
     "companySlugLabel": "Company slug",
@@ -298,13 +309,18 @@
       "deleting": "Deleting...",
       "cancel": "Cancel",
       "moveToFolder": "Move to folder",
-      "track": "Track"
+      "track": "Track",
+      "cancelSent": "Cancel sending",
+      "cancelConfirmTitle": "Cancel sent document",
+      "cancelConfirm": "The document will be marked as cancelled. Signatures already collected will be preserved. Continue?",
+      "cancelSuccess": "Document cancelled."
     },
     "status": {
       "draft": "Draft",
       "pending": "Pending",
       "completed": "Completed",
-      "expired": "Expired"
+      "expired": "Expired",
+      "cancelled": "Cancelled"
     },
     "filters": {
       "search": "Search documents...",
@@ -593,7 +609,7 @@
     "signed": "Signed",
     "loading": "Loading document...",
     "error": "Error loading document",
-    "errorSubtitle": "The link may have expired or the document is no longer available.",
+    "errorSubtitle": "The link may be invalid or the document is no longer available for signing.",
     "alreadySigned": "You have already signed this document.",
     "alreadySignedSubtitle": "Your signature was successfully recorded. You will receive a copy by email when all signers have signed.",
     "allFieldsRequired": "Please fill all required fields before signing.",
@@ -710,7 +726,8 @@
     },
     "back": "Back",
     "expired": "This document has expired and no longer accepts signatures.",
-    "completed": "This document has already been finalized."
+    "completed": "This document has already been finalized.",
+    "cancelled": "This document was cancelled by the sender and no longer accepts signatures."
   },
   "success": {
     "title": "Document signed successfully!",
@@ -1386,7 +1403,8 @@
       "draft": "Draft",
       "pending_signatures": "Pending signatures",
       "completed": "Completed",
-      "expired": "Expired"
+      "expired": "Expired",
+      "cancelled": "Cancelled"
     },
     "pagination": {
       "previous": "Previous",

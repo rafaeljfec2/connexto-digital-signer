@@ -4,13 +4,15 @@ export type DocumentStatus =
   | 'draft'
   | 'pending_signatures'
   | 'completed'
-  | 'expired';
+  | 'expired'
+  | 'cancelled';
 
 export type EnvelopeStatus =
   | 'draft'
   | 'pending_signatures'
   | 'completed'
-  | 'expired';
+  | 'expired'
+  | 'cancelled';
 
 export type ReminderInterval = 'none' | '1_day' | '2_days' | '3_days' | '7_days';
 export type SigningLanguage = 'pt-br' | 'en';
@@ -332,6 +334,15 @@ export const updateEnvelope = async (
 
 export const deleteEnvelope = async (id: string): Promise<void> => {
   await apiClient.delete(`/envelopes/${id}`);
+};
+
+export const cancelEnvelope = async (
+  id: string,
+): Promise<{ id: string; status: EnvelopeStatus }> => {
+  const response = await apiClient.post<{ id: string; status: EnvelopeStatus }>(
+    `/envelopes/${id}/cancel`,
+  );
+  return response.data;
 };
 
 export const listDocumentsByEnvelope = async (

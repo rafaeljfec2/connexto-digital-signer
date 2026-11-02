@@ -3,6 +3,7 @@ import {
   createEnvelopeDraft,
   deleteDocument,
   deleteEnvelope,
+  cancelEnvelope,
   getEnvelopesStats,
   listAllSigners,
   listEnvelopes,
@@ -36,6 +37,16 @@ export const useDeleteEnvelope = () => {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (envelopeId: string) => deleteEnvelope(envelopeId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['envelopes'] });
+    },
+  });
+};
+
+export const useCancelEnvelope = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (envelopeId: string) => cancelEnvelope(envelopeId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['envelopes'] });
     },

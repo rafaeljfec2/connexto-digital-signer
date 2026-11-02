@@ -321,6 +321,45 @@ export default function SignerDocumentPage() {
 
   const { signer, envelope: env } = signerData;
 
+  if (env.status === 'expired') {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] px-4 text-foreground">
+        <Card variant="glass" className="max-w-sm space-y-4 p-8 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/20">
+            <AlertTriangle className="h-6 w-6 text-error" />
+          </div>
+          <p className="text-lg font-medium">{t('expired')}</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (env.status === 'cancelled') {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] px-4 text-foreground">
+        <Card variant="glass" className="max-w-sm space-y-4 p-8 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-error/20">
+            <AlertTriangle className="h-6 w-6 text-error" />
+          </div>
+          <p className="text-lg font-medium">{t('cancelled')}</p>
+        </Card>
+      </div>
+    );
+  }
+
+  if (env.status === 'completed') {
+    return (
+      <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] px-4 text-foreground">
+        <Card variant="glass" className="max-w-sm space-y-4 p-8 text-center">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-info/20">
+            <ShieldCheck className="h-6 w-6 text-info" />
+          </div>
+          <p className="text-lg font-medium">{t('completed')}</p>
+        </Card>
+      </div>
+    );
+  }
+
   if (alreadySigned) {
     return (
       <div className="flex min-h-[100dvh] items-center justify-center bg-[var(--th-page-bg)] px-4 text-foreground">

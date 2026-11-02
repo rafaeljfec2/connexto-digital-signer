@@ -55,3 +55,20 @@ export const createTenant = async (payload: SignUpInput): Promise<SignUpResponse
   const { data } = await apiClient.post<SignUpResponse>('/tenants', payload);
   return data;
 };
+
+export const requestPasswordReset = async (
+  email: string,
+): Promise<{ message: string }> => {
+  const { data } = await apiClient.post<{ message: string }>('/auth/forgot-password', {
+    email,
+  });
+  return data;
+};
+
+export const resetPassword = async (payload: {
+  readonly token: string;
+  readonly password: string;
+}): Promise<{ ok: true }> => {
+  const { data } = await apiClient.post<{ ok: true }>('/auth/reset-password', payload);
+  return data;
+};

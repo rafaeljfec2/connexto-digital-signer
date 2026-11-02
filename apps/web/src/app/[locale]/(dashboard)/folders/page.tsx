@@ -127,6 +127,7 @@ export default function FoldersPage() {
     pending_signatures: t('status.pending'),
     completed: t('status.completed'),
     expired: t('status.expired'),
+    cancelled: t('status.cancelled'),
   }), [t]);
 
   const actionLabels: DocumentActionLabels = useMemo(() => ({
