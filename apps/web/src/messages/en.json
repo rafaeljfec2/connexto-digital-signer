@@ -871,7 +871,28 @@
     },
     "resendInvite": "Resend invitation",
     "resendInviteSuccess": "Invitation resent successfully.",
-    "resendInviteError": "Could not resend the invitation. Please try again."
+    "resendInviteError": "Could not resend the invitation. Please try again.",
+    "notifiedStepNote": "This step uses the signer notification timestamp and may include reminders.",
+    "inviteDelivery": {
+      "title": "Invitation delivery",
+      "providerDisclaimer": "Provider acceptance does not confirm inbox delivery.",
+      "status": {
+        "empty": "No invite send recorded",
+        "queued": "Queued",
+        "sent": "Sent to provider",
+        "failed": "Send failed"
+      },
+      "historicalEstimate": "Estimated historical record",
+      "manualResendCount": "{count} successful manual resend(s)",
+      "historyToggle": "Attempt history",
+      "attemptLine": "Attempt {number}",
+      "trigger": {
+        "initial_send": "Initial send",
+        "sequential_next": "Next signer (sequential)",
+        "manual_resend": "Manual resend",
+        "legacy_backfill": "Estimated history"
+      }
+    }
   },
   "landing": {
     "header": {

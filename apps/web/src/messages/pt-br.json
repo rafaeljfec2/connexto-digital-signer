@@ -871,7 +871,28 @@
     },
     "resendInvite": "Reenviar convite",
     "resendInviteSuccess": "Convite reenviado com sucesso.",
-    "resendInviteError": "Não foi possível reenviar o convite. Tente novamente."
+    "resendInviteError": "Não foi possível reenviar o convite. Tente novamente.",
+    "notifiedStepNote": "Este passo usa a data de notificação do signatário e pode incluir lembretes.",
+    "inviteDelivery": {
+      "title": "Envio do convite",
+      "providerDisclaimer": "Aceitação pelo provedor não confirma entrega na caixa postal.",
+      "status": {
+        "empty": "Nenhum envio de convite registrado",
+        "queued": "Na fila",
+        "sent": "Enviado ao provedor",
+        "failed": "Falha no envio"
+      },
+      "historicalEstimate": "Registro histórico estimado",
+      "manualResendCount": "{count} reenvio(s) manual(is) bem-sucedido(s)",
+      "historyToggle": "Histórico de tentativas",
+      "attemptLine": "Tentativa {number}",
+      "trigger": {
+        "initial_send": "Envio inicial",
+        "sequential_next": "Próximo signatário (sequencial)",
+        "manual_resend": "Reenvio manual",
+        "legacy_backfill": "Histórico estimado"
+      }
+    }
   },
   "landing": {
     "header": {

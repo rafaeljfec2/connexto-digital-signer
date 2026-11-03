@@ -17,6 +17,8 @@ import { validateEnvelopeIsActionable } from '../utils/validate-envelope-actiona
 import {
   assertSignerEligibleForInviteDelivery,
 } from '../utils/signer-invite-eligibility';
+import { InviteDeliveryTrigger } from '../interfaces/invite-delivery.interface';
+import { InviteDeliveryService } from './invite-delivery.service';
 import { SignatureFieldsService } from './signature-fields.service';
 import { SignaturesService } from './signatures.service';
 
@@ -35,6 +37,7 @@ export class EnvelopeDispatchService {
     private readonly fieldsService: SignatureFieldsService,
     private readonly notificationsService: NotificationsService,
     private readonly certificateService: CertificateService,
+    private readonly inviteDeliveryService: InviteDeliveryService,
   ) {}
 
   async sendEnvelope(
@@ -64,7 +67,13 @@ export class EnvelopeDispatchService {
         ? this.pickFirstSigner(signers)
         : signers;
     const now = new Date();
-    const notified = await this.notifySigners(envelope, toNotify, now, message);
+    const notified = await this.notifySigners(
+      envelope,
+      toNotify,
+      now,
+      message,
+      InviteDeliveryTrigger.INITIAL_SEND,
+    );
 
     await Promise.all(
       documents.map((d) =>
@@ -88,7 +97,7 @@ export class EnvelopeDispatchService {
     tenantId: string,
     envelopeId: string,
     signerId: string,
-  ): Promise<{ signerId: string; notifiedAt: Date }> {
+  ): Promise<{ signerId: string; notifiedAt: Date; attemptNumber: number }> {
     const envelope = await this.envelopesService.findOne(envelopeId, tenantId);
     const signers = await this.signaturesService.findByEnvelope(envelopeId, tenantId);
     const signer = signers.find((item) => item.id === signerId);
@@ -113,8 +122,14 @@ export class EnvelopeDispatchService {
     }
 
     const notifiedAt = new Date();
+    let attemptNumber = 0;
     try {
-      await this.deliverSignatureInvite(envelope, signer);
+      const delivery = await this.deliverSignatureInvite(
+        envelope,
+        signer,
+        InviteDeliveryTrigger.MANUAL_RESEND,
+      );
+      attemptNumber = delivery.attemptNumber;
     } catch (error) {
       await this.signerRepository.update(
         { id: signer.id, tenantId },
@@ -132,7 +147,7 @@ export class EnvelopeDispatchService {
       `Invitation resent to signer ${signer.id} for envelope ${envelopeId}`,
     );
 
-    return { signerId: signer.id, notifiedAt };
+    return { signerId: signer.id, notifiedAt, attemptNumber };
   }
 
   async previewSend(
@@ -187,6 +202,8 @@ export class EnvelopeDispatchService {
       },
       [next],
       new Date(),
+      undefined,
+      InviteDeliveryTrigger.SEQUENTIAL_NEXT,
     );
   }
 
@@ -256,11 +273,12 @@ export class EnvelopeDispatchService {
     signers: Signer[],
     notifiedAt: Date,
     message?: string,
+    trigger: InviteDeliveryTrigger = InviteDeliveryTrigger.INITIAL_SEND,
   ): Promise<Signer[]> {
     if (signers.length === 0) return [];
     const saved: Signer[] = [];
     for (const signer of signers) {
-      await this.deliverSignatureInvite(envelope, signer, message);
+      await this.deliverSignatureInvite(envelope, signer, trigger, message);
       const persisted = await this.signerRepository.save({
         ...signer,
         notifiedAt,
@@ -272,22 +290,33 @@ export class EnvelopeDispatchService {
 
   private async deliverSignatureInvite(
     envelope: {
+      readonly id: string;
       readonly tenantId: string;
       readonly title: string;
       readonly signingLanguage?: string;
     },
     signer: Signer,
+    trigger: InviteDeliveryTrigger,
     message?: string,
-  ): Promise<void> {
-    await this.notificationsService.sendSignatureInvite({
-      tenantId: envelope.tenantId,
-      signerEmail: signer.email,
-      signerName: signer.name,
-      documentTitle: envelope.title,
-      signUrl: this.buildSignUrl(signer.accessToken, envelope.signingLanguage ?? 'en'),
-      locale: envelope.signingLanguage ?? 'en',
-      message,
-    });
+  ): Promise<{ attemptNumber: number }> {
+    return this.inviteDeliveryService.executeInviteDelivery(
+      {
+        tenantId: envelope.tenantId,
+        envelopeId: envelope.id,
+        signerId: signer.id,
+        trigger,
+      },
+      () =>
+        this.notificationsService.sendSignatureInvite({
+          tenantId: envelope.tenantId,
+          signerEmail: signer.email,
+          signerName: signer.name,
+          documentTitle: envelope.title,
+          signUrl: this.buildSignUrl(signer.accessToken, envelope.signingLanguage ?? 'en'),
+          locale: envelope.signingLanguage ?? 'en',
+          message,
+        }),
+    );
   }
 
   private async finalizeDocument(

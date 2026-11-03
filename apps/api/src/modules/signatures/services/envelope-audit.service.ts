@@ -9,6 +9,8 @@ import type {
   DocumentAuditSummary,
 } from '../interfaces/audit.interface';
 import { SignaturesService } from './signatures.service';
+import { InviteDeliveryService } from './invite-delivery.service';
+import type { SignerInviteDeliveryDto } from '../interfaces/invite-delivery.interface';
 
 @Injectable()
 export class EnvelopeAuditService {
@@ -17,11 +19,16 @@ export class EnvelopeAuditService {
     private readonly documentsService: DocumentsService,
     private readonly envelopesService: EnvelopesService,
     private readonly certificateService: CertificateService,
+    private readonly inviteDeliveryService: InviteDeliveryService,
   ) {}
 
   async getEnvelopeTracking(envelopeId: string, tenantId: string) {
     const envelope = await this.envelopesService.findOne(envelopeId, tenantId);
     const signers = await this.signaturesService.findByEnvelope(envelopeId, tenantId);
+    const deliveryBySigner = await this.inviteDeliveryService.findByEnvelope(
+      envelopeId,
+      tenantId,
+    );
 
     return {
       envelope: {
@@ -38,6 +45,9 @@ export class EnvelopeAuditService {
         email: signer.email,
         order: signer.order,
         status: signer.status,
+        inviteDelivery: serializeInviteDeliveryForTracking(
+          deliveryBySigner.get(signer.id) ?? emptyInviteDelivery(),
+        ),
         steps: [
           {
             key: 'notified' as const,
@@ -182,3 +192,46 @@ export class EnvelopeAuditService {
     return timeline;
   }
 }
+
+const emptyInviteDelivery = (): SignerInviteDeliveryDto => ({
+  currentStatus: null,
+  currentAttemptNumber: null,
+  lastFinishedAt: null,
+  isHistoricalEstimate: false,
+  manualResendCount: 0,
+  attempts: [],
+});
+
+export const serializeInviteDeliveryForTracking = (
+  delivery: SignerInviteDeliveryDto,
+): Readonly<{
+  currentStatus: SignerInviteDeliveryDto['currentStatus'];
+  currentAttemptNumber: number | null;
+  lastFinishedAt: string | null;
+  isHistoricalEstimate: boolean;
+  manualResendCount: number;
+  attempts: ReadonlyArray<{
+    attemptNumber: number;
+    trigger: string;
+    status: string;
+    startedAt: string;
+    finishedAt: string | null;
+    errorMessage: string | null;
+    isLegacy: boolean;
+  }>;
+}> => ({
+  currentStatus: delivery.currentStatus,
+  currentAttemptNumber: delivery.currentAttemptNumber,
+  lastFinishedAt: delivery.lastFinishedAt?.toISOString() ?? null,
+  isHistoricalEstimate: delivery.isHistoricalEstimate,
+  manualResendCount: delivery.manualResendCount,
+  attempts: delivery.attempts.map((attempt) => ({
+    attemptNumber: attempt.attemptNumber,
+    trigger: attempt.trigger,
+    status: attempt.status,
+    startedAt: attempt.startedAt.toISOString(),
+    finishedAt: attempt.finishedAt?.toISOString() ?? null,
+    errorMessage: attempt.errorMessage,
+    isLegacy: attempt.isLegacy,
+  })),
+});

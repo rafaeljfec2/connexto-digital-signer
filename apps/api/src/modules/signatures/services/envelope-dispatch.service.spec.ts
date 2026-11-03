@@ -11,6 +11,7 @@ import { NotificationsService } from '../../notifications/services/notifications
 import { CertificateService } from '../../tenants/services/certificate.service';
 import { Signer, SignerStatus } from '../entities/signer.entity';
 import { EnvelopeDispatchService } from './envelope-dispatch.service';
+import { InviteDeliveryService } from './invite-delivery.service';
 import { SignatureFieldsService } from './signature-fields.service';
 import { buildDocument, buildEnvelope, buildSigner } from './signatures-test.fixtures';
 import { SignaturesService } from './signatures.service';
@@ -26,6 +27,7 @@ describe('EnvelopeDispatchService', () => {
   let fieldsService: jest.Mocked<SignatureFieldsService>;
   let notificationsService: jest.Mocked<NotificationsService>;
   let certificateService: jest.Mocked<CertificateService>;
+  let inviteDeliveryService: jest.Mocked<InviteDeliveryService>;
 
   beforeEach(() => {
     signerRepository = {
@@ -64,6 +66,12 @@ describe('EnvelopeDispatchService', () => {
       generateP7s: jest.fn(),
       getCertificateStatus: jest.fn(),
     } as unknown as jest.Mocked<CertificateService>;
+    inviteDeliveryService = {
+      executeInviteDelivery: jest.fn(async (_params, send) => {
+        await send();
+        return { attemptNumber: 1 };
+      }),
+    } as unknown as jest.Mocked<InviteDeliveryService>;
 
     service = new EnvelopeDispatchService(
       signerRepository,
@@ -75,6 +83,7 @@ describe('EnvelopeDispatchService', () => {
       fieldsService,
       notificationsService,
       certificateService,
+      inviteDeliveryService,
     );
   });
 
@@ -202,6 +211,7 @@ describe('EnvelopeDispatchService', () => {
 
       expect(result.signerId).toBe('signer-1');
       expect(result.notifiedAt).toBeInstanceOf(Date);
+      expect(result.attemptNumber).toBe(1);
       expect(notificationsService.sendSignatureInvite).toHaveBeenCalledWith(
         expect.objectContaining({ signerEmail: 'jane@acme.com' }),
       );

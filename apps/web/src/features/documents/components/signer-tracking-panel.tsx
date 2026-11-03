@@ -2,14 +2,24 @@
 
 import { useState } from 'react';
 import { useTranslations } from 'next-intl';
-import { Send, Eye, UserCheck, CheckCircle, Loader2, RefreshCw } from 'lucide-react';
+import { Send, Eye, UserCheck, CheckCircle, Loader2, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
 import { Badge } from '@/shared/ui/badge';
 import { Button } from '@/shared/ui/button';
 import { Skeleton } from '@/shared/ui/skeleton';
 import { useEnvelopeTracking } from '../hooks/use-envelope-tracking';
 import { useResendSignerInvite } from '../hooks/use-resend-signer-invite';
-import type { EnvelopeTracking, TrackingStep, TrackingSigner } from '../api';
+import type {
+  EnvelopeTracking,
+  InviteDeliveryAttempt,
+  SignerInviteDelivery,
+  TrackingStep,
+  TrackingSigner,
+} from '../api';
 import { canResendSignerInvite } from '../utils/signer-invite-eligibility';
+import {
+  inviteDeliveryStatusTranslationKey,
+  shouldShowHistoricalEstimateNote,
+} from '../utils/invite-delivery-display';
 
 type SignerTrackingPanelProps = Readonly<{
   envelopeId: string;
@@ -97,14 +107,19 @@ function TrackingStepItem({
         <Icon className="h-3.5 w-3.5" />
       </div>
       <div className="min-w-0 flex-1 pt-0.5">
-        <div className="flex items-center gap-2">
-          <span className={`text-sm ${labelClass}`}>
-            {t(`steps.${step.key}`)}
-          </span>
-          {step.key === 'notified' && step.reminderCount !== undefined && step.reminderCount > 0 ? (
-            <Badge variant="info" className="text-[10px]">
-              {step.reminderCount} {t('reminders')}
-            </Badge>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <span className={`text-sm ${labelClass}`}>
+              {t(`steps.${step.key}`)}
+            </span>
+            {step.key === 'notified' && step.reminderCount !== undefined && step.reminderCount > 0 ? (
+              <Badge variant="info" className="text-[10px]">
+                {step.reminderCount} {t('reminders')}
+              </Badge>
+            ) : null}
+          </div>
+          {step.key === 'notified' ? (
+            <span className="text-[10px] text-foreground-subtle">{t('notifiedStepNote')}</span>
           ) : null}
         </div>
         {step.completedAt === null ? null : (
@@ -116,6 +131,99 @@ function TrackingStepItem({
           <span className="text-xs text-primary">{t('waiting')}</span>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function inviteDeliveryBadgeVariant(
+  status: SignerInviteDelivery['currentStatus'],
+): 'default' | 'success' | 'warning' | 'danger' {
+  if (status === 'sent') {
+    return 'success';
+  }
+  if (status === 'failed') {
+    return 'danger';
+  }
+  if (status === 'queued') {
+    return 'warning';
+  }
+  return 'default';
+}
+
+function InviteDeliverySection({
+  delivery,
+  locale,
+}: Readonly<{
+  delivery: SignerInviteDelivery;
+  locale: string;
+}>) {
+  const t = useTranslations('tracking.inviteDelivery');
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const statusKey = inviteDeliveryStatusTranslationKey(delivery.currentStatus);
+  const showHistorical = shouldShowHistoricalEstimateNote(
+    delivery.isHistoricalEstimate,
+    delivery.attempts.length,
+  );
+
+  return (
+    <div className="mb-4 rounded-lg border border-th-border bg-th-hover/30 p-3">
+      <div className="mb-2 flex flex-wrap items-center gap-2">
+        <span className="text-xs font-medium uppercase tracking-wide text-foreground-muted">
+          {t('title')}
+        </span>
+        <Badge variant={inviteDeliveryBadgeVariant(delivery.currentStatus)}>
+          {t(`status.${statusKey}`)}
+        </Badge>
+      </div>
+      <p className="text-xs text-foreground-muted">{t('providerDisclaimer')}</p>
+      {showHistorical ? (
+        <p className="mt-1 text-xs text-foreground-subtle">{t('historicalEstimate')}</p>
+      ) : null}
+      {delivery.manualResendCount > 0 ? (
+        <p className="mt-1 text-xs text-foreground-muted">
+          {t('manualResendCount', { count: delivery.manualResendCount })}
+        </p>
+      ) : null}
+      {delivery.lastFinishedAt !== null ? (
+        <p className="mt-1 text-xs text-foreground-muted">
+          {formatTimestamp(delivery.lastFinishedAt, locale)}
+        </p>
+      ) : null}
+      {delivery.attempts.length === 0 ? null : (
+        <div className="mt-2">
+          <button
+            type="button"
+            className="flex items-center gap-1 text-xs text-primary"
+            onClick={() => setHistoryOpen((open) => !open)}
+          >
+            {historyOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+            {t('historyToggle')}
+          </button>
+          {historyOpen ? (
+            <ul className="mt-2 space-y-2 border-t border-th-border pt-2">
+              {delivery.attempts.map((attempt: InviteDeliveryAttempt) => (
+                <li key={`${attempt.attemptNumber}-${attempt.trigger}`} className="text-xs">
+                  <span className="font-medium text-foreground">
+                    {t('attemptLine', { number: attempt.attemptNumber })}
+                  </span>
+                  <span className="text-foreground-muted">
+                    {' '}
+                    — {t(`trigger.${attempt.trigger}`)} — {t(`status.${attempt.status}`)}
+                  </span>
+                  {attempt.finishedAt === null ? null : (
+                    <span className="block text-foreground-subtle">
+                      {formatTimestamp(attempt.finishedAt, locale)}
+                    </span>
+                  )}
+                  {attempt.errorMessage === null ? null : (
+                    <span className="block text-destructive">{attempt.errorMessage}</span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          ) : null}
+        </div>
+      )}
     </div>
   );
 }
@@ -167,6 +275,8 @@ function SignerCard({
           ) : null}
         </div>
       </div>
+
+      <InviteDeliverySection delivery={signer.inviteDelivery} locale={locale} />
 
       <div className="space-y-0">
         {signer.steps.map((step, index) => {

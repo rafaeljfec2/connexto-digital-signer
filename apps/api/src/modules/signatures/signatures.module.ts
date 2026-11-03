@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Signer } from './entities/signer.entity';
+import { SignerInviteDeliveryAttempt } from './entities/signer-invite-delivery-attempt.entity';
 import { SignatureField } from './entities/signature-field.entity';
 import { TenantSigner } from './entities/tenant-signer.entity';
 import { DocumentsModule } from '../documents/documents.module';
@@ -22,10 +23,11 @@ import { SignaturesService } from './services/signatures.service';
 import { SigningFlowService } from './services/signing-flow.service';
 import { TenantSignerService } from './services/tenant-signer.service';
 import { VerificationService } from './services/verification.service';
+import { InviteDeliveryService } from './services/invite-delivery.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Signer, SignatureField, TenantSigner]),
+    TypeOrmModule.forFeature([Signer, SignatureField, TenantSigner, SignerInviteDeliveryAttempt]),
     DocumentsModule,
     EnvelopesModule,
     NotificationsModule,
@@ -47,6 +49,7 @@ import { VerificationService } from './services/verification.service';
     SignatureFieldsService,
     TenantSignerService,
     VerificationService,
+    InviteDeliveryService,
   ],
   exports: [
     SignaturesService,
