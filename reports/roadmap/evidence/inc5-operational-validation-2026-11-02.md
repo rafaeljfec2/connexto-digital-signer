@@ -54,3 +54,32 @@ pnpm --filter web build
 
 - E5 e chamada HTTP do audit endpoint não foram exercidos em browser/Postman nesta sessão.
 - Tabela E1–E6 detalhada no `06-execution-plan.md` referencia “revisão anterior”; cenários acima foram alinhados ao roadmap Inc 1–4 e I5.
+
+## Validação local E5/E6 — 2026-11-03
+
+**Ambiente:** API `http://localhost:8083/digital-signer/v1` (branch `feature/inc5-observability-operational-validation`, commit `abe0514`); Web `http://localhost:3001` (`.env` com `NEXT_PUBLIC_API_URL` apontando para `:8083`). Postgres Docker `5433`.
+
+**Conta de teste:** tenant criado na sessão (e-mail descartável `*@example.invalid`, 3 rascunhos). Sem produção.
+
+### E5 — KPI + filtro (PASS)
+
+| Item | Resultado |
+|---|---|
+| KPI selecionado | **Rascunho** (valor 3) |
+| URL após clique | `http://localhost:3001/pt-br/documents?status=draft` |
+| Lista filtrada | 3 itens “Inc5 Draft *”, coerente com API (`meta.total=3`) |
+| Busca + status | Busca “Inc5 Draft 1” mantém `?status=draft` na URL e restringe visualmente |
+| Observação | Com origem `127.0.0.1:3001` as chamadas à API falham por CORS; usar **`localhost:3001`** |
+
+### E6 — HTTP audit (PASS com ressalvas)
+
+| Caso | HTTP | Resultado |
+|---|---|---|
+| Autenticado `limit=10` | 200 | Payload `{ scannedAt, total, limit, records[] }`; `total=0`, `records=[]` |
+| `limit=9999` | 200 | `limit` capado em **500** |
+| `limit=abc` | 200 | Tratado como default **100** (não retorna 400) |
+| Sem auth | **401** | “API key or Bearer token required” |
+| Tenant B | 200 | `total=0` (isolamento OK vs tenant A) |
+| Read-only | OK | Contagem de linhas em `documents` inalterada antes/depois |
+| Detecção positiva | **Não comprovada** | DB local: `0` documentos `completed` com `final_file_key` NULL |
+
