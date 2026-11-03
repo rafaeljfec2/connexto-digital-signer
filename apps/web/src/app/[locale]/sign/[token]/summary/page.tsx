@@ -108,6 +108,7 @@ export default function SignerSummaryPage() {
             sent: (name: string) => t('events.sent', { name }),
             signed: (name: string) => t('events.signed', { name }),
             completed: () => t('events.completed'),
+            viewed: (name: string) => t('events.viewed', { name }),
             verified: (name: string) => t('events.verified', { name }),
           },
           signers: t('signers'),

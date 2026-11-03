@@ -110,6 +110,7 @@ export class EnvelopeAuditService {
         status: s.status,
         authMethod: s.authMethod,
         notifiedAt: s.notifiedAt,
+        viewedAt: s.viewedAt,
         signedAt: s.signedAt,
         ipAddress: s.ipAddress,
         userAgent: s.userAgent,
@@ -140,6 +141,14 @@ export class EnvelopeAuditService {
           actorName: signer.name,
           actorEmail: signer.email,
           timestamp: signer.notifiedAt,
+        });
+      }
+      if (signer.viewedAt) {
+        timeline.push({
+          type: 'viewed',
+          actorName: signer.name,
+          actorEmail: signer.email,
+          timestamp: signer.viewedAt,
         });
       }
       if (signer.verifiedAt) {

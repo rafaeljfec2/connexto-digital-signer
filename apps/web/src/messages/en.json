@@ -783,6 +783,7 @@
       "sent": "Invitation sent to {name}",
       "signed": "{name} signed the document",
       "completed": "Document completed",
+      "viewed": "{name} viewed the document",
       "verified": "{name} verified identity"
     },
     "signers": "Signers",

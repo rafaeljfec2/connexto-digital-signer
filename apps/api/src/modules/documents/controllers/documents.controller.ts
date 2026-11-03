@@ -13,6 +13,9 @@ import {
   Patch,
   Param,
   ParseUUIDPipe,
+  Query,
+  DefaultValuePipe,
+  ParseIntPipe,
   StreamableFile,
   UseInterceptors,
   UploadedFile,
@@ -21,6 +24,7 @@ import { ApiBearerAuth, ApiConsumes, ApiOperation, ApiParam, ApiResponse, ApiTag
 import { FileInterceptor } from '@nestjs/platform-express';
 import { TenantId } from '@connexto/shared';
 import { DocumentsService } from '../services/documents.service';
+import { DocumentIntegrityAuditService } from '../services/document-integrity-audit.service';
 import { CreateDocumentDto } from '../dto/create-document.dto';
 import { UpdateDocumentDto } from '../dto/update-document.dto';
 import { RequireAuthMethod } from '../../../common/decorators/auth-method.decorator';
@@ -36,7 +40,10 @@ const P7S_CONTENT_TYPE = 'application/pkcs7-signature';
 @UseInterceptors(ClassSerializerInterceptor)
 @Controller('documents')
 export class DocumentsController {
-  constructor(private readonly documentsService: DocumentsService) {}
+  constructor(
+    private readonly documentsService: DocumentsService,
+    private readonly documentIntegrityAuditService: DocumentIntegrityAuditService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a document with optional file upload' })
@@ -56,6 +63,18 @@ export class DocumentsController {
       return this.documentsService.create(tenantId, createDocumentDto, file.buffer);
     }
     return this.documentsService.create(tenantId, createDocumentDto);
+  }
+
+  @Get('integrity-audit/completed-without-final-file')
+  @ApiOperation({
+    summary: 'Audit completed documents missing a final file key (read-only)',
+  })
+  @ApiResponse({ status: 200, description: 'Audit result with counts and record ids' })
+  auditCompletedWithoutFinalFile(
+    @TenantId() tenantId: string,
+    @Query('limit', new DefaultValuePipe(100), ParseIntPipe) limit: number,
+  ) {
+    return this.documentIntegrityAuditService.findCompletedWithoutFinalFile(tenantId, limit);
   }
 
   @Get(':id')

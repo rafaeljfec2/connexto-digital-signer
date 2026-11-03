@@ -2,6 +2,7 @@ import { NotFoundException, StreamableFile } from '@nestjs/common';
 import { Readable } from 'node:stream';
 import { Document, DocumentStatus } from '../entities/document.entity';
 import { DocumentsService } from '../services/documents.service';
+import { DocumentIntegrityAuditService } from '../services/document-integrity-audit.service';
 import { DocumentsController } from './documents.controller';
 
 const buildDocument = (overrides?: Partial<Document>): Document => ({
@@ -22,6 +23,33 @@ const buildDocument = (overrides?: Partial<Document>): Document => ({
   createdAt: new Date('2026-01-01T00:00:00.000Z'),
   updatedAt: new Date('2026-01-01T00:00:00.000Z'),
   ...overrides,
+});
+
+describe('DocumentsController integrity audit', () => {
+  test('should delegate completed-without-final-file audit to service', async () => {
+    const documentsService = {} as DocumentsService;
+    const auditResult = {
+      scannedAt: new Date('2026-11-02T00:00:00.000Z'),
+      total: 0,
+      limit: 100,
+      records: [],
+    };
+    const documentIntegrityAuditService = {
+      findCompletedWithoutFinalFile: jest.fn().mockResolvedValue(auditResult),
+    } as unknown as DocumentIntegrityAuditService;
+    const controller = new DocumentsController(
+      documentsService,
+      documentIntegrityAuditService,
+    );
+
+    const result = await controller.auditCompletedWithoutFinalFile('tenant-1', 100);
+
+    expect(result).toBe(auditResult);
+    expect(documentIntegrityAuditService.findCompletedWithoutFinalFile).toHaveBeenCalledWith(
+      'tenant-1',
+      100,
+    );
+  });
 });
 
 describe('DocumentsController content streaming', () => {
@@ -51,6 +79,9 @@ describe('DocumentsController content streaming', () => {
     };
     controller = new DocumentsController(
       documentsService as unknown as DocumentsService,
+      {
+        findCompletedWithoutFinalFile: jest.fn(),
+      } as unknown as DocumentIntegrityAuditService,
     );
   });
 

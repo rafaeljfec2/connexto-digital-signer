@@ -26,6 +26,7 @@ import { FadeIn, PageTransition } from '@/shared/animations';
 import { useRouter } from '@/i18n/navigation';
 import { downloadBlob, fileDownloadName, isNotFoundError } from '@/shared/utils/blob-download';
 import { LayoutGrid, List, Plus, Search } from 'lucide-react';
+import { parseDocumentListStatusParam } from '@/features/documents/utils/document-list-query';
 import { toast } from 'sonner';
 
 function buildFolderNameMap(tree: readonly FolderTreeNode[]): Map<string, string> {
@@ -93,6 +94,14 @@ function DocumentsPageContent() {
       router.replace('/documents', { scroll: false });
     }
   }, [searchParams, router]);
+
+  useEffect(() => {
+    const parsed = parseDocumentListStatusParam(searchParams.get('status'));
+    if (parsed !== null) {
+      setStatus(parsed);
+      setPage(1);
+    }
+  }, [searchParams]);
 
   const debouncedSearch = useDebounce(search, 400);
 

@@ -26,6 +26,14 @@ const INTERVAL_MS: Record<string, number> = {
 
 const MAX_REMINDERS = 3;
 
+type ReminderSkipReason =
+  | 'not-invited'
+  | 'sequential-not-active'
+  | 'max-reminders'
+  | 'interval-not-elapsed';
+
+type CronLogPayload = Readonly<Record<string, string | number>>;
+
 @Injectable()
 export class ReminderSchedulerService {
   constructor(
@@ -128,28 +136,56 @@ export class ReminderSchedulerService {
     const now = Date.now();
 
     for (const signer of signers) {
-      if (!this.isReminderEligible(signer, envelope, signers)) {
+      const skipReason = this.getReminderSkipReason(
+        signer,
+        envelope,
+        signers,
+        intervalMs,
+        now,
+      );
+      if (skipReason !== null) {
+        this.logCronEvent('reminder.skipped', {
+          envelopeId: envelope.id,
+          tenantId: envelope.tenantId,
+          signerId: signer.id,
+          reason: skipReason,
+        });
         continue;
       }
       await this.sendReminderIfDue(signer, envelope, intervalMs, now);
     }
   }
 
-  private isReminderEligible(
+  private getReminderSkipReason(
     signer: Signer,
     envelope: Envelope,
     pendingSigners: Signer[],
-  ): boolean {
+    intervalMs: number,
+    now: number,
+  ): ReminderSkipReason | null {
+    if (signer.reminderCount >= MAX_REMINDERS) {
+      return 'max-reminders';
+    }
     if (signer.notifiedAt === null) {
-      return false;
+      return 'not-invited';
     }
-    if (envelope.signingMode !== SigningMode.SEQUENTIAL) {
-      return true;
+    if (envelope.signingMode === SigningMode.SEQUENTIAL) {
+      const sorted = [...pendingSigners].sort(
+        (a, b) => (a.order ?? 0) - (b.order ?? 0),
+      );
+      if (sorted[0]?.id !== signer.id) {
+        return 'sequential-not-active';
+      }
     }
-    const sorted = [...pendingSigners].sort(
-      (a, b) => (a.order ?? 0) - (b.order ?? 0),
-    );
-    return sorted[0]?.id === signer.id;
+    const lastNotified = signer.notifiedAt.getTime();
+    if (now - lastNotified < intervalMs) {
+      return 'interval-not-elapsed';
+    }
+    return null;
+  }
+
+  private logCronEvent(event: string, fields: CronLogPayload): void {
+    this.logger.log(JSON.stringify({ event, ...fields }));
   }
 
   private async sendReminderIfDue(
@@ -248,14 +284,22 @@ export class ReminderSchedulerService {
     );
 
     if (!claimed) {
+      this.logCronEvent('envelope.expiration', {
+        envelopeId: envelope.id,
+        tenantId: envelope.tenantId,
+        outcome: 'skipped-not-claimed',
+      });
       return;
     }
 
     await this.emitExpiredDocumentEvents(envelope);
 
-    this.logger.log(
-      `Envelope ${envelope.id} expired - marking as ${newStatus} (${signedSigners.length} signatures).`,
-    );
+    this.logCronEvent('envelope.expiration', {
+      envelopeId: envelope.id,
+      tenantId: envelope.tenantId,
+      signedCount: signedSigners.length,
+      outcome: 'expired',
+    });
   }
 
   private async emitExpiredDocumentEvents(envelope: Envelope): Promise<void> {

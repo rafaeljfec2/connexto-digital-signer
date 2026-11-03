@@ -16,6 +16,7 @@ import {
   Loader2,
   Mail,
   Monitor,
+  Eye,
   Send,
   ShieldCheck,
   UserCheck,
@@ -58,6 +59,7 @@ type DocumentAuditViewProps = Readonly<{
       sent: (name: string) => string;
       signed: (name: string) => string;
       completed: () => string;
+      viewed: (name: string) => string;
       verified: (name: string) => string;
     }>;
     signers: string;
@@ -171,6 +173,7 @@ function CopyableHash({
 
 const TIMELINE_ICONS: Record<string, typeof Send> = {
   sent: Send,
+  viewed: Eye,
   signed: CheckCircle2,
   completed: ShieldCheck,
   verified: UserCheck,
@@ -178,6 +181,7 @@ const TIMELINE_ICONS: Record<string, typeof Send> = {
 
 const TIMELINE_COLORS: Record<string, string> = {
   sent: 'bg-primary/20 text-primary',
+  viewed: 'bg-info/20 text-info',
   signed: 'bg-success/20 text-success',
   completed: 'bg-success/20 text-success',
   verified: 'bg-violet-400/20 text-violet-400',
@@ -604,6 +608,8 @@ export function DocumentAuditView({
               else if (event.type === 'signed')
                 eventText = labels.eventsFormat.signed(event.actorName);
               else if (event.type === 'completed') eventText = labels.eventsFormat.completed();
+              else if (event.type === 'viewed')
+                eventText = labels.eventsFormat.viewed(event.actorName);
               else if (event.type === 'verified')
                 eventText = labels.eventsFormat.verified(event.actorName);
 

@@ -783,6 +783,7 @@
       "sent": "Convite enviado para {name}",
       "signed": "{name} assinou o documento",
       "completed": "Documento concluído",
+      "viewed": "{name} visualizou o documento",
       "verified": "{name} verificou identidade"
     },
     "signers": "Signatários",

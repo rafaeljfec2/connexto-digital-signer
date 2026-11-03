@@ -122,5 +122,26 @@ describe('EnvelopeAuditService', () => {
       expect(result.document.finalHash).toBeNull();
       expect(result.documents).toHaveLength(2);
     });
+
+    test('should include viewed events in audit timeline', async () => {
+      const signer = buildSigner({
+        status: SignerStatus.SIGNED,
+        notifiedAt: new Date('2026-01-01T01:00:00.000Z'),
+        viewedAt: new Date('2026-01-01T01:30:00.000Z'),
+        signedAt: new Date('2026-01-01T02:00:00.000Z'),
+      });
+      envelopesService.findOne.mockResolvedValue(buildEnvelope());
+      signaturesService.findByEnvelope.mockResolvedValue([signer]);
+      documentsService.findByEnvelope.mockResolvedValue([buildDocument()]);
+      certificateService.getCertificateStatus.mockResolvedValue(null);
+
+      const result = await service.getEnvelopeAuditSummary('env-1', 'tenant-1');
+
+      expect(result.timeline).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({ type: 'viewed', actorName: signer.name }),
+        ]),
+      );
+    });
   });
 });

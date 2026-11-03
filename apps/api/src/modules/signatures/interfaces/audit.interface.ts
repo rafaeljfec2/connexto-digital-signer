@@ -6,7 +6,7 @@ export interface SigningContext {
 }
 
 export interface AuditTimelineEvent {
-  readonly type: 'sent' | 'signed' | 'completed' | 'verified';
+  readonly type: 'sent' | 'viewed' | 'signed' | 'completed' | 'verified';
   readonly actorName: string;
   readonly actorEmail: string;
   readonly timestamp: Date;
@@ -19,6 +19,7 @@ export interface AuditSignerInfo {
   readonly status: string;
   readonly authMethod: string;
   readonly notifiedAt: Date | null;
+  readonly viewedAt: Date | null;
   readonly signedAt: Date | null;
   readonly ipAddress: string | null;
   readonly userAgent: string | null;

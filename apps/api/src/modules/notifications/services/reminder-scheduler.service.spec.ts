@@ -487,6 +487,15 @@ describe('ReminderSchedulerService', () => {
       expect(notificationsService.sendSignatureReminder).not.toHaveBeenCalledWith(
         expect.objectContaining({ signerEmail: 'bob@example.com' }),
       );
+      expect(logger.log).toHaveBeenCalledWith(
+        JSON.stringify({
+          event: 'reminder.skipped',
+          envelopeId: envelope.id,
+          tenantId: envelope.tenantId,
+          signerId: 'signer-2',
+          reason: 'sequential-not-active',
+        }),
+      );
     });
 
     it('should send reminder to next signer after prior signers signed when notified', async () => {

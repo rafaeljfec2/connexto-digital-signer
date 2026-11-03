@@ -222,7 +222,7 @@ export type PresignedP7sFileUrl = Readonly<{
 }>;
 
 export type AuditTimelineEvent = Readonly<{
-  type: 'sent' | 'signed' | 'completed' | 'verified';
+  type: 'sent' | 'viewed' | 'signed' | 'completed' | 'verified';
   actorName: string;
   actorEmail: string;
   timestamp: string;
@@ -235,6 +235,7 @@ export type AuditSignerInfo = Readonly<{
   status: string;
   authMethod: string;
   notifiedAt: string | null;
+  viewedAt: string | null;
   signedAt: string | null;
   ipAddress: string | null;
   userAgent: string | null;
