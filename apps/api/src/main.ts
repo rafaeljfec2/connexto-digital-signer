@@ -68,9 +68,11 @@ const bootstrap = async (): Promise<void> => {
 
   configureOpenApi(app);
 
+  // Run migrations before accepting traffic so schema-dependent handlers (e.g. invite delivery) never hit a missing table.
+  await runBootMigrations(app.get(DataSource), app.get(Logger));
+
   const port = process.env['PORT'] ?? 3000;
   await app.listen(port, '0.0.0.0');
-  await runBootMigrations(app.get(DataSource), app.get(Logger));
 
   const shutdown = async (signal: string) => {
     app.get(Logger).log(`Received ${signal}, shutting down gracefully...`);

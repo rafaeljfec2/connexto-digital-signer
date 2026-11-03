@@ -520,6 +520,33 @@ export const previewEmail = async (
   return response.data;
 };
 
+export type InviteDeliveryStatus = 'queued' | 'sent' | 'failed';
+
+export type InviteDeliveryTrigger =
+  | 'initial_send'
+  | 'sequential_next'
+  | 'manual_resend'
+  | 'legacy_backfill';
+
+export type InviteDeliveryAttempt = Readonly<{
+  attemptNumber: number;
+  trigger: InviteDeliveryTrigger;
+  status: InviteDeliveryStatus;
+  startedAt: string;
+  finishedAt: string | null;
+  errorMessage: string | null;
+  isLegacy: boolean;
+}>;
+
+export type SignerInviteDelivery = Readonly<{
+  currentStatus: InviteDeliveryStatus | null;
+  currentAttemptNumber: number | null;
+  lastFinishedAt: string | null;
+  isHistoricalEstimate: boolean;
+  manualResendCount: number;
+  attempts: ReadonlyArray<InviteDeliveryAttempt>;
+}>;
+
 export type TrackingStepKey = 'notified' | 'viewed' | 'verified' | 'signed';
 
 export type TrackingStep = Readonly<{
@@ -534,6 +561,7 @@ export type TrackingSigner = Readonly<{
   email: string;
   order: number | null;
   status: 'pending' | 'signed';
+  inviteDelivery: SignerInviteDelivery;
   steps: ReadonlyArray<TrackingStep>;
 }>;
 
@@ -561,6 +589,7 @@ export const getEnvelopeTracking = async (
 export type ResendSignerInviteResult = Readonly<{
   signerId: string;
   notifiedAt: string;
+  attemptNumber: number;
 }>;
 
 export const resendSignerInvite = async (

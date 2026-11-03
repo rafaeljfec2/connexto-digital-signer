@@ -3,7 +3,12 @@ import { EnvelopeStatus } from '../../envelopes/entities/envelope.entity';
 import { EnvelopesService } from '../../envelopes/services/envelopes.service';
 import { CertificateService } from '../../tenants/services/certificate.service';
 import { SignerStatus } from '../entities/signer.entity';
-import { EnvelopeAuditService } from './envelope-audit.service';
+import { EnvelopeAuditService, serializeInviteDeliveryForTracking } from './envelope-audit.service';
+import { InviteDeliveryService } from './invite-delivery.service';
+import {
+  InviteDeliveryStatus,
+  InviteDeliveryTrigger,
+} from '../interfaces/invite-delivery.interface';
 import { buildDocument, buildEnvelope, buildSigner } from './signatures-test.fixtures';
 import { SignaturesService } from './signatures.service';
 
@@ -13,6 +18,7 @@ describe('EnvelopeAuditService', () => {
   let documentsService: jest.Mocked<DocumentsService>;
   let envelopesService: jest.Mocked<EnvelopesService>;
   let certificateService: jest.Mocked<CertificateService>;
+  let inviteDeliveryService: jest.Mocked<Pick<InviteDeliveryService, 'findByEnvelope'>>;
 
   beforeEach(() => {
     signaturesService = {
@@ -28,13 +34,73 @@ describe('EnvelopeAuditService', () => {
     certificateService = {
       getCertificateStatus: jest.fn(),
     } as unknown as jest.Mocked<CertificateService>;
+    inviteDeliveryService = {
+      findByEnvelope: jest.fn().mockResolvedValue(new Map()),
+    };
 
     service = new EnvelopeAuditService(
       signaturesService as unknown as SignaturesService,
       documentsService,
       envelopesService,
       certificateService,
+      inviteDeliveryService as unknown as InviteDeliveryService,
     );
+  });
+
+  describe('getEnvelopeTracking', () => {
+    test('should include inviteDelivery with historical legacy estimate', async () => {
+      const signer = buildSigner({ id: 'signer-1' });
+      envelopesService.findOne.mockResolvedValue(buildEnvelope());
+      signaturesService.findByEnvelope.mockResolvedValue([signer]);
+      inviteDeliveryService.findByEnvelope.mockResolvedValue(
+        new Map([
+          [
+            'signer-1',
+            {
+              currentStatus: InviteDeliveryStatus.SENT,
+              currentAttemptNumber: 1,
+              lastFinishedAt: new Date('2026-01-01T01:00:00.000Z'),
+              isHistoricalEstimate: true,
+              manualResendCount: 0,
+              attempts: [
+                {
+                  attemptNumber: 1,
+                  trigger: InviteDeliveryTrigger.LEGACY_BACKFILL,
+                  status: InviteDeliveryStatus.SENT,
+                  startedAt: new Date('2026-01-01T01:00:00.000Z'),
+                  finishedAt: new Date('2026-01-01T01:00:00.000Z'),
+                  errorMessage: null,
+                  isLegacy: true,
+                },
+              ],
+            },
+          ],
+        ]),
+      );
+
+      const result = await service.getEnvelopeTracking('env-1', 'tenant-1');
+
+      expect(result.signers[0]?.inviteDelivery).toEqual(
+        serializeInviteDeliveryForTracking({
+          currentStatus: InviteDeliveryStatus.SENT,
+          currentAttemptNumber: 1,
+          lastFinishedAt: new Date('2026-01-01T01:00:00.000Z'),
+          isHistoricalEstimate: true,
+          manualResendCount: 0,
+          attempts: [
+            {
+              attemptNumber: 1,
+              trigger: InviteDeliveryTrigger.LEGACY_BACKFILL,
+              status: InviteDeliveryStatus.SENT,
+              startedAt: new Date('2026-01-01T01:00:00.000Z'),
+              finishedAt: new Date('2026-01-01T01:00:00.000Z'),
+              errorMessage: null,
+              isLegacy: true,
+            },
+          ],
+        }),
+      );
+    });
   });
 
   describe('getEnvelopeAuditSummary', () => {
