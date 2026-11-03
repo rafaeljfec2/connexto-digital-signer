@@ -1,22 +1,36 @@
 "use client";
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from '@/i18n/navigation';
 import { useUploadDocument } from '@/features/documents/hooks/use-documents';
+import {
+  validateDocumentUploadContent,
+  validateDocumentUploadSync,
+  type DocumentUploadValidationError,
+} from '@/features/documents/utils/document-upload-validation';
 import { Button, Input } from '@/shared/ui';
 import { UploadDropzone } from './upload-dropzone';
 import { toast } from 'sonner';
 
-const ACCEPTED_MIMES = new Set([
-  'application/pdf',
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-]);
+const PDF_MAX_SIZE_MB = 5;
 
-function getMaxSizeMb(mime: string): number {
-  return mime === 'application/pdf' ? 5 : 3;
+function uploadErrorMessage(
+  t: (key: string, values?: Record<string, string | number>) => string,
+  error: DocumentUploadValidationError,
+  name: string,
+): string {
+  switch (error) {
+    case 'unsupportedExtension':
+      return t('upload.errors.unsupportedExtension', { name });
+    case 'invalidContent':
+      return t('upload.errors.invalidContent', { name });
+    case 'tooLarge':
+      return t('upload.errors.tooLarge', { name, max: PDF_MAX_SIZE_MB });
+    case 'unsupportedType':
+    default:
+      return t('upload.errors.unsupportedType', { name });
+  }
 }
 
 export function UploadForm() {
@@ -27,7 +41,30 @@ export function UploadForm() {
   const [error, setError] = useState<string | null>(null);
   const uploadMutation = useUploadDocument();
 
-  const maxSizeMb = file ? getMaxSizeMb(file.type) : 5;
+  const handleFileChange = useCallback(
+    async (next: File | null) => {
+      if (next === null) {
+        setFile(null);
+        setError(null);
+        return;
+      }
+      const syncError = validateDocumentUploadSync(next);
+      if (syncError !== null) {
+        setError(uploadErrorMessage(tDocuments, syncError, next.name));
+        toast.error(uploadErrorMessage(tDocuments, syncError, next.name));
+        return;
+      }
+      const contentError = await validateDocumentUploadContent(next);
+      if (contentError !== null) {
+        setError(uploadErrorMessage(tDocuments, contentError, next.name));
+        toast.error(uploadErrorMessage(tDocuments, contentError, next.name));
+        return;
+      }
+      setFile(next);
+      setError(null);
+    },
+    [tDocuments],
+  );
 
   const validate = (): boolean => {
     if (!title.trim()) {
@@ -36,15 +73,6 @@ export function UploadForm() {
     }
     if (!file) {
       setError(tDocuments('upload.errors.fileRequired'));
-      return false;
-    }
-    if (!ACCEPTED_MIMES.has(file.type)) {
-      setError(tDocuments('upload.errors.unsupportedType', { name: file.name }));
-      return false;
-    }
-    const limit = getMaxSizeMb(file.type);
-    if (file.size > limit * 1024 * 1024) {
-      setError(tDocuments('upload.errors.tooLarge', { name: file.name, max: limit }));
       return false;
     }
     setError(null);
@@ -78,12 +106,11 @@ export function UploadForm() {
       </div>
       <UploadDropzone
         file={file}
-        onFileChange={setFile}
+        onFileChange={handleFileChange}
         label={tDocuments('upload.dropzoneLabel')}
         helperText={tDocuments('upload.dropzoneHelper')}
         removeLabel={tDocuments('upload.removeFile')}
         error={error ?? undefined}
-        maxSizeMb={maxSizeMb}
       />
       <Button type="submit" disabled={uploadMutation.isPending}>
         {uploadMutation.isPending

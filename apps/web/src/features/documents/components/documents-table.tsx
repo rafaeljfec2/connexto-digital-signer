@@ -13,6 +13,8 @@ import {
   FileText,
   Folder as FolderIcon,
   Calendar,
+  Clock,
+  Users,
   ChevronRight,
   ChevronDown,
   ChevronUp,
@@ -30,6 +32,11 @@ import {
 } from 'lucide-react';
 import { Badge, Skeleton } from '@/shared/ui';
 import type { DocumentStatus, EnvelopeSummary } from '../api';
+import {
+  formatExpiresAtDisplay,
+  formatPendingSignersDisplay,
+  type EnvelopeListMetaLabels,
+} from '../utils/envelope-list-meta';
 import { EmptyState } from './empty-state';
 
 type SortColumn = 'title' | 'status' | 'docs' | 'folder' | 'created';
@@ -121,11 +128,14 @@ export type DocumentsTableProps = Readonly<{
   headers: Readonly<{
     title: string;
     status: string;
+    pendingSigners: string;
+    expiresAt: string;
     docs: string;
     folder: string;
     created: string;
     actions: string;
   }>;
+  listMetaLabels: EnvelopeListMetaLabels;
   emptyTitle: string;
   emptyDescription?: string;
   emptyAction?: ReactNode;
@@ -331,6 +341,7 @@ export function DocumentsTable({
   isLoading = false,
   statusLabels,
   headers,
+  listMetaLabels,
   emptyTitle,
   emptyDescription,
   emptyAction,
@@ -380,6 +391,12 @@ export function DocumentsTable({
         <div className="w-9 shrink-0" />
         <SortableHeader column="title" label={headers.title} sort={sort} onSort={handleSort} className="min-w-0 flex-1" />
         <SortableHeader column="status" label={headers.status} sort={sort} onSort={handleSort} className="w-24 justify-center" />
+        <div className="hidden w-36 justify-center text-[10px] font-medium uppercase tracking-widest text-foreground-subtle lg:flex">
+          {headers.pendingSigners}
+        </div>
+        <div className="hidden w-32 justify-center text-[10px] font-medium uppercase tracking-widest text-foreground-subtle xl:flex">
+          {headers.expiresAt}
+        </div>
         <SortableHeader column="docs" label={headers.docs} sort={sort} onSort={handleSort} className="hidden w-14 justify-center md:flex" />
         <SortableHeader column="folder" label={headers.folder} sort={sort} onSort={handleSort} className="hidden w-28 justify-center lg:flex" />
         <SortableHeader column="created" label={headers.created} sort={sort} onSort={handleSort} className="hidden w-32 justify-center md:flex" />
@@ -399,6 +416,7 @@ export function DocumentsTable({
                 formatDate={formatDate}
                 actionLabels={actionLabels}
                 handlers={handlers}
+                listMetaLabels={listMetaLabels}
                 isDeleting={deletingId === doc.id}
                 folderName={folderNameMap?.get(doc.folderId)}
               />
@@ -436,6 +454,7 @@ type DocumentRowProps = Readonly<{
   doc: EnvelopeSummary;
   statusLabels: Record<DocumentStatus, string>;
   formatDate: (value: string) => string;
+  listMetaLabels: EnvelopeListMetaLabels;
   actionLabels: DocumentActionLabels;
   handlers: Readonly<{
     onDocumentClick: (doc: EnvelopeSummary) => void;
@@ -451,8 +470,27 @@ type DocumentRowProps = Readonly<{
   folderName?: string;
 }>;
 
-function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, isDeleting, folderName }: DocumentRowProps) {
+function DocumentRow({
+  doc,
+  statusLabels,
+  formatDate,
+  listMetaLabels,
+  actionLabels,
+  handlers,
+  isDeleting,
+  folderName,
+}: DocumentRowProps) {
   const actions = useDocumentActions(doc, actionLabels, handlers);
+  const pendingDisplay = formatPendingSignersDisplay(
+    doc.pendingSignerCount ?? 0,
+    doc.status,
+    listMetaLabels,
+  );
+  const expiresLabel = formatExpiresAtDisplay(
+    doc.expiresAt,
+    formatDate,
+    listMetaLabels.noDeadline,
+  );
 
   const openDocument = () => {
     handlers.onDocumentClick(doc);
@@ -505,6 +543,14 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
             <Calendar className="h-3 w-3" />
             {formatDate(doc.createdAt)}
           </span>
+          <span className="flex items-center gap-1 text-[11px] text-foreground-subtle">
+            <Users className="h-3 w-3" />
+            {pendingDisplay.value}
+          </span>
+          <span className="flex items-center gap-1 text-[11px] text-foreground-subtle">
+            <Clock className="h-3 w-3" />
+            {expiresLabel}
+          </span>
         </div>
       </div>
 
@@ -514,6 +560,24 @@ function DocumentRow({ doc, statusLabels, formatDate, actionLabels, handlers, is
       >
         {statusLabels[doc.status]}
       </Badge>
+
+      <p
+        className={`hidden w-36 text-center text-xs lg:block ${
+          pendingDisplay.kind === 'count' ? 'font-medium text-warning' : 'text-foreground-muted'
+        }`}
+      >
+        <span className="inline-flex items-center justify-center gap-1">
+          <Users className="h-3 w-3 shrink-0" />
+          {pendingDisplay.value}
+        </span>
+      </p>
+
+      <p className="hidden w-32 text-center text-xs text-foreground-muted xl:block">
+        <span className="inline-flex items-center justify-center gap-1">
+          <Clock className="h-3 w-3 shrink-0" />
+          {expiresLabel}
+        </span>
+      </p>
 
       <p className="hidden w-14 text-center text-xs text-foreground-muted md:block">
         {doc.documentCount > 1 ? `${doc.documentCount}` : '1'}

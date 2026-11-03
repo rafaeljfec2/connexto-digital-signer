@@ -27,6 +27,7 @@ import {
 } from '@/features/documents/api';
 import type { DocumentStatus, EnvelopeSummary, FolderTreeNode } from '@/features/documents/api';
 import type { DocumentActionLabels } from '@/features/documents/components/documents-table';
+import { buildEnvelopeListMetaLabels } from '@/features/documents/utils/envelope-list-meta';
 import { Button, Card, ConfirmDialog, Pagination, Skeleton } from '@/shared/ui';
 import { FadeIn, PageTransition } from '@/shared/animations';
 import { useRouter } from '@/i18n/navigation';
@@ -139,6 +140,8 @@ export default function FoldersPage() {
     delete: t('actions.delete'),
     moveToFolder: t('actions.moveToFolder'),
   }), [t]);
+
+  const listMetaLabels = useMemo(() => buildEnvelopeListMetaLabels(t), [t]);
 
   const handleNavigate = useCallback((folderId: string | null) => {
     setCurrentFolderId(folderId);
@@ -296,6 +299,7 @@ export default function FoldersPage() {
           isLoading={envelopesQuery.isLoading}
           statusLabels={statusLabels}
           actionLabels={actionLabels}
+          listMetaLabels={listMetaLabels}
           formatDate={formatDate}
           gridMenuOpenId={gridMenuOpenId}
           deletingId={deletingEnvelopeId}
@@ -317,6 +321,8 @@ export default function FoldersPage() {
           tableHeaders={{
             title: t('table.title'),
             status: t('table.status'),
+            pendingSigners: t('table.pendingSigners'),
+            expiresAt: t('table.expiresAt'),
             docs: t('table.docs'),
             folder: t('table.folder'),
             created: t('table.created'),
@@ -484,7 +490,17 @@ type EnvelopeSectionProps = Readonly<{
   onViewSummary: (d: EnvelopeSummary) => void;
   onMoveToFolder: (d: EnvelopeSummary) => void;
   paginationLabels: Readonly<{ previous: string; next: string; page: string }>;
-  tableHeaders: Readonly<{ title: string; status: string; docs: string; folder: string; created: string; actions: string }>;
+  tableHeaders: Readonly<{
+    title: string;
+    status: string;
+    pendingSigners: string;
+    expiresAt: string;
+    docs: string;
+    folder: string;
+    created: string;
+    actions: string;
+  }>;
+  listMetaLabels: ReturnType<typeof buildEnvelopeListMetaLabels>;
   emptyTitle: string;
   emptyDescription: string;
 }>;
@@ -493,7 +509,7 @@ function EnvelopeSection({
   view, envelopes, isLoading, statusLabels, actionLabels, formatDate,
   gridMenuOpenId, deletingId, page, totalPages, onPageChange, onToggleMenu,
   onDocumentClick, onDeleteDocument, onDownloadOriginal, onDownloadSigned,
-  onViewSummary, onMoveToFolder, paginationLabels, tableHeaders,
+  onViewSummary, onMoveToFolder, paginationLabels, tableHeaders, listMetaLabels,
   emptyTitle, emptyDescription,
 }: EnvelopeSectionProps) {
   if (view === 'list') {
@@ -502,7 +518,7 @@ function EnvelopeSection({
         <div className="glass-card rounded-2xl p-4">
           <DocumentsTable
             documents={envelopes} isLoading={isLoading} statusLabels={statusLabels}
-            headers={tableHeaders} emptyTitle={emptyTitle} emptyDescription={emptyDescription}
+            headers={tableHeaders} listMetaLabels={listMetaLabels} emptyTitle={emptyTitle} emptyDescription={emptyDescription}
             formatDate={formatDate} actionLabels={actionLabels}
             onDocumentClick={onDocumentClick} onDeleteDocument={onDeleteDocument}
             onDownloadOriginal={onDownloadOriginal} onDownloadSigned={onDownloadSigned}
@@ -517,7 +533,7 @@ function EnvelopeSection({
   }
 
   const gridContent = renderGridContent({
-    isLoading, envelopes, statusLabels, actionLabels, formatDate,
+    isLoading, envelopes, statusLabels, actionLabels, formatDate, listMetaLabels,
     gridMenuOpenId, onToggleMenu, onDocumentClick, onDeleteDocument,
     onDownloadOriginal, onDownloadSigned, onViewSummary, onMoveToFolder,
     emptyTitle, emptyDescription,
@@ -539,6 +555,7 @@ type GridContentParams = Readonly<{
   statusLabels: Record<DocumentStatus, string>;
   actionLabels: DocumentActionLabels;
   formatDate: (v: string) => string;
+  listMetaLabels: ReturnType<typeof buildEnvelopeListMetaLabels>;
   gridMenuOpenId: string | null;
   onToggleMenu: (id: string | null) => void;
   onDocumentClick: (d: EnvelopeSummary) => void;
@@ -577,7 +594,8 @@ function renderGridContent(params: GridContentParams) {
       {params.envelopes.map((doc) => (
         <GridDocumentCard
           key={doc.id} doc={doc} statusLabels={params.statusLabels} actionLabels={params.actionLabels}
-          formatDate={params.formatDate} isMenuOpen={params.gridMenuOpenId === doc.id}
+          formatDate={params.formatDate} listMetaLabels={params.listMetaLabels}
+          isMenuOpen={params.gridMenuOpenId === doc.id}
           onToggleMenu={(open) => params.onToggleMenu(open ? doc.id : null)}
           onDocumentClick={params.onDocumentClick} onDeleteDocument={params.onDeleteDocument}
           onDownloadOriginal={params.onDownloadOriginal} onDownloadSigned={params.onDownloadSigned}

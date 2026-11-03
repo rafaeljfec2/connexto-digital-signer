@@ -2,9 +2,11 @@
 
 import { useMemo } from 'react';
 import {
+  Calendar,
+  Clock,
   FileText,
   Folder as FolderIcon,
-  Calendar,
+  Users,
   MoreVertical,
   Download,
   FileSignature,
@@ -18,6 +20,11 @@ import {
 } from 'lucide-react';
 import { Badge, Card } from '@/shared/ui';
 import type { DocumentStatus, EnvelopeSummary } from '../api';
+import {
+  formatExpiresAtDisplay,
+  formatPendingSignersDisplay,
+  type EnvelopeListMetaLabels,
+} from '../utils/envelope-list-meta';
 import type { DocumentActionLabels } from './documents-table';
 
 const TRACKABLE_STATUSES = new Set<DocumentStatus>(['pending_signatures', 'completed']);
@@ -127,6 +134,7 @@ export type GridDocumentCardProps = Readonly<{
   statusLabels: Record<DocumentStatus, string>;
   actionLabels: DocumentActionLabels;
   formatDate: (value: string) => string;
+  listMetaLabels: EnvelopeListMetaLabels;
   isMenuOpen: boolean;
   onToggleMenu: (open: boolean) => void;
   onDocumentClick: (doc: EnvelopeSummary) => void;
@@ -146,6 +154,7 @@ export function GridDocumentCard({
   statusLabels,
   actionLabels,
   formatDate,
+  listMetaLabels,
   isMenuOpen,
   onToggleMenu,
   onDocumentClick,
@@ -186,6 +195,17 @@ export function GridDocumentCard({
   const actions = useMemo(
     () => buildGridActions(doc, actionLabels, handlers),
     [doc, actionLabels, handlers],
+  );
+
+  const pendingDisplay = formatPendingSignersDisplay(
+    doc.pendingSignerCount ?? 0,
+    doc.status,
+    listMetaLabels,
+  );
+  const expiresLabel = formatExpiresAtDisplay(
+    doc.expiresAt,
+    formatDate,
+    listMetaLabels.noDeadline,
   );
 
   return (
@@ -245,6 +265,18 @@ export function GridDocumentCard({
             {folderName}
           </span>
         ) : null}
+        <span
+          className={`flex items-center gap-1 text-[10px] ${
+            pendingDisplay.kind === 'count' ? 'font-medium text-warning' : 'text-foreground-subtle'
+          }`}
+        >
+          <Users className="h-3 w-3" />
+          {pendingDisplay.value}
+        </span>
+        <span className="flex items-center gap-1 text-[10px] text-foreground-subtle">
+          <Clock className="h-3 w-3" />
+          {expiresLabel}
+        </span>
       </div>
     </Card>
   );

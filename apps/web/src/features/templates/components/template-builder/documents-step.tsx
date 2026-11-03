@@ -1,10 +1,11 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { FileText, HelpCircle, ImageIcon, Trash2, Upload, FileUp } from 'lucide-react';
+import { FileText, HelpCircle, Trash2, Upload } from 'lucide-react';
 import { Dropzone } from '@/shared/ui/dropzone';
 import { Tooltip } from '@/shared/ui';
 import { StaggerChildren, StaggerItem } from '@/shared/animations';
+import { DOCUMENT_UPLOAD_ACCEPT } from '@/features/documents/utils/document-upload-validation';
 import type { TemplateDocument } from '../../api';
 
 type PendingFile = {
@@ -19,12 +20,6 @@ type DocumentsStepProps = {
   readonly onRemoveDocument: (docId: string) => void;
   readonly onRemovePending: (index: number) => void;
 };
-
-const ACCEPTED_TYPES = 'application/pdf,image/png,image/jpeg,image/webp';
-
-function getFileIcon(mimeType: string) {
-  return mimeType.startsWith('image/') ? ImageIcon : FileText;
-}
 
 function formatSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
@@ -46,10 +41,10 @@ export function DocumentsStep({
     <div className="space-y-5">
       <Dropzone
         onFiles={onAddFiles}
-        accept={ACCEPTED_TYPES}
+        accept={DOCUMENT_UPLOAD_ACCEPT}
         multiple
         label={t('builder.steps.documents')}
-        helperText="PDF (5MB), PNG/JPEG/WEBP (3MB)"
+        helperText={t('builder.documentsDropzoneHelper')}
       />
 
       {totalCount > 0 ? (
@@ -67,34 +62,31 @@ export function DocumentsStep({
           </div>
 
           <StaggerChildren className="space-y-2">
-            {documents.map((doc) => {
-              const Icon = getFileIcon(doc.mimeType);
-              return (
-                <StaggerItem key={doc.id}>
-                  <div className="group flex items-center gap-3 rounded-xl border border-th-border bg-th-card p-3.5 transition-colors hover:border-primary/20">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                      <Icon className="h-5 w-5 text-primary" />
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="truncate text-sm font-medium text-foreground">{doc.title}</p>
-                      <p className="text-xs text-foreground-muted">{formatSize(doc.size)}</p>
-                    </div>
-                    <button
-                      type="button"
-                      className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground-muted transition-colors hover:bg-error/10 hover:text-error"
-                      onClick={() => onRemoveDocument(doc.id)}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
+            {documents.map((doc) => (
+              <StaggerItem key={doc.id}>
+                <div className="group flex items-center gap-3 rounded-xl border border-th-border bg-th-card p-3.5 transition-colors hover:border-primary/20">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <FileText className="h-5 w-5 text-primary" />
                   </div>
-                </StaggerItem>
-              );
-            })}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">{doc.title}</p>
+                    <p className="text-xs text-foreground-muted">{formatSize(doc.size)}</p>
+                  </div>
+                  <button
+                    type="button"
+                    className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-foreground-muted transition-colors hover:bg-error/10 hover:text-error"
+                    onClick={() => onRemoveDocument(doc.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                </div>
+              </StaggerItem>
+            ))}
             {pendingFiles.map((pf, i) => (
               <StaggerItem key={`pending-${pf.file.name}-${pf.file.size}`}>
                 <div className="group flex items-center gap-3 rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3.5 transition-colors">
                   <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                    <FileUp className="h-5 w-5 text-primary animate-pulse" />
+                    <Upload className="h-5 w-5 text-primary animate-pulse" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-foreground">{pf.title}</p>

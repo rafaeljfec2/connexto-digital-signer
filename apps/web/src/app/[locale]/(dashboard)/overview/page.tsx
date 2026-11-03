@@ -4,6 +4,7 @@ import { useAuth } from '@/features/auth/hooks/use-auth';
 import type { EnvelopeSummary } from '@/features/documents/api';
 import { ActivityFeed } from '@/features/documents/components/activity-feed';
 import { DocumentsTable } from '@/features/documents/components/documents-table';
+import { buildEnvelopeListMetaLabels } from '@/features/documents/utils/envelope-list-meta';
 import { HelpSection } from '@/features/documents/components/help-section';
 import { KpiCards } from '@/features/documents/components/kpi-cards';
 import { OnboardingChecklist } from '@/features/documents/components/onboarding-checklist';
@@ -60,6 +61,11 @@ export default function DashboardPage() {
       cancelled: tDocuments('status.cancelled'),
     }),
     [tDocuments]
+  );
+
+  const listMetaLabels = useMemo(
+    () => buildEnvelopeListMetaLabels(tDocuments),
+    [tDocuments],
   );
 
   const handleDocumentClick = useCallback(
@@ -163,11 +169,14 @@ export default function DashboardPage() {
             headers={{
               title: tDocuments('table.title'),
               status: tDocuments('table.status'),
+              pendingSigners: tDocuments('table.pendingSigners'),
+              expiresAt: tDocuments('table.expiresAt'),
               docs: tDocuments('table.docs'),
               folder: tDocuments('table.folder'),
               created: tDocuments('table.created'),
               actions: tDocuments('table.actions'),
             }}
+            listMetaLabels={listMetaLabels}
             emptyTitle={tDashboard('empty.title')}
             emptyDescription={tDashboard('empty.description')}
             formatDate={formatDate}

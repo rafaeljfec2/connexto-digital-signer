@@ -48,6 +48,7 @@ export type EnvelopeSummary = {
   readonly signingLanguage: SigningLanguage;
   readonly closureMode: ClosureMode;
   readonly documentCount: number;
+  readonly pendingSignerCount: number;
   readonly createdAt: string;
   readonly updatedAt: string;
 };

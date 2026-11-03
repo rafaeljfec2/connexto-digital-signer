@@ -288,10 +288,18 @@
     "table": {
       "title": "Título",
       "status": "Status",
+      "pendingSigners": "Pendentes",
+      "expiresAt": "Prazo",
       "docs": "Docs",
       "folder": "Pasta",
       "created": "Criado em",
       "actions": "Ações"
+    },
+    "list": {
+      "pendingCount": "{count, plural, one {# signatário pendente} other {# signatários pendentes}}",
+      "noPending": "Nenhum signatário pendente",
+      "pendingNotApplicable": "—",
+      "noDeadline": "Sem prazo"
     },
     "actions": {
       "newDocument": "Novo documento",
@@ -364,7 +372,7 @@
       "titleLabel": "Título do envelope",
       "titlePlaceholder": "Contrato de vendas - Fevereiro",
       "dropzoneLabel": "Arraste e solte seus arquivos aqui",
-      "dropzoneHelper": "PDF (até 5MB), PNG, JPEG, WEBP (até 3MB). Múltiplos arquivos.",
+      "dropzoneHelper": "Somente PDF (até 5MB). Vários arquivos permitidos.",
       "fileLoaded": "PDF carregado",
       "replaceFile": "Trocar PDF",
       "defaultTitle": "Novo documento",
@@ -383,7 +391,9 @@
       "errors": {
         "titleRequired": "Título obrigatório",
         "fileRequired": "É necessário pelo menos um arquivo",
-        "unsupportedType": "Tipo de arquivo não suportado: {name}. Aceitos: PDF, PNG, JPEG, WEBP",
+        "unsupportedType": "Somente arquivos PDF são aceitos: {name}",
+        "invalidContent": "O arquivo não é um PDF válido: {name}",
+        "unsupportedExtension": "Somente arquivos com extensão .pdf são aceitos: {name}",
         "tooLarge": "Arquivo \"{name}\" excede {max}MB",
         "failed": "Falha no envio",
         "duplicateFile": "O arquivo \"{name}\" já foi adicionado"
@@ -1178,6 +1188,8 @@
       },
       "variablesSaved": "Variáveis salvas com sucesso",
       "variablesSaveError": "Falha ao salvar variáveis. Tente novamente.",
+      "documentUploadRejected": "Somente arquivos PDF de até 5MB são aceitos.",
+      "documentsDropzoneHelper": "Somente PDF (até 5MB).",
       "variable": {
         "key": "Chave",
         "keyPlaceholder": "Ex: company_name",

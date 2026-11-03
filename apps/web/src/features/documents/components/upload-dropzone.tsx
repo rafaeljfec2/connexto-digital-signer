@@ -1,24 +1,18 @@
 "use client";
 
 import { Dropzone, Button } from '@/shared/ui';
+import { DOCUMENT_UPLOAD_ACCEPT, PDF_MAX_SIZE_BYTES } from '../utils/document-upload-validation';
 
-const ACCEPTED_TYPES = 'application/pdf,image/png,image/jpeg,image/webp';
-
-const MIME_LABELS: Readonly<Record<string, string>> = {
-  'application/pdf': 'PDF',
-  'image/png': 'PNG',
-  'image/jpeg': 'JPEG',
-  'image/webp': 'WEBP',
-};
+const MAX_SIZE_MB = PDF_MAX_SIZE_BYTES / (1024 * 1024);
 
 export type UploadDropzoneProps = {
   readonly file: File | null;
-  readonly onFileChange: (file: File | null) => void;
+  readonly onFileChange: (file: File | null) => void | Promise<void>;
   readonly label: string;
   readonly helperText: string;
   readonly removeLabel: string;
   readonly error?: string;
-  readonly maxSizeMb: number;
+  readonly maxSizeMb?: number;
 };
 
 export function UploadDropzone({
@@ -28,16 +22,17 @@ export function UploadDropzone({
   helperText,
   removeLabel,
   error,
-  maxSizeMb,
+  maxSizeMb = MAX_SIZE_MB,
 }: Readonly<UploadDropzoneProps>) {
   const formatSize = (bytes: number) => `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-  const fileTypeLabel = file ? (MIME_LABELS[file.type] ?? file.type.split('/')[1]?.toUpperCase() ?? '') : '';
 
   return (
     <div className="space-y-3">
       <Dropzone
-        accept={ACCEPTED_TYPES}
-        onFiles={(files) => onFileChange(files[0] ?? null)}
+        accept={DOCUMENT_UPLOAD_ACCEPT}
+        onFiles={(files) => {
+          void onFileChange(files[0] ?? null);
+        }}
         label={label}
         helperText={helperText}
       />
@@ -46,7 +41,7 @@ export function UploadDropzone({
           <div className="space-y-1">
             <p className="font-normal">{file.name}</p>
             <p className="text-foreground-muted">
-              {formatSize(file.size)} • {fileTypeLabel} • {maxSizeMb}MB max
+              {formatSize(file.size)} • PDF • {maxSizeMb}MB max
             </p>
           </div>
           <Button type="button" variant="ghost" onClick={() => onFileChange(null)}>

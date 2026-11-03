@@ -19,6 +19,10 @@ import { Button, ConfirmDialog, Stepper } from '@/shared/ui';
 import type { StepperItem } from '@/shared/ui/stepper';
 import { PageTransition, StepTransition } from '@/shared/animations';
 import {
+  validateDocumentUploadContent,
+  validateDocumentUploadSync,
+} from '@/features/documents/utils/document-upload-validation';
+import {
   useCreateTemplate,
   useTemplate,
   useUpdateTemplate,
@@ -189,12 +193,27 @@ export function TemplateBuilder({ templateId }: TemplateBuilderProps) {
     }
   }, [createdId, deleteMutation, router, t]);
 
-  const handleAddFiles = (files: File[]) => {
-    const newPending = files.map((f) => ({
-      file: f,
-      title: f.name.replace(/\.[^.]+$/, ''),
-    }));
-    setPendingFiles([...pendingFiles, ...newPending]);
+  const handleAddFiles = async (files: File[]) => {
+    const accepted: typeof pendingFiles = [];
+    for (const file of files) {
+      const syncError = validateDocumentUploadSync(file);
+      if (syncError !== null) {
+        toast.error(t('builder.documentUploadRejected'));
+        continue;
+      }
+      const contentError = await validateDocumentUploadContent(file);
+      if (contentError !== null) {
+        toast.error(t('builder.documentUploadRejected'));
+        continue;
+      }
+      accepted.push({
+        file,
+        title: file.name.replace(/\.[^.]+$/, ''),
+      });
+    }
+    if (accepted.length > 0) {
+      setPendingFiles([...pendingFiles, ...accepted]);
+    }
   };
 
   const handleAddSigner = (input: AddTemplateSignerInput) => {

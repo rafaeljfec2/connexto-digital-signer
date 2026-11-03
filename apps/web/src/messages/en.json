@@ -288,10 +288,18 @@
     "table": {
       "title": "Title",
       "status": "Status",
+      "pendingSigners": "Pending",
+      "expiresAt": "Deadline",
       "docs": "Docs",
       "folder": "Folder",
       "created": "Created",
       "actions": "Actions"
+    },
+    "list": {
+      "pendingCount": "{count, plural, one {# pending signer} other {# pending signers}}",
+      "noPending": "No pending signers",
+      "pendingNotApplicable": "—",
+      "noDeadline": "No deadline"
     },
     "actions": {
       "newDocument": "New document",
@@ -364,7 +372,7 @@
       "titleLabel": "Envelope title",
       "titlePlaceholder": "Sales contract - February",
       "dropzoneLabel": "Drag and drop your files here",
-      "dropzoneHelper": "PDF (up to 5MB), PNG, JPEG, WEBP (up to 3MB). Multiple files.",
+      "dropzoneHelper": "PDF only (up to 5MB). Multiple files allowed.",
       "fileLoaded": "PDF loaded",
       "replaceFile": "Replace PDF",
       "defaultTitle": "New document",
@@ -383,7 +391,9 @@
       "errors": {
         "titleRequired": "Title is required",
         "fileRequired": "At least one file is required",
-        "unsupportedType": "Unsupported file type: {name}. Accepted: PDF, PNG, JPEG, WEBP",
+        "unsupportedType": "Only PDF files are accepted: {name}",
+        "invalidContent": "The file is not a valid PDF: {name}",
+        "unsupportedExtension": "Only files with a .pdf extension are accepted: {name}",
         "tooLarge": "File \"{name}\" exceeds {max}MB",
         "failed": "Upload failed",
         "duplicateFile": "File \"{name}\" is already added"
@@ -1215,6 +1225,8 @@
       },
       "variablesSaved": "Variables saved successfully",
       "variablesSaveError": "Failed to save variables. Please try again.",
+      "documentUploadRejected": "Only PDF files up to 5MB are accepted.",
+      "documentsDropzoneHelper": "PDF only (up to 5MB).",
       "variable": {
         "key": "Key",
         "keyPlaceholder": "E.g. company_name",

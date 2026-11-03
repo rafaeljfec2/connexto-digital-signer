@@ -81,7 +81,7 @@ export class EnvelopesService {
     tenantId: string,
     query: ListEnvelopesQueryDto,
   ): Promise<{
-    data: (Envelope & { documentCount: number })[];
+    data: (Envelope & { documentCount: number; pendingSignerCount: number })[];
     meta: { page: number; limit: number; total: number; totalPages: number };
   }> {
     const page = query.page ?? 1;
@@ -97,6 +97,16 @@ export class EnvelopesService {
             .from('documents', 'd')
             .where('d.envelope_id = envelope.id'),
         'documentCount',
+      )
+      .addSelect(
+        (sub) =>
+          sub
+            .select('COUNT(*)')
+            .from('signers', 's')
+            .where('s.envelope_id = envelope.id')
+            .andWhere('s.tenant_id = envelope.tenant_id')
+            .andWhere("s.status = 'pending'"),
+        'pendingSignerCount',
       )
       .where('envelope.tenantId = :tenantId', { tenantId });
 
@@ -121,6 +131,7 @@ export class EnvelopesService {
     const data = rawResults.entities.map((envelope, index) => ({
       ...envelope,
       documentCount: Number(rawResults.raw[index]?.documentCount ?? 0),
+      pendingSignerCount: Number(rawResults.raw[index]?.pendingSignerCount ?? 0),
     }));
 
     return {

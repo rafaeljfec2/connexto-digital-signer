@@ -27,6 +27,7 @@ import { useRouter } from '@/i18n/navigation';
 import { downloadBlob, fileDownloadName, isNotFoundError } from '@/shared/utils/blob-download';
 import { LayoutGrid, List, Plus, Search } from 'lucide-react';
 import { parseDocumentListStatusParam } from '@/features/documents/utils/document-list-query';
+import { buildEnvelopeListMetaLabels } from '@/features/documents/utils/envelope-list-meta';
 import { toast } from 'sonner';
 
 function buildFolderNameMap(tree: readonly FolderTreeNode[]): Map<string, string> {
@@ -152,6 +153,8 @@ function DocumentsPageContent() {
     cancel: t('actions.cancelSent'),
   }), [t]);
 
+  const listMetaLabels = useMemo(() => buildEnvelopeListMetaLabels(t), [t]);
+
   const handleDocumentClick = useCallback((env: EnvelopeSummary) => {
     router.push(env.status === 'completed' ? `/documents/${env.id}/summary` : `/documents/${env.id}`);
   }, [router]);
@@ -271,7 +274,8 @@ function DocumentsPageContent() {
           <motion.div key="list-view" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }} className="glass-card rounded-2xl p-4">
             <DocumentsTable
               documents={envelopes} isLoading={query.isLoading} statusLabels={statusLabels}
-              headers={{ title: t('table.title'), status: t('table.status'), docs: t('table.docs'), folder: t('table.folder'), created: t('table.created'), actions: t('table.actions') }}
+              headers={{ title: t('table.title'), status: t('table.status'), pendingSigners: t('table.pendingSigners'), expiresAt: t('table.expiresAt'), docs: t('table.docs'), folder: t('table.folder'), created: t('table.created'), actions: t('table.actions') }}
+              listMetaLabels={listMetaLabels}
               emptyTitle={t('empty.title')} emptyDescription={t('empty.description')}
               emptyAction={newDocumentAction}
               formatDate={formatDate} actionLabels={actionLabels} folderNameMap={folderNameMap}
@@ -299,6 +303,7 @@ function DocumentsPageContent() {
                   <GridDocumentCard
                     key={doc.id} doc={doc} folderName={folderNameMap.get(doc.folderId)}
                     statusLabels={statusLabels} actionLabels={actionLabels} formatDate={formatDate}
+                    listMetaLabels={listMetaLabels}
                     isMenuOpen={gridMenuOpenId === doc.id}
                     onToggleMenu={(open) => setGridMenuOpenId(open ? doc.id : null)}
                     onDocumentClick={handleDocumentClick} onDeleteDocument={setDeleteTarget}
