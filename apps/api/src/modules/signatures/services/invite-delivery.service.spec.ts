@@ -1,22 +1,38 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
-import type { Repository } from 'typeorm';
+import type { EntityManager, Repository } from 'typeorm';
 import { SignerInviteDeliveryAttempt } from '../entities/signer-invite-delivery-attempt.entity';
 import {
   InviteDeliveryStatus,
   InviteDeliveryTrigger,
 } from '../interfaces/invite-delivery.interface';
-import { InviteDeliveryService, sanitizeDeliveryError } from './invite-delivery.service';
+import { GENERIC_INVITE_PROVIDER_REJECTED_MESSAGE } from './invite-delivery.constants';
+import { InviteDeliveryService } from './invite-delivery.service';
 
 describe('InviteDeliveryService', () => {
   let service: InviteDeliveryService;
   let attemptRepository: jest.Mocked<
     Pick<
       Repository<SignerInviteDeliveryAttempt>,
-      'find' | 'findOne' | 'save' | 'update' | 'createQueryBuilder'
+      'find' | 'findOne' | 'save' | 'update' | 'createQueryBuilder' | 'manager'
     >
   >;
+  let maxQueryBuilder: {
+    select: jest.Mock;
+    where: jest.Mock;
+    andWhere: jest.Mock;
+    getRawOne: jest.Mock;
+    getMany: jest.Mock;
+  };
 
   beforeEach(() => {
+    maxQueryBuilder = {
+      select: jest.fn().mockReturnThis(),
+      where: jest.fn().mockReturnThis(),
+      andWhere: jest.fn().mockReturnThis(),
+      getRawOne: jest.fn().mockResolvedValue({ max: '0' }),
+      getMany: jest.fn().mockResolvedValue([]),
+    };
+
     attemptRepository = {
       find: jest.fn().mockResolvedValue([]),
       findOne: jest.fn().mockResolvedValue(null),
@@ -25,22 +41,40 @@ describe('InviteDeliveryService', () => {
         id: 'attempt-id',
       })),
       update: jest.fn().mockResolvedValue({ affected: 1 }),
-      createQueryBuilder: jest.fn(),
+      createQueryBuilder: jest.fn(() => maxQueryBuilder as unknown as ReturnType<
+        Repository<SignerInviteDeliveryAttempt>['createQueryBuilder']
+      >),
+      manager: {
+        transaction: jest.fn(),
+        query: jest.fn(),
+      } as unknown as Repository<SignerInviteDeliveryAttempt>['manager'],
     };
 
-    const queryBuilder = {
-      select: jest.fn().mockReturnThis(),
-      where: jest.fn().mockReturnThis(),
-      andWhere: jest.fn().mockReturnThis(),
-      getRawOne: jest.fn().mockResolvedValue({ max: '0' }),
-    };
-    attemptRepository.createQueryBuilder.mockReturnValue(
-      queryBuilder as unknown as ReturnType<Repository<SignerInviteDeliveryAttempt>['createQueryBuilder']>,
+    const transactionManager = {
+      getRepository: () => attemptRepository,
+      query: jest.fn().mockResolvedValue(undefined),
+    } as unknown as EntityManager;
+
+    (attemptRepository.manager.transaction as jest.Mock).mockImplementation(
+      async (work: (manager: EntityManager) => Promise<unknown>) =>
+        work(transactionManager),
     );
 
     service = new InviteDeliveryService(
       attemptRepository as unknown as Repository<SignerInviteDeliveryAttempt>,
     );
+  });
+
+  describe('findByEnvelope', () => {
+    test('should scope attempts by tenant and envelope', async () => {
+      await service.findByEnvelope('env-1', 'tenant-1');
+
+      expect(attemptRepository.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { envelopeId: 'env-1', tenantId: 'tenant-1' },
+        }),
+      );
+    });
   });
 
   describe('executeInviteDelivery', () => {
@@ -68,7 +102,7 @@ describe('InviteDeliveryService', () => {
       );
     });
 
-    test('should record failed attempt when provider rejects invite', async () => {
+    test('should record generic failed message when provider rejects invite', async () => {
       await expect(
         service.executeInviteDelivery(
           {
@@ -87,7 +121,7 @@ describe('InviteDeliveryService', () => {
         'attempt-id',
         expect.objectContaining({
           status: InviteDeliveryStatus.FAILED,
-          errorMessage: 'Email provider did not accept the signature invitation',
+          errorMessage: GENERIC_INVITE_PROVIDER_REJECTED_MESSAGE,
         }),
       );
     });
@@ -111,13 +145,36 @@ describe('InviteDeliveryService', () => {
         ),
       ).rejects.toThrow(ConflictException);
     });
-  });
 
-  describe('sanitizeDeliveryError', () => {
-    test('should trim and cap error messages', () => {
-      const longMessage = ` ${'x'.repeat(3000)} `;
-      const sanitized = sanitizeDeliveryError(new Error(longMessage));
-      expect(sanitized.length).toBe(2000);
+    test('should expire stale queued attempts before starting a new delivery', async () => {
+      const staleStartedAt = new Date(Date.now() - 60 * 60 * 1000);
+      maxQueryBuilder.getMany.mockResolvedValue([
+        {
+          id: 'stale-id',
+          tenantId: 'tenant-1',
+          envelopeId: 'env-1',
+          signerId: 'signer-1',
+          attemptNumber: 1,
+          trigger: InviteDeliveryTrigger.INITIAL_SEND,
+          status: InviteDeliveryStatus.QUEUED,
+          startedAt: staleStartedAt,
+        },
+      ]);
+
+      await service.executeInviteDelivery(
+        {
+          tenantId: 'tenant-1',
+          envelopeId: 'env-1',
+          signerId: 'signer-1',
+          trigger: InviteDeliveryTrigger.MANUAL_RESEND,
+        },
+        async () => 'provider-msg',
+      );
+
+      expect(attemptRepository.update).toHaveBeenCalledWith(
+        'stale-id',
+        expect.objectContaining({ status: InviteDeliveryStatus.FAILED }),
+      );
     });
   });
 });

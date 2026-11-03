@@ -1,6 +1,8 @@
 import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateSignerInviteDeliveryAttempts1730000000026 implements MigrationInterface {
+  name = 'CreateSignerInviteDeliveryAttempts1730000000026';
+
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
       CREATE TYPE "signer_invite_delivery_trigger_enum" AS ENUM (
@@ -68,7 +70,14 @@ export class CreateSignerInviteDeliveryAttempts1730000000026 implements Migratio
         s."tenant_id",
         s."envelope_id",
         s."id",
-        1,
+        COALESCE(
+          (
+            SELECT MAX(a."attempt_number")
+            FROM "signer_invite_delivery_attempts" a
+            WHERE a."signer_id" = s."id"
+          ),
+          0
+        ) + 1,
         'legacy_backfill',
         'sent',
         s."notified_at",
